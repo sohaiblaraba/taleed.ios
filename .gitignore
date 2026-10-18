@@ -1,0 +1,26 @@
+# Xcode
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved.orig
+
+# macOS
+.DS_Store
+
+# Secrets never go in the repository
+*.p12
+*.mobileprovision
+*.cer
+.env

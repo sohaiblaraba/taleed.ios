@@ -1,0 +1,16 @@
+// Settings shared by every configuration. Each configuration file includes this one.
+
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+TARGETED_DEVICE_FAMILY = 1
+SWIFT_VERSION = 6.0
+SWIFT_STRICT_CONCURRENCY = complete
+
+// Release identity. Debug overrides it.
+PRODUCT_BUNDLE_IDENTIFIER = app.taleed
+APP_DISPLAY_NAME = Taleed
+
+// The base URL of the API. "/$()/" keeps "//" from starting a comment.
+TALEED_API_BASE_URL = https:/$()/taleed.app/api/v1

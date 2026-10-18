@@ -1,0 +1,39 @@
+# SwiftLint configuration. Run `swiftlint` from the repository root.
+included:
+  - Taleed
+  - TaleedTests
+
+# Generated code is never edited, so it is never linted.
+excluded:
+  - TaleedAPI
+  - build
+
+# Trailing commas keep diffs small.
+disabled_rules:
+  - trailing_comma
+
+opt_in_rules:
+  - closure_spacing
+  - empty_count
+  - explicit_init
+  - first_where
+  - modifier_order
+  - redundant_nil_coalescing
+  - sorted_imports
+  - toggle_bool
+  - vertical_parameter_alignment_on_call
+
+analyzer_rules:
+  - unused_declaration
+  - unused_import
+
+line_length:
+  warning: 140
+  error: 200
+  ignores_urls: true
+
+identifier_name:
+  excluded: [id, fr, ar, en, me]
+
+type_name:
+  excluded: [L10nKey]

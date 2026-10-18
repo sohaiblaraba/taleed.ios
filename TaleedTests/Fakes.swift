@@ -1,0 +1,84 @@
+import Foundation
+@testable import Taleed
+
+/// A `TaleedApi` that answers from canned results.
+@MainActor
+final class FakeTaleedApi: TaleedApi {
+    var configResult: Result<RemoteConfig, ApiError> = .success(.fixture())
+    var meResult: Result<User, ApiError> = .success(.fixture())
+    var categoriesResult: Result<[CatalogCategory], ApiError> = .success([])
+    var signInResult: Result<(token: String, user: User), ApiError> = .success(("new-token", .fixture()))
+    private(set) var meCalls = 0
+    private(set) var signedOutTokens: [String] = []
+    var onUnauthorized: ((String) -> Void)?
+
+    /// Set to make `me()` behave like the generated client wrapper on a 401.
+    var sentToken: () -> String? = { nil }
+
+    func config() async throws(ApiError) -> RemoteConfig { try configResult.get() }
+
+    func catalogCategories() async throws(ApiError) -> [CatalogCategory] { try categoriesResult.get() }
+
+    func me() async throws(ApiError) -> User {
+        meCalls += 1
+        if case .failure(.unauthorized) = meResult, let token = sentToken() {
+            onUnauthorized?(token)
+        }
+        return try meResult.get()
+    }
+
+    func signIn(email: String, password: String) async throws(ApiError) -> (token: String, user: User) {
+        try signInResult.get()
+    }
+
+    func signOut(token: String) async throws(ApiError) {
+        signedOutTokens.append(token)
+    }
+}
+
+/// A `TokenStore` in memory.
+final class InMemoryTokenStore: TokenStore, @unchecked Sendable {
+    private let lock = NSLock()
+    private var token: String?
+
+    init(token: String? = nil) {
+        self.token = token
+    }
+
+    func load() -> String? { lock.withLock { token } }
+    func save(_ token: String) { lock.withLock { self.token = token } }
+    func delete() { lock.withLock { token = nil } }
+}
+
+extension RemoteConfig {
+    static func fixture(minimumVersion: String = "1.0.0") -> RemoteConfig {
+        RemoteConfig(
+            minimumVersion: minimumVersion,
+            support: SupportContacts(email: "contact@taleed.app", phone: "+213540693236", whatsappURL: nil)
+        )
+    }
+}
+
+extension User {
+    static func fixture(username: String = "amina") -> User {
+        User(
+            id: "u1",
+            username: username,
+            displayName: "@\(username)",
+            avatarURL: nil,
+            isVerified: false,
+            isOfficial: false
+        )
+    }
+}
+
+extension AppEnvironment {
+    static func fixture(appVersion: String = "1.0.0") -> AppEnvironment {
+        AppEnvironment(
+            apiBaseURL: URL(string: "http://localhost:3000/api/v1")!,
+            appVersion: appVersion,
+            buildNumber: "1",
+            appStoreURL: URL(string: "https://apps.apple.com/app/taleed")!
+        )
+    }
+}

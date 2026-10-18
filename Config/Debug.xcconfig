@@ -1,0 +1,9 @@
+// Debug: the local backend over plain HTTP (simulator only).
+#include "Base.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = app.taleed.debug
+APP_DISPLAY_NAME = Taleed Dev
+TALEED_API_BASE_URL = http:/$()/localhost:3000/api/v1
+
+// Info.plist is preprocessed: TALEED_ALLOWS_LOCAL_NETWORKING turns on NSAllowsLocalNetworking.
+INFOPLIST_PREPROCESSOR_DEFINITIONS = TALEED_ALLOWS_LOCAL_NETWORKING=1
