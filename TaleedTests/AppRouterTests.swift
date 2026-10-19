@@ -204,16 +204,28 @@ struct AppRouterTests {
         #expect(router.path(.home) == [.listing(id: "l1")])
     }
 
-    @Test func paymentReturnOpensTheOrderAndWaitsToBeSynced() {
+    @Test func paymentReturnOpensThePaymentScreenThatSyncs() {
         signedIn.value = true
         router.open(url: URL(string: "taleed://payment-return?kind=order&id=o1&result=success")!)
-        #expect(router.path(.profile) == [.orders, .order(id: "o1")])
-        #expect(router.consumePaymentReturn(kind: .order, id: "other") == nil)
-        #expect(router.consumePaymentReturn(kind: .order, id: "o1") == PaymentReturn(kind: .order, id: "o1", succeeded: true))
+        #expect(router.path(.profile) == [.orders, .orderPayment(OrderPaymentTarget(orderId: "o1", attempt: .returnedSuccess))])
         #expect(router.consumePaymentReturn(kind: .order, id: "o1") == nil)
 
         router.open(url: URL(string: "taleed://payment-return?kind=top_up&id=t1&result=failure")!)
         #expect(router.path(.profile) == [.wallet])
+        #expect(router.consumePaymentReturn(kind: .topUp, id: "other") == nil)
+        #expect(router.consumePaymentReturn(kind: .topUp, id: "t1") == PaymentReturn(kind: .topUp, id: "t1", succeeded: false))
+        #expect(router.consumePaymentReturn(kind: .topUp, id: "t1") == nil)
+    }
+
+    @Test func checkoutIsReplacedByItsOrdersPaymentScreen() {
+        signedIn.value = true
+        let checkout = AppRoute.checkout(CheckoutTarget(listingId: "l1"))
+        router.open(.screen(checkout))
+        let payment = AppRoute.orderPayment(OrderPaymentTarget(orderId: "o1"))
+        router.replace(checkout, with: payment)
+        #expect(router.path(.home) == [.listing(id: "l1"), payment])
+        router.replace(checkout, with: .order(id: "o2"))
+        #expect(router.path(.home) == [.listing(id: "l1"), payment, .order(id: "o2")])
     }
 
     @Test func linksWaitForTheShell() {

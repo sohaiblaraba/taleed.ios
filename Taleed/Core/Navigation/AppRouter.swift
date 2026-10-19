@@ -26,7 +26,8 @@ final class AppRouter {
     private(set) var paths: [AppTab: [AppRoute]] = [:]
     /// The sign-in (or sign-up) sheet.
     var authEntry: AuthEntry?
-    /// The last payment return, for the order or wallet screen to sync (then `consumePaymentReturn`).
+    /// The last top-up's payment return, for the wallet screen to sync (then `consumePaymentReturn`). An
+    /// order's return opens its payment screen, which syncs it.
     private(set) var pendingPaymentReturn: PaymentReturn?
     /// True while a `/listings/{id}/chat` link opens its conversation.
     private(set) var isResolvingLink = false
@@ -64,6 +65,21 @@ final class AppRouter {
     /// Pushes a screen that needs an account, through the sign-in gate.
     func pushSignedIn(_ route: AppRoute) {
         requireSignIn { [weak self] in self?.push(route) }
+    }
+
+    /// Replaces a screen of a stack by another one in place (checkout by its order's payment screen), so
+    /// that back skips it. The route is looked for on the current tab first; when it is no longer in any
+    /// stack, the new screen is pushed on the current tab.
+    func replace(_ route: AppRoute, with newRoute: AppRoute) {
+        let tabs = [selectedTab] + AppTab.allCases.filter { $0 != selectedTab }
+        for tab in tabs {
+            if let index = paths[tab]?.lastIndex(of: route) {
+                paths[tab]?[index] = newRoute
+                paths[tab] = Array(paths[tab]?[...index] ?? [])
+                return
+            }
+        }
+        push(newRoute)
     }
 
     func pop() {
@@ -123,10 +139,14 @@ final class AppRouter {
         case let .signUp(referralCode):
             if isSignedIn() { show(.home, stack: []) } else { authEntry = .signUp(referralCode: referralCode) }
         case let .paymentReturn(paymentReturn):
-            pendingPaymentReturn = paymentReturn
             switch paymentReturn.kind {
-            case .order: open(.screen(.order(id: paymentReturn.id)))
-            case .topUp: open(.screen(.wallet))
+            case .order:
+                // The payment screen syncs the order whatever `result` says.
+                let attempt: PaymentAttempt = paymentReturn.succeeded ? .returnedSuccess : .returnedFailure
+                open(.screen(.orderPayment(OrderPaymentTarget(orderId: paymentReturn.id, attempt: attempt))))
+            case .topUp:
+                pendingPaymentReturn = paymentReturn
+                open(.screen(.wallet))
             }
         }
     }
@@ -146,7 +166,7 @@ final class AppRouter {
             } else {
                 (.home, [.listing(id: target.listingId), route])
             }
-        case .order: (.profile, [.orders, route])
+        case .order, .orderPayment: (.profile, [.orders, route])
         case .favorites, .orders, .wallet, .notifications, .settings, .referrals, .myListings: (.profile, [route])
         case .deleteAccount: (.profile, [.settings, route])
         #if DEBUG

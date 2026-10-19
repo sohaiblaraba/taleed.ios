@@ -31,6 +31,9 @@ enum AppRoute: Hashable, Sendable {
     case conversation(id: String, focusesComposer: Bool = false)
     case bundle(id: String)
     case checkout(CheckoutTarget)
+    /// The payment screen of an order (G11): after "Payer" / "Commander", the payment return, or the
+    /// buyer's own order awaiting payment that holds the goods. It syncs the payment when it opens.
+    case orderPayment(OrderPaymentTarget)
     // Profile hub (G6, G8, G12–G18)
     /// The member's own listings (G8): "Mes annonces" on their profile.
     case myListings
@@ -54,7 +57,7 @@ enum AppRoute: Hashable, Sendable {
     /// leave the stacks at sign-out.
     var requiresSignIn: Bool {
         switch self {
-        case .conversation, .bundle, .checkout, .favorites, .orders, .order, .wallet, .notifications, .referrals,
+        case .conversation, .bundle, .checkout, .orderPayment, .favorites, .orders, .order, .wallet, .notifications, .referrals,
              .deleteAccount, .editListing, .bundleBuilder, .myListings:
             true
         case .listing, .member, .search, .visualSearch, .settings:
@@ -73,10 +76,12 @@ enum AppRoute: Hashable, Sendable {
     }
 
     /// The shell hides its tab bar over this screen: Item Detail draws its own; a conversation keeps the
-    /// bottom for its composer, which rises with the keyboard.
+    /// bottom for its composer, which rises with the keyboard; checkout has none (Figma Buy Now).
     var hidesShellTabBar: Bool {
-        if case .conversation = self { return true }
-        return drawsOwnTabBar
+        switch self {
+        case .conversation, .checkout: true
+        default: drawsOwnTabBar
+        }
     }
 
     /// The same screen with a new identity: a link opens it fresh, never on the state of a screen
@@ -116,6 +121,14 @@ struct CheckoutTarget: Hashable, Sendable {
     let listingId: String
     var offerId: String?
     var bundleId: String?
+}
+
+/// The order the payment screen shows, how the member came to it, and the home address of the order
+/// just placed when it is not saved yet ("Enregistrer cette adresse").
+struct OrderPaymentTarget: Hashable, Sendable {
+    let orderId: String
+    var attempt: PaymentAttempt = .none
+    var addressToSave: AddressDraft?
 }
 
 /// `taleed://payment-return?kind=order|top_up&id=…&result=success|failure` (slice D, Paying online).

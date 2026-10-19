@@ -37,6 +37,8 @@ struct AppRootView: View {
                                               reads: container.conversationReads))
             .environment(\.pushRegistration, container.push)
             .environment(\.bundleDependencies, BundleDependencies(bundles: container.api, members: container.api))
+            .environment(\.checkoutDependencies,
+                         CheckoutDependencies(checkout: container.api, listings: container.api, bundles: container.api))
             .environment(\.memberDependencies,
                          MemberDependencies(members: container.api, reports: container.api, uploads: container.uploads))
             .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in

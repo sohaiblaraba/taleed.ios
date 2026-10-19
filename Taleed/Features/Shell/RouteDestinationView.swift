@@ -17,6 +17,7 @@ struct RouteDestinationView: View {
     @Environment(\.myListingsDependencies) private var myListings
     @Environment(\.messagesDependencies) private var messages
     @Environment(\.bundleDependencies) private var bundles
+    @Environment(\.checkoutDependencies) private var checkout
     @Environment(ExploreReferenceStore.self) private var references
     @Environment(CatalogStore.self) private var catalog
     @Environment(ListingChangeCenter.self) private var listingChanges
@@ -76,7 +77,18 @@ struct RouteDestinationView: View {
             } else {
                 RoutePlaceholderView(route: route)
             }
-        case .checkout: RoutePlaceholderView(route: route)
+        case let .checkout(target):
+            if let checkout {
+                CheckoutView(target: target, route: route, dependencies: checkout).id(route)
+            } else {
+                RoutePlaceholderView(route: route)
+            }
+        case let .orderPayment(target):
+            if let checkout {
+                OrderPaymentView(target: target, route: route, api: checkout.checkout).id(route)
+            } else {
+                RoutePlaceholderView(route: route)
+            }
         case .favorites:
             if let favoritesApi { FavoritesView(api: favoritesApi, store: favorites) } else { RoutePlaceholderView(route: route) }
         case .orders: RoutePlaceholderView(route: route)

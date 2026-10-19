@@ -30,12 +30,14 @@ struct CheckoutItem: View {
 }
 
 /// Delivery option card (design-system §4.4): icon, name and supporting text, radio, gap 12. Selected:
-/// `blue/50` fill and a brand border. Single choice; the whole card is the tap target.
+/// `blue/50` fill and a brand border. Single choice; the whole card is the tap target. `fee`: the
+/// delivery price at the end of the name row, as the website shows both kinds side by side.
 struct DeliveryOption: View {
     let icon: TaleedIcon
     let title: String
     let description: String
     let selected: Bool
+    var fee: String?
     let onSelect: () -> Void
 
     var body: some View {
@@ -43,9 +45,20 @@ struct DeliveryOption: View {
             HStack(alignment: .top, spacing: TaleedSpacing.s12) {
                 TaleedIconView(icon, size: 24, color: selected ? TaleedColor.brandPrimary : TaleedColor.textSecondary)
                 VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-                    Text(title)
-                        .taleedFont(TaleedFont.buttonMedium)
-                        .foregroundStyle(TaleedColor.textPrimary)
+                    HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s8) {
+                        Text(title)
+                            .taleedFont(TaleedFont.buttonMedium)
+                            .foregroundStyle(TaleedColor.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if let fee {
+                            Text(fee)
+                                .taleedFont(TaleedFont.buttonMedium)
+                                .foregroundStyle(TaleedColor.textPrimary)
+                                .monospacedDigit()
+                                .multilineTextAlignment(.trailing)
+                                .layoutPriority(1)
+                        }
+                    }
                     Text(description)
                         .taleedFont(TaleedFont.bodySmall)
                         .foregroundStyle(TaleedColor.textSecondary)
@@ -73,13 +86,20 @@ struct OrderSummaryLine: Identifiable {
     var onInfo: (() -> Void)?
     /// A value that is not an amount ("dès 400 DA", "calculée au paiement"); shown instead of `amount`.
     var valueText: String?
+    /// A small tag after the label: a promo code, "auto" for a voucher.
+    var tag: String?
+    /// A discount (promo, voucher, wallet): the amount in the brand colour, as on the website.
+    var isDiscount = false
 
-    init(id: String, label: String, amount: Int?, onInfo: (() -> Void)? = nil, valueText: String? = nil) {
+    init(id: String, label: String, amount: Int?, onInfo: (() -> Void)? = nil, valueText: String? = nil,
+         tag: String? = nil, isDiscount: Bool = false) {
         self.id = id
         self.label = label
         self.amount = amount
         self.onInfo = onInfo
         self.valueText = valueText
+        self.tag = tag
+        self.isDiscount = isDiscount
     }
 }
 
@@ -118,6 +138,9 @@ struct OrderSummary: View {
                     .taleedFont(style)
                     .foregroundStyle(labelColor)
                     .fixedSize(horizontal: false, vertical: true)
+                if let tag = line.tag {
+                    TaleedBadge(title: tag)
+                }
                 if let onInfo = line.onInfo {
                     Button(action: onInfo) {
                         TaleedIconView(.info, size: 16, color: TaleedColor.textSecondary).minimumHitArea()
@@ -134,7 +157,8 @@ struct OrderSummary: View {
                         .foregroundStyle(TaleedColor.textPrimary)
                         .multilineTextAlignment(.trailing)
                 } else {
-                    AmountText(amount: line.amount, style: style)
+                    AmountText(amount: line.amount, style: style,
+                               color: line.isDiscount ? TaleedColor.brandPrimary : TaleedColor.textPrimary)
                 }
             }
             .layoutPriority(1)

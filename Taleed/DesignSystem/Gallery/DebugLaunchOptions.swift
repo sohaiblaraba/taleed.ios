@@ -36,6 +36,8 @@ import Foundation
 ///     -TaleedDebugSend lost                    the first message is posted but its answer is lost (the
 ///                                              stream or "Réessayer" confirms it, same clientId); `offline`:
 ///                                              it fails before leaving, "Non envoyé" until "Réessayer"
+///     -TaleedDebugCheckout offline             checkout's first load fails offline (then works)
+///     -TaleedDebugOrderPayment offline         the payment screen's first sync fails offline (then works)
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor
