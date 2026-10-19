@@ -104,7 +104,7 @@ extension AppEnvironment {
             apiBaseURL: URL(string: "http://localhost:3000/api/v1")!,
             appVersion: appVersion,
             buildNumber: "1",
-            appStoreURL: URL(string: "https://apps.apple.com/app/taleed")!
+            appStoreID: nil
         )
     }
 }

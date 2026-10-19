@@ -42,7 +42,14 @@ final class AppContainer {
             router.sessionDidEnd()
             router.selectedTab = .home
         }
-        session.onSessionExpired = { [router] in router.presentSignIn() }
+        // From the suspended screen the shell was not on screen to see the session end: leave the
+        // screens that need an account here too.
+        session.onSessionExpired = { [router] in
+            router.sessionDidEnd()
+            router.presentSignIn()
+        }
+        // The suspended screen is the root of the Profile stack: nothing may cover it (screens.md §0.6).
+        session.onSuspended = { [router] in router.popToRoot(.profile) }
         router.resolveConversation = { [api] (listingId: String, buyerId: String) async throws(ApiError) -> String in
             try await api.openConversation(listingId: listingId, buyerId: buyerId)
         }

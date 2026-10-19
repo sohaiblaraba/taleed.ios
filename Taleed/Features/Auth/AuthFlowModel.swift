@@ -37,6 +37,22 @@ final class AuthFlowModel {
         }
     }
 
+    /// The router asked for another entry while the sheet is open: an `/r/{code}` link or a sign-up
+    /// button opens sign-up (request access while invite-only) with the link's code, which replaces
+    /// any code typed so far (screens.md §1.2).
+    func open(_ entry: AuthEntry) {
+        switch entry {
+        case .signIn:
+            show(.signIn)
+        case let .signUp(code):
+            if let code = code.flatMap(AuthValidation.referralCode(fromLink:)) {
+                signUp.referralCode = code
+                requestAccess.referralCode = code
+            }
+            show(.signUp)
+        }
+    }
+
     /// Moves to another step, taking the email typed so far when that step's field is empty.
     func show(_ target: Step) {
         let email = currentEmail

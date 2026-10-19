@@ -32,6 +32,9 @@ final class SessionManager {
     /// Called when the session of a signed-in member ends on its own (`401 unauthorized`): the app asks
     /// to sign in again (screens.md §0.6). Not called at launch, where a `401` continues signed out.
     @ObservationIgnored var onSessionExpired: (() -> Void)?
+    /// Called just before the state becomes `.suspended`, in the same update: the suspended screen draws
+    /// on the Profile stack, so a screen pushed there must leave it first (screens.md §0.6).
+    @ObservationIgnored var onSuspended: (() -> Void)?
 
     @ObservationIgnored private let api: TaleedApi
     @ObservationIgnored private let apiSession: ApiSession
@@ -62,20 +65,21 @@ final class SessionManager {
         } catch {
             switch error {
             case .unauthorized: clearSession()
-            case .banned: state = .suspended
+            case .banned: suspend()
             default: throw error
             }
         }
     }
 
     /// Refreshes the member on return to the foreground. Failures other than a lost or
-    /// suspended session change nothing.
+    /// suspended session change nothing. A suspended member who still has a session asks again too:
+    /// a `200` means the suspension was lifted and the shell shows again; a `401` signs out.
     func refresh() async {
-        guard isSignedIn else { return }
+        guard isSignedIn || hasSuspendedSession else { return }
         do {
             state = .signedIn(try await api.me(automatic: true))
         } catch {
-            if error == .banned { state = .suspended }
+            if error == .banned, state != .suspended { suspend() }
             // `.unauthorized` is handled by `handleUnauthorized`.
         }
     }
@@ -85,7 +89,7 @@ final class SessionManager {
             let (token, user) = try await api.signIn(email: email, password: password)
             didAuthenticate(token: token, user: user)
         } catch {
-            if error == .banned { state = .suspended }
+            if error == .banned { suspend() }
             throw error
         }
     }
@@ -112,14 +116,19 @@ final class SessionManager {
     private func handleUnauthorized(rejectedToken: String) {
         // Ignore a late answer for a token that a new sign-in already replaced.
         guard apiSession.token == rejectedToken else { return }
-        let wasSignedIn = isSignedIn
+        let hadSession = isSignedIn || hasSuspendedSession
         clearSession()
-        if wasSignedIn { onSessionExpired?() }
+        if hadSession { onSessionExpired?() }
     }
 
     /// A signed-in request answered `403 banned`: the account was suspended meanwhile.
     private func handleBanned(sentToken: String) {
         guard apiSession.token == sentToken, isSignedIn else { return }
+        suspend()
+    }
+
+    private func suspend() {
+        onSuspended?()
         state = .suspended
     }
 

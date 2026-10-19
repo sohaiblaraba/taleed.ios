@@ -14,12 +14,28 @@ struct WelcomeView: View {
     /// The Figma frame the positions below are measured in.
     static let frame = CGSize(width: 440, height: 956)
 
+    /// Where the headline starts, in the Figma frame: Figma's 438, a little higher so that a long second
+    /// line (Arabic) ends above the camera and the dress hanger, below the pink knit.
+    static let headlineTop: CGFloat = 428
+    /// The legal line's width in the Figma frame: the open sky between the camera and the dress. Figma's
+    /// 368 frame holds two short English lines; the French and Arabic ones are longer and take three.
+    static let legalWidth: CGFloat = 196
+
     var body: some View {
         GeometryReader { proxy in
             let size = CGSize(width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing,
                               height: proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom)
             ZStack {
                 WelcomeArtwork(size: size)
+                if dynamicTypeSize.isAccessibilitySize {
+                    // Figma's hidden "scrim-gradient" (neutral/50): at accessibility sizes the text no longer
+                    // fits the open sky, so the items fade behind it.
+                    LinearGradient(stops: [.init(color: TaleedColor.neutral50.opacity(0.9), location: 0),
+                                           .init(color: TaleedColor.neutral50.opacity(0.94), location: 0.94),
+                                           .init(color: TaleedColor.neutral50, location: 1)],
+                                   startPoint: .top, endPoint: .bottom)
+                        .accessibilityHidden(true)
+                }
                 foreground(size: size, safeArea: proxy.safeAreaInsets)
             }
             .frame(width: size.width, height: size.height)
@@ -28,31 +44,32 @@ struct WelcomeView: View {
         .background(TaleedColor.blue500.ignoresSafeArea())
     }
 
-    /// Headline, legal line and the two actions, from the bottom up (Figma: the actions end 136 above
-    /// the bottom edge). The column scrolls when large text makes it taller than the screen.
+    /// The headline on the open sky under the pink knit (Figma: y 438), then the legal line and the two
+    /// actions from the bottom up (Figma: the actions end 136 above the bottom edge). The column scrolls
+    /// when large text makes it taller than the screen.
     private func foreground(size: CGSize, safeArea: EdgeInsets) -> some View {
         let scaleX = size.width / Self.frame.width
         let scaleY = size.height / Self.frame.height
+        let isAccessibilitySize = dynamicTypeSize.isAccessibilitySize
+        let minimumTop = safeArea.top + TaleedSpacing.s24
         return ScrollView {
             VStack(spacing: 0) {
-                Spacer(minLength: safeArea.top + TaleedSpacing.s24)
                 Text(l10n.string(.appWelcomeHeadline))
                     .taleedFont(TaleedFont.loginHeadline)
                     .foregroundStyle(TaleedColor.navy900)
                     .multilineTextAlignment(.center)
                     // Two lines as in Figma: a longer line (French) shrinks a little instead of wrapping.
                     // Accessibility sizes wrap freely.
-                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
-                    .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 1 : 0.7)
+                    .lineLimit(isAccessibilitySize ? nil : 2)
+                    .minimumScaleFactor(isAccessibilitySize ? 1 : 0.7)
                     .frame(maxWidth: 392 * scaleX)
                     .accessibilityAddTraits(.isHeader)
-                // Figma: headline 438–526, legal 604; the legal frame is 48 high, then 16 to the actions.
+                    .padding(.top, isAccessibilitySize ? minimumTop : max(minimumTop, Self.headlineTop * scaleY))
+                Spacer(minLength: TaleedSpacing.s24)
+                // Figma: legal 604, its frame 48 high, then 16 to the actions.
                 LegalText(text: l10n.string(.appWelcomeLegal), style: TaleedFont.legal, color: TaleedColor.navy900,
                           linkColor: TaleedColor.navy900)
-                    // Narrower than Figma's 368 frame, so longer French and Arabic lines stay clear of the
-                    // camera and the dress.
-                    .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 280 * scaleX)
-                    .padding(.top, 78 * scaleY)
+                    .frame(maxWidth: isAccessibilitySize ? .infinity : Self.legalWidth * scaleX)
                 VStack(spacing: TaleedSpacing.s12) {
                     TaleedButton(title: l10n.string(.appWelcomeContinueEmail), kind: .mintSoft, size: .large,
                                  leadingIcon: .envelope, isFullWidth: true, leadingIconColor: TaleedColor.blue600,
@@ -65,7 +82,7 @@ struct WelcomeView: View {
             }
             .padding(.horizontal, TaleedSpacing.s16)
             .padding(.bottom, max(136 * scaleY, safeArea.bottom + TaleedSpacing.s16))
-            .frame(maxWidth: .infinity, minHeight: size.height, alignment: .bottom)
+            .frame(maxWidth: .infinity, minHeight: size.height)
         }
         .scrollBounceBehavior(.basedOnSize)
         .scrollIndicators(.hidden)

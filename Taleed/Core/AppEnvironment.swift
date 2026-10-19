@@ -11,8 +11,14 @@ struct AppEnvironment: Sendable {
     let buildNumber: String
     /// Sent as `X-App-Platform`.
     let platform = "ios"
-    /// The App Store page that the update screen opens. Placeholder until the app is published.
-    let appStoreURL: URL
+    /// The app's Apple ID in App Store Connect (`TALEED_APP_STORE_ID`), nil until the record exists.
+    let appStoreID: String?
+
+    /// The App Store page that the update screen opens: `https://apps.apple.com/app/id<ID>`.
+    var appStoreURL: URL? {
+        guard let appStoreID, !appStoreID.isEmpty, appStoreID.allSatisfy(\.isASCIIDigit) else { return nil }
+        return URL(string: "https://apps.apple.com/app/id\(appStoreID)")
+    }
 
     static func current(bundle: Bundle = .main) -> AppEnvironment {
         let info = bundle.infoDictionary ?? [:]
@@ -28,7 +34,11 @@ struct AppEnvironment: Sendable {
             apiBaseURL: apiBaseURL,
             appVersion: appVersion,
             buildNumber: info["CFBundleVersion"] as? String ?? "0",
-            appStoreURL: URL(string: "https://apps.apple.com/app/taleed")!
+            appStoreID: (info["TaleedAppStoreID"] as? String)?.trimmingCharacters(in: .whitespaces)
         )
     }
+}
+
+private extension Character {
+    var isASCIIDigit: Bool { isASCII && isNumber }
 }

@@ -220,6 +220,84 @@ struct LaunchViewModelTests {
         #expect(!session.isSignedIn)
     }
 
+    @Test func everySuspensionCallsBackFirst() async throws {
+        // Launch: `GET /me` answers `403 banned`.
+        api.meResult = .failure(.banned)
+        let (launch, session) = makeLaunch(tokenStore: InMemoryTokenStore(token: "t"))
+        var statesSeen: [SessionManager.State] = []
+        session.onSuspended = { statesSeen.append(session.state) }
+        await launch.start()
+        #expect(statesSeen == [.signedOut])
+
+        // While signed in: another call answers `403 banned`.
+        api.meResult = .success(.fixture())
+        await launch.start()
+        api.onBanned?("t")
+        #expect(statesSeen.count == 2)
+        #expect(session.state == .suspended)
+
+        // At sign-in.
+        session.signOut()
+        api.signInResult = .failure(.banned)
+        try? await session.signIn(email: "a@b.dz", password: "x")
+        #expect(statesSeen.count == 3)
+    }
+
+    @Test func liftedSuspensionShowsTheShellOnReturnToForeground() async {
+        api.meResult = .failure(.banned)
+        let (launch, session) = makeLaunch(tokenStore: InMemoryTokenStore(token: "t"))
+        await launch.start()
+        #expect(launch.route == .suspended(RemoteConfig.fixture().support))
+
+        await launch.didReturnToForeground()
+        #expect(session.state == .suspended)
+
+        api.meResult = .success(.fixture())
+        await launch.didReturnToForeground()
+        #expect(launch.route == .main)
+        #expect(session.user == .fixture())
+    }
+
+    @Test func endedSuspendedSessionSignsOutOnReturnToForeground() async {
+        let tokens = InMemoryTokenStore(token: "t")
+        api.meResult = .failure(.banned)
+        let (launch, session) = makeLaunch(tokenStore: tokens)
+        var expired = 0
+        session.onSessionExpired = { expired += 1 }
+        await launch.start()
+
+        api.meResult = .failure(.unauthorized)
+        await launch.didReturnToForeground()
+
+        #expect(session.state == .signedOut)
+        #expect(tokens.load() == nil)
+        #expect(launch.route == .main)
+        #expect(expired == 1)
+    }
+
+    @Test func suspendedAtSignInDoesNotAskAgainOnReturnToForeground() async {
+        api.signInResult = .failure(.banned)
+        let (launch, session) = makeLaunch(tokenStore: InMemoryTokenStore())
+        await launch.start()
+        try? await session.signIn(email: "a@b.dz", password: "x")
+
+        await launch.didReturnToForeground()
+
+        #expect(api.meCalls == 0)
+        #expect(session.state == .suspended)
+    }
+
+    @Test func storeURLComesFromTheAppStoreID() {
+        func environment(_ id: String?) -> AppEnvironment {
+            AppEnvironment(apiBaseURL: URL(string: "http://localhost:3000/api/v1")!, appVersion: "1.0.0",
+                           buildNumber: "1", appStoreID: id)
+        }
+        #expect(environment("6450000000").appStoreURL == URL(string: "https://apps.apple.com/app/id6450000000"))
+        #expect(environment(nil).appStoreURL == nil)
+        #expect(environment("").appStoreURL == nil)
+        #expect(environment("$(TALEED_APP_STORE_ID)").appStoreURL == nil)
+    }
+
     @Test func suspendedAtSignInHasNoSession() async {
         api.signInResult = .failure(.banned)
         let (launch, session) = makeLaunch(tokenStore: InMemoryTokenStore())

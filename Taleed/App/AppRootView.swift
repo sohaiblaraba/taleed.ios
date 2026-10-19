@@ -77,10 +77,15 @@ struct AppRootView: View {
         } else if screen == "launchError" {
             LaunchErrorView(error: .network) {}
         } else {
-            UpdateRequiredView(storeURL: container.environment.appStoreURL)
+            UpdateRequiredView(storeURL: storeURL ?? URL(string: "https://taleed.app"))
         }
     }
     #endif
+
+    /// The App Store page, or the website until the app has an App Store ID (`TALEED_APP_STORE_ID`).
+    private var storeURL: URL? {
+        container.environment.appStoreURL ?? container.launch.config?.links.website
+    }
 
     @ViewBuilder
     private var launchContent: some View {
@@ -92,7 +97,7 @@ struct AppRootView: View {
                 Task { await container.launch.start() }
             }
         case .updateRequired:
-            UpdateRequiredView(storeURL: container.environment.appStoreURL)
+            UpdateRequiredView(storeURL: storeURL)
         case let .suspended(support):
             SuspendedView(support: support, showsAccountLinks: container.session.hasSuspendedSession)
         case .main:
@@ -106,7 +111,7 @@ private struct AppEnvironmentKey: EnvironmentKey {
         apiBaseURL: URL(string: "http://localhost:3000/api/v1")!,
         appVersion: "0.0.0",
         buildNumber: "0",
-        appStoreURL: URL(string: "https://apps.apple.com/app/taleed")!
+        appStoreID: nil
     )
 }
 

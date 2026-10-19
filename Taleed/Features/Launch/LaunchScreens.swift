@@ -31,9 +31,9 @@ struct LaunchErrorView: View {
     }
 }
 
-/// Blocking: the app is below `minimumVersion.ios`.
+/// Blocking: the app is below `minimumVersion.ios`. The button opens the App Store page.
 struct UpdateRequiredView: View {
-    let storeURL: URL
+    let storeURL: URL?
     @Environment(LanguageManager.self) private var l10n
     @Environment(\.openURL) private var openURL
 
@@ -53,10 +53,13 @@ struct UpdateRequiredView: View {
                     .taleedFont(TaleedFont.bodyLarge)
                     .foregroundStyle(TaleedColor.textBody)
                     .multilineTextAlignment(.center)
-                TaleedButton(title: l10n.string(.updateRequiredAction), kind: .secondary, size: .large, isFullWidth: true) {
-                    openURL(storeURL)
+                if let storeURL {
+                    TaleedButton(title: l10n.string(.updateRequiredAction), kind: .secondary, size: .large,
+                                 isFullWidth: true) {
+                        openURL(storeURL)
+                    }
+                    .padding(.top, TaleedSpacing.s8)
                 }
-                .padding(.top, TaleedSpacing.s8)
             }
             .padding(TaleedSpacing.s24)
             .frame(maxWidth: .infinity)

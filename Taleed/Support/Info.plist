@@ -52,6 +52,8 @@
 	<string>$(TALEED_URL_SCHEME)</string>
 	<key>TaleedAPIBaseURL</key>
 	<string>$(TALEED_API_BASE_URL)</string>
+	<key>TaleedAppStoreID</key>
+	<string>$(TALEED_APP_STORE_ID)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>PlusJakartaSans-Regular.ttf</string>

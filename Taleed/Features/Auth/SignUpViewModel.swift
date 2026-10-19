@@ -137,8 +137,10 @@ final class SignUpViewModel {
         // The account may have been created anyway (api-guide.md, Retrying): the website's
         // "the connection seems slow, try signing in".
         case .network: .key(.authErrorTimeout)
-        // `forbidden`: an email that may not sign up again.
+        // `forbidden`: an email that may not sign up again. The API refuses it without saying why, and
+        // the website shows its generic error (register-form.tsx).
         case .server, .unknown: .key(.authErrorGeneric)
+        case let .failed(failure) where failure.code == .forbidden: .key(.authErrorGeneric)
         default: .error(error)
         }
     }

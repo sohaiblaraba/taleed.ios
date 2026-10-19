@@ -45,7 +45,7 @@ struct MainShellView: View {
         // The design-system bottom sheet (handle, start-aligned title, close) with the auth forms, as
         // Android's sign-in sheet. Closing it signed in continues the action that asked for it (the auth gate).
         .taleedSheet(isPresented: authSheetPresented, onDismiss: { router.authSheetDidDismiss() }, content: {
-            AuthSheetView(entry: router.authEntry ?? .signIn)
+            AuthSheetView(entry: router.authEntry)
                 .appLanguage(l10n.language)
         })
         .onAppear { router.shellDidAppear() }

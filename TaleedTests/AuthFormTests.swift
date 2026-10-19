@@ -176,7 +176,7 @@ struct SignUpViewModelTests {
         (ApiError.network, FormMessage.key(.authErrorTimeout)),
         (ApiError.server(status: 500), FormMessage.key(.authErrorGeneric)),
         (ApiError.rateLimited(retryAfter: 600), FormMessage.error(.rateLimited(retryAfter: 600))),
-        (ApiError.failed(ApiFailure(status: 403, code: .forbidden)), FormMessage.error(.failed(ApiFailure(status: 403, code: .forbidden)))),
+        (ApiError.failed(ApiFailure(status: 403, code: .forbidden)), FormMessage.key(.authErrorGeneric)),
     ])
     func formMessages(error: ApiError, message: FormMessage) async {
         let (viewModel, _) = makeViewModel()
@@ -337,6 +337,29 @@ struct AuthFlowModelTests {
         #expect(flow.forgotPassword.email == "amina@example.com")
         flow.show(.signUp)
         #expect(flow.signUp.email == "amina@example.com")
+    }
+
+    @Test func inviteLinkWhileSignInShowsOpensSignUpWithTheCode() {
+        let flow = makeFlow(entry: .signIn)
+        flow.signIn.email = "amina@example.com"
+        flow.open(.signUp(referralCode: "7DE5395A"))
+        #expect(flow.step == .signUp)
+        #expect(flow.signUp.referralCode == "7de5395a")
+        #expect(flow.signUp.email == "amina@example.com")
+    }
+
+    @Test func inviteLinkWhileSignInShowsDuringBetaOpensRequestAccess() {
+        let flow = makeFlow(entry: .signIn, betaMode: true)
+        flow.open(.signUp(referralCode: "7de5395a"))
+        #expect(flow.step == .requestAccess)
+        #expect(flow.requestAccess.referralCode == "7de5395a")
+    }
+
+    @Test func aNewInviteLinkReplacesTheCodeAndAnInvalidOneKeepsIt() {
+        let flow = makeFlow(entry: .signUp(referralCode: "11111111"))
+        flow.open(.signUp(referralCode: "22222222"))
+        flow.open(.signUp(referralCode: "not-a-code"))
+        #expect(flow.signUp.referralCode == "22222222")
     }
 
     @Test func inviteRequiredCarriesTheSignUpForm() {

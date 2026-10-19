@@ -22,7 +22,8 @@ extension EnvironmentValues {
 /// (handle, start-aligned Title 2 heading, close), as Android's sign-in sheet. It holds the four auth
 /// forms; the links under each form move between them, as the website's auth pages do.
 struct AuthSheetView: View {
-    let entry: AuthEntry
+    /// The router's `authEntry`; nil while the sheet closes.
+    let entry: AuthEntry?
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
     @Environment(\.authDependencies) private var dependencies
@@ -38,7 +39,12 @@ struct AuthSheetView: View {
         .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: flow?.step)
         .onAppear {
             guard flow == nil, let dependencies else { return }
-            flow = AuthFlowModel(entry: entry, session: session, api: dependencies.api, isBetaMode: dependencies.isBetaMode)
+            flow = AuthFlowModel(entry: entry ?? .signIn, session: session, api: dependencies.api,
+                                 isBetaMode: dependencies.isBetaMode)
+        }
+        // A link (`/r/{code}`) or another sign-in request while the sheet is already up.
+        .onChange(of: entry) { _, newEntry in
+            if let newEntry { flow?.open(newEntry) }
         }
     }
 
