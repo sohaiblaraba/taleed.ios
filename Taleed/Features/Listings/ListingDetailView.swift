@@ -292,7 +292,8 @@ extension ListingDetailView {
         case .done:
             break
         case let .openConversation(id):
-            router.pushSignedIn(.conversation(id: id))
+            // "Envoyer un message": the conversation with the keyboard up (screens.md §2 G9).
+            router.pushSignedIn(.conversation(id: id, focusesComposer: true))
         case .deleted:
             listingChanges.post(.deleted, listingId: model.listingId, source: model.changeSource)
             favorites.markRemoved(model.listingId)

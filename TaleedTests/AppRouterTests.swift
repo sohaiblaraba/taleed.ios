@@ -174,7 +174,7 @@ struct AppRouterTests {
         router.open(.listingChat(listingId: "l1", memberId: "m1"))
         await waitUntil { !router.isResolvingLink }
         #expect(router.selectedTab == .messages)
-        #expect(router.path(.messages) == [.conversation(id: "conversation-l1-m1")])
+        #expect(router.path(.messages) == [.conversation(id: "conversation-l1-m1", focusesComposer: true)])
     }
 
     @Test func listingChatFallsBackToTheListing() async {

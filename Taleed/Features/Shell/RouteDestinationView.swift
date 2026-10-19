@@ -15,6 +15,7 @@ struct RouteDestinationView: View {
     @Environment(SessionManager.self) private var session
     @Environment(\.editListingDependencies) private var editListing
     @Environment(\.myListingsDependencies) private var myListings
+    @Environment(\.messagesDependencies) private var messages
     @Environment(ExploreReferenceStore.self) private var references
     @Environment(CatalogStore.self) private var catalog
     @Environment(ListingChangeCenter.self) private var listingChanges
@@ -57,7 +58,12 @@ struct RouteDestinationView: View {
             if let explore { SearchResultsView(query: query, api: explore.listings).id(route) } else { RoutePlaceholderView(route: route) }
         case let .visualSearch(id):
             if let explore { VisualSearchResultsView(id: id, api: explore.explore).id(id) } else { RoutePlaceholderView(route: route) }
-        case .conversation: RoutePlaceholderView(route: route)
+        case let .conversation(id, focusesComposer):
+            if let messages {
+                ConversationView(conversationId: id, route: route, focusesComposer: focusesComposer, dependencies: messages).id(id)
+            } else {
+                RoutePlaceholderView(route: route)
+            }
         case .bundle: RoutePlaceholderView(route: route)
         case .checkout: RoutePlaceholderView(route: route)
         case .favorites:

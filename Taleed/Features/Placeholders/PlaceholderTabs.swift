@@ -1,24 +1,8 @@
 import SwiftUI
 
 // Tabs Figma does not draw (decision D-12) have the centred-title top app bar and a one-line message,
-// as on Android (D7). Explore is in `Features/Explore`, Sell in `Features/Sell`.
-
-struct MessagesView: View {
-    @Environment(LanguageManager.self) private var l10n
-    @Environment(SessionManager.self) private var session
-
-    var body: some View {
-        ShellScreen {
-            TaleedTopAppBar(title: l10n.string(.tabMessages))
-        } content: {
-            if session.isSignedIn {
-                MessageStateView(text: l10n.string(.messagesPlaceholder))
-            } else {
-                SignInPromptView()
-            }
-        }
-    }
-}
+// as on Android (D7). Explore is in `Features/Explore`, Sell in `Features/Sell`, Messages in
+// `Features/Messages`.
 
 /// The notifications placeholder, pushed from the bell of the brand app bar (Home and Sell).
 struct NotificationsView: View {

@@ -30,6 +30,12 @@ import Foundation
 ///                                              `publish`: the first publish (or edit save) fails offline
 ///     -TaleedDebugMyListings offline           the first My listings request fails offline (then works)
 ///     -TaleedDebugEditListing offline          the edit form's first load fails offline (then works)
+///     -TaleedDebugInbox offline                the inbox's first request fails offline (then works);
+///                                              `empty` answers an empty inbox
+///     -TaleedDebugConversation offline         the first conversation load fails offline (then works)
+///     -TaleedDebugSend lost                    the first message is posted but its answer is lost (the
+///                                              stream or "Réessayer" confirms it, same clientId); `offline`:
+///                                              it fails before leaving, "Non envoyé" until "Réessayer"
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor

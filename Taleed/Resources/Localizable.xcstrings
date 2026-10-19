@@ -397,6 +397,98 @@
         }
       }
     },
+    "app_chat_not_sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non envoyé"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تُرسَل"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not sent"
+          }
+        }
+      }
+    },
+    "app_chat_read_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous ne pouvez plus répondre dans cette conversation."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد بإمكانك الرد في هذه المحادثة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can no longer reply in this conversation."
+          }
+        }
+      }
+    },
+    "app_chat_sending": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoi…"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ الإرسال…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending…"
+          }
+        }
+      }
+    },
+    "app_chat_you_blocked": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez bloqué %@."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لقد حظرت %@."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You blocked %@."
+          }
+        }
+      }
+    },
     "app_edit_listing_reloaded": {
       "extractionState": "manual",
       "localizations": {
@@ -1534,6 +1626,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ce contenu n’est plus disponible"
+          }
+        }
+      }
+    },
+    "app_offer_status_closed": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clôturée"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مغلق"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed"
           }
         }
       }
@@ -3640,6 +3755,52 @@
         }
       }
     },
+    "bundle_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indisponible"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد متوفرًا"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable"
+          }
+        }
+      }
+    },
+    "chat_add_photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter une photo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف صورة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a photo"
+          }
+        }
+      }
+    },
     "chat_blocked_read_only": {
       "extractionState": "manual",
       "localizations": {
@@ -3659,6 +3820,313 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vous ne pouvez plus écrire à ce membre."
+          }
+        }
+      }
+    },
+    "chat_bundle_question": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Question sur le lot · %d article"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Question sur le lot · %d articles"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سؤال حول الحزمة · غرض واحد"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سؤال حول الحزمة · غرضان"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سؤال حول الحزمة · %d أغراض"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سؤال حول الحزمة · %d غرضًا"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سؤال حول الحزمة · %d غرض"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Question about the bundle · %d item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Question about the bundle · %d items"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "chat_deleted_read_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce membre a supprimé son compte — les réponses sont désactivées."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف هذا العضو حسابه — الردود معطّلة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This member deleted their account — replies are disabled."
+          }
+        }
+      }
+    },
+    "chat_deleted_user": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisateur supprimé"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستخدم محذوف"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted user"
+          }
+        }
+      }
+    },
+    "chat_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune conversation"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد محادثات"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No conversations"
+          }
+        }
+      }
+    },
+    "chat_empty_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contactez un vendeur depuis une annonce pour démarrer une conversation."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راسل بائعًا من صفحة أي إعلان لبدء محادثة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message a seller from a listing to start a conversation."
+          }
+        }
+      }
+    },
+    "chat_official_read_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message officiel de Taleed — les réponses sont désactivées."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسالة رسمية من Taleed — الردود معطّلة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Official message from Taleed — replies are disabled."
+          }
+        }
+      }
+    },
+    "chat_order_review_cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Évaluez votre expérience"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيّم تجربتك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rate your experience"
+          }
+        }
+      }
+    },
+    "chat_photo_alt": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo envoyée dans la conversation"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صورة مرسلة في المحادثة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo sent in the conversation"
+          }
+        }
+      }
+    },
+    "chat_remove_photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer la photo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة الصورة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove photo"
+          }
+        }
+      }
+    },
+    "chat_type_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrivez un message…"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتب رسالة…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type a message…"
+          }
+        }
+      }
+    },
+    "chat_view_listing": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir l’annonce"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض الإعلان"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View listing"
           }
         }
       }
@@ -3774,6 +4242,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voir ma commande"
+          }
+        }
+      }
+    },
+    "common_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكل"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
           }
         }
       }
@@ -4303,6 +4794,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voir tout"
+          }
+        }
+      }
+    },
+    "common_send": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرسال"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        }
+      }
+    },
+    "common_you": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You"
           }
         }
       }
@@ -7201,6 +7738,83 @@
         }
       }
     },
+    "offers_bundle_offer": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Offre sur un lot · %d article"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Offre sur un lot · %d articles"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عرض على حزمة · غرض واحد"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عرض على حزمة · غرضان"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عرض على حزمة · %d أغراض"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عرض على حزمة · %d غرضًا"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عرض على حزمة · %d غرض"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bundle offer · %d item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bundle offer · %d items"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "offers_error_active": {
       "extractionState": "manual",
       "localizations": {
@@ -7243,6 +7857,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "L’offre doit être comprise entre %1$@ et %2$@."
+          }
+        }
+      }
+    },
+    "offers_expires_in": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expire %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ينتهي %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expires %@"
           }
         }
       }
@@ -7362,6 +7999,29 @@
         }
       }
     },
+    "offers_seller_offer": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offre du vendeur"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض البائع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seller's offer"
+          }
+        }
+      }
+    },
     "offers_send_offer": {
       "extractionState": "manual",
       "localizations": {
@@ -7381,6 +8041,144 @@
           "stringUnit": {
             "state": "translated",
             "value": "Envoyer l’offre"
+          }
+        }
+      }
+    },
+    "offers_status_accepted": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceptée"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقبول"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted"
+          }
+        }
+      }
+    },
+    "offers_status_cancelled": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulée"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملغى"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        }
+      }
+    },
+    "offers_status_countered": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contre-offre faite"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قُدّم عرض مضاد"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Countered"
+          }
+        }
+      }
+    },
+    "offers_status_declined": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refusée"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرفوض"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined"
+          }
+        }
+      }
+    },
+    "offers_status_expired": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expirée"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منتهي الصلاحية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expired"
+          }
+        }
+      }
+    },
+    "offers_status_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيد الانتظار"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending"
           }
         }
       }
@@ -7450,6 +8248,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Le transporteur a refusé la création du colis."
+          }
+        }
+      }
+    },
+    "orders_purchases": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achats"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المشتريات"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchases"
+          }
+        }
+      }
+    },
+    "orders_sales": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ventes"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المبيعات"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sales"
           }
         }
       }

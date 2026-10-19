@@ -185,7 +185,8 @@ final class AppRouter {
             defer { isResolvingLink = false }
             do {
                 let conversationId = try await resolveConversation(listingId, memberId)
-                open(.screen(.conversation(id: conversationId)))
+                // The seller writes first (the "new favorite" notification): the keyboard opens.
+                open(.screen(.conversation(id: conversationId, focusesComposer: true)))
             } catch {
                 // Not the seller (`403 forbidden`), a removed listing…: the listing itself.
                 open(.screen(.listing(id: listingId)))

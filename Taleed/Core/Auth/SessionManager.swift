@@ -84,6 +84,16 @@ final class SessionManager {
         }
     }
 
+    /// The badges an action answered (`POST /conversations/{id}/read`, `POST /notifications/read`): the
+    /// Messages tab and the bell show them at once, without `GET /me`.
+    func updateUnreadCounts(messages: Int, notifications: Int) {
+        guard case var .signedIn(user) = state else { return }
+        user.unreadMessages = max(0, messages)
+        user.unreadNotifications = max(0, notifications)
+        if case let .signedIn(current) = state, current == user { return }
+        state = .signedIn(user)
+    }
+
     func signIn(email: String, password: String) async throws(ApiError) {
         do {
             let (token, user) = try await api.signIn(email: email, password: password)

@@ -96,7 +96,9 @@ final class ApiCaller {
         }
     }
 
-    private func record(_ error: ApiError, sentToken: String?) {
+    /// Reports a failure the app got outside `call` (the live stream of a conversation): a rejected token
+    /// signs out, `banned` shows the suspended screen, a `429` pauses automatic requests.
+    func record(_ error: ApiError, sentToken: String?) {
         switch error {
         case .unauthorized:
             if let sentToken { onUnauthorized?(sentToken) }

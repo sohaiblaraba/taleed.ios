@@ -27,7 +27,8 @@ enum AppRoute: Hashable, Sendable {
     case search(ExploreQuery, opening: UUID? = nil)
     case visualSearch(id: String)
     // Messages, offers, bundles, checkout (G9–G11)
-    case conversation(id: String)
+    /// A conversation (G9). `focusesComposer`: "Message the seller" opens it with the keyboard up.
+    case conversation(id: String, focusesComposer: Bool = false)
     case bundle(id: String)
     case checkout(CheckoutTarget)
     // Profile hub (G6, G8, G12–G18)
@@ -69,6 +70,13 @@ enum AppRoute: Hashable, Sendable {
     var drawsOwnTabBar: Bool {
         if case .listing = self { return true }
         return false
+    }
+
+    /// The shell hides its tab bar over this screen: Item Detail draws its own; a conversation keeps the
+    /// bottom for its composer, which rises with the keyboard.
+    var hidesShellTabBar: Bool {
+        if case .conversation = self { return true }
+        return drawsOwnTabBar
     }
 
     /// The same screen with a new identity: a link opens it fresh, never on the state of a screen

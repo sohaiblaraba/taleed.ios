@@ -28,7 +28,7 @@ struct MainShellView: View {
         .environment(\.confirmationHost, confirmations)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             // A screen that draws the bar inside its own bottom bar (Item Detail) hides this one.
-            if !drawsOwnTabBar {
+            if !hidesTabBar {
                 ShellTabBar()
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tabBarHeight = $0 }
             }
@@ -91,15 +91,16 @@ struct MainShellView: View {
         }
     }
 
-    /// The screen on top draws the tab bar inside its own bottom bar (Item Detail).
-    private var drawsOwnTabBar: Bool {
-        router.path(router.selectedTab).last?.drawsOwnTabBar ?? false
+    /// The screen on top draws the tab bar inside its own bottom bar (Item Detail), or has none (a
+    /// conversation, whose composer takes the bottom).
+    private var hidesTabBar: Bool {
+        router.path(router.selectedTab).last?.hidesShellTabBar ?? false
     }
 
     /// The bottom bar of the screen on top: its own when it draws the tab bar (measured per screen),
     /// otherwise the shell's tab bar.
     private var toastBottomInset: CGFloat {
-        guard let top = router.path(router.selectedTab).last, top.drawsOwnTabBar else { return tabBarHeight }
+        guard let top = router.path(router.selectedTab).last, top.hidesShellTabBar else { return tabBarHeight }
         return toasts.bottomBarHeight(tab: router.selectedTab, route: top) ?? tabBarHeight
     }
 
@@ -125,7 +126,7 @@ struct MainShellView: View {
                     // Pushed screens likewise (not the screens that draw the bar in their own bottom bar).
                     RouteDestinationView(route: route)
                         .safeAreaInset(edge: .bottom, spacing: 0) {
-                            Color.clear.frame(height: route.drawsOwnTabBar ? 0 : tabBarHeight).allowsHitTesting(false)
+                            Color.clear.frame(height: route.hidesShellTabBar ? 0 : tabBarHeight).allowsHitTesting(false)
                         }
                 }
         }
