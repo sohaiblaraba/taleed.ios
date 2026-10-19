@@ -2,8 +2,18 @@ import SwiftUI
 
 /// A photo in the uploader. The first one is the cover.
 struct PhotoUploaderItem: Identifiable {
+    /// Where the photo's upload stands (slice B, Selling: each photo is uploaded as soon as it is picked).
+    enum Status {
+        case ready
+        /// A spinner over the photo.
+        case uploading
+        /// The message on the photo and a retry button.
+        case failed(message: String)
+    }
+
     let id: String
     var media: ProductMedia
+    var status: Status = .ready
 }
 
 /// Photo uploader, variant A (design-system §4.1, decision D-6): up to 5 photos, a large cover tile
@@ -14,6 +24,8 @@ struct PhotoUploader: View {
     let onAdd: () -> Void
     let onRemove: (PhotoUploaderItem.ID) -> Void
     let onMakeCover: (PhotoUploaderItem.ID) -> Void
+    /// Sends a failed photo again.
+    var onRetry: ((PhotoUploaderItem.ID) -> Void)?
     @Environment(\.locale) private var locale
 
     private static let zoneSubtitleStyle = TaleedTextStyle(size: 11, weight: .regular, lineHeight: nil, letterSpacing: 0,
@@ -77,14 +89,14 @@ struct PhotoUploader: View {
     private var tiles: some View {
         HStack(alignment: .top, spacing: TaleedSize.photoUploaderTileGap) {
             if let cover = photos.first {
-                PhotoTile(item: cover, number: 1, onRemove: onRemove, onMakeCover: onMakeCover)
+                PhotoTile(item: cover, number: 1, onRemove: onRemove, onMakeCover: onMakeCover, onRetry: onRetry)
                     .aspectRatio(1, contentMode: .fit)
                     .frame(maxWidth: .infinity)
             }
             LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedSize.photoUploaderTileGap), GridItem(.flexible())],
                       spacing: TaleedSize.photoUploaderTileGap) {
                 ForEach(Array(photos.enumerated().dropFirst()), id: \.element.id) { index, item in
-                    PhotoTile(item: item, number: index + 1, onRemove: onRemove, onMakeCover: onMakeCover)
+                    PhotoTile(item: item, number: index + 1, onRemove: onRemove, onMakeCover: onMakeCover, onRetry: onRetry)
                         .aspectRatio(1, contentMode: .fit)
                 }
                 if photos.count < maxPhotos {
@@ -125,23 +137,82 @@ private struct PhotoTile: View {
     let number: Int
     let onRemove: (PhotoUploaderItem.ID) -> Void
     let onMakeCover: (PhotoUploaderItem.ID) -> Void
+    let onRetry: ((PhotoUploaderItem.ID) -> Void)?
     @Environment(\.locale) private var locale
 
     private var isCover: Bool { number == 1 }
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
-        let photoLabel = DesignSystemStrings.format(.photoUploaderPhoto, locale: locale, number)
         Color.clear
             .overlay { ProductMediaView(media: item.media) }
+            .overlay { statusLayer }
             .clipShape(shape)
-            .overlay(shape.strokeBorder(TaleedColor.borderSubtle, lineWidth: 1))
+            .overlay(shape.strokeBorder(borderColor, lineWidth: 1))
             .accessibilityElement()
-            .accessibilityLabel(isCover ? photoLabel + ", " + DesignSystemStrings.string(.photoUploaderCover, locale: locale)
-                : photoLabel)
+            .accessibilityLabel(accessibilityText)
             .accessibilityAddTraits(.isImage)
+            .overlay { retryButton }
             .overlay(alignment: .topTrailing) { removeButton.padding(TaleedSize.photoUploaderRemoveInset) }
             .overlay(alignment: .bottomLeading) { coverControl.padding(TaleedSize.photoUploaderRemoveInset) }
+    }
+
+    private var borderColor: Color {
+        if case .failed = item.status { return TaleedColor.feedbackError }
+        return TaleedColor.borderSubtle
+    }
+
+    /// "Photo 2, Cover", then the upload's state.
+    private var accessibilityText: String {
+        var parts = [DesignSystemStrings.format(.photoUploaderPhoto, locale: locale, number)]
+        if isCover { parts.append(DesignSystemStrings.string(.photoUploaderCover, locale: locale)) }
+        switch item.status {
+        case .ready: break
+        case .uploading: parts.append(DesignSystemStrings.string(.commonLoading, locale: locale))
+        case let .failed(message): parts.append(message)
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    /// A dimmed photo under a spinner while it uploads; a light error wash once it failed.
+    @ViewBuilder
+    private var statusLayer: some View {
+        switch item.status {
+        case .ready:
+            EmptyView()
+        case .uploading:
+            ZStack {
+                TaleedColor.textPrimary.opacity(0.35)
+                ProgressView().tint(TaleedColor.textInverse)
+            }
+            .accessibilityHidden(true)
+        case .failed:
+            TaleedColor.errorSoft.opacity(0.85)
+                .accessibilityHidden(true)
+        }
+    }
+
+    /// A failed photo: the warning and "Réessayer", centred, the whole wash a 44 pt target or more.
+    @ViewBuilder
+    private var retryButton: some View {
+        if case .failed = item.status, let onRetry {
+            Button { onRetry(item.id) } label: {
+                VStack(spacing: TaleedSpacing.s4) {
+                    TaleedIconView(.warningCircle, size: 20, color: TaleedColor.feedbackError)
+                    Text(DesignSystemStrings.string(.commonRetry, locale: locale))
+                        .taleedFont(TaleedFont.buttonSmall)
+                        .foregroundStyle(TaleedColor.feedbackError)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .padding(TaleedSpacing.s4)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(DesignSystemStrings.string(.commonRetry, locale: locale) + ", "
+                + DesignSystemStrings.format(.photoUploaderPhoto, locale: locale, number))
+        }
     }
 
     private var removeButton: some View {

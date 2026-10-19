@@ -355,7 +355,7 @@ struct FilterOptionsView: View {
 
 /// A choice row: at least 56 high, the label (bold for a category, indented for a subcategory) and a
 /// check when chosen.
-private struct FilterOptionRow: View {
+struct FilterOptionRow: View {
     let option: FilterOption
     let isSelected: Bool
     let action: () -> Void

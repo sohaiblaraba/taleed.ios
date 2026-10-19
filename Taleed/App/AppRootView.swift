@@ -26,6 +26,7 @@ struct AppRootView: View {
             .environment(\.listingDependencies,
                          ListingDependencies(listings: container.api, reports: container.api, uploads: container.uploads))
             .environment(\.favoritesListApi, container.api)
+            .environment(\.sellDependencies, SellDependencies(api: container.api, uploads: container.uploads))
             .environment(\.memberDependencies,
                          MemberDependencies(members: container.api, reports: container.api, uploads: container.uploads))
             .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in
