@@ -10,7 +10,7 @@ import Foundation
 /** Where to print the parcel&#39;s label. */
 public struct ShippingLabel: Sendable, Codable, Hashable {
 
-    /** The label to print: the carrier's document (usually a PDF), or a printable page. Open it in the browser or the system's print dialog. */
+    /** The label to print: the carrier's document (usually a PDF), or a printable page. Open it in the browser or the system's print dialog. The printable page holds only the label and a print button, without the website's navigation; the button is in the request's language (`Accept-Language`), the label itself always in French, for the carrier. */
     public var url: String
     /** The link stops working then: fetch a new one each time the seller prints. ISO 8601, UTC. */
     public var expiresAt: Date?

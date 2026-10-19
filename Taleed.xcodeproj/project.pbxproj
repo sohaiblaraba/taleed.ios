@@ -254,6 +254,7 @@
 		F5AB75D7B9A25FFB56648CB4 /* VisualSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7291EDAB7CEFF57EB8948CD4 /* VisualSearchTests.swift */; };
 		F63EA81865340FA3A1A599F4 /* IconButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB9CBD56016A166B04C24C4 /* IconButtons.swift */; };
 		F7A1AAE07407B4D0929127D6 /* SellForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0FAE93FC6703E35142DA89 /* SellForm.swift */; };
+		F8AAB7FBAE326FEAA8DF5761 /* ShippingLabelSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A927EB7A25F3A136CC167B /* ShippingLabelSheet.swift */; };
 		F8F65A7FE33CA916E069B9FB /* LaunchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71DC7EA935F16C216FF7C5C /* LaunchViewModel.swift */; };
 		F90AE597F8809EAFDCEE5379 /* SearchResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8EED86D5B5DADE660F53B2 /* SearchResultsView.swift */; };
 		F9B927421EF045B66CB8134E /* MyListingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14C29CAC65EF0589A4396B28 /* MyListingsView.swift */; };
@@ -457,6 +458,7 @@
 		B0A2E4FD03B16F11F769ED3F /* PagedListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PagedListTests.swift; sourceTree = "<group>"; };
 		B113761F5E7890C6F4A49589 /* PhotoUpload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoUpload.swift; sourceTree = "<group>"; };
 		B29D45BE48ECC2E93DDC0041 /* FavoritesPagingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesPagingTests.swift; sourceTree = "<group>"; };
+		B2A927EB7A25F3A136CC167B /* ShippingLabelSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingLabelSheet.swift; sourceTree = "<group>"; };
 		B36533E98CAACED9DB970E57 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		B50BD3C0BA82897D8BE1ABC0 /* CheckoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutView.swift; sourceTree = "<group>"; };
 		B6053708013FA85F48F601C1 /* TaleedIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaleedIcon.swift; sourceTree = "<group>"; };
@@ -788,6 +790,7 @@
 				59042B7EA1F22B81378DB802 /* OrdersListViewModel.swift */,
 				DF31AACB70451B66DE09A2CB /* OrderTimelineCard.swift */,
 				83371C40B66F462909AE27CA /* SellerOrderButton.swift */,
+				B2A927EB7A25F3A136CC167B /* ShippingLabelSheet.swift */,
 			);
 			path = Orders;
 			sourceTree = "<group>";
@@ -1540,6 +1543,7 @@
 				E298DDEF3B4B797A94DD1560 /* SellerOrderButton.swift in Sources */,
 				899E0B397E18F7C093014988 /* SessionManager.swift in Sources */,
 				74A89296218FFAA3DE48C78C /* SettingsView.swift in Sources */,
+				F8AAB7FBAE326FEAA8DF5761 /* ShippingLabelSheet.swift in Sources */,
 				1F9A3780F6B98FBCABFB1895 /* SignInView.swift in Sources */,
 				42289540639B35BCF9F9EF11 /* SignInViewModel.swift in Sources */,
 				4DF3CDDB52BA07201EDD3D6D /* SignUpView.swift in Sources */,

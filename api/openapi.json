@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.7",
+    "version": "1.5.8",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -16317,7 +16317,7 @@
           "url": {
             "type": "string",
             "format": "uri",
-            "description": "The label to print: the carrier's document (usually a PDF), or a printable page. Open it in the browser or the system's print dialog."
+            "description": "The label to print: the carrier's document (usually a PDF), or a printable page. Open it in the browser or the system's print dialog. The printable page holds only the label and a print button, without the website's navigation; the button is in the request's language (`Accept-Language`), the label itself always in French, for the carrier."
           },
           "expiresAt": {
             "nullable": true,

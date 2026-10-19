@@ -13,10 +13,10 @@ import SwiftUI
 ///   réception" (after a confirmation; disabled with its hint while the parcel travels), "Laisser une
 ///   évaluation", "Signaler un problème", "Annuler la commande" (after a confirmation). The seller's
 ///   (G13): "Bordereau d'expédition" (after a confirmation; the carrier takes several seconds, then the
-///   label opens in the in-app browser, whose share sheet prints), "Imprimer le bordereau" (a fresh link
-///   on each tap), "Générer le vrai bordereau" (test servers), "Accepter la réclamation" (after a
-///   confirmation) and "Contester", "Laisser une évaluation". A carrier refusal stays under the buttons
-///   with the carrier's own words. Then "Envoyer un message";
+///   label opens in `ShippingLabelSheet`, which prints through the system print dialog), "Imprimer le
+///   bordereau" (a fresh link on each tap, in the same sheet), "Générer le vrai bordereau" (test
+///   servers), "Accepter la réclamation" (after a confirmation) and "Contester", "Laisser une
+///   évaluation". A carrier refusal stays under the buttons with the carrier's own words. Then "Envoyer un message";
 /// - the amounts, the delivery with its tracking number, the timeline with the carrier's scans folded
 ///   under it, and the reviews.
 ///
@@ -26,6 +26,7 @@ struct OrderDetailView: View {
     @State private var model: OrderDetailViewModel
     @State private var confirmation: Confirmation?
     @State private var sheet: Sheet?
+    @State private var label: ShippingLabelDocument?
     let dependencies: OrdersDependencies
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
@@ -88,6 +89,15 @@ struct OrderDetailView: View {
             }
             .appLanguage(l10n.language)
         }
+        .sheet(item: $label) { document in
+            ShippingLabelSheet(document: document, jobName: labelJobName) { [model] in await model.labelURL() }
+                .appLanguage(l10n.language)
+        }
+    }
+
+    /// The print job's name: "Bordereau d’expédition T-000123".
+    private var labelJobName: String {
+        [l10n.string(.ordersGetShippingLabel), model.order?.number].compactMap(\.self).joined(separator: " ")
     }
 
     @ViewBuilder
@@ -214,15 +224,15 @@ struct OrderDetailView: View {
     /// Creates the parcel, then opens its label (the website opens it in a new tab).
     private func ship() {
         Task {
-            if let url = await model.ship() { InAppBrowser.open(url) }
+            if let url = await model.ship() { label = ShippingLabelDocument(url: url) }
         }
     }
 
-    /// A fresh link to the label, opened in the in-app browser: the carrier's PDF or the printable page,
-    /// printed from its share sheet.
+    /// A fresh link to the label (the carrier's PDF or the printable page), shown and printed in
+    /// `ShippingLabelSheet`.
     private func printLabel() {
         Task {
-            if let url = await model.labelURL() { InAppBrowser.open(url) }
+            if let url = await model.labelURL() { label = ShippingLabelDocument(url: url) }
         }
     }
 
