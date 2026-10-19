@@ -5,6 +5,8 @@ import SwiftUI
 /// asks to sign in and then adds the favorite (screens.md §0.5).
 struct ListingCardView: View {
     let listing: ListingSummary
+    /// The heart's tap on a screen that handles it itself (Favorites); the shared toggle otherwise.
+    var onFavorite: ((ListingSummary) -> Void)?
     @Environment(CatalogStore.self) private var catalog
     @Environment(FavoriteStore.self) private var favorites
     @Environment(AppRouter.self) private var router
@@ -23,7 +25,9 @@ struct ListingCardView: View {
     }
 
     private func favorite() {
-        if session.isSignedIn {
+        if let onFavorite {
+            onFavorite(listing)
+        } else if session.isSignedIn {
             favorites.toggle(listing)
         } else {
             router.requireSignIn { [favorites, listing] in favorites.setFavorite(listing, to: true) }
@@ -87,12 +91,14 @@ enum ListingCardContent {
 /// The two-column grid of listing cards (Figma Home: gap 8, inside the 16 pt margins).
 struct ListingGrid: View {
     let listings: [ListingSummary]
+    /// See `ListingCardView.onFavorite`.
+    var onFavorite: ((ListingSummary) -> Void)?
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedLayout.productGridGap, alignment: .top),
                             GridItem(.flexible(), alignment: .top)],
                   spacing: TaleedLayout.productGridGap) {
-            ForEach(listings) { ListingCardView(listing: $0) }
+            ForEach(listings) { ListingCardView(listing: $0, onFavorite: onFavorite) }
         }
         .padding(.horizontal, TaleedLayout.screenMargin)
     }

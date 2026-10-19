@@ -963,6 +963,75 @@
         }
       }
     },
+    "app_favorites_empty_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المس القلب على أي غرض لتجده هنا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the heart on an item to find it here."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez le cœur d’un article pour le retrouver ici."
+          }
+        }
+      }
+    },
+    "app_favorites_empty_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد مفضلات بعد"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No favorites yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun favori pour le moment"
+          }
+        }
+      }
+    },
+    "app_favorites_removed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُزيل من المفضلة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed from favorites"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retiré des favoris"
+          }
+        }
+      }
+    },
     "app_listing_accepted_offer": {
       "extractionState": "manual",
       "localizations": {
@@ -4698,6 +4767,29 @@
         }
       }
     },
+    "home_cta_browse": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصفّح الأغراض"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse items"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parcourir les articles"
+          }
+        }
+      }
+    },
     "home_cta_sell": {
       "extractionState": "manual",
       "localizations": {
@@ -6461,6 +6553,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tout"
+          }
+        }
+      }
+    },
+    "nav_favorites": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المفضلة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorites"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favoris"
           }
         }
       }

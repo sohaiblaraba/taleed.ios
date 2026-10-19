@@ -348,4 +348,11 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appProfileUnblockedToast = "app_profile_unblocked_toast"
     case appProfileReportMember = "app_profile_report_member"
     case appA11yNotVerified = "app_a11y_not_verified"
+
+    // Favorites (G6): website keys, then app-only keys.
+    case navFavorites = "nav_favorites"
+    case homeCtaBrowse = "home_cta_browse"
+    case appFavoritesEmptyTitle = "app_favorites_empty_title"
+    case appFavoritesEmptyBody = "app_favorites_empty_body"
+    case appFavoritesRemoved = "app_favorites_removed"
 }

@@ -13,6 +13,9 @@ import Observation
 /// the app asked for before the change. A card asked for after the request settled (pull-to-refresh,
 /// the foreground reload, another list) shows the server's heart and count again, including changes
 /// made by other members or on the website.
+///
+/// Every change the API confirmed is also logged in `changes` (with `changeSeq`), so that the favorites
+/// screen adds the cards hearted elsewhere at its top and drops the ones un-hearted, without a reload.
 @MainActor
 @Observable
 final class FavoriteStore {
@@ -33,6 +36,11 @@ final class FavoriteStore {
     private(set) var overrides: [String: Override] = [:]
     /// Listings that answered `404`.
     private(set) var removedIds: Set<String> = []
+    /// Bumped by every entry of `changes`: the favorites screen follows it to add and remove its cards.
+    private(set) var changeSeq = 0
+
+    /// The changes of this session's member, oldest first (`changes(after:)`).
+    @ObservationIgnored private(set) var changes: [FavoriteChange] = []
 
     /// A favorite could not be changed (not a `404`): the app's toast.
     @ObservationIgnored var onFailure: ((ApiError) -> Void)?
@@ -47,6 +55,8 @@ final class FavoriteStore {
     /// What the member asked for last, while a request for that listing runs.
     @ObservationIgnored private var wanted: [String: Bool] = [:]
     @ObservationIgnored private var inFlight: Set<String> = []
+    /// The card of each listing whose request runs, for `changes`.
+    @ObservationIgnored private var cards: [String: ListingSummary] = [:]
 
     init(api: FavoritesApi, now: @escaping () -> ContinuousClock.Instant = { .now }) {
         self.api = api
@@ -78,6 +88,7 @@ final class FavoriteStore {
             ? current
             : FavoriteState(isFavorited: favorited, count: max(0, current.count + (favorited ? 1 : -1)))
         overrides[id] = Override(state: shown, settledAt: nil)
+        cards[id] = listing
         // Sent even when the heart already shows that state (after a sign-in): both calls are idempotent.
         guard !isRunning else { return nil }
         inFlight.insert(id)
@@ -87,6 +98,12 @@ final class FavoriteStore {
     /// A listing that is gone (deleted by its seller, or `404` on its screen): lists leave its card out.
     func markRemoved(_ id: String) {
         removedIds.insert(id)
+        record(.removed(id: id))
+    }
+
+    /// The changes that settled after `seq` (a `changeSeq` read earlier), oldest first.
+    func changes(after seq: Int) -> [FavoriteChange] {
+        changes.filter { $0.seq > seq }
     }
 
     /// The session changed (sign-in, sign-out, another account): the lists reload with the new
@@ -95,6 +112,7 @@ final class FavoriteStore {
     func sessionDidChange() {
         overrides = overrides.filter { inFlight.contains($0.key) }
         confirmed = confirmed.filter { inFlight.contains($0.key) }
+        changes = []
     }
 
     private func send(_ id: String) async {
@@ -110,11 +128,18 @@ final class FavoriteStore {
                 await send(id)
                 return
             }
+            let card = cards[id]
             finish(id, with: answer)
+            if answer.isFavorited, let card {
+                record(.added(card))
+            } else if !answer.isFavorited {
+                record(.removed(id: id))
+            }
         } catch {
             finish(id, with: confirmed[id])
             if error.isNotFound {
                 removedIds.insert(id)
+                record(.removed(id: id))
                 onRemoved?(id)
             } else {
                 onFailure?(error)
@@ -131,6 +156,25 @@ final class FavoriteStore {
         }
         wanted[id] = nil
         confirmed[id] = nil
+        cards[id] = nil
         inFlight.remove(id)
     }
+
+    private func record(_ kind: FavoriteChange.Kind) {
+        changeSeq += 1
+        changes.append(FavoriteChange(seq: changeSeq, kind: kind))
+    }
+}
+
+/// A favorite the API confirmed (or a listing found gone), in the order they settled (`FavoriteStore.changes`).
+struct FavoriteChange: Equatable, Sendable {
+    enum Kind: Equatable, Sendable {
+        /// Favorited: the card as the screen that changed it had it.
+        case added(ListingSummary)
+        /// No longer a favorite, or the listing is gone (`404`, deleted).
+        case removed(id: String)
+    }
+
+    let seq: Int
+    let kind: Kind
 }

@@ -10,6 +10,8 @@ struct RouteDestinationView: View {
     @Environment(\.exploreDependencies) private var explore
     @Environment(\.listingDependencies) private var listings
     @Environment(\.memberDependencies) private var members
+    @Environment(\.favoritesListApi) private var favoritesApi
+    @Environment(FavoriteStore.self) private var favorites
     @Environment(SessionManager.self) private var session
 
     var body: some View {
@@ -41,7 +43,8 @@ struct RouteDestinationView: View {
         case .conversation: RoutePlaceholderView(route: route)
         case .bundle: RoutePlaceholderView(route: route)
         case .checkout: RoutePlaceholderView(route: route)
-        case .favorites: RoutePlaceholderView(route: route)
+        case .favorites:
+            if let favoritesApi { FavoritesView(api: favoritesApi, store: favorites) } else { RoutePlaceholderView(route: route) }
         case .orders: RoutePlaceholderView(route: route)
         case .order: RoutePlaceholderView(route: route)
         case .wallet: RoutePlaceholderView(route: route)

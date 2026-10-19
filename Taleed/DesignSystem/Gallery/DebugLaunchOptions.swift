@@ -4,7 +4,7 @@ import Foundation
 /// Launch arguments that open a screen directly, for screenshots and UI checks (debug builds only):
 ///
 ///     -TaleedDebugTab profile                  select a tab (home, explore, sell, messages, profile)
-///     -TaleedDebugProfilePath settings,designSystem   (settings, designSystem, developerMenu)
+///     -TaleedDebugProfilePath settings,designSystem   (settings, designSystem, developerMenu, favorites)
 ///     -TaleedDebugOpenURL /listings/42             open a link through the router once the shell shows
 ///     -TaleedGallerySection buttons            scroll the design-system gallery to a section
 ///     -TaleedGalleryLargeText YES              turn on the gallery's "Text 200 %" switch
@@ -20,6 +20,8 @@ import Foundation
 ///     -TaleedDebugSearchResults offline        the first search-results request fails offline (then works)
 ///     -TaleedDebugListing offline              the first listing-screen request fails offline (then works)
 ///     -TaleedDebugMember offline               the first profile request fails offline (then works)
+///     -TaleedDebugFavorites offline            the first favorites request fails offline (then works);
+///                                              `empty` answers no favorites
 ///     -TaleedDebugVisualSearch YES             show the photo-search button although `GET /config` has it
 ///                                              off (the API then answers `503 feature_disabled`)
 ///
@@ -69,6 +71,7 @@ private extension AppRoute {
         case "settings": self = .settings
         case "designSystem": self = .designSystem
         case "developerMenu": self = .developerMenu
+        case "favorites": self = .favorites
         default: return nil
         }
     }
