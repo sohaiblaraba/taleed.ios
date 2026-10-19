@@ -9,6 +9,7 @@ struct RouteDestinationView: View {
     let route: AppRoute
     @Environment(\.exploreDependencies) private var explore
     @Environment(\.listingDependencies) private var listings
+    @Environment(\.memberDependencies) private var members
     @Environment(SessionManager.self) private var session
 
     var body: some View {
@@ -20,7 +21,14 @@ struct RouteDestinationView: View {
                 RoutePlaceholderView(route: route)
             }
         case .editListing: RoutePlaceholderView(route: route)
-        case .member: RoutePlaceholderView(route: route)
+        case let .member(username, wardrobe):
+            if let members {
+                MemberProfileView(username: username, wardrobe: wardrobe, dependencies: members, memberId: session.user?.id)
+                    .id(route)
+            } else {
+                RoutePlaceholderView(route: route)
+            }
+        case .myListings: RoutePlaceholderView(route: route)
         case .bundleBuilder: RoutePlaceholderView(route: route)
         case let .search(query, _):
             // Identity by route (the query and the link's `opening`): a link that replaces the results gets

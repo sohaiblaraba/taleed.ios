@@ -19,6 +19,7 @@ import Foundation
 ///                                              `empty` answers an empty feed
 ///     -TaleedDebugSearchResults offline        the first search-results request fails offline (then works)
 ///     -TaleedDebugListing offline              the first listing-screen request fails offline (then works)
+///     -TaleedDebugMember offline               the first profile request fails offline (then works)
 ///     -TaleedDebugVisualSearch YES             show the photo-search button although `GET /config` has it
 ///                                              off (the API then answers `503 feature_disabled`)
 ///

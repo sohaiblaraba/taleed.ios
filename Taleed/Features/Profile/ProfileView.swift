@@ -23,8 +23,17 @@ struct ProfileView: View {
                         .padding(.top, TaleedSpacing.s24)
                     }
 
-                    ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
-                        router.push(.settings)
+                    VStack(spacing: 0) {
+                        // The member's public profile, as others see it (G5).
+                        if let username = session.user?.username {
+                            ListRow(label: l10n.string(.navMyProfile), showsChevron: true) {
+                                router.push(.member(username: username))
+                            }
+                            .accessibilityIdentifier("profile.myProfile")
+                        }
+                        ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
+                            router.push(.settings)
+                        }
                     }
 
                     if session.isSignedIn {

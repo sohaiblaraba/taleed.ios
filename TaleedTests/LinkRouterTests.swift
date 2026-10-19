@@ -114,6 +114,17 @@ struct LinkRouterTests {
         #expect(destination("https://taleed.app/members/%40amina") == .screen(.member(username: "amina")))
     }
 
+    @Test func memberLinksKeepTheWardrobeFilterAndTheBundleMode() {
+        #expect(destination("https://taleed.app/ar/members/amina?category=women-bags&sort=price_asc")
+            == .screen(.member(username: "amina", wardrobe: WardrobeQuery(category: "women-bags", sort: .priceAsc))))
+        // An unknown sort is the default one.
+        #expect(destination("/members/amina?sort=cheapest") == .screen(.member(username: "amina")))
+        // The website's "Achète en lot" link opens the bundle builder.
+        #expect(destination("/members/amina?bundle=1") == .screen(.bundleBuilder(username: "amina")))
+        #expect(destination("/members/") == .home)
+        #expect(destination("/members/amina/extra") == .home)
+    }
+
     @Test func paymentReturn() {
         #expect(destination("taleed://payment-return?kind=order&id=o1&result=success")
             == .paymentReturn(PaymentReturn(kind: .order, id: "o1", succeeded: true)))

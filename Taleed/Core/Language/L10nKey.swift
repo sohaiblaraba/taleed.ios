@@ -307,4 +307,45 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appA11yShare = "app_a11y_share"
     case appA11yOpenPhoto = "app_a11y_open_photo"
     case appReportAddPhoto = "app_report_add_photo"
+
+    // Member profile (G5): website keys, then app-only keys.
+    case memberListings = "member_listings"
+    case memberReviews = "member_reviews"
+    case memberMemberSince = "member_member_since"
+    case memberSales = "member_sales"  // plural
+    case memberNoListings = "member_no_listings"
+    case memberNoListingsInCategory = "member_no_listings_in_category"
+    case memberFollow = "member_follow"
+    case memberFollowing = "member_following"
+    case memberFollowers = "member_followers"  // plural
+    case memberFollowingCount = "member_following_count"  // plural
+    case memberCategory = "member_category"
+    case memberAllCategories = "member_all_categories"
+    case memberChecksTitle = "member_checks_title"
+    case memberCheckEmail = "member_check_email"
+    case memberCheckPhone = "member_check_phone"
+    case memberCheckIdentity = "member_check_identity"
+    case memberFilter = "member_filter"
+    case memberShowResults = "member_show_results"  // plural
+    case memberItemsCount = "member_items_count"  // plural
+    case bundleBannerBody = "bundle_banner_body"
+    case bundleCreate = "bundle_create"
+    case reviewsStars = "reviews_stars"  // plural
+    case navMyProfile = "nav_my_profile"
+    case appProfileEdit = "app_profile_edit"
+    case appProfileMyListings = "app_profile_my_listings"
+    case appProfileStatSales = "app_profile_stat_sales"
+    case appProfileStatFollowers = "app_profile_stat_followers"
+    case appProfileStatFollowing = "app_profile_stat_following"
+    case appProfileBlock = "app_profile_block"
+    case appProfileUnblock = "app_profile_unblock"
+    case appProfileBlockTitle = "app_profile_block_title"
+    case appProfileBlockBody = "app_profile_block_body"
+    case appProfileBlockConfirm = "app_profile_block_confirm"
+    case appProfileBlockedNotice = "app_profile_blocked_notice"
+    case appProfileBlockedNoticeBody = "app_profile_blocked_notice_body"
+    case appProfileBlockedToast = "app_profile_blocked_toast"
+    case appProfileUnblockedToast = "app_profile_unblocked_toast"
+    case appProfileReportMember = "app_profile_report_member"
+    case appA11yNotVerified = "app_a11y_not_verified"
 }

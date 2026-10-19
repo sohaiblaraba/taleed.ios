@@ -44,7 +44,7 @@ struct AppRouterTests {
             (.listing(id: "l"), .home), (.member(username: "m"), .home), (.search(ExploreQuery(text: "robe")), .explore),
             (.visualSearch(id: "v"), .explore), (.conversation(id: "c"), .messages), (.bundle(id: "b"), .messages),
             (.favorites, .profile), (.orders, .profile), (.wallet, .profile), (.notifications, .profile),
-            (.settings, .profile), (.referrals, .profile),
+            (.settings, .profile), (.referrals, .profile), (.myListings, .profile),
         ]
         for (route, tab) in expectations {
             let (canonicalTab, stack) = AppRouter.canonicalStack(for: route)

@@ -46,7 +46,7 @@ enum LinkRouter {
     private static func destination(segments: [String], query: [String: String]) -> AppDestination {
         switch segments.first {
         case "listings": return listing(segments, query: query)
-        case "members": return segments.count == 2 ? username(segments[1]).map { .screen(.member(username: $0)) } ?? .home : .home
+        case "members": return member(segments, query: query)
         case "browse": return segments.count == 1 ? .explore(exploreQuery(query)) : .home
         case "categories": return categories(segments, query: query)
         case "visual-search": return single(segments) { .screen(.visualSearch(id: $0)) }
@@ -85,6 +85,17 @@ enum LinkRouter {
         default:
             return .home
         }
+    }
+
+    /// `/members/{username}`, with the website's wardrobe filter (`?category=&sort=`); `?bundle=1` (the
+    /// website's "Achète en lot" link) opens the bundle builder over the profile.
+    private static func member(_ segments: [String], query: [String: String]) -> AppDestination {
+        guard segments.count == 2, let name = username(segments[1]) else { return .home }
+        if query["bundle"] == "1" { return .screen(.bundleBuilder(username: name)) }
+        var wardrobe = WardrobeQuery()
+        wardrobe.category = query["category"]
+        wardrobe.sort = query["sort"].flatMap(WardrobeQuery.Sort.init(rawValue:)) ?? .newest
+        return .screen(.member(username: name, wardrobe: wardrobe))
     }
 
     /// `/categories/{slug}` and `/categories/{parent}/{slug}`: the last slug is the category.

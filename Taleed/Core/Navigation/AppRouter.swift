@@ -146,7 +146,7 @@ final class AppRouter {
                 (.home, [.listing(id: target.listingId), route])
             }
         case .order: (.profile, [.orders, route])
-        case .favorites, .orders, .wallet, .notifications, .settings, .referrals: (.profile, [route])
+        case .favorites, .orders, .wallet, .notifications, .settings, .referrals, .myListings: (.profile, [route])
         case .deleteAccount: (.profile, [.settings, route])
         #if DEBUG
         case .designSystem, .developerMenu: (.profile, [.settings, route])

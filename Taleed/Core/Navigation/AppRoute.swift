@@ -15,7 +15,8 @@ enum AppRoute: Hashable, Sendable {
     case listing(id: String)
     /// The seller's edit form (G8).
     case editListing(id: String)
-    case member(username: String)
+    /// A member's profile (G5). `wardrobe`: the filter a link asked for (`?category=&sort=`).
+    case member(username: String, wardrobe: WardrobeQuery = WardrobeQuery())
     /// Picking a seller's items for a bundle (G10): "Achète en lot" on a listing.
     case bundleBuilder(username: String)
     /// Search results with filters (G3): a category from Home, `/browse?…`, `/categories/…`.
@@ -27,7 +28,9 @@ enum AppRoute: Hashable, Sendable {
     case conversation(id: String)
     case bundle(id: String)
     case checkout(CheckoutTarget)
-    // Profile hub (G6, G12–G18)
+    // Profile hub (G6, G8, G12–G18)
+    /// The member's own listings (G8): "Mes annonces" on their profile.
+    case myListings
     case favorites
     case orders
     case order(id: String)
@@ -49,7 +52,7 @@ enum AppRoute: Hashable, Sendable {
     var requiresSignIn: Bool {
         switch self {
         case .conversation, .bundle, .checkout, .favorites, .orders, .order, .wallet, .notifications, .referrals,
-             .deleteAccount, .editListing, .bundleBuilder:
+             .deleteAccount, .editListing, .bundleBuilder, .myListings:
             true
         case .listing, .member, .search, .visualSearch, .settings:
             false
