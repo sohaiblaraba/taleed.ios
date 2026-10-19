@@ -15,8 +15,6 @@ struct HomeView: View {
     @Environment(SessionManager.self) private var session
     @Environment(FavoriteStore.self) private var favorites
     @Environment(AppToasts.self) private var toasts
-    @Environment(\.scenePhase) private var scenePhase
-    @State private var wasInBackground = false
 
     /// Cards before the trust strip (the wireframe shows ten, then the strip).
     static let cardsBeforeTrustStrip = 10
@@ -37,6 +35,9 @@ struct HomeView: View {
                             .padding(.horizontal, TaleedLayout.screenMargin)
                             .padding(.top, TaleedSpacing.s8)
                             .id(Self.topID)
+                            // Whether the member is at the top: the quiet foreground reload waits for it.
+                            .onAppear { Task { await viewModel.topAppeared() } }
+                            .onDisappear { viewModel.topDisappeared() }
                         if !viewModel.isHeroDismissed {
                             hero
                         }
@@ -59,17 +60,6 @@ struct HomeView: View {
         #endif
         .onChange(of: viewModel.refreshFailure) { _, failure in
             if let failure { toasts.show(error: failure.error) }
-        }
-        .onChange(of: scenePhase) { _, phase in
-            switch phase {
-            case .background:
-                wasInBackground = true
-            case .active where wasInBackground:
-                wasInBackground = false
-                Task { await viewModel.returnedToForeground() }
-            default:
-                break
-            }
         }
     }
 

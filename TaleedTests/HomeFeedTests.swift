@@ -16,58 +16,33 @@ final class FakeListingsApi: ListingsApi {
     }
 
     private(set) var requests: [Request] = []
+    /// When set, each request waits this long first; a cancelled one then fails, as `URLSession` does.
+    var delay: Duration?
+    private(set) var isWaiting = false
 
     func searchListings(_ query: ExploreQuery, cursor: String?, automatic: Bool) async throws(Taleed.ApiError)
         -> Page<ListingSummary> {
         requests.append(Request(query: query, cursor: cursor, automatic: automatic))
+        if let delay {
+            isWaiting = true
+            try? await Task.sleep(for: delay)
+            isWaiting = false
+            if Task.isCancelled { throw .network }
+        }
         guard let result = pages[cursor] else { throw .network }
         return try result.get()
     }
 }
 
-/// A `FavoritesApi` whose answers the test releases one at a time.
-@MainActor
-final class FakeFavoritesApi: FavoritesApi {
-    /// Answers in order; a missing answer echoes the request with `count`.
-    var results: [Result<Taleed.FavoriteState, Taleed.ApiError>] = []
-    var count = 10
-    private(set) var sent: [(id: String, favorited: Bool)] = []
-    /// When set, each call waits until `release()`.
-    var holds = false
-    private var waiting: [CheckedContinuation<Void, Never>] = []
-
-    func setFavorite(listingId: String, favorited: Bool) async throws(Taleed.ApiError) -> Taleed.FavoriteState {
-        sent.append((listingId, favorited))
-        if holds { await withCheckedContinuation { waiting.append($0) } }
-        if !results.isEmpty { return try results.removeFirst().get() }
-        return Taleed.FavoriteState(isFavorited: favorited, count: count)
-    }
-
-    func release() {
-        let next = waiting
-        waiting = []
-        next.forEach { $0.resume() }
-    }
-
-    var isWaiting: Bool { !waiting.isEmpty }
-}
-
 extension ListingSummary {
     static func fixture(id: String = "l1", isFavorited: Bool = false, favoritesCount: Int = 3,
                         status: Taleed.ListingStatus = .active, condition: String? = "VERY_GOOD",
-                        isBoosted: Bool = false) -> ListingSummary {
+                        isBoosted: Bool = false, asOf: ContinuousClock.Instant = .now) -> ListingSummary {
         ListingSummary(id: id, title: "Robe", price: 2500, size: "M", brandName: "Zara", condition: condition,
                        status: status, imageURL: nil, favoritesCount: favoritesCount, isFavorited: isFavorited,
-                       isBoosted: isBoosted, shipsFrom: CatalogWilaya(id: 16, name: "Alger"), sellerRating: nil)
+                       isBoosted: isBoosted, shipsFrom: CatalogWilaya(id: 16, name: "Alger"), sellerRating: nil,
+                       asOf: asOf)
     }
-}
-
-private func notFound() -> Taleed.ApiError {
-    .from(status: 404, body: Data(#"{"error":{"code":"not_found","message":"x"}}"#.utf8))
-}
-
-private func waitUntil(_ condition: @MainActor () -> Bool) async {
-    for _ in 0..<200 where !condition() { await Task.yield() }
 }
 
 // MARK: - Search parameters
@@ -183,123 +158,6 @@ struct ListingCardContentTests {
     }
 }
 
-// MARK: - Favorites
-
-@MainActor
-struct FavoriteStoreTests {
-    private let api = FakeFavoritesApi()
-
-    @Test func aTapFillsTheHeartAtOnceThenTakesTheApisCount() async {
-        let store = FavoriteStore(api: api)
-        let listing = ListingSummary.fixture(favoritesCount: 3)
-        api.holds = true
-        let task = store.toggle(listing)
-        #expect(store.state(for: listing) == Taleed.FavoriteState(isFavorited: true, count: 4))
-        await waitUntil { api.isWaiting }
-        api.count = 7
-        api.release()
-        await task?.value
-        #expect(store.state(for: listing) == Taleed.FavoriteState(isFavorited: true, count: 7))
-        #expect(api.sent.map(\.favorited) == [true])
-    }
-
-    @Test func aFailurePutsTheHeartBackAndReportsIt() async {
-        let store = FavoriteStore(api: api)
-        var failures: [Taleed.ApiError] = []
-        store.onFailure = { failures.append($0) }
-        let listing = ListingSummary.fixture(isFavorited: true, favoritesCount: 5)
-        api.results = [.failure(.network)]
-        await store.toggle(listing)?.value
-        #expect(store.state(for: listing) == Taleed.FavoriteState(isFavorited: true, count: 5))
-        #expect(failures == [.network])
-        #expect(store.removedIds.isEmpty)
-    }
-
-    @Test func aRemovedListingLeavesTheLists() async {
-        let store = FavoriteStore(api: api)
-        var removed: [String] = []
-        store.onRemoved = { removed.append($0) }
-        api.results = [.failure(notFound())]
-        await store.toggle(.fixture(id: "gone"))?.value
-        #expect(store.removedIds == ["gone"])
-        #expect(removed == ["gone"])
-    }
-
-    @Test func tapsDuringARequestSendTheLastWish() async {
-        let store = FavoriteStore(api: api)
-        let listing = ListingSummary.fixture(favoritesCount: 3)
-        api.holds = true
-        let task = store.toggle(listing)
-        await waitUntil { api.isWaiting }
-        // Two more taps while the first request runs: back to not favorited, then favorited again.
-        #expect(store.toggle(listing) == nil)
-        #expect(store.toggle(listing) == nil)
-        #expect(store.state(for: listing).isFavorited)
-        api.holds = false
-        api.release()
-        await task?.value
-        // The API already says favorited, which is the last wish: nothing more to send.
-        #expect(api.sent.map(\.favorited) == [true])
-        #expect(store.state(for: listing).isFavorited)
-    }
-
-    @Test func anUndoDuringARequestIsSentAfterIt() async {
-        let store = FavoriteStore(api: api)
-        let listing = ListingSummary.fixture(favoritesCount: 3)
-        api.holds = true
-        let task = store.toggle(listing)
-        await waitUntil { api.isWaiting }
-        store.toggle(listing)
-        #expect(!store.state(for: listing).isFavorited)
-        api.holds = false
-        api.release()
-        await task?.value
-        #expect(api.sent.map(\.favorited) == [true, false])
-        #expect(!store.state(for: listing).isFavorited)
-    }
-
-    @Test func afterSigningInTheHeartAddsEvenWhenAlreadyShownSaved() async {
-        let store = FavoriteStore(api: api)
-        let listing = ListingSummary.fixture(isFavorited: true, favoritesCount: 4)
-        await store.setFavorite(listing, to: true)?.value
-        #expect(api.sent.map(\.favorited) == [true])
-    }
-
-    @Test func anotherMemberStartsFromTheListsAgain() async {
-        let store = FavoriteStore(api: api)
-        let listing = ListingSummary.fixture()
-        await store.toggle(listing)?.value
-        #expect(store.state(for: listing).isFavorited)
-        store.sessionDidChange()
-        #expect(!store.state(for: listing).isFavorited)
-    }
-}
-
-// MARK: - Pagination when the screen lets go
-
-@MainActor
-struct PagedListCancellationTests {
-    @Test func aCancelledNextPageIsNoError() async {
-        var slow = false
-        let list = PagedList<ListingSummary> { cursor throws(Taleed.ApiError) in
-            if cursor == nil {
-                return Page(items: [.fixture(id: "a")], nextCursor: "p2", total: 2)
-            }
-            slow = true
-            try? await Task.sleep(for: .seconds(5))
-            throw .network
-        }
-        await list.loadIfNeeded()
-        let task = Task { await list.loadMore() }
-        await waitUntil { slow }
-        task.cancel()
-        await task.value
-        #expect(list.loadMoreError == nil)
-        #expect(!list.isLoadingMore)
-        #expect(list.hasMore)
-    }
-}
-
 // MARK: - Home
 
 @MainActor
@@ -359,15 +217,88 @@ struct HomeViewModelTests {
         #expect(model.refreshFailure?.error == .network)
     }
 
-    @Test func theForegroundRefreshIsAutomaticAndSilent() async {
+    @Test func aMemberReloadCancelledByTheScreenIsMadeAgain() async {
+        api.pages = [nil: page(["a"])]
+        let model = makeModel()
+        await model.show(for: .init(memberId: nil, language: .fr))
+        // Signed in, the member taps a card before the personalized page arrives.
+        api.pages = [nil: page(["b"])]
+        api.delay = .seconds(5)
+        let member = HomeViewModel.FeedContext(memberId: "yasmine", language: .fr)
+        let task = Task { await model.show(for: member) }
+        await waitUntil { api.isWaiting }
+        task.cancel()
+        await task.value
+        #expect(model.feed.items.map(\.id) == ["a"])
+        #expect(model.refreshFailure == nil)
+        // Home shows again: the personalized feed loads.
+        api.delay = nil
+        await model.show(for: member)
+        #expect(model.feed.items.map(\.id) == ["b"])
+        await model.show(for: member)
+        #expect(api.requests.count == 3)
+    }
+
+    @Test func aFailedMemberReloadIsMadeAgain() async {
         api.pages = [nil: page(["a"])]
         let model = makeModel()
         await model.show(for: .init(memberId: nil, language: .fr))
         api.pages = [:]
-        await model.returnedToForeground()
+        let member = HomeViewModel.FeedContext(memberId: "yasmine", language: .fr)
+        await model.show(for: member)
+        #expect(model.refreshFailure?.error == .network)
+        api.pages = [nil: page(["b"])]
+        await model.show(for: member)
+        #expect(model.feed.items.map(\.id) == ["b"])
+    }
+
+    @Test func theForegroundRefreshIsAutomaticAndSilent() async {
+        api.pages = [nil: page(["a"])]
+        let model = makeModel()
+        await model.show(for: .init(memberId: nil, language: .fr))
+        await model.topAppeared()
+        api.pages = [:]
+        let left = ContinuousClock.now
+        model.wentToBackground(at: left)
+        await model.returnedToForeground(at: left + HomeViewModel.foregroundReloadAfter)
+        #expect(api.requests.count == 2)
         #expect(api.requests.last?.automatic == true)
         #expect(model.refreshFailure == nil)
         #expect(model.feed.items.map(\.id) == ["a"])
+    }
+
+    @Test func aShortAbsenceKeepsTheFeed() async {
+        api.pages = [nil: page(["a"])]
+        let model = makeModel()
+        await model.show(for: .init(memberId: nil, language: .fr))
+        await model.topAppeared()
+        let left = ContinuousClock.now
+        model.wentToBackground(at: left)
+        await model.returnedToForeground(at: left + .seconds(10))
+        #expect(api.requests.count == 1)
+    }
+
+    @Test func deepInTheFeedTheForegroundReloadWaitsForTheTop() async {
+        api.pages = [nil: page(["a", "b"], next: "p2"), "p2": page(["c", "d"])]
+        let model = makeModel()
+        await model.show(for: .init(memberId: nil, language: .fr))
+        await model.topAppeared()
+        await model.feed.loadMore()
+        // The member scrolled down to the second page, then left the app for a while.
+        model.topDisappeared()
+        let left = ContinuousClock.now
+        model.wentToBackground(at: left)
+        await model.returnedToForeground(at: left + .seconds(600))
+        #expect(api.requests.count == 2)
+        #expect(model.feed.items.map(\.id) == ["a", "b", "c", "d"])
+        // Back at the top: the quiet reload, once.
+        api.pages = [nil: page(["e", "a"], next: "p2")]
+        await model.topAppeared()
+        #expect(model.feed.items.map(\.id) == ["e", "a"])
+        #expect(api.requests.last?.automatic == true)
+        model.topDisappeared()
+        await model.topAppeared()
+        #expect(api.requests.count == 3)
     }
 
     @Test func theHeroStaysDismissed() {

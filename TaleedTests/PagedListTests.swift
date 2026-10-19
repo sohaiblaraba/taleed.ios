@@ -145,3 +145,57 @@ struct PagedListTests {
         #expect(api.requested == [nil, "p2"])
     }
 }
+
+// MARK: - Pagination when the screen lets go
+
+@MainActor
+struct PagedListCancellationTests {
+    @Test func aFirstPageLoadSaysWhetherFreshItemsArrived() async {
+        var fails = false
+        let list = PagedList<ListingSummary> { _ throws(Taleed.ApiError) in
+            if fails { throw .network }
+            return Page(items: [.fixture(id: "a")], nextCursor: nil, total: 1)
+        }
+        let loaded = await list.reload()
+        #expect(loaded)
+        fails = true
+        let refreshed = await list.refresh()
+        #expect(!refreshed)
+        #expect(list.refreshError == .network)
+    }
+
+    @Test func aCancelledFirstPageIsNoErrorAndNoLoad() async {
+        var started = false
+        let list = PagedList<ListingSummary> { _ throws(Taleed.ApiError) in
+            started = true
+            try? await Task.sleep(for: .seconds(5))
+            throw .network
+        }
+        let task = Task { await list.reload() }
+        await waitUntil { started }
+        task.cancel()
+        let loaded = await task.value
+        #expect(!loaded)
+        #expect(list.error == nil && !list.isLoadingFirstPage && !list.hasLoaded)
+    }
+
+    @Test func aCancelledNextPageIsNoError() async {
+        var slow = false
+        let list = PagedList<ListingSummary> { cursor throws(Taleed.ApiError) in
+            if cursor == nil {
+                return Page(items: [.fixture(id: "a")], nextCursor: "p2", total: 2)
+            }
+            slow = true
+            try? await Task.sleep(for: .seconds(5))
+            throw .network
+        }
+        await list.loadIfNeeded()
+        let task = Task { await list.loadMore() }
+        await waitUntil { slow }
+        task.cancel()
+        await task.value
+        #expect(list.loadMoreError == nil)
+        #expect(!list.isLoadingMore)
+        #expect(list.hasMore)
+    }
+}

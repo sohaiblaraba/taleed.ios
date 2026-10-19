@@ -11,6 +11,7 @@ struct MainShellView: View {
     @Environment(AppToasts.self) private var toasts
     @Environment(WelcomeGate.self) private var welcome
     @Environment(FavoriteStore.self) private var favorites
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         @Bindable var router = router
@@ -50,6 +51,17 @@ struct MainShellView: View {
                 .appLanguage(l10n.language)
         })
         .onAppear { router.shellDidAppear() }
+        // Home reloads after a while in the background (here, since Home may sit under a pushed screen).
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .background:
+                home.wentToBackground()
+            case .active:
+                Task { await home.returnedToForeground() }
+            default:
+                break
+            }
+        }
         // Another member's hearts: the lists reload with theirs.
         .onChange(of: session.user?.id) { _, _ in favorites.sessionDidChange() }
         .onChange(of: session.isSignedIn) { _, isSignedIn in

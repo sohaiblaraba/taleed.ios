@@ -47,17 +47,20 @@ final class PagedList<Item: Identifiable & Sendable> where Item.ID: Sendable {
     /// Loads the first page unless one is on screen or loading (call it from `.task`).
     func loadIfNeeded() async {
         guard !hasLoaded, !isLoadingFirstPage else { return }
-        await loadFirstPage(refreshing: false)
+        await reload()
     }
 
-    /// Loads the first page again, showing the loading state when nothing is on screen.
-    func reload() async {
+    /// Loads the first page again, showing the loading state when nothing is on screen. Returns true
+    /// when a fresh first page is on screen; false when it failed, was cancelled or a newer load won.
+    @discardableResult
+    func reload() async -> Bool {
         await loadFirstPage(refreshing: false)
     }
 
     /// Pull-to-refresh: starts again without a cursor and keeps the items on screen until the first
-    /// page arrives.
-    func refresh() async {
+    /// page arrives. Returns true when a fresh first page is on screen (see `reload()`).
+    @discardableResult
+    func refresh() async -> Bool {
         await loadFirstPage(refreshing: true)
     }
 
@@ -88,7 +91,7 @@ final class PagedList<Item: Identifiable & Sendable> where Item.ID: Sendable {
             if error.isInvalidCursor {
                 // The cursor expired (or the list changed too much): start again from the top.
                 isLoadingMore = false
-                await loadFirstPage(refreshing: true)
+                await refresh()
             } else {
                 loadMoreError = error
             }
@@ -126,7 +129,7 @@ final class PagedList<Item: Identifiable & Sendable> where Item.ID: Sendable {
 
     // MARK: Loading
 
-    private func loadFirstPage(refreshing: Bool) async {
+    private func loadFirstPage(refreshing: Bool) async -> Bool {
         generation += 1
         let current = generation
         if refreshing && hasLoaded { isRefreshing = true } else { isLoadingFirstPage = true }
@@ -142,20 +145,23 @@ final class PagedList<Item: Identifiable & Sendable> where Item.ID: Sendable {
         }
         do {
             let page = try await fetch(nil)
-            guard current == generation else { return }
+            guard current == generation else { return false }
             items = []
             ids = []
             nextCursor = nil
             append(page)
             hasLoaded = true
+            return true
         } catch {
-            // Cancelled (the screen went away): nothing to report; `loadIfNeeded` starts again.
-            guard current == generation, !Task.isCancelled else { return }
+            // Cancelled (the screen went away): nothing to report; `loadIfNeeded` starts again, and a
+            // caller that needed this load sees `false` and asks again.
+            guard current == generation, !Task.isCancelled else { return false }
             if hasLoaded {
                 refreshError = error
             } else {
                 self.error = error
             }
+            return false
         }
     }
 

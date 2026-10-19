@@ -9,7 +9,8 @@ import OSLog
 ///
 /// It lives in `AppContainer`, so the feed and its scroll survive a language switch and the other tabs.
 /// The feed reloads when the member or the language changes (personalized, labels in the language),
-/// on pull-to-refresh, and when the app returns to the foreground.
+/// on pull-to-refresh, and when the app returns to the foreground after a while, as long as the member
+/// is at the top of the feed (a reload replaces the pages they scrolled through).
 @MainActor
 @Observable
 final class HomeViewModel {
@@ -32,9 +33,21 @@ final class HomeViewModel {
     @ObservationIgnored private let catalog: CatalogStore
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let origin: RequestOrigin
-    @ObservationIgnored private var context: FeedContext?
+    /// The member and language the screen shows now.
+    @ObservationIgnored private var requestedContext: FeedContext?
+    /// The member and language of the cards on screen: set only once a first page for them arrived, so
+    /// that a load cancelled or failed for a new member is made again the next time Home shows.
+    @ObservationIgnored private var loadedContext: FeedContext?
+    /// When the app went to the background; nil while in the foreground.
+    @ObservationIgnored private var backgroundSince: ContinuousClock.Instant?
+    /// The app came back after `foregroundReloadAfter`: reload quietly once the member is at the top.
+    @ObservationIgnored private var needsQuietReload = false
+    /// The top of the feed (the search field) is on screen.
+    @ObservationIgnored private var isShowingTop = false
 
     static let heroDismissedKey = "home.heroDismissed"
+    /// A shorter absence (a glance at another app) keeps the feed as it is.
+    static let foregroundReloadAfter: Duration = .seconds(60)
 
     init(api: ListingsApi, catalog: CatalogStore, defaults: UserDefaults = .standard) {
         self.catalog = catalog
@@ -57,54 +70,83 @@ final class HomeViewModel {
 
     /// The screen appeared, or the member or the language changed: loads the feed once, and again for
     /// another member (signed in, the feed leaves out their own items) or language.
+    ///
+    /// The cards count as loaded for a member only once their first page arrived: when the screen lets
+    /// go of the request (a card tapped, the request cancelled) or it fails, the next call loads again.
     func show(for context: FeedContext) async {
-        guard let previous = self.context else {
-            self.context = context
-            await feed.loadIfNeeded()
-            return
-        }
-        guard previous != context else {
-            await feed.loadIfNeeded()
-            return
-        }
-        self.context = context
-        if feed.hasLoaded {
-            await feed.refresh()
-            reportRefreshFailure()
-        } else {
-            await feed.reload()
-        }
+        requestedContext = context
+        guard loadedContext != context || !feed.hasLoaded else { return }
+        await loadFeed(reportingFailure: true)
     }
 
     /// Pull-to-refresh: the feed from its first page, and the catalog for the chips.
     func refresh() async {
         async let catalogRefresh: Void = catalog.refresh()
-        if feed.hasLoaded {
-            await feed.refresh()
-            reportRefreshFailure()
-        } else {
-            await feed.reload()
-        }
+        await loadFeed(reportingFailure: true)
         await catalogRefresh
     }
 
     /// The error state's "Retry".
     func retry() async {
         if catalog.catalog == nil { Task { await catalog.refresh() } }
-        await feed.retry()
+        await loadFeed(reportingFailure: true)
     }
 
-    /// Back from the background (api-guide.md, Reload): refreshes the feed quietly. A failure keeps the
-    /// cards on screen and shows no toast, since the member did not ask.
-    func returnedToForeground() async {
-        guard feed.hasLoaded, !feed.isRefreshing, !feed.isLoadingFirstPage else { return }
+    // MARK: Foreground
+
+    /// The app went to the background.
+    func wentToBackground(at instant: ContinuousClock.Instant = .now) {
+        backgroundSince = instant
+    }
+
+    /// Back from the background (screens.md §0.6, api-guide.md Reload): after `foregroundReloadAfter`,
+    /// refreshes the feed quietly when the member is at the top of it, or later, when they scroll back
+    /// to the top or come back to Home. Deeper in the feed the loaded pages and the scroll stay (the
+    /// reload would replace them with the first page, in a new order). A failure keeps the cards on
+    /// screen and shows no toast, since the member did not ask.
+    func returnedToForeground(at instant: ContinuousClock.Instant = .now) async {
+        guard let since = backgroundSince else { return }
+        backgroundSince = nil
+        guard instant - since >= Self.foregroundReloadAfter else { return }
+        needsQuietReload = true
+        await reloadQuietlyIfAtTop()
+    }
+
+    /// The top of the feed scrolled into view, or Home showed again.
+    func topAppeared() async {
+        isShowingTop = true
+        await reloadQuietlyIfAtTop()
+    }
+
+    /// The member scrolled down past the top of the feed, or another screen covers Home.
+    func topDisappeared() {
+        isShowingTop = false
+    }
+
+    private func reloadQuietlyIfAtTop() async {
+        guard needsQuietReload, isShowingTop, feed.hasLoaded else { return }
+        needsQuietReload = false
+        // A load already running brings fresh cards.
+        guard !feed.isRefreshing, !feed.isLoadingFirstPage else { return }
         origin.isAutomatic = true
         defer { origin.isAutomatic = false }
-        await feed.refresh()
+        await loadFeed(reportingFailure: false)
     }
 
-    private func reportRefreshFailure() {
-        if let error = feed.refreshError { refreshFailure = RefreshFailure(error: error) }
+    // MARK: Loading
+
+    /// The feed from its first page, for the member and language the screen shows now: keeps the cards
+    /// on screen meanwhile when there are some.
+    private func loadFeed(reportingFailure: Bool) async {
+        let context = requestedContext
+        let loaded = feed.hasLoaded ? await feed.refresh() : await feed.reload()
+        if loaded {
+            // Fresh cards for that member and language (a newer member's load, if any, runs on).
+            if context == requestedContext { loadedContext = context }
+            needsQuietReload = false
+        } else if reportingFailure, let error = feed.refreshError {
+            refreshFailure = RefreshFailure(error: error)
+        }
     }
 
     func dismissHero() {

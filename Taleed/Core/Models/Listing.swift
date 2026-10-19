@@ -23,6 +23,9 @@ struct ListingSummary: Identifiable, Equatable, Hashable, Sendable {
     let shipsFrom: CatalogWilaya?
     /// Nil until the seller has a review.
     let sellerRating: MemberRating?
+    /// When the app asked the API for this card: the card shows the server's state as of then. A heart
+    /// changed in the app later wins over it (`FavoriteStore`); a card asked for after the change wins.
+    var asOf: ContinuousClock.Instant = .now
 }
 
 /// `status` of a listing. Values this build does not know are `unknown`: no buy buttons, no banner.

@@ -20,6 +20,7 @@ protocol FavoritesApi: AnyObject {
 extension GeneratedTaleedApi: ListingsApi, FavoritesApi {
     func searchListings(_ query: ExploreQuery, cursor: String?, automatic: Bool) async throws(ApiError) -> Page<ListingSummary> {
         let filters = ListingSearchParameters(query)
+        let asOf = ContinuousClock.now
         let page = try await caller.call(.read, automatic: automatic) {
             try await ListingsAPI.searchListings(
                 q: filters.text, category: filters.category, brand: filters.brand, wilaya: filters.wilaya,
@@ -28,7 +29,7 @@ extension GeneratedTaleedApi: ListingsApi, FavoritesApi {
                 sort: filters.sort.flatMap(TaleedAPI.ListingSort.init(rawValue:)), cursor: cursor, apiConfiguration: $0
             )
         }
-        return Page(items: page.items.map(ListingSummary.init), nextCursor: page.nextCursor, total: page.total)
+        return Page(items: page.items.map { ListingSummary($0, asOf: asOf) }, nextCursor: page.nextCursor, total: page.total)
     }
 
     func setFavorite(listingId: String, favorited: Bool) async throws(ApiError) -> FavoriteState {
@@ -81,8 +82,8 @@ struct ListingSearchParameters: Equatable, Sendable {
 
 extension ListingSummary {
     /// From the API's card. Unknown enum values (decoded as `unknownDefaultOpenApi`) become "no tag" and
-    /// `.unknown` (api-guide.md, Compatibility).
-    init(_ card: TaleedAPI.ListingCard) {
+    /// `.unknown` (api-guide.md, Compatibility). `asOf`: when the request started.
+    init(_ card: TaleedAPI.ListingCard, asOf: ContinuousClock.Instant = .now) {
         self.init(
             id: card.id,
             title: card.title,
@@ -96,7 +97,8 @@ extension ListingSummary {
             isFavorited: card.isFavorited,
             isBoosted: card.isBoosted,
             shipsFrom: card.shipsFrom.map { CatalogWilaya(id: $0.id, name: $0.name) },
-            sellerRating: card.sellerRating.flatMap { $0.count >= 1 ? MemberRating(average: $0.average, count: $0.count) : nil }
+            sellerRating: card.sellerRating.flatMap { $0.count >= 1 ? MemberRating(average: $0.average, count: $0.count) : nil },
+            asOf: asOf
         )
     }
 }

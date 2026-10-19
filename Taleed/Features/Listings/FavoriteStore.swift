@@ -8,11 +8,29 @@ import Observation
 /// Taps made while a request runs are kept: once it answers, the store sends what the member asked
 /// for last. On a failure the heart goes back to the last state the API confirmed. `404 not_found`
 /// (the listing was deleted, taken down or hidden) puts the id in `removedIds`: lists leave the card out.
+///
+/// The server stays the source of truth (screens.md §0.1): the store's state only covers the cards
+/// the app asked for before the change. A card asked for after the request settled (pull-to-refresh,
+/// the foreground reload, another list) shows the server's heart and count again, including changes
+/// made by other members or on the website.
 @MainActor
 @Observable
 final class FavoriteStore {
-    /// What the member changed in this session, by listing id. Wins over the state a card came with.
-    private(set) var overrides: [String: FavoriteState] = [:]
+    /// A heart the member changed in this session.
+    struct Override: Equatable, Sendable {
+        var state: FavoriteState
+        /// When the API's answer (or the failure) arrived; nil while a request runs, when the override
+        /// wins over every card.
+        var settledAt: ContinuousClock.Instant?
+
+        /// Whether it wins over a card asked for at `asOf`.
+        func applies(to asOf: ContinuousClock.Instant) -> Bool {
+            settledAt.map { asOf < $0 } ?? true
+        }
+    }
+
+    /// What the member changed in this session, by listing id. Wins over cards asked for before it settled.
+    private(set) var overrides: [String: Override] = [:]
     /// Listings that answered `404`.
     private(set) var removedIds: Set<String> = []
 
@@ -22,19 +40,23 @@ final class FavoriteStore {
     @ObservationIgnored var onRemoved: ((String) -> Void)?
 
     @ObservationIgnored private let api: FavoritesApi
-    /// The state the API last confirmed, by listing id (the card's state before the first tap).
+    @ObservationIgnored private let now: () -> ContinuousClock.Instant
+    /// The state the API last confirmed while requests for a listing run (the card's state before the
+    /// first tap): a failure goes back to it.
     @ObservationIgnored private var confirmed: [String: FavoriteState] = [:]
     /// What the member asked for last, while a request for that listing runs.
     @ObservationIgnored private var wanted: [String: Bool] = [:]
     @ObservationIgnored private var inFlight: Set<String> = []
 
-    init(api: FavoritesApi) {
+    init(api: FavoritesApi, now: @escaping () -> ContinuousClock.Instant = { .now }) {
         self.api = api
+        self.now = now
     }
 
     /// The heart and count to draw for a listing.
     func state(for listing: ListingSummary) -> FavoriteState {
-        overrides[listing.id] ?? FavoriteState(isFavorited: listing.isFavorited, count: listing.favoritesCount)
+        if let override = overrides[listing.id], override.applies(to: listing.asOf) { return override.state }
+        return FavoriteState(isFavorited: listing.isFavorited, count: listing.favoritesCount)
     }
 
     /// The heart's tap, signed in. Returns the request it started (tests wait on it).
@@ -49,13 +71,15 @@ final class FavoriteStore {
     func setFavorite(_ listing: ListingSummary, to favorited: Bool) -> Task<Void, Never>? {
         let id = listing.id
         let current = state(for: listing)
-        if confirmed[id] == nil { confirmed[id] = current }
+        let isRunning = inFlight.contains(id)
+        if !isRunning { confirmed[id] = current }
         wanted[id] = favorited
-        if current.isFavorited != favorited {
-            overrides[id] = FavoriteState(isFavorited: favorited, count: max(0, current.count + (favorited ? 1 : -1)))
-        }
+        let shown = current.isFavorited == favorited
+            ? current
+            : FavoriteState(isFavorited: favorited, count: max(0, current.count + (favorited ? 1 : -1)))
+        overrides[id] = Override(state: shown, settledAt: nil)
         // Sent even when the heart already shows that state (after a sign-in): both calls are idempotent.
-        guard !inFlight.contains(id) else { return nil }
+        guard !isRunning else { return nil }
         inFlight.insert(id)
         return Task { await send(id) }
     }
@@ -70,7 +94,7 @@ final class FavoriteStore {
 
     private func send(_ id: String) async {
         guard let favorited = wanted[id] else {
-            inFlight.remove(id)
+            finish(id, with: confirmed[id])
             return
         }
         do {
@@ -81,13 +105,9 @@ final class FavoriteStore {
                 await send(id)
                 return
             }
-            overrides[id] = answer
-            wanted[id] = nil
-            inFlight.remove(id)
+            finish(id, with: answer)
         } catch {
-            inFlight.remove(id)
-            wanted[id] = nil
-            if let last = confirmed[id] { overrides[id] = last }
+            finish(id, with: confirmed[id])
             if error.isNotFound {
                 removedIds.insert(id)
                 onRemoved?(id)
@@ -95,5 +115,17 @@ final class FavoriteStore {
                 onFailure?(error)
             }
         }
+    }
+
+    /// The last request for a listing settled: its state holds until a card asked for later arrives.
+    private func finish(_ id: String, with state: FavoriteState?) {
+        if let state {
+            overrides[id] = Override(state: state, settledAt: now())
+        } else {
+            overrides[id] = nil
+        }
+        wanted[id] = nil
+        confirmed[id] = nil
+        inFlight.remove(id)
     }
 }
