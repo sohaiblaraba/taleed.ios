@@ -19,6 +19,7 @@ struct AppRootView: View {
             .environment(container.catalog)
             .environment(container.toasts)
             .environment(container.favorites)
+            .environment(container.listingChanges)
             .environment(container.welcome)
             .environment(container.launch)
             .environment(container.exploreReferences)
@@ -27,6 +28,8 @@ struct AppRootView: View {
                          ListingDependencies(listings: container.api, reports: container.api, uploads: container.uploads))
             .environment(\.favoritesListApi, container.api)
             .environment(\.sellDependencies, SellDependencies(api: container.api, uploads: container.uploads))
+            .environment(\.editListingDependencies, EditListingDependencies(api: container.api, uploads: container.uploads))
+            .environment(\.myListingsDependencies, MyListingsDependencies(listings: container.api, owner: container.api))
             .environment(\.memberDependencies,
                          MemberDependencies(members: container.api, reports: container.api, uploads: container.uploads))
             .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in

@@ -37,6 +37,7 @@ struct ListingDetailView: View {
     @Environment(SessionManager.self) private var session
     @Environment(FavoriteStore.self) private var favorites
     @Environment(AppToasts.self) private var toasts
+    @Environment(ListingChangeCenter.self) private var listingChanges
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.shellTab) private var shellTab
@@ -88,7 +89,12 @@ struct ListingDetailView: View {
                 if let shellTab { toasts.setBottomBarHeight(height, tab: shellTab, route: .listing(id: model.listingId)) }
             }
         }
-        .task { await model.loadIfNeeded() }
+        .task {
+            model.startFollowing(listingChanges)
+            await model.loadIfNeeded()
+        }
+        // Saved on the edit form, hidden or deleted from My listings (G8).
+        .onChange(of: listingChanges.seq) { _, _ in Task { await model.sync(with: listingChanges) } }
         .onChange(of: session.user?.id) { _, id in Task { await model.memberDidChange(to: id) } }
         .onChange(of: model.refreshError) { _, error in if let error { toasts.show(error: error) } }
         .onChange(of: model.loadError) { _, error in
@@ -109,7 +115,8 @@ struct ListingDetailView: View {
             }
         }
         .taleedConfirmation(isPresented: confirmsDelete) {
-            ConfirmationModalCard(title: l10n.string(.commonConfirmTitle), message: l10n.string(.listingDeleteConfirm),
+            // The Figma confirmation modal's copy (screens.md §2 G8).
+            ConfirmationModalCard(title: l10n.string(.appListingDeleteTitle), message: l10n.string(.appListingDeleteBody),
                                   confirmTitle: l10n.string(.commonDelete),
                                   onConfirm: { confirmsDelete = false; delete() },
                                   onCancel: { confirmsDelete = false })
@@ -264,6 +271,9 @@ struct ListingDetailView: View {
             let outcome = await model.setHidden(visibility == .hide)
             if outcome == .done {
                 toasts.show(l10n.string(visibility == .hide ? .appListingHiddenToast : .appListingResumedToast))
+                if let listing = model.listing {
+                    listingChanges.post(.updated(listing), listingId: model.listingId, source: model.changeSource)
+                }
             }
             handle(outcome)
         }
@@ -272,7 +282,11 @@ struct ListingDetailView: View {
     private func delete() {
         Task { handle(await model.delete()) }
     }
+}
 
+// MARK: - Outcomes
+
+extension ListingDetailView {
     private func handle(_ outcome: ListingDetailViewModel.Outcome) {
         switch outcome {
         case .done:
@@ -280,11 +294,16 @@ struct ListingDetailView: View {
         case let .openConversation(id):
             router.pushSignedIn(.conversation(id: id))
         case .deleted:
+            listingChanges.post(.deleted, listingId: model.listingId, source: model.changeSource)
             favorites.markRemoved(model.listingId)
             toasts.show(l10n.string(.appListingDeletedToast))
             dismiss()
         case let .failed(error):
             toasts.show(error: error)
+            // The listing was reloaded: My listings moves it to its tab.
+            if error.code == .listingLocked, let listing = model.listing, listing.isOwner {
+                listingChanges.post(.updated(listing), listingId: model.listingId, source: model.changeSource)
+            }
         }
     }
 

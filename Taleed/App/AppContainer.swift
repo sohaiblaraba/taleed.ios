@@ -16,6 +16,8 @@ final class AppContainer {
     let catalog: CatalogStore
     let home: HomeViewModel
     let favorites: FavoriteStore
+    /// The member's changes to their listings, for every screen that shows them (G8).
+    let listingChanges = ListingChangeCenter()
     /// Brands and sizes of the Explore filter sheet.
     let exploreReferences: ExploreReferenceStore
     let router = AppRouter()

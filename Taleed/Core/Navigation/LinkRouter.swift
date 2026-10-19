@@ -72,7 +72,8 @@ enum LinkRouter {
         }
     }
 
-    /// `/listings/{id}` and `/listings/{id}/chat?with={memberId}`.
+    /// `/listings/{id}`, `/listings/{id}/chat?with={memberId}` and the website's edit page
+    /// `/listings/{id}/edit` (the edit form, over the listing, signed in).
     private static func listing(_ segments: [String], query: [String: String]) -> AppDestination {
         guard segments.count >= 2, !segments[1].isEmpty else { return .home }
         let id = segments[1]
@@ -82,6 +83,8 @@ enum LinkRouter {
         case 3 where segments[2] == "chat":
             if let member = query["with"] { return .listingChat(listingId: id, memberId: member) }
             return .screen(.listing(id: id))
+        case 3 where segments[2] == "edit":
+            return .screen(.editListing(id: id))
         default:
             return .home
         }

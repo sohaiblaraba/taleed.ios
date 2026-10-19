@@ -30,6 +30,10 @@ struct ProfileView: View {
                                 router.push(.member(username: username))
                             }
                             .accessibilityIdentifier("profile.myProfile")
+                            ListRow(label: l10n.string(.appProfileMyListings), showsChevron: true) {
+                                router.push(.myListings)
+                            }
+                            .accessibilityIdentifier("profile.myListings")
                             ListRow(label: l10n.string(.navFavorites), showsChevron: true) {
                                 router.push(.favorites)
                             }

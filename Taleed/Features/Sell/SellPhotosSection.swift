@@ -65,12 +65,14 @@ struct SellPhotosSection: View {
             .local(Image(uiImage: preview))
         } else if case let .uploaded(uploaded) = photo.upload {
             .remote(uploaded.thumbURL ?? uploaded.url)
+        } else if case let .kept(kept) = photo.upload {
+            .remote(kept.thumbURL ?? kept.url)
         } else {
             .remote(nil)
         }
         let status: PhotoUploaderItem.Status = switch photo.upload {
         case .uploading: .uploading
-        case .uploaded: .ready
+        case .uploaded, .kept: .ready
         case let .failed(error): .failed(message: errorMessage(error), canRetry: photo.canRetry)
         }
         return PhotoUploaderItem(id: photo.id.uuidString, media: media, status: status)

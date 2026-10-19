@@ -1,10 +1,19 @@
 import Foundation
 import TaleedAPI
 
+/// The seller's actions on their listing (screens.md §2 G8), on the listing screen and in My listings.
+@MainActor
+protocol ListingOwnerApi: AnyObject {
+    /// `POST /listings/{id}/status`: hides (`HIDDEN`) or resumes (`ACTIVE`) the seller's listing.
+    func setListingHidden(id: String, hidden: Bool) async throws(ApiError) -> ListingDetail
+    /// `DELETE /listings/{id}`.
+    func deleteListing(id: String) async throws(ApiError)
+}
+
 /// The calls of the listing screen (screens.md §2 G4): the listing, the buyer's actions (message,
 /// offer, bundle toggle) and the seller's (hide, resume, delete).
 @MainActor
-protocol ListingDetailApi: AnyObject {
+protocol ListingDetailApi: ListingOwnerApi {
     /// `GET /listings/{id}`, never to prefetch. `countView`: true only when the member opens the screen
     /// (a view for the seller's statistics); every other reload sends `countView=false` (API 1.5.3).
     /// `automatic`: a reload the member did not ask for (return to the foreground).
@@ -14,10 +23,6 @@ protocol ListingDetailApi: AnyObject {
     func openConversation(listingId: String) async throws(ApiError) -> String
     /// `POST /listings/{id}/offers {amount}`: the conversation the offer went to.
     func makeOffer(listingId: String, amount: Int) async throws(ApiError) -> String
-    /// `POST /listings/{id}/status`: hides (`HIDDEN`) or resumes (`ACTIVE`) the seller's listing.
-    func setListingHidden(id: String, hidden: Bool) async throws(ApiError) -> ListingDetail
-    /// `DELETE /listings/{id}`.
-    func deleteListing(id: String) async throws(ApiError)
     /// `GET /bundles/{id}`: the items of the member's open bundle.
     func bundle(id: String) async throws(ApiError) -> BundleSelectionState
     /// `PUT /members/{username}/bundle {listingIds}`: replaces the whole selection.
@@ -133,7 +138,8 @@ extension ListingDetail {
                 ListingPhoto(id: $0.id, url: URL(string: $0.url), thumbURL: URL(string: $0.thumbUrl))
             },
             category: ListingCategoryRef(slug: listing.category.slug, name: listing.category.name,
-                                         parentName: listing.category.parent?.name),
+                                         parentName: listing.category.parent?.name, id: listing.category.id,
+                                         parentId: listing.category.parent?.id),
             shipsFrom: listing.shipsFrom.map { CatalogWilaya(id: $0.id, name: $0.name) },
             viewsCount: listing.viewsCount,
             favoritesCount: listing.favoritesCount,

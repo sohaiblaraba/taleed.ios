@@ -13,6 +13,11 @@ struct RouteDestinationView: View {
     @Environment(\.favoritesListApi) private var favoritesApi
     @Environment(FavoriteStore.self) private var favorites
     @Environment(SessionManager.self) private var session
+    @Environment(\.editListingDependencies) private var editListing
+    @Environment(\.myListingsDependencies) private var myListings
+    @Environment(ExploreReferenceStore.self) private var references
+    @Environment(CatalogStore.self) private var catalog
+    @Environment(ListingChangeCenter.self) private var listingChanges
 
     var body: some View {
         switch route {
@@ -22,7 +27,14 @@ struct RouteDestinationView: View {
             } else {
                 RoutePlaceholderView(route: route)
             }
-        case .editListing: RoutePlaceholderView(route: route)
+        case let .editListing(id):
+            if let editListing {
+                EditListingView(listingId: id, dependencies: editListing, references: references, catalog: catalog,
+                                session: session)
+                    .id(id)
+            } else {
+                RoutePlaceholderView(route: route)
+            }
         case let .member(username, wardrobe, opensBundle):
             if let members {
                 MemberProfileView(username: username, wardrobe: wardrobe, opensBundle: opensBundle, dependencies: members,
@@ -31,7 +43,12 @@ struct RouteDestinationView: View {
             } else {
                 RoutePlaceholderView(route: route)
             }
-        case .myListings: RoutePlaceholderView(route: route)
+        case .myListings:
+            if let myListings {
+                MyListingsView(dependencies: myListings, changesSeq: listingChanges.seq)
+            } else {
+                RoutePlaceholderView(route: route)
+            }
         case .bundleBuilder: RoutePlaceholderView(route: route)
         case let .search(query, _):
             // Identity by route (the query and the link's `opening`): a link that replaces the results gets

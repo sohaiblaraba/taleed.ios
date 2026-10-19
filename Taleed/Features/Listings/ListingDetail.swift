@@ -61,6 +61,10 @@ struct ListingCategoryRef: Equatable, Sendable {
     let slug: String
     let name: String
     let parentName: String?
+    /// The category's id (`GET /catalog` ids), to prefill the edit form.
+    var id = ""
+    /// Nil for the older listings filed under a top-level category (slice B, Editing).
+    var parentId: String?
 }
 
 /// The seller as the listing screen shows them. Never a real name (screens.md §0.3).

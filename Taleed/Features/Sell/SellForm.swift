@@ -90,6 +90,10 @@ struct SellForm: Equatable, Sendable {
     var condition: String?
     /// The wilaya the item ships from, prefilled from the member's (no "none" choice, as on the website).
     var wilayaId: Int?
+    /// Edit form only: the top-level category an older listing is filed under (`category.parent` is
+    /// null). It can be saved as it is, without a subcategory, until the member picks another category
+    /// (slice B, Editing).
+    var topLevelCategoryId: String?
 
     // MARK: Input limits
 
@@ -124,7 +128,7 @@ struct SellForm: Equatable, Sendable {
         if let error = descriptionError { errors[.description] = error }
         if parentCategoryId == nil {
             errors[.category] = .categoryRequired
-        } else if categoryId == nil {
+        } else if categoryId == nil, !keepsTopLevelCategory {
             errors[.subcategory] = .categoryRequired
         }
         if condition == nil { errors[.condition] = .conditionRequired }
@@ -135,6 +139,11 @@ struct SellForm: Equatable, Sendable {
     /// Whether `field` passes its own check now (to clear its error as the member fixes it).
     func passes(_ field: SellField, photoCount: Int) -> Bool {
         errors(photoCount: photoCount)[field] == nil
+    }
+
+    /// The older listing's top-level category, unchanged: saved without a subcategory.
+    var keepsTopLevelCategory: Bool {
+        categoryId == nil && topLevelCategoryId != nil && parentCategoryId == topLevelCategoryId
     }
 
     var titleError: SellFieldError? {
@@ -185,6 +194,9 @@ struct SellForm: Equatable, Sendable {
         var rejectedPhotos: [Int] = []
         /// Issues on paths the form does not show: say "check the fields" only.
         var hasUnplacedIssues = false
+        /// `body.photos.<n>.id`: the listing no longer has a photo the edit form kept, it was edited
+        /// somewhere else. Reload it into the form (slice B, Field errors).
+        var listingChanged = false
         /// The lists to fetch again before the member picks again: the API no longer knows the chosen
         /// category, wilaya (`GET /catalog`) or brand (`GET /brands`).
         var staleLists: Set<SellReferenceList> = []
@@ -214,7 +226,9 @@ struct SellForm: Equatable, Sendable {
                 mapping.errors[field] = error
                 if let list = staleList(parts) { mapping.staleLists.insert(list) }
             } else if parts[1] == "photos" {
-                if parts.count >= 3, let index = Int(parts[2]) {
+                if parts.count >= 4, parts[3] == "id" {
+                    mapping.listingChanged = true
+                } else if parts.count >= 3, let index = Int(parts[2]) {
                     if !mapping.rejectedPhotos.contains(index) { mapping.rejectedPhotos.append(index) }
                 } else {
                     mapping.errors[.photos] = .photoRequired

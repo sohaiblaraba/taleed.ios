@@ -9,6 +9,9 @@ struct SellView: View {
     @Environment(\.sellDependencies) private var dependencies
     @Environment(CatalogStore.self) private var catalog
     @Environment(ExploreReferenceStore.self) private var references
+    @Environment(AppRouter.self) private var router
+    @Environment(AppToasts.self) private var toasts
+    @Environment(ListingChangeCenter.self) private var listingChanges
     @State private var model: SellViewModel?
 
     var body: some View {
@@ -16,7 +19,7 @@ struct SellView: View {
             ShellBrandAppBar()
         } content: {
             if session.isSignedIn, let model {
-                SellFormView(model: model)
+                SellFormView(model: model) { await publish(model) }
             } else {
                 VStack(spacing: 0) {
                     PageHeading(eyebrow: l10n.string(.tabSell), title: l10n.string(.sellTitle))
@@ -48,12 +51,38 @@ struct SellView: View {
         }
         .onChange(of: session.user?.wilayaId) { _, wilayaId in model?.memberWilayaDidLoad(wilayaId) }
     }
+
+    private func publish(_ model: SellViewModel) async {
+        guard let listingId = await model.publish() else { return }
+        toasts.show(l10n.string(.sellPublished))
+        // My listings shows it in its Active tab.
+        listingChanges.post(.created, listingId: listingId)
+        model.reset(wilayaId: session.user?.wilayaId)
+        router.push(.listing(id: listingId))
+    }
 }
 
 /// The form of Figma "Sell an Item" (wireframes.md #2): photos, title, description, category and
-/// subcategory, brand, size, condition, price, shipping wilaya, "Publier l'annonce".
-private struct SellFormView: View {
+/// subcategory, brand, size, condition, price, shipping wilaya, "Publier l'annonce". The edit form
+/// (G8) is the same without the page heading, its button "Enregistrer les modifications".
+struct SellFormView: View {
     @Bindable var model: SellViewModel
+    /// The Sell tab's "SELL / Vendre un article" heading; the edit form has its title in the app bar.
+    var showsHeading = true
+    var submitTitle: L10nKey = .sellPublish
+    /// A notice above the button (the edit form: the listing was reloaded).
+    var notice: String?
+    /// Publish or save; the field errors are the model's.
+    let onSubmit: () async -> Void
+
+    init(model: SellViewModel, showsHeading: Bool = true, submitTitle: L10nKey = .sellPublish, notice: String? = nil,
+         onSubmit: @escaping () async -> Void) {
+        _model = Bindable(model)
+        self.showsHeading = showsHeading
+        self.submitTitle = submitTitle
+        self.notice = notice
+        self.onSubmit = onSubmit
+    }
     private static let topID = "sell.top"
     @State private var picker: SellPicker?
     @FocusState private var titleFocused: Bool
@@ -62,16 +91,17 @@ private struct SellFormView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(CatalogStore.self) private var catalog
     @Environment(ExploreReferenceStore.self) private var references
-    @Environment(SessionManager.self) private var session
-    @Environment(AppRouter.self) private var router
-    @Environment(AppToasts.self) private var toasts
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
-                    PageHeading(eyebrow: l10n.string(.tabSell), title: l10n.string(.sellTitle))
-                        .id(Self.topID)
+                    if showsHeading {
+                        PageHeading(eyebrow: l10n.string(.tabSell), title: l10n.string(.sellTitle))
+                            .id(Self.topID)
+                    } else {
+                        Color.clear.frame(height: 0).id(Self.topID)
+                    }
                     if let catalog = catalog.catalog {
                         form(catalog)
                     } else if let error = catalog.error {
@@ -238,21 +268,58 @@ private struct SellFormView: View {
 
     private var publishSection: some View {
         VStack(spacing: TaleedSpacing.s12) {
+            if let notice {
+                InlineAlert(kind: .warning, title: notice)
+                    .accessibilityIdentifier("sell.notice")
+            }
             if let error = model.publishError {
                 InlineAlert(kind: .error, title: l10n.message(for: error))
                     .accessibilityIdentifier("sell.publishError")
             }
-            TaleedButton(title: l10n.string(model.isPublishing ? .sellPublishing : .sellPublish),
+            TaleedButton(title: l10n.string(model.isPublishing ? .sellPublishing : submitTitle),
                          kind: .secondary, size: .large, isFullWidth: true) {
-                Task { await publish() }
+                Task { await submit() }
             }
             .disabled(!model.canPublish)
             .accessibilityIdentifier("sell.publish")
         }
     }
 
-    // MARK: Pickers
+    // MARK: Publishing
 
+    /// Opens a picker; the keyboard goes, so that focus does not come back to a field when it closes.
+    private func open(_ choice: SellPicker) {
+        dismissKeyboard()
+        picker = choice
+    }
+
+    private func dismissKeyboard() {
+        titleFocused = false
+        sizeFocused = false
+        priceFocused = false
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
+    private func submit() async {
+        dismissKeyboard()
+        await onSubmit()
+    }
+
+    // MARK: Text
+
+    /// "Marque (optionnel)", as the website's label with its muted "(optionnel)" (Figma "Brand (optional)").
+    private func optionalLabel(_ key: L10nKey) -> String {
+        "\(l10n.string(key)) (\(l10n.string(.commonOptional)))"
+    }
+
+    private func message(for error: SellFieldError) -> String {
+        SellMessages.text(for: error, language: l10n.language)
+    }
+}
+
+// MARK: - Pickers
+
+extension SellFormView {
     private var shortPickerBinding: Binding<Bool> {
         Binding(get: { picker.map { !$0.isLong } ?? false }, set: { if !$0, picker?.isLong == false { picker = nil } })
     }
@@ -300,39 +367,5 @@ private struct SellFormView: View {
         case .category, .subcategory, .condition:
             EmptyView()
         }
-    }
-
-    // MARK: Publishing
-
-    /// Opens a picker; the keyboard goes, so that focus does not come back to a field when it closes.
-    private func open(_ choice: SellPicker) {
-        dismissKeyboard()
-        picker = choice
-    }
-
-    private func dismissKeyboard() {
-        titleFocused = false
-        sizeFocused = false
-        priceFocused = false
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-
-    private func publish() async {
-        dismissKeyboard()
-        guard let listingId = await model.publish() else { return }
-        toasts.show(l10n.string(.sellPublished))
-        model.reset(wilayaId: session.user?.wilayaId)
-        router.push(.listing(id: listingId))
-    }
-
-    // MARK: Text
-
-    /// "Marque (optionnel)", as the website's label with its muted "(optionnel)" (Figma "Brand (optional)").
-    private func optionalLabel(_ key: L10nKey) -> String {
-        "\(l10n.string(key)) (\(l10n.string(.commonOptional)))"
-    }
-
-    private func message(for error: SellFieldError) -> String {
-        SellMessages.text(for: error, language: l10n.language)
     }
 }

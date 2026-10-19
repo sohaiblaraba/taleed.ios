@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 /// The keys of Localizable.xcstrings. They are the same on Android (strings.xml), with the same values:
 /// add a key on both platforms, never on one. Keys marked "plural" have plural variations; resolve them
 /// with `DesignSystemStrings.format` or `LanguageManager.format` and the count as the first argument.
@@ -395,4 +396,22 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appSellErrorTooLong = "app_sell_error_too_long"
     case appSellPhotoLibrary = "app_sell_photo_library"
     case appSellSizeSuggestions = "app_sell_size_suggestions"
+
+    // Edit listing and my listings (G8): website keys, then app-only keys.
+    case sellEditTitle = "sell_edit_title"
+    case sellUpdate = "sell_update"
+    case sellUpdated = "sell_updated"
+    case listingStatusActive = "listing_status_active"
+    case appMyListingsTabCount = "app_my_listings_tab_count"
+    case appMyListingsEmptyActiveTitle = "app_my_listings_empty_active_title"
+    case appMyListingsEmptyActiveBody = "app_my_listings_empty_active_body"
+    case appMyListingsEmptyHiddenTitle = "app_my_listings_empty_hidden_title"
+    case appMyListingsEmptyHiddenBody = "app_my_listings_empty_hidden_body"
+    case appMyListingsEmptyReservedTitle = "app_my_listings_empty_reserved_title"
+    case appMyListingsEmptyReservedBody = "app_my_listings_empty_reserved_body"
+    case appMyListingsEmptySoldTitle = "app_my_listings_empty_sold_title"
+    case appMyListingsEmptySoldBody = "app_my_listings_empty_sold_body"
+    case appListingDeleteTitle = "app_listing_delete_title"
+    case appListingDeleteBody = "app_listing_delete_body"
+    case appEditListingReloaded = "app_edit_listing_reloaded"
 }

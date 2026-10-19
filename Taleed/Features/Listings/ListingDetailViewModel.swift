@@ -69,6 +69,11 @@ final class ListingDetailViewModel {
     /// A shorter absence keeps the listing as it is (as Home and search).
     static let foregroundReloadAfter: Duration = .seconds(60)
 
+    /// Marks the changes this screen posts (hide, resume, delete), so that it skips them coming back.
+    let changeSource = UUID()
+    /// The `ListingChangeCenter` changes already applied; nil until the screen first syncs.
+    @ObservationIgnored private var appliedChangeSeq: Int?
+
     init(listingId: String, api: ListingDetailApi, memberId: String? = nil) {
         self.listingId = listingId
         self.api = api
@@ -315,5 +320,39 @@ final class ListingDetailViewModel {
 
     private func end(_ work: Work) {
         running.remove(work)
+    }
+}
+
+// MARK: - Changes made on other screens (G8)
+
+extension ListingDetailViewModel {
+    /// Starts following the center from its current state (the screen's `.task`).
+    func startFollowing(_ center: ListingChangeCenter) {
+        if appliedChangeSeq == nil { appliedChangeSeq = center.seq }
+    }
+
+    /// The member's changes to this listing on other screens (G8): saved on the edit form, hidden or
+    /// deleted from My listings. The listing the API answered replaces the one on screen; a deletion or a
+    /// refused change reloads it (a deleted one then shows "no longer available").
+    func sync(with center: ListingChangeCenter) async {
+        let applied = appliedChangeSeq ?? center.seq
+        appliedChangeSeq = center.seq
+        guard let changes = center.changes(after: applied) else {
+            if listing != nil { await reload() }
+            return
+        }
+        var needsReload = false
+        for change in changes where change.listingId == listingId && change.source != changeSource {
+            switch change.kind {
+            case let .updated(updated):
+                listing = updated
+                refreshError = nil
+            case .deleted, .stale:
+                needsReload = true
+            case .created:
+                break
+            }
+        }
+        if needsReload { await reload() }
     }
 }

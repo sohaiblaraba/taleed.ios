@@ -7,41 +7,6 @@ import UIKit
 /// (`listing_photo`) with a retry per photo, the fields checked on the device, then `POST /listings`.
 /// There are no drafts (§7 G7): the form lives as long as the Sell tab, and starts over after publishing
 /// or when another member signs in.
-/// Where a photo's upload stands.
-enum SellPhotoUpload {
-    case uploading
-    case uploaded(UploadedPhoto)
-    case failed(ApiError)
-}
-
-/// A picked photo of the sell form: its preview, what was picked (to send it again), and its upload.
-struct SellPhoto: Identifiable {
-    let id = UUID()
-    var preview: UIImage?
-    /// The picked data, kept to upload the photo again (a failure, or a key the API refused).
-    let data: Data
-    var upload: SellPhotoUpload = .uploading
-
-    var key: String? {
-        if case let .uploaded(photo) = upload { return photo.key }
-        return nil
-    }
-
-    var isUploading: Bool {
-        if case .uploading = upload { return true }
-        return false
-    }
-
-    var error: ApiError? {
-        if case let .failed(error) = upload { return error }
-        return nil
-    }
-
-    /// Failed, and sending the same photo again may work (no answer, a server failure, a rate limit).
-    /// Too large, a format the API refuses, unreadable: only removing it helps.
-    var canRetry: Bool { error?.canRetrySamePhoto ?? false }
-}
-
 @MainActor
 @Observable
 final class SellViewModel {
@@ -62,7 +27,11 @@ final class SellViewModel {
 
     static let maxPhotos = SellLimits.photosMax
 
-    @ObservationIgnored private let api: SellApi
+    /// Set on the edit form: the listing as loaded, what Save compares with.
+    private(set) var baseline: ListingEditBaseline?
+
+    @ObservationIgnored private let api: SellApi?
+    @ObservationIgnored private let editApi: EditListingApi?
     @ObservationIgnored private let upload: (Data) async throws(ApiError) -> UploadedPhoto
     /// Fetches lists again after the API refused a choice from them, so that picking again offers
     /// what it knows now.
@@ -71,10 +40,30 @@ final class SellViewModel {
     init(api: SellApi, upload: @escaping (Data) async throws(ApiError) -> UploadedPhoto, wilayaId: Int? = nil,
          refreshLists: @escaping (Set<SellReferenceList>) async -> Void = { _ in }) {
         self.api = api
+        editApi = nil
         self.upload = upload
         self.refreshLists = refreshLists
         form.wilayaId = wilayaId
     }
+
+    /// The edit form, filled from the listing (slice B, Editing). A listing without a wilaya shows the
+    /// member's, as on the website, and saves it.
+    init(editing listing: ListingDetail, brands: [CatalogBrand], memberWilayaId: Int?, api: EditListingApi,
+         upload: @escaping (Data) async throws(ApiError) -> UploadedPhoto,
+         refreshLists: @escaping (Set<SellReferenceList>) async -> Void = { _ in }) {
+        self.api = nil
+        editApi = api
+        self.upload = upload
+        self.refreshLists = refreshLists
+        let saved = SellForm.saved(listing, brands: brands)
+        baseline = ListingEditBaseline(listingId: listing.id, form: saved, photoIds: listing.photos.map(\.id))
+        var form = saved
+        if form.wilayaId == nil { form.wilayaId = memberWilayaId }
+        self.form = form
+        photos = listing.photos.prefix(Self.maxPhotos).map { SellPhoto(kept: $0) }
+    }
+
+    var isEditing: Bool { baseline != nil }
 
     // MARK: State
 
@@ -93,6 +82,9 @@ final class SellViewModel {
     }
 
     private var uploadedKeys: [String] { photos.compactMap(\.key) }
+
+    /// The photos the request sends, in display order (new uploads and, when editing, kept photos).
+    private var photoReferences: [ListingPhotoRef] { photos.compactMap(\.reference) }
 
     // MARK: Photos
 
@@ -167,15 +159,9 @@ final class SellViewModel {
     /// Checks the form and publishes it. Returns the new listing's id, or nil when a field or the API
     /// refused it (the errors are then on screen).
     func publish() async -> String? {
-        guard canPublish else { return nil }
+        guard let api, canPublish else { return nil }
         publishError = nil
-        var errors = form.errors(photoCount: uploadedKeys.count)
-        if photos.contains(where: { $0.error != nil }) { errors[.photos] = .photoUploadFailed }
-        fieldErrors = errors
-        guard errors.isEmpty, let submission = form.submission(photoKeys: uploadedKeys) else {
-            refusals += 1
-            return nil
-        }
+        guard checkFields(), let submission = form.submission(photoKeys: uploadedKeys) else { return nil }
         isPublishing = true
         var staleLists: Set<SellReferenceList> = []
         do {
@@ -194,22 +180,38 @@ final class SellViewModel {
         return nil
     }
 
+    /// Checks every field on the device and shows the errors. False (and the screen scrolls to the
+    /// first error) when one fails.
+    private func checkFields() -> Bool {
+        var errors = form.errors(photoCount: photoReferences.count)
+        if photos.contains(where: { $0.error != nil }) { errors[.photos] = .photoUploadFailed }
+        fieldErrors = errors
+        guard errors.isEmpty else {
+            refusals += 1
+            return false
+        }
+        return true
+    }
+
     /// The API's field errors (slice B, Field errors): highlight the fields, and upload again each photo
     /// whose key it refused (expired, or used by another listing). Returns the lists to fetch again.
     private func applyIssues(_ issues: [ApiFieldIssue]) -> Set<SellReferenceList> {
-        let mapping = SellForm.mapping(of: issues)
+        applyIssues(SellForm.mapping(of: issues))
+    }
+
+    private func applyIssues(_ mapping: SellForm.IssueMapping) -> Set<SellReferenceList> {
         fieldErrors = mapping.errors
         refusals += 1
-        let photoIds = uploadedPhotoIds
+        let photoIds = sentPhotoIds
         let rejected = mapping.rejectedPhotos.compactMap { photoIds.indices.contains($0) ? photoIds[$0] : nil }
-        for id in rejected {
+        for id in rejected where photos.first(where: { $0.id == id })?.data != nil {
             Task { await self.send(id) }
         }
         return mapping.staleLists
     }
 
     /// The photos sent, in the order of `photos[]` in the request.
-    private var uploadedPhotoIds: [SellPhoto.ID] { photos.filter { $0.key != nil }.map(\.id) }
+    private var sentPhotoIds: [SellPhoto.ID] { photos.filter { $0.reference != nil }.map(\.id) }
 
     /// Starts over (after publishing, or for another member). `wilayaId`: the member's wilaya.
     func reset(wilayaId: Int?) {
@@ -246,7 +248,7 @@ final class SellViewModel {
             .price: old.priceText != form.priceText,
             .wilaya: old.wilayaId != form.wilayaId,
         ]
-        let current = form.errors(photoCount: uploadedKeys.count)
+        let current = form.errors(photoCount: photoReferences.count)
         for (field, didChange) in changed where didChange && fieldErrors[field] != nil {
             fieldErrors[field] = current[field]
         }
@@ -261,7 +263,7 @@ final class SellViewModel {
         guard fieldErrors[.photos] != nil else { return }
         if photos.contains(where: { $0.error != nil }) {
             fieldErrors[.photos] = .photoUploadFailed
-        } else if uploadedKeys.isEmpty, !isUploading {
+        } else if photoReferences.isEmpty, !isUploading {
             fieldErrors[.photos] = .photoRequired
         } else {
             fieldErrors[.photos] = nil
@@ -293,4 +295,65 @@ final class SellViewModel {
         throw failure.error
     }
     #endif
+}
+
+// MARK: - Editing (G8)
+
+extension SellViewModel {
+    /// "Enregistrer les modifications": checks the form, then `PATCH /listings/{id}` with only what changed
+    /// (slice B, Editing). Nothing changed still sends the request: the answer is the listing as it is
+    /// now, or why it can no longer change.
+    func save() async -> ListingSaveOutcome {
+        guard let editApi, let baseline, canPublish else { return .refused }
+        publishError = nil
+        guard checkFields(), var changes = form.changes(since: baseline.form, photoCount: photoReferences.count) else {
+            return .refused
+        }
+        changes.photos = baseline.photoChanges(photoReferences)
+        isPublishing = true
+        defer { isPublishing = false }
+        do {
+            #if DEBUG
+            try Self.debugFailure(.publish)
+            #endif
+            return .saved(try await editApi.updateListing(id: baseline.listingId, changes: changes))
+        } catch {
+            switch error.code {
+            case .listingLocked, .forbidden:
+                return .cannotEdit(error)
+            case .notFound:
+                return .gone
+            case .invalidRequest:
+                let mapping = SellForm.mapping(of: error.issues)
+                if mapping.listingChanged { return .listingChanged }
+                publishError = error
+                let staleLists = applyIssues(mapping)
+                if !staleLists.isEmpty {
+                    isPublishing = false
+                    await refreshLists(staleLists)
+                }
+                return .refused
+            default:
+                publishError = error
+                return .refused
+            }
+        }
+    }
+
+    /// The listing again, after it was edited somewhere else: its photos as they are now, then the
+    /// member's new uploads; its values, except the fields the member changed.
+    func reloadListing(_ listing: ListingDetail, brands: [CatalogBrand]) {
+        guard let old = baseline, old.listingId == listing.id else { return }
+        let saved = SellForm.saved(listing, brands: brands)
+        let shownWilaya = form.wilayaId
+        var reloaded = SellForm.reloaded(edited: form, old: old.form, fresh: saved)
+        // Still without a wilaya: the member's stays, as when the form opened.
+        if reloaded.wilayaId == nil { reloaded.wilayaId = shownWilaya }
+        form = reloaded
+        baseline = ListingEditBaseline(listingId: listing.id, form: saved, photoIds: listing.photos.map(\.id))
+        let added = photos.filter { if case .kept = $0.upload { false } else { true } }
+        photos = Array((listing.photos.map { SellPhoto(kept: $0) } + added).prefix(Self.maxPhotos))
+        fieldErrors = [:]
+        publishError = nil
+    }
 }

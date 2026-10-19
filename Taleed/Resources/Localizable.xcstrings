@@ -397,6 +397,29 @@
         }
       }
     },
+    "app_edit_listing_reloaded": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عُدّل هذا الإعلان من مكان آخر وأُعيد تحميل صوره. تحقّق منها ثم احفظ من جديد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This listing was changed somewhere else and its photos were reloaded. Check them, then save again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette annonce a été modifiée ailleurs. Ses photos ont été rechargées : vérifiez-les, puis enregistrez à nouveau."
+          }
+        }
+      }
+    },
     "app_error_address_limit": {
       "extractionState": "manual",
       "localizations": {
@@ -1055,6 +1078,52 @@
         }
       }
     },
+    "app_listing_delete_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن التراجع عن هذا الإجراء."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action is permanent."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette action est définitive."
+          }
+        }
+      }
+    },
+    "app_listing_delete_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف الإعلان؟"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete listing?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer l’annonce ?"
+          }
+        }
+      }
+    },
     "app_listing_deleted_toast": {
       "extractionState": "manual",
       "localizations": {
@@ -1189,6 +1258,213 @@
           "stringUnit": {
             "state": "translated",
             "value": "Détail de l’article"
+          }
+        }
+      }
+    },
+    "app_my_listings_empty_active_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تظهر هنا الأغراض التي تعرضها للبيع."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The items you put on sale show up here."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les articles que vous mettez en vente apparaissent ici."
+          }
+        }
+      }
+    },
+    "app_my_listings_empty_active_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد إعلانات معروضة للبيع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No listings for sale"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune annonce en vente"
+          }
+        }
+      }
+    },
+    "app_my_listings_empty_hidden_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يرى الإعلانَ المخفي أحدٌ غيرك. يمكنك إعادة عرضه للبيع في أي وقت."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only you can see a hidden listing. You can put it back on sale at any time."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une annonce masquée n’est visible que par vous. Vous pouvez la remettre en vente à tout moment."
+          }
+        }
+      }
+    },
+    "app_my_listings_empty_hidden_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد إعلانات مخفية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hidden listings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune annonce masquée"
+          }
+        }
+      }
+    },
+    "app_my_listings_empty_reserved_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يكون الغرض محجوزًا ما دام هناك طلب قيد التنفيذ."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An item is reserved while an order is in progress."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un article est réservé pendant qu’une commande est en cours."
+          }
+        }
+      }
+    },
+    "app_my_listings_empty_reserved_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد إعلانات محجوزة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reserved listings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune annonce réservée"
+          }
+        }
+      }
+    },
+    "app_my_listings_empty_sold_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تظهر هنا الأغراض التي بعتها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your sold items show up here."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos articles vendus apparaissent ici."
+          }
+        }
+      }
+    },
+    "app_my_listings_empty_sold_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد مبيعات بعد"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No sales yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune vente pour le moment"
+          }
+        }
+      }
+    },
+    "app_my_listings_tab_count": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$d)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$d)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$d)"
           }
         }
       }
@@ -5664,6 +5940,29 @@
         }
       }
     },
+    "listing_status_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معروض للبيع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For sale"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En vente"
+          }
+        }
+      }
+    },
     "listing_status_hidden": {
       "extractionState": "manual",
       "localizations": {
@@ -8247,6 +8546,29 @@
         }
       }
     },
+    "sell_edit_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل الإعلان"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit listing"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier l’annonce"
+          }
+        }
+      }
+    },
     "sell_error_category_required": {
       "extractionState": "manual",
       "localizations": {
@@ -8749,6 +9071,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "ex. Veste en jean Levi’s"
+          }
+        }
+      }
+    },
+    "sell_update": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ التعديلات"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save changes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer les modifications"
+          }
+        }
+      }
+    },
+    "sell_updated": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تحديث الإعلان."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listing updated."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annonce mise à jour."
           }
         }
       }

@@ -4,7 +4,8 @@ import Foundation
 /// Launch arguments that open a screen directly, for screenshots and UI checks (debug builds only):
 ///
 ///     -TaleedDebugTab profile                  select a tab (home, explore, sell, messages, profile)
-///     -TaleedDebugProfilePath settings,designSystem   (settings, designSystem, developerMenu, favorites)
+///     -TaleedDebugProfilePath settings,designSystem   (settings, designSystem, developerMenu, favorites,
+///                                              myListings)
 ///     -TaleedDebugOpenURL /listings/42             open a link through the router once the shell shows
 ///     -TaleedGallerySection buttons            scroll the design-system gallery to a section
 ///     -TaleedGalleryLargeText YES              turn on the gallery's "Text 200 %" switch
@@ -26,7 +27,9 @@ import Foundation
 ///                                              off (the API then answers `503 feature_disabled`)
 ///     -TaleedDebugSell upload                  the sell form's first photo upload fails offline (then works);
 ///                                              `upload-refused`: it fails as too large (413);
-///                                              `publish`: the first publish fails offline
+///                                              `publish`: the first publish (or edit save) fails offline
+///     -TaleedDebugMyListings offline           the first My listings request fails offline (then works)
+///     -TaleedDebugEditListing offline          the edit form's first load fails offline (then works)
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor
@@ -75,6 +78,7 @@ private extension AppRoute {
         case "designSystem": self = .designSystem
         case "developerMenu": self = .developerMenu
         case "favorites": self = .favorites
+        case "myListings": self = .myListings
         default: return nil
         }
     }

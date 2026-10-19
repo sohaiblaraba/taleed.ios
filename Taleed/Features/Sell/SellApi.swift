@@ -33,6 +33,48 @@ struct ListingSubmission: Equatable, Sendable {
     let photoKeys: [String]
 }
 
+/// A photo of the edit form as `PATCH /listings/{id}` takes it: one the listing has (`{id}`) or a new
+/// upload (`{key}`).
+enum ListingPhotoRef: Equatable, Sendable {
+    case kept(id: String)
+    case added(key: String)
+}
+
+/// What `PATCH /listings/{id}` sends: only the fields the member changed (slice B, Editing). A field left
+/// nil stays as it is.
+struct ListingChanges: Equatable, Sendable {
+    enum Brand: Equatable, Sendable {
+        /// `{}`: the listing has no brand anymore.
+        case none
+        case catalog(id: String)
+        case typed(name: String)
+    }
+
+    var title: String?
+    var description: String?
+    var price: Int?
+    /// A subcategory id.
+    var categoryId: String?
+    var brand: Brand?
+    /// `""` removes the size.
+    var size: String?
+    var condition: String?
+    var wilayaId: Int?
+    /// The complete new list in display order, or nil to keep the photos as they are.
+    var photos: [ListingPhotoRef]?
+
+    var isEmpty: Bool { self == ListingChanges() }
+}
+
+/// The calls of the edit form (screens.md §2 G8; slice B, Editing).
+@MainActor
+protocol EditListingApi: AnyObject {
+    /// `GET /listings/{id}` to prefill the form, without counting a view.
+    func editableListing(id: String) async throws(ApiError) -> ListingDetail
+    /// `PATCH /listings/{id}`: the listing as saved.
+    func updateListing(id: String, changes: ListingChanges) async throws(ApiError) -> ListingDetail
+}
+
 /// The limits of `POST /listings` (contract `ListingCreate` and `BrandInput` rules), counted after
 /// trimming, in UTF-16 units as the API counts.
 enum SellLimits {
@@ -54,6 +96,44 @@ enum SellLimits {
     static func isSendableCondition(_ code: String) -> Bool {
         guard let condition = ListingCondition(rawValue: code) else { return false }
         return condition != .unknownDefaultOpenApi
+    }
+}
+
+extension GeneratedTaleedApi: EditListingApi {
+    func editableListing(id: String) async throws(ApiError) -> ListingDetail {
+        try await listing(id: id, countView: false, automatic: false)
+    }
+
+    func updateListing(id: String, changes: ListingChanges) async throws(ApiError) -> ListingDetail {
+        let brand: BrandInput? = switch changes.brand {
+        case .none?: BrandInput()
+        case let .catalog(id)?: BrandInput(id: id)
+        case let .typed(name)?: BrandInput(name: name)
+        case nil: nil
+        }
+        let body = ListingUpdate(
+            title: changes.title,
+            description: changes.description,
+            price: changes.price,
+            categoryId: changes.categoryId,
+            brand: brand,
+            size: changes.size,
+            condition: changes.condition.map { ListingCondition(rawValue: $0) ?? .unknownDefaultOpenApi },
+            wilayaId: changes.wilayaId,
+            photos: changes.photos?.map { photo in
+                switch photo {
+                case let .kept(id): PhotoInput(id: id)
+                case let .added(key): PhotoInput(key: key)
+                }
+            }
+        )
+        let asOf = ContinuousClock.now
+        // A member's action: never repeated on its own (screens.md §0.6). Saving again by hand is safe:
+        // the same values change nothing.
+        let listing = try await caller.call(.write) {
+            try await SellingAPI.updateListing(id: id, listingUpdate: body, apiConfiguration: $0)
+        }
+        return ListingDetail(listing, asOf: asOf)
     }
 }
 
