@@ -19,6 +19,7 @@ struct RouteDestinationView: View {
     @Environment(\.bundleDependencies) private var bundles
     @Environment(\.checkoutDependencies) private var checkout
     @Environment(\.ordersDependencies) private var orders
+    @Environment(\.walletApi) private var walletApi
     @Environment(ExploreReferenceStore.self) private var references
     @Environment(CatalogStore.self) private var catalog
     @Environment(ListingChangeCenter.self) private var listingChanges
@@ -98,7 +99,8 @@ struct RouteDestinationView: View {
             if let orders { OrderDetailView(orderId: id, dependencies: orders).id(id) } else { RoutePlaceholderView(route: route) }
         case let .dispute(id):
             if let orders { DisputeThreadView(disputeId: id, dependencies: orders).id(id) } else { RoutePlaceholderView(route: route) }
-        case .wallet: RoutePlaceholderView(route: route)
+        case .wallet:
+            if let walletApi { WalletView(api: walletApi) } else { RoutePlaceholderView(route: route) }
         case .notifications: NotificationsView()
         case .settings: SettingsView()
         case .deleteAccount: RoutePlaceholderView(route: route)

@@ -59,6 +59,8 @@ enum TaleedTone: String, CaseIterable, Sendable {
     case warning
     /// `surfaceGrouped` / `textBody`.
     case neutral
+    /// `errorSoft` / `feedback/error`: a refusal ("Refusé"), as the website's destructive badge.
+    case error
 
     var fill: Color {
         switch self {
@@ -66,6 +68,7 @@ enum TaleedTone: String, CaseIterable, Sendable {
         case .success: TaleedColor.successSoft
         case .warning: TaleedColor.warningSoft
         case .neutral: TaleedColor.surfaceGrouped
+        case .error: TaleedColor.errorSoft
         }
     }
 
@@ -75,6 +78,7 @@ enum TaleedTone: String, CaseIterable, Sendable {
         case .success: TaleedColor.feedbackSuccess
         case .warning: TaleedColor.warningText
         case .neutral: TaleedColor.textBody
+        case .error: TaleedColor.feedbackError
         }
     }
 

@@ -5,7 +5,7 @@ import Foundation
 ///
 ///     -TaleedDebugTab profile                  select a tab (home, explore, sell, messages, profile)
 ///     -TaleedDebugProfilePath settings,designSystem   (settings, designSystem, developerMenu, favorites,
-///                                              myListings, orders)
+///                                              myListings, orders, wallet)
 ///     -TaleedDebugOpenURL /listings/42             open a link through the router once the shell shows
 ///     -TaleedGallerySection buttons            scroll the design-system gallery to a section
 ///     -TaleedGalleryLargeText YES              turn on the gallery's "Text 200 %" switch
@@ -43,6 +43,7 @@ import Foundation
 ///                                              by the carrier (`502 carrier_error` with a `detail`)
 ///     -TaleedDebugOrders offline               the orders list's first page fails offline (then works);
 ///                                              `empty` answers no orders
+///     -TaleedDebugWallet offline               the wallet's first load fails offline (then works)
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor
@@ -93,6 +94,7 @@ private extension AppRoute {
         case "favorites": self = .favorites
         case "myListings": self = .myListings
         case "orders": self = .orders
+        case "wallet": self = .wallet
         default: return nil
         }
     }

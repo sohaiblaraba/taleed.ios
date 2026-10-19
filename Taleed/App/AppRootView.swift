@@ -41,6 +41,7 @@ struct AppRootView: View {
             .environment(\.checkoutDependencies,
                          CheckoutDependencies(checkout: container.api, listings: container.api, bundles: container.api))
             .environment(\.ordersDependencies, OrdersDependencies(orders: container.api, uploads: container.uploads))
+            .environment(\.walletApi, container.api)
             .environment(\.memberDependencies,
                          MemberDependencies(members: container.api, reports: container.api, uploads: container.uploads))
             .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in

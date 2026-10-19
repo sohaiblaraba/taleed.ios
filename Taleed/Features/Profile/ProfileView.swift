@@ -6,6 +6,10 @@ struct ProfileView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
     @Environment(AppRouter.self) private var router
+    @Environment(\.walletApi) private var walletApi
+    /// The website menu's figure next to "Portefeuille": `balance + voucherBalance` of `GET /wallet`
+    /// (`GET /me` does not carry it).
+    @State private var walletHeadline: Int?
 
     var body: some View {
         ShellScreen {
@@ -42,6 +46,12 @@ struct ProfileView: View {
                                 router.push(.orders)
                             }
                             .accessibilityIdentifier("profile.orders")
+                            ListRow(label: l10n.string(.navWallet),
+                                    trailingText: walletHeadline.map { PriceFormatter.format($0, language: l10n.language) },
+                                    showsChevron: true) {
+                                router.push(.wallet)
+                            }
+                            .accessibilityIdentifier("profile.wallet")
                         }
                         ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
                             router.push(.settings)
@@ -58,6 +68,18 @@ struct ProfileView: View {
                 .padding(.bottom, TaleedSpacing.s24)
             }
         }
+        // Again each time the hub shows (back from the wallet, a checkout, an order) and after sign-in.
+        .task(id: session.user?.id) { await loadWalletHeadline() }
+        .onAppear { Task { await loadWalletHeadline() } }
+    }
+
+    /// Quiet: without an answer the row shows no figure.
+    private func loadWalletHeadline() async {
+        guard session.isSignedIn, let walletApi else {
+            walletHeadline = nil
+            return
+        }
+        if let summary = try? await walletApi.wallet(automatic: true) { walletHeadline = summary.headline }
     }
 }
 

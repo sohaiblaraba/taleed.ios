@@ -194,6 +194,14 @@ final class AppRouter {
         return pending
     }
 
+    /// The pending payment return of a kind, whatever its id, once: the wallet screen syncs the top-up a
+    /// return link named, which may not be the one it started (the app was closed during the payment).
+    func consumePaymentReturn(kind: PaymentReturn.Kind) -> PaymentReturn? {
+        guard let pending = pendingPaymentReturn, pending.kind == kind else { return nil }
+        pendingPaymentReturn = nil
+        return pending
+    }
+
     /// Called when the shell appears: opens a link that arrived during launch.
     func shellDidAppear() {
         isShellReady = true
