@@ -115,15 +115,19 @@ struct MainShellView: View {
     private func tab(_ tab: AppTab, @ViewBuilder root: () -> some View) -> some View {
         let isSelected = router.selectedTab == tab
         return NavigationStack(path: router.pathBinding(tab)) {
-            root().navigationDestination(for: AppRoute.self) { route in
-                // Pushed screens do not get the shell's bottom inset from the stack: they reserve the tab
-                // bar's height themselves, so that their last row scrolls above it (not the screens that
-                // draw the bar in their own bottom bar).
-                RouteDestinationView(route: route)
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        Color.clear.frame(height: route.drawsOwnTabBar ? 0 : tabBarHeight).allowsHitTesting(false)
-                    }
-            }
+            // The stack does not pass the shell's bottom inset on, to its first screen either: each screen
+            // reserves the tab bar's height itself, so that its last row scrolls above the bar.
+            root()
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Color.clear.frame(height: tabBarHeight).allowsHitTesting(false)
+                }
+                .navigationDestination(for: AppRoute.self) { route in
+                    // Pushed screens likewise (not the screens that draw the bar in their own bottom bar).
+                    RouteDestinationView(route: route)
+                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                            Color.clear.frame(height: route.drawsOwnTabBar ? 0 : tabBarHeight).allowsHitTesting(false)
+                        }
+                }
         }
         .environment(\.shellTab, tab)
         .opacity(isSelected ? 1 : 0)
