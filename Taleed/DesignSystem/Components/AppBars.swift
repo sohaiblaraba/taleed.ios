@@ -35,6 +35,9 @@ private struct AppBarContainer<Content: View>: View {
 struct BrandAppBar: View {
     var showsDivider = false
     var onNotifications: (() -> Void)?
+    /// Unread notifications on the bell (hidden at 0, "9+" above 9).
+    var notificationsBadge = 0
+    var notificationsBadgeAccessibilityLabel: String?
     var avatarInitials: String?
     var avatarURL: URL?
     /// Defaults to "Profile" (`tab_profile`).
@@ -55,11 +58,20 @@ struct BrandAppBar: View {
                 if let onNotifications {
                     Button(action: onNotifications) {
                         TaleedIconView(.bell, size: 24, color: TaleedColor.textPrimary)
+                            .overlay(alignment: .topTrailing) {
+                                if notificationsBadge > 0 {
+                                    CountBadge(count: notificationsBadge,
+                                               accessibilityLabel: notificationsBadgeAccessibilityLabel ?? "",
+                                               maxCount: 9, size: .small)
+                                        .offset(x: 8, y: -6)
+                                }
+                            }
                             .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(DesignSystemStrings.string(.commonNotifications, locale: locale))
+                    .accessibilityValue(notificationsBadge > 0 ? notificationsBadgeAccessibilityLabel ?? "" : "")
                 }
                 if let avatarInitials {
                     let avatar = TaleedAvatar(initials: avatarInitials, size: 36, imageURL: avatarURL, style: .wireframe)

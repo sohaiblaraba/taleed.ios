@@ -18,6 +18,13 @@ struct AppRootView: View {
             .environment(container.router)
             .environment(container.catalog)
             .environment(container.toasts)
+            .environment(container.welcome)
+            .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in
+                #if DEBUG
+                if DebugLaunchOptions.forcesBetaMode { return true }
+                #endif
+                return launch.config?.betaMode ?? false
+            }))
             #if DEBUG
             .environment(\.developmentApi, container.api)
             #endif
@@ -63,9 +70,12 @@ struct AppRootView: View {
     #if DEBUG
     @ViewBuilder
     private func debugLaunchScreen(_ screen: String) -> some View {
-        if screen == "suspended" {
+        if screen == "suspended" || screen == "suspendedSession" {
             SuspendedView(support: SupportContacts(email: "contact@taleed.app", phone: "+213 540 69 32 36",
-                                                   whatsappURL: URL(string: "https://wa.me/213540693236")))
+                                                   whatsappURL: URL(string: "https://wa.me/213540693236")),
+                          showsAccountLinks: screen == "suspendedSession")
+        } else if screen == "launchError" {
+            LaunchErrorView(error: .network) {}
         } else {
             UpdateRequiredView(storeURL: container.environment.appStoreURL)
         }
@@ -84,7 +94,7 @@ struct AppRootView: View {
         case .updateRequired:
             UpdateRequiredView(storeURL: container.environment.appStoreURL)
         case let .suspended(support):
-            SuspendedView(support: support)
+            SuspendedView(support: support, showsAccountLinks: container.session.hasSuspendedSession)
         case .main:
             MainShellView(home: container.home)
         }

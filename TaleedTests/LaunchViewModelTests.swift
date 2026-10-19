@@ -169,4 +169,65 @@ struct LaunchViewModelTests {
         #expect(tokens.load() == nil)
         #expect(api.signedOutTokens == ["t"])
     }
+
+    @Test func signOutCallsBackForTheWelcomeScreen() async {
+        let (launch, session) = makeLaunch(tokenStore: InMemoryTokenStore(token: "t"))
+        await launch.start()
+        var signedOut = 0
+        session.onSignedOut = { signedOut += 1 }
+
+        session.signOut()
+
+        #expect(signedOut == 1)
+    }
+
+    @Test func bannedWhileSignedInShowsSuspendedAndKeepsTheToken() async {
+        let tokens = InMemoryTokenStore(token: "t")
+        let (launch, session) = makeLaunch(tokenStore: tokens)
+        await launch.start()
+
+        api.onBanned?("t")
+
+        #expect(session.state == .suspended)
+        #expect(session.hasSuspendedSession)
+        #expect(launch.route == .suspended(RemoteConfig.fixture().support))
+        #expect(tokens.load() == "t")
+    }
+
+    @Test func bannedForAnOldTokenChangesNothing() async {
+        let (launch, session) = makeLaunch(tokenStore: InMemoryTokenStore(token: "t"))
+        await launch.start()
+
+        api.onBanned?("old")
+
+        #expect(session.isSignedIn)
+    }
+
+    @Test func expiredSessionAsksToSignInAgainButNotAtLaunch() async {
+        let tokens = InMemoryTokenStore(token: "expired")
+        api.meResult = .failure(.unauthorized)
+        let (launch, session) = makeLaunch(tokenStore: tokens)
+        var expired = 0
+        session.onSessionExpired = { expired += 1 }
+
+        await launch.start()
+        #expect(expired == 0)
+
+        api.meResult = .success(.fixture())
+        try? await session.signIn(email: "a@b.dz", password: "x")
+        api.onUnauthorized?("new-token")
+        #expect(expired == 1)
+        #expect(!session.isSignedIn)
+    }
+
+    @Test func suspendedAtSignInHasNoSession() async {
+        api.signInResult = .failure(.banned)
+        let (launch, session) = makeLaunch(tokenStore: InMemoryTokenStore())
+        await launch.start()
+
+        try? await session.signIn(email: "a@b.dz", password: "x")
+
+        #expect(session.state == .suspended)
+        #expect(!session.hasSuspendedSession)
+    }
 }

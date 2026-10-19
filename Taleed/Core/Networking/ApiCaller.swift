@@ -24,6 +24,9 @@ final class ApiCaller {
     /// Called when the API rejects the token that a request carried (`401 unauthorized`), with that
     /// token. `SessionManager` sets it to sign out globally.
     var onUnauthorized: ((String) -> Void)?
+    /// Called when a request that carried a token answers `403 banned`, with that token
+    /// (screens.md §0.6: the suspended screen).
+    var onBanned: ((String) -> Void)?
 
     /// The waits between attempts of a read. Three retries: 1, 2 and 4 seconds.
     var retryDelays: [Duration] = [.seconds(1), .seconds(2), .seconds(4)]
@@ -97,6 +100,8 @@ final class ApiCaller {
         switch error {
         case .unauthorized:
             if let sentToken { onUnauthorized?(sentToken) }
+        case .banned:
+            if let sentToken { onBanned?(sentToken) }
         case let .rateLimited(seconds):
             let wait = seconds.map(TimeInterval.init) ?? Self.defaultRateLimitWait
             rateLimitedUntil = now().addingTimeInterval(wait)

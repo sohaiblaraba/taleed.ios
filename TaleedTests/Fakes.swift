@@ -14,6 +14,7 @@ final class FakeTaleedApi: TaleedApi {
     private(set) var meCalls = 0
     private(set) var signedOutTokens: [String] = []
     var onUnauthorized: ((String) -> Void)?
+    var onBanned: ((String) -> Void)?
 
     /// Set to make `me()` behave like the generated client wrapper on a 401.
     var sentToken: () -> String? = { nil }
@@ -105,5 +106,31 @@ extension AppEnvironment {
             buildNumber: "1",
             appStoreURL: URL(string: "https://apps.apple.com/app/taleed")!
         )
+    }
+}
+
+/// An `AuthApi` that answers from canned results and records what it was sent.
+@MainActor
+final class FakeAuthApi: AuthApi {
+    var signUpResult: Result<(token: String, user: User), ApiError> = .success(("signup-token", .fixture(username: "nouveau")))
+    var resetResult: Result<Void, ApiError> = .success(())
+    var accessResult: Result<Void, ApiError> = .success(())
+    private(set) var signUps: [SignUpForm] = []
+    private(set) var resetEmails: [String] = []
+    private(set) var accessRequests: [AccessRequestForm] = []
+
+    func signUp(_ form: SignUpForm) async throws(ApiError) -> (token: String, user: User) {
+        signUps.append(form)
+        return try signUpResult.get()
+    }
+
+    func requestPasswordReset(email: String) async throws(ApiError) {
+        resetEmails.append(email)
+        try resetResult.get()
+    }
+
+    func requestAccess(_ form: AccessRequestForm) async throws(ApiError) {
+        accessRequests.append(form)
+        try accessResult.get()
     }
 }

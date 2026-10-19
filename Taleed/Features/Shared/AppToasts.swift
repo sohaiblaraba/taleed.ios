@@ -13,9 +13,10 @@ final class AppToasts {
         self.languageManager = languageManager
     }
 
+    /// `duration`: for a long message, how long it stays (the usual 4 s otherwise).
     func show(_ message: String, kind: TaleedFeedbackKind = .success, actionTitle: String? = nil,
-              action: (() -> Void)? = nil) {
-        state.show(ToastItem(kind: kind, message: message, actionTitle: actionTitle, onAction: action))
+              duration: TimeInterval? = nil, action: (() -> Void)? = nil) {
+        state.show(ToastItem(kind: kind, message: message, actionTitle: actionTitle, onAction: action, duration: duration))
     }
 
     /// The app's message for a failed action (never the API's `message`).

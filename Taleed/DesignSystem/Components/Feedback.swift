@@ -199,6 +199,8 @@ struct ToastItem: Identifiable, Equatable {
     var style: TaleedToast.Style = .dark
     var actionTitle: String?
     var onAction: (() -> Void)?
+    /// How long it stays, when longer than the usual 4 s (a long message).
+    var duration: TimeInterval?
 
     static func == (lhs: ToastItem, rhs: ToastItem) -> Bool { lhs.id == rhs.id }
 }
@@ -260,8 +262,9 @@ private struct ShownToast: View {
     /// ("Cancel") stays until it is used or closed, so it can still be reached (Android lengthens it
     /// with the accessibility manager's recommended timeout).
     private var timeout: TimeInterval? {
-        guard voiceOver else { return TaleedMotion.toastAutoDismiss }
-        return item.actionTitle == nil ? TaleedMotion.toastAutoDismiss * 2.5 : nil
+        let duration = item.duration ?? TaleedMotion.toastAutoDismiss
+        guard voiceOver else { return duration }
+        return item.actionTitle == nil ? duration * 2.5 : nil
     }
 
     var body: some View {

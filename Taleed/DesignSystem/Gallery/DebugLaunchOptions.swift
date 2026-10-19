@@ -9,7 +9,12 @@ import Foundation
 ///     -TaleedGallerySection buttons            scroll the design-system gallery to a section
 ///     -TaleedGalleryLargeText YES              turn on the gallery's "Text 200 %" switch
 ///     -TaleedDebugSignIn YES                   open the sign-in sheet
-///     -TaleedDebugLaunchScreen suspended       show a launch screen (updateRequired, suspended)
+///     -TaleedDebugLaunchScreen suspended       show a launch screen (updateRequired, suspended,
+///                                              suspendedSession, launchError)
+///     -TaleedDebugSignUp a1b2c3d4              open the sign-up sheet with a referral code
+///     -TaleedDebugBetaMode YES                 act as if `GET /config` said `betaMode: true`
+///     -TaleedDebugAppVersion 0.9.0             report another app version (the update screen)
+///     -welcome_done NO                         show the welcome screen again
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor
@@ -23,6 +28,9 @@ enum DebugLaunchOptions {
     /// A launch screen to show instead of the launch flow's answer.
     static var launchScreen: String? { UserDefaults.standard.string(forKey: "TaleedDebugLaunchScreen") }
 
+    /// Request access instead of sign-up, as during the invite-only period.
+    static var forcesBetaMode: Bool { UserDefaults.standard.bool(forKey: "TaleedDebugBetaMode") }
+
     static func apply(to router: AppRouter) {
         guard !applied else { return }
         applied = true
@@ -35,6 +43,9 @@ enum DebugLaunchOptions {
         }
         if defaults.bool(forKey: "TaleedDebugSignIn") {
             router.presentSignIn()
+        }
+        if let code = defaults.string(forKey: "TaleedDebugSignUp") {
+            router.authEntry = .signUp(referralCode: code)
         }
         if let link = defaults.string(forKey: "TaleedDebugOpenURL") {
             router.open(LinkRouter.destination(for: link))

@@ -6,6 +6,10 @@ struct BottomNavItem<ID: Hashable>: Identifiable {
     let id: ID
     let icon: TaleedIcon
     let title: String
+    /// An unread count on the icon (hidden at 0, "9+" above 9, as on the website).
+    var badge = 0
+    /// What the count says ("3 unread messages"), read after the title.
+    var badgeAccessibilityLabel: String?
 }
 
 /// Bottom navigation (design-system §5.2, decision D-2): five equal items, the active one in a
@@ -81,6 +85,13 @@ private struct BottomNavButton<ID: Hashable>: View {
         Button(action: action) {
             VStack(spacing: TaleedSpacing.s4) {
                 TaleedIconView(item.icon, size: 20, color: color)
+                    .overlay(alignment: .topTrailing) {
+                        if item.badge > 0 {
+                            CountBadge(count: item.badge, accessibilityLabel: item.badgeAccessibilityLabel ?? "",
+                                       maxCount: 9, size: .small)
+                                .offset(x: 10, y: -7)
+                        }
+                    }
                 Text(item.title)
                     .taleedFont(TaleedTextStyle(size: style.size * labelScale, weight: style.weight,
                                                 lineHeight: nil, letterSpacing: 0, relativeTo: style.relativeTo))
@@ -100,6 +111,7 @@ private struct BottomNavButton<ID: Hashable>: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(item.title)
+        .accessibilityValue(item.badge > 0 ? item.badgeAccessibilityLabel ?? "" : "")
         .accessibilityAddTraits(isActive ? .isSelected : [])
         .accessibilityShowsLargeContentViewer {
             TaleedIconView(item.icon, size: 20, color: nil)

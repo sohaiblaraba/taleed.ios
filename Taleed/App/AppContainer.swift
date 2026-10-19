@@ -17,6 +17,7 @@ final class AppContainer {
     let router = AppRouter()
     let toasts: AppToasts
     let uploads: PhotoUploadService
+    let welcome: WelcomeGate
 
     init(environment: AppEnvironment = .current(), tokenStore: TokenStore = KeychainTokenStore()) {
         ImageLoading.configure()
@@ -30,8 +31,18 @@ final class AppContainer {
         home = HomeViewModel(catalog: catalog)
         toasts = AppToasts(languageManager: languageManager)
         uploads = PhotoUploadService(api: api)
+        welcome = WelcomeGate()
 
-        router.isSignedIn = { [session] in session.isSignedIn }
+        // A suspended member who was signed in keeps the screens that still answer (orders, wallet,
+        // account deletion), so links to them do not ask to sign in.
+        router.isSignedIn = { [session] in session.isSignedIn || session.hasSuspendedSession }
+        router.onDestinationOpened = { [welcome] in welcome.skipForLink() }
+        session.onSignedOut = { [welcome, router] in
+            welcome.showAfterSignOut()
+            router.sessionDidEnd()
+            router.selectedTab = .home
+        }
+        session.onSessionExpired = { [router] in router.presentSignIn() }
         router.resolveConversation = { [api] (listingId: String, buyerId: String) async throws(ApiError) -> String in
             try await api.openConversation(listingId: listingId, buyerId: buyerId)
         }

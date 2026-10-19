@@ -27,6 +27,9 @@ protocol TaleedApi: AnyObject {
     /// Called when the API rejects the token that a request carried (`401 unauthorized`),
     /// with that token. `SessionManager` sets it to sign out globally.
     var onUnauthorized: ((String) -> Void)? { get set }
+    /// Called when a request that carried a token answers `403 banned` (the account was suspended
+    /// meanwhile), with that token. `SessionManager` sets it to show the suspended screen.
+    var onBanned: ((String) -> Void)? { get set }
 }
 
 extension TaleedApi {
@@ -61,6 +64,11 @@ final class GeneratedTaleedApi: TaleedApi, UploadsApi, DevelopmentApi {
     var onUnauthorized: ((String) -> Void)? {
         get { caller.onUnauthorized }
         set { caller.onUnauthorized = newValue }
+    }
+
+    var onBanned: ((String) -> Void)? {
+        get { caller.onBanned }
+        set { caller.onBanned = newValue }
     }
 
     init(session: ApiSession) {
@@ -126,7 +134,7 @@ final class GeneratedTaleedApi: TaleedApi, UploadsApi, DevelopmentApi {
 
 // MARK: - Mapping
 
-private extension User {
+extension User {
     init(_ me: Me) {
         self.init(
             id: me.id,

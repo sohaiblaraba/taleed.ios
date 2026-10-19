@@ -96,7 +96,7 @@ private struct GalleryButtons: View {
                     TaleedButton(title: copy("Écrire au vendeur", "مراسلة البائع", "Message seller"), kind: .tertiary,
                                  leadingIcon: .chatCircle, trailingIcon: .caretRight, isFullWidth: true) {}
                     TaleedButton(title: copy("Continuer avec l’e-mail", "المتابعة بالبريد الإلكتروني", "Continue with email"),
-                                 kind: .tertiary, leadingIcon: .envelope, isFullWidth: true,
+                                 kind: .mintSoft, leadingIcon: .envelope, isFullWidth: true,
                                  leadingIconColor: TaleedColor.blue600) {}
                 }
             }

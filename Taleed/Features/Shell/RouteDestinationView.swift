@@ -23,6 +23,7 @@ struct RouteDestinationView: View {
         case .wallet: RoutePlaceholderView(route: route)
         case .notifications: NotificationsView()
         case .settings: SettingsView()
+        case .deleteAccount: RoutePlaceholderView(route: route)
         case .referrals: RoutePlaceholderView(route: route)
         #if DEBUG
         case .designSystem: DesignSystemGalleryView()

@@ -36,6 +36,9 @@ final class AppRouter {
     @ObservationIgnored var resolveConversation: ((_ listingId: String, _ buyerId: String) async throws(ApiError) -> String)?
     @ObservationIgnored var websiteLinks: () -> WebsiteLinks = { WebsiteLinks() }
     @ObservationIgnored var browser: (URL) -> Void = { InAppBrowser.open($0) }
+    /// Called when a destination opens once the shell shows (a link, a push, a launch argument): the
+    /// welcome screen steps aside for it.
+    @ObservationIgnored var onDestinationOpened: (() -> Void)?
 
     /// The action waiting for sign-in, run once the sheet closes signed in.
     @ObservationIgnored private var afterSignIn: (() -> Void)?
@@ -96,6 +99,7 @@ final class AppRouter {
             pendingDestination = destination
             return
         }
+        onDestinationOpened?()
         switch destination {
         case .home: show(.home, stack: [])
         case let .explore(query): show(.explore, stack: query.isEmpty ? [] : [.search(query)])
@@ -141,6 +145,7 @@ final class AppRouter {
             }
         case .order: (.profile, [.orders, route])
         case .favorites, .orders, .wallet, .notifications, .settings, .referrals: (.profile, [route])
+        case .deleteAccount: (.profile, [.settings, route])
         #if DEBUG
         case .designSystem, .developerMenu: (.profile, [.settings, route])
         #endif

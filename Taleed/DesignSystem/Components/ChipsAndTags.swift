@@ -165,22 +165,34 @@ struct TaleedBadge: View {
     }
 }
 
-/// Count badge: 24 circle in `feedback/error`, white 11/800 digits. Shows "99+" above 99, left to
-/// right in every language (never "+99"). `accessibilityLabel` says what is counted ("3 unread
-/// messages"), as Android's `contentDescription`.
+/// Count badge: 24 circle in `feedback/error`, white 11/800 digits. Shows "99+" above 99 (or
+/// "`maxCount`+"), left to right in every language (never "+99"). `accessibilityLabel` says what is
+/// counted ("3 unread messages"), as Android's `contentDescription`. The small size (18) sits on a
+/// 20–24 pt icon (bottom navigation, the bell).
 struct CountBadge: View {
+    enum Size: Sendable {
+        case regular, small
+    }
+
     let count: Int
     let accessibilityLabel: String
+    var maxCount = 99
+    var size: Size = .regular
 
     var body: some View {
-        Text(verbatim: (count > 99 ? "99+" : "\(count)").isolatedLeftToRight)
+        let diameter = size == .regular ? TaleedSize.countBadge : 18
+        Text(verbatim: (count > maxCount ? "\(maxCount)+" : "\(count)").isolatedLeftToRight)
             .taleedFont(TaleedFont.countBadge)
             .foregroundStyle(TaleedColor.textInverse)
             .monospacedDigit()
-            .padding(.horizontal, 6)
-            .frame(minWidth: TaleedSize.countBadge, minHeight: TaleedSize.countBadge)
+            .padding(.horizontal, size == .regular ? 6 : 4)
+            .frame(minWidth: diameter, minHeight: diameter)
             .background(Capsule().fill(TaleedColor.feedbackError))
+            .overlay {
+                if size == .small { Capsule().strokeBorder(TaleedColor.surfacePrimary, lineWidth: 1.5) }
+            }
             .environment(\.layoutDirection, .leftToRight)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(accessibilityLabel)
     }

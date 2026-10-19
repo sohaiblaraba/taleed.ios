@@ -28,6 +28,8 @@ enum AppRoute: Hashable, Sendable {
     case wallet
     case notifications
     case settings
+    /// Delete the account (G16). Also offered on the suspended screen.
+    case deleteAccount
     case referrals
     #if DEBUG
     /// The design-system gallery (debug builds only).
@@ -40,7 +42,8 @@ enum AppRoute: Hashable, Sendable {
     /// leave the stacks at sign-out.
     var requiresSignIn: Bool {
         switch self {
-        case .conversation, .bundle, .checkout, .favorites, .orders, .order, .wallet, .notifications, .referrals:
+        case .conversation, .bundle, .checkout, .favorites, .orders, .order, .wallet, .notifications, .referrals,
+             .deleteAccount:
             true
         case .listing, .member, .search, .visualSearch, .settings:
             false

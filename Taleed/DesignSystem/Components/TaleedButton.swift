@@ -19,6 +19,9 @@ enum TaleedButtonKind: String, CaseIterable, Sendable {
     /// Not in the Figma Button set: the white frame Figma draws for "View profile", "Clear filters"
     /// and the modal "Cancel" (§8.10): `radius.m`, Medium 13/600 padding 16, Large 15/600 padding 24.
     case outline
+    /// The Login wireframe's override of Tertiary for "Continue with email": `mint/50` fill, `mint/100`
+    /// border, `mint/900` label (pair it with a `blue/600` leading icon).
+    case mintSoft
 
     var isHyperlink: Bool { self == .hyperlink || self == .hyperlinkUnderlined }
 }
@@ -117,6 +120,9 @@ struct TaleedButtonColors: Equatable {
         case (.outline, .normal): return .init(fill: Palette.surfacePrimary, border: Palette.borderSubtle, content: Palette.textPrimary)
         case (.outline, .pressed): return .init(fill: Palette.surfaceGrouped, border: Palette.borderSubtle, content: Palette.textPrimary)
         case (.outline, .disabled): return .init(fill: Palette.surfacePrimary, border: Palette.borderSubtle, content: Palette.navy300)
+        case (.mintSoft, .normal): return .init(fill: Palette.mint50, border: Palette.mint100, content: Palette.mint900)
+        case (.mintSoft, .pressed): return .init(fill: Palette.mint100, border: Palette.mint100, content: Palette.mint900)
+        case (.mintSoft, .disabled): return .init(fill: Palette.mint50, border: Palette.mint100, content: Palette.navy300)
         }
     }
 }

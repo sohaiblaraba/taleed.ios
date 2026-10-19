@@ -9,6 +9,7 @@ struct MainShellView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
     @Environment(AppToasts.self) private var toasts
+    @Environment(WelcomeGate.self) private var welcome
 
     var body: some View {
         @Bindable var router = router
@@ -24,12 +25,7 @@ struct MainShellView: View {
         }
         .taleedToastHost(toasts.state)
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
-        // The design-system bottom sheet (handle, start-aligned title, close), as Android's sign-in sheet.
-        // Closing it signed in continues the action that asked for it (the auth gate).
-        .taleedSheet(isPresented: authSheetPresented, onDismiss: { router.authSheetDidDismiss() }, content: {
-            SignInView()
-                .appLanguage(l10n.language)
-        })
+        .accessibilityHidden(showsWelcome)
         .overlay {
             if router.isResolvingLink {
                 ProgressView()
@@ -38,10 +34,32 @@ struct MainShellView: View {
                     .accessibilityLabel(l10n.string(.commonLoading))
             }
         }
+        // Welcome (Figma Login) covers the shell for a signed-out member until they browse or sign in.
+        .overlay {
+            if showsWelcome {
+                WelcomeView(onContinueWithEmail: { router.presentSignIn() }, onBrowse: { welcome.complete() })
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: TaleedMotion.transitionMax), value: showsWelcome)
+        // The design-system bottom sheet (handle, start-aligned title, close) with the auth forms, as
+        // Android's sign-in sheet. Closing it signed in continues the action that asked for it (the auth gate).
+        .taleedSheet(isPresented: authSheetPresented, onDismiss: { router.authSheetDidDismiss() }, content: {
+            AuthSheetView(entry: router.authEntry ?? .signIn)
+                .appLanguage(l10n.language)
+        })
         .onAppear { router.shellDidAppear() }
         .onChange(of: session.isSignedIn) { _, isSignedIn in
-            if !isSignedIn { router.sessionDidEnd() }
+            if isSignedIn {
+                welcome.complete()
+            } else {
+                router.sessionDidEnd()
+            }
         }
+    }
+
+    private var showsWelcome: Bool {
+        welcome.isVisible && !session.isSignedIn
     }
 
     private var authSheetPresented: Binding<Bool> {
@@ -53,9 +71,17 @@ struct MainShellView: View {
             BottomNavItem(id: .home, icon: .houseLine, title: l10n.string(.tabHome)),
             BottomNavItem(id: .explore, icon: .magnifyingGlass, title: l10n.string(.tabExplore)),
             BottomNavItem(id: .sell, icon: .plus, title: l10n.string(.tabSell)),
-            BottomNavItem(id: .messages, icon: .chatCircleText, title: l10n.string(.tabMessages)),
+            BottomNavItem(id: .messages, icon: .chatCircleText, title: l10n.string(.tabMessages),
+                          badge: unreadMessages, badgeAccessibilityLabel: unreadMessagesLabel),
             BottomNavItem(id: .profile, icon: .user, title: l10n.string(.tabProfile)),
         ]
+    }
+
+    /// `counts.unreadMessages` of `GET /me` (launch, foreground, sign-in).
+    private var unreadMessages: Int { session.user?.unreadMessages ?? 0 }
+
+    private var unreadMessagesLabel: String? {
+        unreadMessages > 0 ? l10n.format(.appA11yUnreadMessages, unreadMessages) : nil
     }
 
     /// Keeps every tab alive in its own navigation stack, and shows the selected one.
@@ -92,11 +118,18 @@ struct ShellBrandAppBar: View {
     var showsDivider = true
     @Environment(SessionManager.self) private var session
     @Environment(AppRouter.self) private var router
+    @Environment(LanguageManager.self) private var l10n
+
+    /// `counts.unreadNotifications` of `GET /me`.
+    private var unreadNotifications: Int { session.user?.unreadNotifications ?? 0 }
 
     var body: some View {
         BrandAppBar(
             showsDivider: showsDivider,
             onNotifications: session.isSignedIn ? { router.push(.notifications) } : nil,
+            notificationsBadge: unreadNotifications,
+            notificationsBadgeAccessibilityLabel: unreadNotifications > 0
+                ? l10n.format(.appA11yUnreadNotifications, unreadNotifications) : nil,
             avatarInitials: session.user.map { TaleedAvatar.initials(from: $0.displayName) },
             avatarURL: session.user?.avatarURL,
             onAvatar: { router.selectedTab = .profile }

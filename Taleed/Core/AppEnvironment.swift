@@ -19,9 +19,14 @@ struct AppEnvironment: Sendable {
         guard let base = info["TaleedAPIBaseURL"] as? String, let apiBaseURL = URL(string: base) else {
             preconditionFailure("TaleedAPIBaseURL is missing from Info.plist")
         }
+        var appVersion = info["CFBundleShortVersionString"] as? String ?? "0.0.0"
+        #if DEBUG
+        // `-TaleedDebugAppVersion 0.9.0`: check the update screen against the local server.
+        if let version = UserDefaults.standard.string(forKey: "TaleedDebugAppVersion") { appVersion = version }
+        #endif
         return AppEnvironment(
             apiBaseURL: apiBaseURL,
-            appVersion: info["CFBundleShortVersionString"] as? String ?? "0.0.0",
+            appVersion: appVersion,
             buildNumber: info["CFBundleVersion"] as? String ?? "0",
             appStoreURL: URL(string: "https://apps.apple.com/app/taleed")!
         )

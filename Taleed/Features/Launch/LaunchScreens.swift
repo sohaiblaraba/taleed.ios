@@ -66,14 +66,30 @@ struct UpdateRequiredView: View {
     }
 }
 
-/// The account is suspended: support contacts from `GET /config`, and Sign out.
+/// The account is suspended: support contacts from `GET /config`, and Sign out. A member suspended while
+/// signed in can still open their orders and wallet and delete the account (slice-d.md and slice-e.md,
+/// Suspended members): `showsAccountLinks`. Those screens push on the Profile stack, shown here.
 struct SuspendedView: View {
     let support: SupportContacts
+    var showsAccountLinks = false
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
+    @Environment(AppRouter.self) private var router
     @Environment(\.openURL) private var openURL
 
     var body: some View {
+        NavigationStack(path: router.pathBinding(.profile)) {
+            content
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: AppRoute.self) { RouteDestinationView(route: $0) }
+        }
+        .onAppear {
+            // Screens opened from here (an order from the orders list) push on the Profile stack.
+            router.selectedTab = .profile
+        }
+    }
+
+    private var content: some View {
         VStack(spacing: 0) {
             BrandAppBar(showsDivider: true)
             ScrollView {
@@ -97,7 +113,28 @@ struct SuspendedView: View {
                         .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
                     }
 
+                    if showsAccountLinks {
+                        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                            Eyebrow(text: l10n.string(.appSuspendedStillAvailable))
+                            VStack(spacing: 0) {
+                                ListRow(label: l10n.string(.navOrders), leadingIcon: .truck, showsChevron: true) {
+                                    router.push(.orders)
+                                }
+                                ListRow(label: l10n.string(.navWallet), leadingIcon: .money, showsChevron: true) {
+                                    router.push(.wallet)
+                                }
+                                ListRow(label: l10n.string(.settingsDeleteCta), leadingIcon: .trash, showsChevron: true,
+                                        showsDivider: false, labelColor: TaleedColor.feedbackError) {
+                                    router.push(.deleteAccount)
+                                }
+                            }
+                            .taleedCard()
+                            .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+                        }
+                    }
+
                     TaleedButton(title: l10n.string(.authSignOut), kind: .tertiary, size: .large, isFullWidth: true) {
+                        router.popToRoot(.profile)
                         session.signOut()
                     }
                 }
