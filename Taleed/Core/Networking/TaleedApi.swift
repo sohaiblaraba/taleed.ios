@@ -1,64 +1,90 @@
 import Foundation
 import TaleedAPI
 
-/// The API calls that the app makes, in app models. View models depend on this protocol;
-/// only `GeneratedTaleedApi` touches the generated client.
+// How the app calls the API
+//
+// View models depend on protocols of app models; only `GeneratedTaleedApi` touches the generated
+// client. Each screen group adds its own protocol next to its screens (for example `ListingsApi` in
+// `Features/Listing`), implements it in an extension of `GeneratedTaleedApi` with
+// `caller.call(.read) { try await ListingsAPI.getListing(id: id, apiConfiguration: $0) }`, maps the
+// generated models to app models there, and gets the instance from `AppContainer.api`.
+// Pass `.write` for actions that must not repeat on their own (api-guide.md, Retrying).
+
+/// The calls of the app shell: launch, session, catalog, and what the router and the debug menu need.
 @MainActor
 protocol TaleedApi: AnyObject {
     func config() async throws(ApiError) -> RemoteConfig
-    func catalogCategories() async throws(ApiError) -> [CatalogCategory]
-    func me() async throws(ApiError) -> User
+    func catalog() async throws(ApiError) -> Catalog
+    /// `automatic`: a refresh the member did not ask for (return to the foreground).
+    func me(automatic: Bool) async throws(ApiError) -> User
     func signIn(email: String, password: String) async throws(ApiError) -> (token: String, user: User)
     /// Revokes the session of `token` on the server. The caller deletes the token whatever the answer.
     func signOut(token: String) async throws(ApiError)
+    /// `POST /conversations` with `listingId` and `buyerId` (the `/listings/{id}/chat?with=` link):
+    /// the conversation's id.
+    func openConversation(listingId: String, buyerId: String) async throws(ApiError) -> String
 
     /// Called when the API rejects the token that a request carried (`401 unauthorized`),
     /// with that token. `SessionManager` sets it to sign out globally.
     var onUnauthorized: ((String) -> Void)? { get set }
 }
 
+extension TaleedApi {
+    func me() async throws(ApiError) -> User { try await me(automatic: false) }
+}
+
+/// `POST /uploads` (api-guide.md, Uploads). Use `PhotoUploadService`, which prepares the photo.
 @MainActor
-final class GeneratedTaleedApi: TaleedApi {
-    private let session: ApiSession
-    var onUnauthorized: ((String) -> Void)?
+protocol UploadsApi: AnyObject {
+    /// Uploads a prepared JPEG file. Allow about a minute.
+    func upload(file: URL, purpose: UploadPurpose) async throws(ApiError) -> UploadedPhoto
+}
+
+/// The step of `POST /orders/{id}/shipment/simulate` (development and staging servers only).
+enum ShipmentSimulationStep: String, CaseIterable, Sendable {
+    case transit, arrived, delivered
+}
+
+/// Development-only calls, for the debug menu. Never call them from a release build's screens.
+@MainActor
+protocol DevelopmentApi: AnyObject {
+    /// Moves a demo parcel forward. `404` unless the server's carrier is the mock one.
+    func simulateShipment(orderId: String, step: ShipmentSimulationStep) async throws(ApiError)
+}
+
+@MainActor
+final class GeneratedTaleedApi: TaleedApi, UploadsApi, DevelopmentApi {
+    let session: ApiSession
+    /// Runs every generated call: errors, retries, the rejected token.
+    let caller: ApiCaller
+
+    var onUnauthorized: ((String) -> Void)? {
+        get { caller.onUnauthorized }
+        set { caller.onUnauthorized = newValue }
+    }
 
     init(session: ApiSession) {
         self.session = session
+        caller = ApiCaller(session: session)
     }
 
     func config() async throws(ApiError) -> RemoteConfig {
-        let config = try await call { () async throws(ErrorResponse) in
-            try await ReferenceAPI.getConfig(apiConfiguration: session.configuration)
-        }
-        return RemoteConfig(
-            minimumVersion: config.minimumVersion.ios,
-            support: SupportContacts(
-                email: config.support.email,
-                phone: config.support.phone,
-                whatsappURL: URL(string: config.support.whatsappUrl)
-            )
-        )
+        let config = try await caller.call { try await ReferenceAPI.getConfig(apiConfiguration: $0) }
+        return RemoteConfig(config)
     }
 
-    func catalogCategories() async throws(ApiError) -> [CatalogCategory] {
-        let catalog = try await call { () async throws(ErrorResponse) in
-            try await ReferenceAPI.getCatalog(apiConfiguration: session.configuration)
-        }
-        return catalog.categories.map { CatalogCategory(id: $0.id, name: $0.name) }
+    func catalog() async throws(ApiError) -> Catalog {
+        Catalog(try await caller.call { try await ReferenceAPI.getCatalog(apiConfiguration: $0) })
     }
 
-    func me() async throws(ApiError) -> User {
-        let me = try await call { () async throws(ErrorResponse) in
-            try await AccountAPI.getMe(apiConfiguration: session.configuration)
-        }
-        return User(me)
+    func me(automatic: Bool) async throws(ApiError) -> User {
+        User(try await caller.call(.read, automatic: automatic) { try await AccountAPI.getMe(apiConfiguration: $0) })
     }
 
     func signIn(email: String, password: String) async throws(ApiError) -> (token: String, user: User) {
         let request = SignInRequest(email: email, password: password)
-        let auth = try await call { () async throws(ErrorResponse) in
-            try await AuthAPI.signIn(signInRequest: request, apiConfiguration: session.configuration)
-        }
+        // Repeating a sign-in does no harm (api-guide.md, Retrying), but a wrong password must not.
+        let auth = try await caller.call(.write) { try await AuthAPI.signIn(signInRequest: request, apiConfiguration: $0) }
         return (auth.token, User(auth.user))
     }
 
@@ -72,22 +98,33 @@ final class GeneratedTaleedApi: TaleedApi {
         }
     }
 
-    /// Runs a generated call, maps its error, and reports a rejected token.
-    private func call<T: Sendable>(
-        _ operation: () async throws(ErrorResponse) -> T
-    ) async throws(ApiError) -> T {
-        let sentToken = session.token
-        do {
-            return try await operation()
-        } catch {
-            let apiError = ApiError.from(error)
-            if apiError == .unauthorized, let sentToken {
-                onUnauthorized?(sentToken)
-            }
-            throw apiError
+    func openConversation(listingId: String, buyerId: String) async throws(ApiError) -> String {
+        let request = ConversationOpen(listingId: listingId, buyerId: buyerId)
+        // Opening the same conversation again returns it (slice C, Retrying).
+        let conversation = try await caller.call(.read) {
+            try await ConversationsAPI.openConversation(conversationOpen: request, apiConfiguration: $0)
+        }
+        return conversation.id
+    }
+
+    func upload(file: URL, purpose: UploadPurpose) async throws(ApiError) -> UploadedPhoto {
+        let generatedPurpose = TaleedAPI.UploadPurpose(rawValue: purpose.rawValue) ?? .unknownDefaultOpenApi
+        // A repeated upload stores a new file; one left unused does no harm (slice E, Retrying).
+        let upload = try await caller.call(.read, configuration: session.uploadConfiguration()) {
+            try await UploadsAPI.createUpload(purpose: generatedPurpose, file: file, apiConfiguration: $0)
+        }
+        return UploadedPhoto(key: upload.key, url: URL(string: upload.url), thumbURL: URL(string: upload.thumbUrl))
+    }
+
+    func simulateShipment(orderId: String, step: ShipmentSimulationStep) async throws(ApiError) {
+        let body = ShipmentSimulation(step: TaleedAPI.ShipmentSimulationStep(rawValue: step.rawValue) ?? .unknownDefaultOpenApi)
+        try await caller.call(.write) {
+            try await DevelopmentAPI.simulateShipment(id: orderId, shipmentSimulation: body, apiConfiguration: $0)
         }
     }
 }
+
+// MARK: - Mapping
 
 private extension User {
     init(_ me: Me) {
@@ -97,7 +134,62 @@ private extension User {
             displayName: me.displayName,
             avatarURL: me.avatarUrl.flatMap(URL.init(string:)),
             isVerified: me.isVerified,
-            isOfficial: me.isOfficial
+            isOfficial: me.isOfficial,
+            unreadMessages: me.counts.unreadMessages,
+            unreadNotifications: me.counts.unreadNotifications
+        )
+    }
+}
+
+private extension RemoteConfig {
+    init(_ config: AppConfig) {
+        self.init(
+            minimumVersion: config.minimumVersion.ios,
+            support: SupportContacts(
+                email: config.support.email,
+                phone: config.support.phone,
+                whatsappURL: URL(string: config.support.whatsappUrl)
+            ),
+            betaMode: config.betaMode,
+            features: RemoteFeatures(visualSearch: config.features.visualSearch, push: config.features.push),
+            // An unknown method is not offered (api-guide.md, Compatibility).
+            paymentMethods: config.paymentMethods.filter { $0 != .unknownDefaultOpenApi }.map(\.rawValue),
+            links: WebsiteLinks(
+                website: URL(string: config.links.website),
+                terms: URL(string: config.links.terms),
+                privacy: URL(string: config.links.privacy),
+                buyerProtection: URL(string: config.links.buyerProtection),
+                guides: URL(string: config.links.guides)
+            )
+        )
+    }
+}
+
+private extension Catalog {
+    init(_ catalog: TaleedAPI.Catalog) {
+        self.init(
+            categories: catalog.categories.map { node in
+                CatalogCategory(id: node.id, slug: node.slug, name: node.name,
+                                children: node.children.map { CatalogCategory(id: $0.id, slug: $0.slug, name: $0.name) })
+            },
+            // Values unknown to this build keep their catalog label: tags show it (decision 6).
+            conditions: catalog.conditions.map {
+                CatalogCondition(value: $0.value.rawValue, label: $0.label, shortLabel: $0.shortLabel)
+            },
+            sorts: catalog.sorts.compactMap {
+                $0.value == .unknownDefaultOpenApi ? nil : CatalogOption(value: $0.value.rawValue, label: $0.label)
+            },
+            wilayas: catalog.wilayas.map { CatalogWilaya(id: $0.id, name: $0.name) },
+            reportReasons: catalog.reportReasons.compactMap {
+                $0.value == .unknownDefaultOpenApi ? nil : CatalogOption(value: $0.value.rawValue, label: $0.label)
+            },
+            disputeReasons: catalog.disputeReasons.compactMap {
+                $0.value == .unknownDefaultOpenApi
+                    ? nil : CatalogDisputeReason(value: $0.value.rawValue, label: $0.label, needsEvidence: $0.needsEvidence)
+            },
+            payoutMethods: catalog.payoutMethods.compactMap {
+                $0.value == .unknownDefaultOpenApi ? nil : CatalogOption(value: $0.value.rawValue, label: $0.label)
+            }
         )
     }
 }

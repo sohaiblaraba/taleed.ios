@@ -4,7 +4,7 @@ import SwiftUI
 struct HomeView: View {
     let viewModel: HomeViewModel
     @Environment(LanguageManager.self) private var l10n
-    @Environment(ShellRouter.self) private var router
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         ShellScreen {
@@ -31,7 +31,7 @@ struct HomeView: View {
                     .padding(.top, TaleedSpacing.s8)
                 MessageStateView(text: l10n.string(.commonEmpty))
             }
-            .refreshable { await viewModel.load() }
+            .refreshable { await viewModel.retry() }
         case let .loaded(categories):
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -45,13 +45,15 @@ struct HomeView: View {
                         .padding(.bottom, TaleedSpacing.s8)
                     LazyVStack(spacing: 0) {
                         ForEach(categories) { category in
-                            ListRow(label: category.name)
+                            ListRow(label: category.name, showsChevron: true) {
+                                router.push(.search(ExploreQuery(category: category.slug)))
+                            }
                         }
                     }
                 }
                 .padding(.bottom, TaleedSpacing.s24)
             }
-            .refreshable { await viewModel.load() }
+            .refreshable { await viewModel.retry() }
         }
     }
 

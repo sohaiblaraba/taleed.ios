@@ -11,16 +11,29 @@ struct AppRootView: View {
         content
             // Rebuild the screens when the language changes. Otherwise a screen that is off screen
             // in a navigation stack keeps the old layout direction and shows mirrored text.
-            // The tab and the navigation path live in ShellRouter, so they survive.
+            // The tab and the navigation paths live in AppRouter, so they survive.
             .id(language)
             .environment(container.languageManager)
             .environment(container.session)
             .environment(container.router)
+            .environment(container.catalog)
+            .environment(container.toasts)
+            #if DEBUG
+            .environment(\.developmentApi, container.api)
+            #endif
             .environment(\.appEnvironment, container.environment)
             .appLanguage(language)
             .tint(Theme.primary)
             .preferredColorScheme(.light)
             .task { await container.launch.start() }
+            // The disk copy shows at once; the launch fetches the catalog again (api-guide.md, Caching).
+            .task { await container.catalog.refresh() }
+            // App links (taleed.app), the payment return (`taleed://payment-return`) and pushes all go
+            // through the router; one that comes during launch waits for the shell.
+            .onOpenURL { container.router.open(url: $0) }
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                if let url = activity.webpageURL { container.router.open(url: url) }
+            }
             .onChange(of: scenePhase) { _, phase in
                 switch phase {
                 case .background:

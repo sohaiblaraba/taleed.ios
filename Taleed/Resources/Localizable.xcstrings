@@ -70,6 +70,457 @@
         }
       }
     },
+    "app_error_address_limit": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لقد بلغت الحد الأقصى لعدد العناوين. احذف عنوانًا لإضافة آخر."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have reached the maximum number of addresses. Delete one to add another."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez atteint le nombre maximal d’adresses. Supprimez-en une pour en ajouter une autre."
+          }
+        }
+      }
+    },
+    "app_error_file_too_large": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه الصورة كبيرة جدًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This photo is too large."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette photo est trop volumineuse."
+          }
+        }
+      }
+    },
+    "app_error_forbidden": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكنك القيام بهذا الإجراء."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can’t do this."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous ne pouvez pas effectuer cette action."
+          }
+        }
+      }
+    },
+    "app_error_invalid_request": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحقّق من الحقول المشار إليها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the highlighted fields."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez les champs indiqués."
+          }
+        }
+      }
+    },
+    "app_error_invalid_state": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيّر الوضع في الأثناء. حدّث الصفحة لرؤية الخيارات الجديدة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This has changed in the meantime. Refresh to see what you can do now."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La situation a changé entre-temps. Actualisez pour voir les nouvelles options."
+          }
+        }
+      }
+    },
+    "app_error_invite_required": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التسجيل في تليد بالدعوة فقط حاليًا. اطلب دعوة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taleed is invite-only for now. Request an invitation."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taleed est sur invitation pour le moment. Demandez une invitation."
+          }
+        }
+      }
+    },
+    "app_error_listing_locked": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن تعديل هذا الغرض حاليًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This item can’t be changed right now."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet article ne peut pas être modifié pour le moment."
+          }
+        }
+      }
+    },
+    "app_error_offer_closed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد هذا العرض بانتظار رد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This offer is no longer waiting for an answer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette offre n’attend plus de réponse."
+          }
+        }
+      }
+    },
+    "app_error_offer_out_of_range": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا المبلغ غير مقبول لهذا العرض."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This amount isn’t accepted for this offer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce montant n’est pas accepté pour cette offre."
+          }
+        }
+      }
+    },
+    "app_error_password_too_long": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يجب ألا تتجاوز كلمة المرور 128 حرفًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password must be at most 128 characters."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe ne doit pas dépasser 128 caractères."
+          }
+        }
+      }
+    },
+    "app_error_payment_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الدفع غير متاح حاليًا. حاول مجددًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payment is unavailable right now. Please try again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le paiement est indisponible pour le moment. Réessayez."
+          }
+        }
+      }
+    },
+    "app_error_price_changed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيّر المجموع. تحقّق من المبلغ الجديد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The total has changed. Check the new amount."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le total a changé. Vérifiez le nouveau montant."
+          }
+        }
+      }
+    },
+    "app_error_rate_limited": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أعد المحاولة بعد لحظات."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please try again in a moment."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réessayez dans un instant."
+          }
+        }
+      }
+    },
+    "app_error_rate_limited_minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أعد المحاولة بعد %d دقيقة."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أعد المحاولة بعد دقيقة واحدة."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أعد المحاولة بعد دقيقتين."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أعد المحاولة بعد %d دقائق."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أعد المحاولة بعد %d دقيقة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أعد المحاولة بعد %d دقيقة."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Try again in %d minute."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Try again in %d minutes."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Réessayez dans %d minute."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Réessayez dans %d minutes."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "app_error_shipping_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حساب تكلفة التوصيل. حاول مجددًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The delivery cost could not be calculated. Please try again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les frais de livraison n’ont pas pu être calculés. Réessayez."
+          }
+        }
+      }
+    },
+    "app_error_unsupported_media": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا التنسيق غير مدعوم."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This format is not supported."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce format n’est pas pris en charge."
+          }
+        }
+      }
+    },
+    "app_error_username_cooldown": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لقد غيّرت اسم المستخدم مؤخرًا. حاول لاحقًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You changed your username recently. Try again later."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez changé de nom d’utilisateur récemment. Réessayez plus tard."
+          }
+        }
+      }
+    },
     "app_name": {
       "extractionState": "manual",
       "localizations": {
@@ -93,6 +544,75 @@
         }
       }
     },
+    "app_not_found_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ربما تم حذفه أو إخفاؤه."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It may have been removed or hidden."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il a peut-être été supprimé ou masqué."
+          }
+        }
+      }
+    },
+    "app_not_found_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا المحتوى لم يعد متاحًا"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is no longer available"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce contenu n’est plus disponible"
+          }
+        }
+      }
+    },
+    "app_placeholder_coming_soon": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه الشاشة قادمة قريبًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This screen is coming soon."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet écran arrive bientôt."
+          }
+        }
+      }
+    },
     "auth_email": {
       "extractionState": "manual",
       "localizations": {
@@ -112,6 +632,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adresse email"
+          }
+        }
+      }
+    },
+    "auth_error_email_exists": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوجد حساب بهذا البريد الإلكتروني."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An account already exists with this email."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un compte existe déjà avec cet email."
+          }
+        }
+      }
+    },
+    "auth_error_generic": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر إتمام العملية. حاول مجددًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not complete the operation. Please try again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de terminer l’opération. Réessayez."
           }
         }
       }
@@ -162,6 +728,52 @@
         }
       }
     },
+    "auth_error_username_invalid": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم مستخدم غير صالح: من 3 إلى 30 حرفًا — أحرف أو أرقام أو نقاط أو شرطات أو شرطات سفلية."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid username: 3–30 characters — letters, digits, dots, hyphens or underscores."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom d’utilisateur invalide : 3 à 30 caractères, lettres, chiffres, points, tirets ou underscores."
+          }
+        }
+      }
+    },
+    "auth_error_username_taken": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم المستخدم مأخوذ."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This username is already taken."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce nom d’utilisateur est déjà pris."
+          }
+        }
+      }
+    },
     "auth_password": {
       "extractionState": "manual",
       "localizations": {
@@ -181,6 +793,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mot de passe"
+          }
+        }
+      }
+    },
+    "auth_request_access_account_exists": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوجد حساب بالفعل بهذا البريد الإلكتروني. جرّب تسجيل الدخول بدلاً من ذلك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An account already exists with this email. Try logging in instead."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un compte existe déjà avec cet email. Essayez de vous connecter."
+          }
+        }
+      }
+    },
+    "auth_request_access_already_requested": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لديك بالفعل طلب معلّق أو مقبول بهذا البريد الإلكتروني."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You already have a pending or approved request with this email."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez déjà une demande en attente ou approuvée avec cet email."
           }
         }
       }
@@ -300,6 +958,75 @@
         }
       }
     },
+    "chat_blocked_read_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد بإمكانك مراسلة هذا العضو."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can no longer message this member."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous ne pouvez plus écrire à ce membre."
+          }
+        }
+      }
+    },
+    "checkout_error_listing_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الغرض لم يعد متاحًا للشراء."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This item is no longer available for purchase."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet article n’est plus disponible à l’achat."
+          }
+        }
+      }
+    },
+    "checkout_error_method_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طريقة الدفع هذه لم تعد متاحة. يرجى اختيار طريقة أخرى."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This payment method is no longer offered. Please pick another one."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce moyen de paiement n’est plus proposé. Choisissez-en un autre."
+          }
+        }
+      }
+    },
     "checkout_item_label": {
       "extractionState": "manual",
       "localizations": {
@@ -319,6 +1046,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Article"
+          }
+        }
+      }
+    },
+    "checkout_promo_invalid": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رمز التخفيض غير صالح."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This promo code is not valid."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce code promo n’est pas valide."
           }
         }
       }
@@ -365,6 +1115,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Retour"
+          }
+        }
+      }
+    },
+    "common_blocked": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد بإمكانك التفاعل مع هذا العضو."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can no longer interact with this member."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous ne pouvez plus interagir avec ce membre."
           }
         }
       }
@@ -526,6 +1299,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pas de connexion. Vérifiez votre réseau et réessayez."
+          }
+        }
+      }
+    },
+    "common_go_home": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العودة إلى الرئيسية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to home"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retour à l’accueil"
           }
         }
       }
@@ -1286,6 +2082,29 @@
         }
       }
     },
+    "offers_error_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوجد بالفعل عرض معلق على هذا الغرض."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An offer is already pending for this item."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une offre est déjà en attente pour cet article."
+          }
+        }
+      }
+    },
     "order_summary_fee_info": {
       "extractionState": "manual",
       "localizations": {
@@ -1328,6 +2147,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Récapitulatif"
+          }
+        }
+      }
+    },
+    "orders_label_carrier_error": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رفض الناقل إنشاء الطرد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The carrier rejected the parcel creation."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le transporteur a refusé la création du colis."
           }
         }
       }
@@ -1898,6 +2740,29 @@
         }
       }
     },
+    "report_already_reported": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لديك بلاغ قيد المراجعة لهذا العنصر."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You already have an open report for this item."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez déjà un signalement en cours pour cet élément."
+          }
+        }
+      }
+    },
     "search_placeholder": {
       "extractionState": "manual",
       "localizations": {
@@ -1990,6 +2855,98 @@
         }
       }
     },
+    "settings_delete_blocked_active_orders": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لديك طلبات جارية. أكملها أو ألغها قبل حذف حسابك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have orders in progress. Complete or cancel them before deleting your account."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez des commandes en cours. Terminez-les ou annulez-les avant de supprimer votre compte."
+          }
+        }
+      }
+    },
+    "settings_delete_blocked_open_disputes": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لديك نزاع مفتوح. انتظر حلّه قبل حذف حسابك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have an open dispute. Wait for its resolution before deleting your account."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez un litige en cours. Attendez sa résolution avant de supprimer votre compte."
+          }
+        }
+      }
+    },
+    "settings_delete_blocked_pending_payout": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هناك تحويل قيد المعالجة. انتظر وصوله قبل حذف حسابك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A payout is being processed. Wait for it to arrive before deleting your account."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un versement est en cours de traitement. Attendez son arrivée avant de supprimer votre compte."
+          }
+        }
+      }
+    },
+    "settings_delete_blocked_wallet": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يزال لديك رصيد في محفظتك. اطلب تحويله قبل حذف حسابك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You still have money in your wallet. Request a payout before deleting your account."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il reste de l’argent sur votre portefeuille. Demandez un versement avant de supprimer votre compte."
+          }
+        }
+      }
+    },
     "settings_language": {
       "extractionState": "manual",
       "localizations": {
@@ -2009,6 +2966,75 @@
           "stringUnit": {
             "state": "translated",
             "value": "Langue"
+          }
+        }
+      }
+    },
+    "settings_name_locked_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم التحقق من هويتك، لذا يجب أن يبقى اسمك مطابقًا لوثيقة هويتك. اتصل بنا إذا احتاج إلى تصحيح."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your identity is verified, so your name now has to keep matching your ID document. Contact us if it needs correcting."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre identité est vérifiée : votre nom doit désormais rester conforme à votre pièce d’identité. Contactez-nous s’il doit être corrigé."
+          }
+        }
+      }
+    },
+    "settings_password_too_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password must be at least 8 characters."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe doit contenir au moins 8 caractères."
+          }
+        }
+      }
+    },
+    "settings_password_wrong_error": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كلمة المرور الحالية غير صحيحة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current password is incorrect."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe actuel est incorrect."
           }
         }
       }
@@ -2377,6 +3403,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mise à jour requise"
+          }
+        }
+      }
+    },
+    "visual_error_disabled": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث البصري غير مفعّل بعد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visual search is not enabled yet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La recherche visuelle n’est pas encore activée."
+          }
+        }
+      }
+    },
+    "wallet_error_amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المبلغ غير صالح أو أكبر من الرصيد المتاح."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid amount or above your available balance."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Montant invalide ou supérieur au solde disponible."
           }
         }
       }

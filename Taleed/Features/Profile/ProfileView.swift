@@ -5,7 +5,7 @@ import SwiftUI
 struct ProfileView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
-    @Environment(ShellRouter.self) private var router
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         ShellScreen {
@@ -17,14 +17,14 @@ struct ProfileView: View {
                         MemberHeader(user: user)
                     } else {
                         TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large, isFullWidth: true) {
-                            router.isSignInPresented = true
+                            router.presentSignIn()
                         }
                         .padding(.horizontal, TaleedLayout.screenMargin)
                         .padding(.top, TaleedSpacing.s24)
                     }
 
                     ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
-                        router.profilePath.append(.settings)
+                        router.push(.settings)
                     }
 
                     if session.isSignedIn {

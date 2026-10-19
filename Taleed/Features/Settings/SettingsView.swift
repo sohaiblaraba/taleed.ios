@@ -3,7 +3,7 @@ import SwiftUI
 /// The language picker, then the app version.
 struct SettingsView: View {
     @Environment(LanguageManager.self) private var l10n
-    @Environment(ShellRouter.self) private var router
+    @Environment(AppRouter.self) private var router
     @Environment(\.appEnvironment) private var environment
     @Environment(\.dismiss) private var dismiss
 
@@ -34,7 +34,10 @@ struct SettingsView: View {
                         .padding(.top, TaleedSpacing.s16)
                     #if DEBUG
                     ListRow(label: "Design system", leadingIcon: .sparkle, showsChevron: true) {
-                        router.profilePath.append(.designSystem)
+                        router.push(.designSystem)
+                    }
+                    ListRow(label: "Developer menu", leadingIcon: .info, showsChevron: true) {
+                        router.push(.developerMenu)
                     }
                     #endif
                 }

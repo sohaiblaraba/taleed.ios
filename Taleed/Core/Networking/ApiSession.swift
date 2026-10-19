@@ -23,6 +23,27 @@ struct TaleedRequestBuilderFactory: RequestBuilderFactory {
     func getBuilder<T: Decodable>() -> RequestBuilder<T>.Type { TaleedDecodableRequestBuilder<T>.self }
 }
 
+/// Uploads: the same session rules, with the minute the API guide allows for a photo (Uploads).
+let taleedUploadURLSession: URLSession = {
+    let configuration = URLSessionConfiguration.default
+    configuration.timeoutIntervalForRequest = 60
+    configuration.timeoutIntervalForResource = 120
+    configuration.httpShouldSetCookies = false
+    configuration.httpCookieStorage = nil
+    configuration.urlCache = nil
+    return URLSession(configuration: configuration)
+}()
+
+final class TaleedUploadDecodableRequestBuilder<T: Decodable & Sendable>: URLSessionDecodableRequestBuilder<T>,
+    @unchecked Sendable {
+    override func createURLSession() -> URLSessionProtocol { taleedUploadURLSession }
+}
+
+struct TaleedUploadRequestBuilderFactory: RequestBuilderFactory {
+    func getNonDecodableBuilder<T>() -> RequestBuilder<T>.Type { TaleedRequestBuilder<T>.self }
+    func getBuilder<T: Decodable>() -> RequestBuilder<T>.Type { TaleedUploadDecodableRequestBuilder<T>.self }
+}
+
 /// Holds the token and the language, and sets the headers of api-guide.md on every request:
 /// `Accept-Language`, `X-App-Platform`, `X-App-Version` and, once signed in, `Authorization`.
 ///
@@ -71,4 +92,16 @@ final class ApiSession: Sendable {
             requestBuilderFactory: TaleedRequestBuilderFactory()
         )
     }
+
+    /// A configuration with the current headers whose requests may take a minute: uploads.
+    func uploadConfiguration() -> TaleedAPIAPIConfiguration {
+        TaleedAPIAPIConfiguration(
+            basePath: configuration.basePath,
+            customHeaders: configuration.customHeaders,
+            requestBuilderFactory: TaleedUploadRequestBuilderFactory()
+        )
+    }
+
+    /// The base URL of the API, such as `http://localhost:3000/api/v1`.
+    var baseURL: String { configuration.basePath }
 }

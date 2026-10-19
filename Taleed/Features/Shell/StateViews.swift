@@ -19,21 +19,58 @@ struct LoadingStateView: View {
     }
 }
 
-/// An error with Retry: warning icon, the app's message for the error, a Tertiary Medium "Retry".
+/// An error with Retry: warning icon, the app's message for the error (offline, rate limit, server…),
+/// a Tertiary Medium "Retry". A `404 not_found` shows the "no longer available" state instead, with
+/// "Back to home" (screens that live in a stack may pass `onBack` to go back instead).
 struct ErrorStateView: View {
     let error: ApiError
     let retry: () -> Void
+    var onBack: (() -> Void)?
+    @Environment(LanguageManager.self) private var l10n
+    @Environment(AppRouter.self) private var router: AppRouter?
+
+    var body: some View {
+        if error.isNotFound {
+            NotFoundStateView(onBack: onBack ?? router.map { router in { router.open(.home) } })
+        } else {
+            CenteredStateColumn {
+                TaleedIconView(error == .network ? .wifiHigh : .warningCircle, size: 32,
+                               color: error == .network ? TaleedColor.textSecondary : TaleedColor.feedbackError)
+                    .accessibilityHidden(true)
+                Text(l10n.message(for: error))
+                    .taleedFont(TaleedFont.bodyLarge)
+                    .foregroundStyle(TaleedColor.textPrimary)
+                    .multilineTextAlignment(.center)
+                TaleedButton(title: l10n.string(.commonRetry), kind: .tertiary, size: .medium, action: retry)
+            }
+        }
+    }
+}
+
+/// "This is no longer available" (`404 not_found`): a removed or hidden listing, a suspended member,
+/// an order that is not the member's.
+struct NotFoundStateView: View {
+    var onBack: (() -> Void)?
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
         CenteredStateColumn {
-            TaleedIconView(.warningCircle, size: 32, color: TaleedColor.feedbackError)
+            TaleedIconView(.magnifyingGlass, size: 32, color: TaleedColor.textSecondary)
                 .accessibilityHidden(true)
-            Text(l10n.string(error == .network ? .commonErrorNetwork : .commonErrorGeneric))
-                .taleedFont(TaleedFont.bodyLarge)
-                .foregroundStyle(TaleedColor.textPrimary)
-                .multilineTextAlignment(.center)
-            TaleedButton(title: l10n.string(.commonRetry), kind: .tertiary, size: .medium, action: retry)
+            VStack(spacing: TaleedSpacing.s8) {
+                Text(l10n.string(.appNotFoundTitle))
+                    .taleedFont(TaleedFont.title2)
+                    .foregroundStyle(TaleedColor.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
+                Text(l10n.string(.appNotFoundBody))
+                    .taleedFont(TaleedFont.bodyRegular)
+                    .foregroundStyle(TaleedColor.textBody)
+            }
+            .multilineTextAlignment(.center)
+            .accessibilityElement(children: .combine)
+            if let onBack {
+                TaleedButton(title: l10n.string(.commonGoHome), kind: .tertiary, size: .medium, action: onBack)
+            }
         }
     }
 }
@@ -65,19 +102,19 @@ extension MessageStateView where Action == EmptyView {
 /// sheet (Android's sign-in placeholder).
 struct SignInPromptView: View {
     @Environment(LanguageManager.self) private var l10n
-    @Environment(ShellRouter.self) private var router
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         MessageStateView(text: l10n.string(.authSignInRequired)) {
             TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large) {
-                router.isSignInPresented = true
+                router.presentSignIn()
             }
         }
     }
 }
 
 /// Centres its content in the space (padding 24, gap 16); scrolls when large text makes it taller.
-private struct CenteredStateColumn<Content: View>: View {
+struct CenteredStateColumn<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {

@@ -1,7 +1,8 @@
 import Foundation
 import Observation
 
-/// The top-level categories of `GET /catalog`, in the app language.
+/// The top-level categories of the catalog, in the app language, from `CatalogStore` (shown from the
+/// disk copy at once, then refreshed).
 @MainActor
 @Observable
 final class HomeViewModel {
@@ -11,28 +12,28 @@ final class HomeViewModel {
         case failed(ApiError)
     }
 
-    private(set) var state: State = .loading
+    @ObservationIgnored private let catalog: CatalogStore
 
-    @ObservationIgnored private let api: TaleedApi
-
-    init(api: TaleedApi) {
-        self.api = api
+    init(catalog: CatalogStore) {
+        self.catalog = catalog
     }
 
-    /// Loads the categories. Keeps the current list on screen while it reloads (pull-to-refresh,
-    /// language switch), and shows the error state only when there is nothing to show.
+    /// The categories on screen while the catalog reloads (pull-to-refresh, language switch); the error
+    /// state only when there is nothing to show.
+    var state: State {
+        if let loaded = catalog.catalog { return .loaded(loaded.categories) }
+        if let error = catalog.error, !catalog.isRefreshing { return .failed(error) }
+        return .loading
+    }
+
+    /// Loads the catalog unless the launch already is.
     func load() async {
-        if case .failed = state { state = .loading }
-        do {
-            state = .loaded(try await api.catalogCategories())
-        } catch {
-            if case .loaded = state { return }
-            state = .failed(error)
-        }
+        guard !catalog.isRefreshing else { return }
+        await catalog.refresh()
     }
 
+    /// Pull-to-refresh and the error state's "Retry".
     func retry() async {
-        state = .loading
-        await load()
+        await catalog.refresh()
     }
 }

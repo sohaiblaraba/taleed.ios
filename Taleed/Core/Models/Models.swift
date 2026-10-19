@@ -12,15 +12,55 @@ struct User: Equatable, Sendable {
     let avatarURL: URL?
     let isVerified: Bool
     let isOfficial: Bool
+    /// `counts` of `GET /me`: the Messages tab and the bell badges.
+    var unreadMessages = 0
+    var unreadNotifications = 0
 
     /// `@username`, or nil for the few accounts without a username.
     var handle: String? { username.map { "@\($0)" } }
 }
 
-/// The parts of `GET /config` that the app uses so far.
+/// `GET /config`, the first call of every launch (api-guide.md, Remote configuration).
 struct RemoteConfig: Equatable, Sendable {
     let minimumVersion: String
     let support: SupportContacts
+    /// Invite-only period: the request-access form replaces sign-up.
+    var betaMode = false
+    var features = RemoteFeatures()
+    /// The payment methods turned on (`mock`, `cod`, `chargily`, `slickpay`), as the API names them.
+    var paymentMethods: [String] = []
+    /// Website pages to open in the in-app browser, in the response language.
+    var links = WebsiteLinks()
+}
+
+/// `features` of `GET /config`: hide what is off.
+struct RemoteFeatures: Equatable, Sendable {
+    var visualSearch = false
+    var push = false
+}
+
+/// `links` of `GET /config`. Open them with `InAppBrowser` (never in an embedded web view).
+struct WebsiteLinks: Equatable, Sendable {
+    var website: URL?
+    var terms: URL?
+    var privacy: URL?
+    var buyerProtection: URL?
+    var guides: URL?
+
+    func url(for page: WebsitePage) -> URL? {
+        switch page {
+        case .website: website
+        case .terms: terms
+        case .privacy: privacy
+        case .buyerProtection: buyerProtection
+        case .guides: guides
+        }
+    }
+}
+
+/// The website pages the app shows in the in-app browser.
+enum WebsitePage: String, CaseIterable, Sendable {
+    case website, terms, privacy, buyerProtection, guides
 }
 
 struct SupportContacts: Equatable, Sendable {
@@ -29,8 +69,12 @@ struct SupportContacts: Equatable, Sendable {
     let whatsappURL: URL?
 }
 
-/// A top-level category from `GET /catalog`, named in the app language.
-struct CatalogCategory: Identifiable, Equatable, Sendable {
-    let id: String
-    let name: String
+/// A page of a list (api-guide.md, Pagination). `nextCursor` is nil on the last page.
+struct Page<Item: Sendable>: Sendable {
+    let items: [Item]
+    let nextCursor: String?
+    /// The items across all pages ("132 results").
+    let total: Int
 }
+
+extension Page: Equatable where Item: Equatable {}

@@ -212,20 +212,23 @@ extension View {
 
 extension View {
     /// Presents a bottom sheet sized to its content, in the presenter's language and direction.
-    func taleedSheet<Sheet: View>(isPresented: Binding<Bool>, @ViewBuilder content: @escaping () -> Sheet) -> some View {
-        modifier(TaleedSheetPresenter(isPresented: isPresented, sheet: content))
+    /// `onDismiss` runs once the sheet is gone, however it closed.
+    func taleedSheet<Sheet: View>(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil,
+                                  @ViewBuilder content: @escaping () -> Sheet) -> some View {
+        modifier(TaleedSheetPresenter(isPresented: isPresented, onDismiss: onDismiss, sheet: content))
     }
 }
 
 private struct TaleedSheetPresenter<Sheet: View>: ViewModifier {
     @Binding var isPresented: Bool
+    let onDismiss: (() -> Void)?
     let sheet: () -> Sheet
     @Environment(\.locale) private var locale
     @Environment(\.layoutDirection) private var layoutDirection
     @State private var height: CGFloat = 320
 
     func body(content: Content) -> some View {
-        content.sheet(isPresented: $isPresented) {
+        content.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
             // Sized to the content (24 pt top corners, the design-system handle instead of the system
             // one); taller content (large text) gets the full height and scrolls.
             ScrollView {

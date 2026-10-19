@@ -6,7 +6,10 @@ import Foundation
 final class FakeTaleedApi: TaleedApi {
     var configResult: Result<RemoteConfig, ApiError> = .success(.fixture())
     var meResult: Result<User, ApiError> = .success(.fixture())
-    var categoriesResult: Result<[CatalogCategory], ApiError> = .success([])
+    var catalogResult: Result<Catalog, ApiError> = .success(.fixture())
+    var openConversationResult: Result<String, ApiError> = .success("conversation-1")
+    private(set) var catalogCalls = 0
+    private(set) var openedConversations: [(listingId: String, buyerId: String)] = []
     var signInResult: Result<(token: String, user: User), ApiError> = .success(("new-token", .fixture()))
     private(set) var meCalls = 0
     private(set) var signedOutTokens: [String] = []
@@ -17,9 +20,12 @@ final class FakeTaleedApi: TaleedApi {
 
     func config() async throws(ApiError) -> RemoteConfig { try configResult.get() }
 
-    func catalogCategories() async throws(ApiError) -> [CatalogCategory] { try categoriesResult.get() }
+    func catalog() async throws(ApiError) -> Catalog {
+        catalogCalls += 1
+        return try catalogResult.get()
+    }
 
-    func me() async throws(ApiError) -> User {
+    func me(automatic: Bool) async throws(ApiError) -> User {
         meCalls += 1
         if case .failure(.unauthorized) = meResult, let token = sentToken() {
             onUnauthorized?(token)
@@ -33,6 +39,11 @@ final class FakeTaleedApi: TaleedApi {
 
     func signOut(token: String) async throws(ApiError) {
         signedOutTokens.append(token)
+    }
+
+    func openConversation(listingId: String, buyerId: String) async throws(ApiError) -> String {
+        openedConversations.append((listingId, buyerId))
+        return try openConversationResult.get()
     }
 }
 
@@ -55,6 +66,20 @@ extension RemoteConfig {
         RemoteConfig(
             minimumVersion: minimumVersion,
             support: SupportContacts(email: "contact@taleed.app", phone: "+213540693236", whatsappURL: nil)
+        )
+    }
+}
+
+extension Catalog {
+    static func fixture(categories: [CatalogCategory] = [CatalogCategory(id: "c1", slug: "femmes", name: "Femmes")]) -> Catalog {
+        Catalog(
+            categories: categories,
+            conditions: [CatalogCondition(value: "VERY_GOOD", label: "Très bon état", shortLabel: "Très bon")],
+            sorts: [CatalogOption(value: "newest", label: "Nouveautés")],
+            wilayas: [CatalogWilaya(id: 16, name: "Alger")],
+            reportReasons: [],
+            disputeReasons: [],
+            payoutMethods: []
         )
     }
 }

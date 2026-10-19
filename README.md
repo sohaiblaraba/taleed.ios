@@ -25,6 +25,26 @@ Swift 6, SwiftUI, iOS 17 and later, iPhone in portrait.
 | `TaleedAPI/` | API client generated from `api/openapi.json`. Never edit it. |
 | `TaleedTests/` | Unit tests (Swift Testing). |
 
+## Shared screen infrastructure
+
+What every screen group reuses (screens.md §0 and §1, api-guide.md):
+
+| Piece | Where |
+|---|---|
+| Router: tabs, per-tab stacks, links, pushes, payment return, auth gate, website pages | `Core/Navigation/AppRouter.swift`, `AppRoute.swift`, `LinkRouter.swift`; screens per route in `Features/Shell/RouteDestinationView.swift` |
+| Calling the API: errors, read retries with backoff, rate-limit pause, rejected token | `Core/Networking/ApiCaller.swift`, `TaleedApi.swift` (add a protocol per screen group, implemented in an extension of `GeneratedTaleedApi`) |
+| Error codes and their messages | `Core/Networking/ApiError.swift`, `ApiErrorMessages.swift`; states in `Features/Shell/StateViews.swift`, toasts in `Features/Shared/AppToasts.swift` |
+| Cursor pagination, de-duplicated by id, pull-to-refresh | `Core/Lists/PagedList.swift`, `Features/Shared/PagedListView.swift` |
+| Catalog cached on disk, refreshed at launch and on language switch | `Core/Catalog/` |
+| Images (Nuke, disk cache) | `Core/Images/ImageLoading.swift`, `Features/Shared/RemoteImage.swift` |
+| Photo uploads (`POST /uploads`) | `Core/Uploads/PhotoUpload.swift` |
+| In-app browser | `Core/Navigation/InAppBrowser.swift` (`router.openWebsite(.terms)`) |
+| Developer menu (debug builds only) | `Features/Developer/DeveloperMenuView.swift` (Settings → Developer menu) |
+
+Links can be tried on the simulator with the app's scheme, which reads like a path:
+`xcrun simctl openurl booted "taleed://ar/orders/<id>"`, or with the launch argument
+`-TaleedDebugOpenURL /listings/<id>`.
+
 ## Build configurations
 
 | Configuration | Bundle ID | App name | API |

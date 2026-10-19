@@ -1,107 +1,54 @@
-import Observation
 import SwiftUI
 
-enum ShellTab: Hashable, CaseIterable {
-    case home, explore, sell, messages, profile
-}
-
-/// Screens pushed on the Home and Sell tabs.
-enum ShellRoute: Hashable {
-    /// The notifications placeholder, opened from the brand app bar's bell.
-    case notifications
-}
-
-enum ProfileRoute: Hashable {
-    case settings
-    #if DEBUG
-    /// The design-system gallery (debug builds only).
-    case designSystem
-    #endif
-}
-
-/// Navigation state of the main shell. It lives outside the views so that it survives
-/// a language switch.
-@MainActor
-@Observable
-final class ShellRouter {
-    var selectedTab: ShellTab = .home
-    var homePath: [ShellRoute] = []
-    var sellPath: [ShellRoute] = []
-    var profilePath: [ProfileRoute] = []
-    var isSignInPresented = false
-
-    /// Selecting the current tab again returns it to its first screen.
-    var tabSelection: Binding<ShellTab> {
-        Binding(
-            get: { self.selectedTab },
-            set: { tab in
-                if tab == self.selectedTab {
-                    switch tab {
-                    case .home: self.homePath = []
-                    case .sell: self.sellPath = []
-                    case .profile: self.profilePath = []
-                    case .explore, .messages: break
-                    }
-                }
-                self.selectedTab = tab
-            }
-        )
-    }
-
-    /// Pushes the notifications placeholder on the current tab (the bell shows on Home and Sell).
-    func openNotifications() {
-        if selectedTab == .sell { sellPath.append(.notifications) } else { homePath.append(.notifications) }
-    }
-}
-
 /// The five tabs: Home, Explore, Sell, Messages, Profile, under the design-system bottom navigation
-/// (decision D-2). Every tab keeps its own navigation stack while another one shows.
+/// (decision D-2). Every tab keeps its own navigation stack (`AppRouter.paths`) while another one
+/// shows, and every stack draws its screens with `RouteDestinationView`.
 struct MainShellView: View {
     let home: HomeViewModel
-    @Environment(ShellRouter.self) private var router
+    @Environment(AppRouter.self) private var router
     @Environment(LanguageManager.self) private var l10n
+    @Environment(SessionManager.self) private var session
+    @Environment(AppToasts.self) private var toasts
 
     var body: some View {
         @Bindable var router = router
         ZStack {
-            tab(.home) {
-                NavigationStack(path: $router.homePath) {
-                    HomeView(viewModel: home).shellDestinations()
-                }
-            }
-            tab(.explore) { NavigationStack { ExploreView() } }
-            tab(.sell) {
-                NavigationStack(path: $router.sellPath) {
-                    SellView().shellDestinations()
-                }
-            }
-            tab(.messages) { NavigationStack { MessagesView() } }
-            tab(.profile) {
-                NavigationStack(path: $router.profilePath) {
-                    ProfileView()
-                        .navigationDestination(for: ProfileRoute.self) { route in
-                            switch route {
-                            case .settings: SettingsView()
-                            #if DEBUG
-                            case .designSystem: DesignSystemGalleryView()
-                            #endif
-                            }
-                        }
-                }
-            }
+            tab(.home) { HomeView(viewModel: home) }
+            tab(.explore) { ExploreView() }
+            tab(.sell) { SellView() }
+            tab(.messages) { MessagesView() }
+            tab(.profile) { ProfileView() }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             TaleedBottomNavigation(items: navigationItems, selection: router.tabSelection)
         }
+        .taleedToastHost(toasts.state)
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
         // The design-system bottom sheet (handle, start-aligned title, close), as Android's sign-in sheet.
-        .taleedSheet(isPresented: $router.isSignInPresented) {
+        // Closing it signed in continues the action that asked for it (the auth gate).
+        .taleedSheet(isPresented: authSheetPresented, onDismiss: { router.authSheetDidDismiss() }, content: {
             SignInView()
                 .appLanguage(l10n.language)
+        })
+        .overlay {
+            if router.isResolvingLink {
+                ProgressView()
+                    .controlSize(.large)
+                    .tint(TaleedColor.brandPrimary)
+                    .accessibilityLabel(l10n.string(.commonLoading))
+            }
+        }
+        .onAppear { router.shellDidAppear() }
+        .onChange(of: session.isSignedIn) { _, isSignedIn in
+            if !isSignedIn { router.sessionDidEnd() }
         }
     }
 
-    private var navigationItems: [BottomNavItem<ShellTab>] {
+    private var authSheetPresented: Binding<Bool> {
+        Binding(get: { router.authEntry != nil }, set: { if !$0 { router.authEntry = nil } })
+    }
+
+    private var navigationItems: [BottomNavItem<AppTab>] {
         [
             BottomNavItem(id: .home, icon: .houseLine, title: l10n.string(.tabHome)),
             BottomNavItem(id: .explore, icon: .magnifyingGlass, title: l10n.string(.tabExplore)),
@@ -111,13 +58,15 @@ struct MainShellView: View {
         ]
     }
 
-    /// Keeps every tab alive and shows the selected one.
-    private func tab(_ tab: ShellTab, @ViewBuilder content: () -> some View) -> some View {
+    /// Keeps every tab alive in its own navigation stack, and shows the selected one.
+    private func tab(_ tab: AppTab, @ViewBuilder root: () -> some View) -> some View {
         let isSelected = router.selectedTab == tab
-        return content()
-            .opacity(isSelected ? 1 : 0)
-            .allowsHitTesting(isSelected)
-            .accessibilityHidden(!isSelected)
+        return NavigationStack(path: router.pathBinding(tab)) {
+            root().navigationDestination(for: AppRoute.self) { RouteDestinationView(route: $0) }
+        }
+        .opacity(isSelected ? 1 : 0)
+        .allowsHitTesting(isSelected)
+        .accessibilityHidden(!isSelected)
     }
 }
 
@@ -142,27 +91,16 @@ struct ShellScreen<Bar: View, Content: View>: View {
 struct ShellBrandAppBar: View {
     var showsDivider = true
     @Environment(SessionManager.self) private var session
-    @Environment(ShellRouter.self) private var router
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         BrandAppBar(
             showsDivider: showsDivider,
-            onNotifications: session.isSignedIn ? { router.openNotifications() } : nil,
+            onNotifications: session.isSignedIn ? { router.push(.notifications) } : nil,
             avatarInitials: session.user.map { TaleedAvatar.initials(from: $0.displayName) },
             avatarURL: session.user?.avatarURL,
             onAvatar: { router.selectedTab = .profile }
         )
-    }
-}
-
-private extension View {
-    /// The screens Home and Sell push.
-    func shellDestinations() -> some View {
-        navigationDestination(for: ShellRoute.self) { route in
-            switch route {
-            case .notifications: NotificationsView()
-            }
-        }
     }
 }
 

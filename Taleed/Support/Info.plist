@@ -22,6 +22,17 @@
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(TALEED_URL_SCHEME)</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
@@ -37,6 +48,8 @@
 		<true/>
 	</dict>
 #endif
+	<key>TaleedURLScheme</key>
+	<string>$(TALEED_URL_SCHEME)</string>
 	<key>TaleedAPIBaseURL</key>
 	<string>$(TALEED_API_BASE_URL)</string>
 	<key>UIAppFonts</key>

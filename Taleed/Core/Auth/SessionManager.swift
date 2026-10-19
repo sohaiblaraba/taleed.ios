@@ -58,7 +58,7 @@ final class SessionManager {
     func refresh() async {
         guard isSignedIn else { return }
         do {
-            state = .signedIn(try await api.me())
+            state = .signedIn(try await api.me(automatic: true))
         } catch {
             if error == .banned { state = .suspended }
             // `.unauthorized` is handled by `handleUnauthorized`.

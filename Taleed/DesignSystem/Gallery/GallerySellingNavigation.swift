@@ -75,7 +75,7 @@ struct GallerySellingAndCheckout: View {
 /// §5 Navigation patterns and §6 composed modules.
 struct GalleryNavigation: View {
     @State private var search = "Nike jacket"
-    @State private var tab: ShellTab = .home
+    @State private var tab: AppTab = .home
     @State private var showsSheet = false
     @State private var showsModal = false
     @State private var showsHero = true
@@ -112,7 +112,7 @@ struct GalleryNavigation: View {
         GallerySection(id: "bottom-nav", number: "5.2", title: "Bottom navigation",
                        note: "Five destinations (D-2). One label size for all five; never truncated.", fullBleed: true) {
             TaleedBottomNavigation(items: [
-                BottomNavItem(id: ShellTab.home, icon: .houseLine, title: copy("Accueil", "الرئيسية", "Home")),
+                BottomNavItem(id: AppTab.home, icon: .houseLine, title: copy("Accueil", "الرئيسية", "Home")),
                 BottomNavItem(id: .explore, icon: .magnifyingGlass, title: copy("Explorer", "استكشاف", "Explore")),
                 BottomNavItem(id: .sell, icon: .plus, title: copy("Vendre", "بيع", "Sell")),
                 BottomNavItem(id: .messages, icon: .chatCircleText, title: copy("Messages", "الرسائل", "Messages")),

@@ -4,7 +4,7 @@ import SwiftUI
 /// §6 Composed patterns and the Item Detail pieces of the wireframes.
 struct GalleryComposed: View {
     @State private var query = "Nike jacket"
-    @State private var tab: ShellTab = .home
+    @State private var tab: AppTab = .home
     @State private var step = 2
     @State private var photo = 0
     @Environment(\.locale) private var locale
@@ -110,7 +110,7 @@ struct GalleryComposed: View {
 
     private var copyBack: String { DesignSystemStrings.string(.commonBack, locale: locale) }
 
-    private func navItems(_ copy: GalleryCopy) -> [BottomNavItem<ShellTab>] {
+    private func navItems(_ copy: GalleryCopy) -> [BottomNavItem<AppTab>] {
         [
             BottomNavItem(id: .home, icon: .houseLine, title: copy("Accueil", "الرئيسية", "Home")),
             BottomNavItem(id: .explore, icon: .magnifyingGlass, title: copy("Explorer", "استكشاف", "Explore")),
