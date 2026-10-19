@@ -5,14 +5,18 @@ struct SplashView: View {
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text(l10n.string(.appName))
-                .font(.largeTitle.bold())
-                .foregroundStyle(Theme.primary)
+        VStack(spacing: TaleedSpacing.s24) {
+            Image(taleed: .wordmark)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 190, height: 48)
+                .accessibilityLabel(l10n.string(.appName))
             ProgressView()
+                .tint(TaleedColor.brandPrimary)
                 .accessibilityLabel(l10n.string(.commonLoading))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
     }
 }
 
@@ -23,6 +27,7 @@ struct LaunchErrorView: View {
 
     var body: some View {
         ErrorStateView(error: error, retry: retry)
+            .background(TaleedColor.surfacePrimary.ignoresSafeArea())
     }
 }
 
@@ -34,24 +39,30 @@ struct UpdateRequiredView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                Image(systemName: "arrow.down.app")
-                    .font(.system(size: 56))
-                    .foregroundStyle(Theme.primary)
+            VStack(spacing: TaleedSpacing.s16) {
+                Image(taleed: .lettermark)
+                    .resizable()
+                    .frame(width: 64, height: 64)
                     .accessibilityHidden(true)
                 Text(l10n.string(.updateRequiredTitle))
-                    .font(.title2.bold())
+                    .taleedFont(TaleedFont.title2)
+                    .foregroundStyle(TaleedColor.textPrimary)
                     .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
                 Text(l10n.string(.updateRequiredBody))
+                    .taleedFont(TaleedFont.bodyLarge)
+                    .foregroundStyle(TaleedColor.textBody)
                     .multilineTextAlignment(.center)
-                Button(l10n.string(.updateRequiredAction)) { openURL(storeURL) }
-                    .buttonStyle(.borderedProminent)
-                    .frame(minHeight: Theme.minTouchTarget)
+                TaleedButton(title: l10n.string(.updateRequiredAction), kind: .secondary, size: .large, isFullWidth: true) {
+                    openURL(storeURL)
+                }
+                .padding(.top, TaleedSpacing.s8)
             }
-            .padding(24)
+            .padding(TaleedSpacing.s24)
             .frame(maxWidth: .infinity)
         }
         .defaultScrollAnchor(.center)
+        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
     }
 }
 
@@ -60,46 +71,49 @@ struct SuspendedView: View {
     let support: SupportContacts
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
-        List {
-            Section {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(l10n.string(.suspendedTitle))
-                        .font(.title2.bold())
-                    Text(l10n.string(.suspendedBody))
-                }
-                .padding(.vertical, 8)
-            }
+        VStack(spacing: 0) {
+            BrandAppBar(showsDivider: true)
+            ScrollView {
+                VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
+                    InlineAlert(kind: .error, title: l10n.string(.suspendedTitle), message: l10n.string(.suspendedBody))
 
-            Section(l10n.string(.suspendedContact)) {
-                if let url = URL(string: "mailto:\(support.email)") {
-                    contactLink(support.email, systemImage: "envelope", url: url)
-                }
-                if let url = URL(string: "tel:\(support.phone.filter { !$0.isWhitespace })") {
-                    contactLink(support.phone, systemImage: "phone", url: url)
-                }
-                if let url = support.whatsappURL {
-                    contactLink("WhatsApp", systemImage: "message", url: url)
-                }
-            }
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                        Eyebrow(text: l10n.string(.suspendedContact))
+                        VStack(spacing: 0) {
+                            if let url = URL(string: "mailto:\(support.email)") {
+                                contactRow(support.email, icon: .envelope, url: url)
+                            }
+                            if let url = URL(string: "tel:\(support.phone.filter { !$0.isWhitespace })") {
+                                contactRow(support.phone, icon: .phone, url: url, showsDivider: support.whatsappURL != nil)
+                            }
+                            if let url = support.whatsappURL {
+                                contactRow("WhatsApp", icon: .chatCircle, url: url, showsDivider: false)
+                            }
+                        }
+                        .taleedCard()
+                        .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+                    }
 
-            Section {
-                Button(l10n.string(.authSignOut), role: .destructive) { session.signOut() }
-                    .frame(maxWidth: .infinity, minHeight: Theme.minTouchTarget)
+                    TaleedButton(title: l10n.string(.authSignOut), kind: .tertiary, size: .large, isFullWidth: true) {
+                        session.signOut()
+                    }
+                }
+                .padding(TaleedLayout.screenMargin)
+                .padding(.top, TaleedSpacing.s8)
             }
         }
+        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
     }
 
-    private func contactLink(_ title: String, systemImage: String, url: URL) -> some View {
-        Link(destination: url) {
-            Label {
-                // Emails and phone numbers read left to right in Arabic too.
-                Text(verbatim: title).environment(\.layoutDirection, .leftToRight)
-            } icon: {
-                Image(systemName: systemImage)
-            }
-            .frame(minHeight: Theme.minTouchTarget, alignment: .leading)
+    private func contactRow(_ title: String, icon: TaleedIcon, url: URL, showsDivider: Bool = true) -> some View {
+        // Emails and phone numbers read left to right in Arabic too.
+        TaleedListRow(title: title.isolatedLeftToRight, leadingIcon: icon, titleColor: TaleedColor.brandPrimary,
+                      showsChevron: false, showsDivider: showsDivider) {
+            openURL(url)
         }
+        .accessibilityAddTraits(.isLink)
     }
 }

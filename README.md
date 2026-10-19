@@ -74,6 +74,29 @@ Without `--from`, the script regenerates from the copy in `api/`. Commit the con
 generated code together. If the compiler then points at a `switch` that must handle a new
 value, handle it.
 
+## Design system
+
+The Figma design system lives in `Taleed/DesignSystem`:
+
+| Path | What |
+|---|---|
+| `Tokens/TaleedTokens.swift` | Colours, text styles, spacing, radius, elevation, opacity, sizes, layout and motion, named as in the design hand-off's `tokens.json` (`TaleedColor.brandPrimary`, `TaleedFont.title1`, `TaleedSpacing.s16`, `TaleedRadius.m`). Generated. |
+| `Icons/TaleedIcon.swift` | The 55 Phosphor icons (`TaleedIconView(.heart, size: 20, color: …)`). Generated. |
+| `Foundation/` | Text-style modifier (`.taleedFont(TaleedFont.bodyRegular)`, Alexandria in Arabic), shadows, images, price formatting (DA suffix), condition codes. `Theme` is the one entry point. |
+| `Components/` | Buttons, fields, chips, tags, cards, checkout controls, app bars, bottom navigation, sheets, toasts… They take plain data and closures. |
+| `Gallery/` | Debug-only gallery of every component (Settings → Design system). |
+
+Assets are in `Resources/DesignSystem.xcassets` (icons as template SVGs) and the fonts in
+`Resources/Fonts` (Plus Jakarta Sans and Alexandria, SIL Open Font License, licenses included).
+Never edit the generated files: change `tokens.json` and run
+
+```bash
+scripts/generate-design-system.py --design ../design
+```
+
+Debug builds accept launch arguments that open a screen directly (for screenshots): see
+`Gallery/DebugLaunchOptions.swift`.
+
 ## Change the project
 
 Edit `project.yml`, then run `xcodegen generate` and commit `project.yml` and

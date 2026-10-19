@@ -1,0 +1,187 @@
+#if DEBUG
+import SwiftUI
+
+/// §4 Selling and checkout controls.
+struct GallerySellingAndCheckout: View {
+    @State private var photoCounts = [0, 1, 3, 5]
+    @State private var delivery = 0
+    @State private var promo = ""
+    @State private var promoInvalid = "WELCOM"
+    @Environment(\.locale) private var locale
+
+    private static let photoSources: [TaleedImage] = [.loginGreenDress, .loginBlueTop, .loginPinkShirt, .loginBrownBag,
+                                                      .loginHeadphones]
+
+    var body: some View {
+        let copy = GalleryCopy(locale)
+        GallerySection(id: "photos", number: "4.1", title: "Photo uploader", note: "Variant A, 0 / 1 / 3 / 5 photos (D-6).") {
+            VStack(spacing: TaleedSpacing.s24) {
+                ForEach(photoCounts.indices, id: \.self) { index in
+                    PhotoUploader(
+                        photos: photos(count: photoCounts[index]),
+                        onAdd: { photoCounts[index] = min(5, photoCounts[index] + 1) },
+                        onRemove: { _ in photoCounts[index] = max(0, photoCounts[index] - 1) },
+                        onMakeCover: { _ in }
+                    )
+                }
+            }
+        }
+        GallerySection(id: "checkout", number: "4.3–4.4", title: "Checkout item, delivery option") {
+            VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                CheckoutItem(caption: copy("Article", "الغرض", "Item"),
+                             title: "Pantalon en toile garçon", price: 800, media: .local(Image(taleed: .loginDrapedFabric)))
+                    .padding(.bottom, TaleedSpacing.s16)
+                Eyebrow(text: copy("Mode de livraison", "طريقة التوصيل", "Delivery method"))
+                DeliveryOption(icon: .house, title: copy("Livraison à domicile", "التوصيل إلى المنزل", "Home delivery"),
+                               subtitle: copy("Livré à votre adresse par notre partenaire", "يوصله شريكنا إلى عنوانك",
+                                              "Delivered to your address by our delivery partner"),
+                               isSelected: delivery == 0) { delivery = 0 }
+                DeliveryOption(icon: .storefront, title: copy("Retrait en stop-desk", "الاستلام من مكتب التوصيل", "Stop-desk pickup"),
+                               subtitle: copy("Retirez votre colis au bureau partenaire de votre choix",
+                                              "استلم طردك من المكتب الشريك الذي تختاره",
+                                              "Pick up your parcel at the partner desk of your choice"),
+                               isSelected: delivery == 1) { delivery = 1 }
+            }
+        }
+        GallerySection(id: "summary", number: "4.5–4.6", title: "Order summary, promo code", note: "Pending, then resolved.") {
+            VStack(spacing: TaleedSpacing.s24) {
+                summary(copy, shipping: nil, total: nil)
+                summary(copy, shipping: delivery == 0 ? 600 : 400, total: delivery == 0 ? 1490 : 1290)
+                PromoCodeField(label: copy("Code promo", "رمز التخفيض", "Promo code"), code: $promo,
+                               placeholder: copy("Ex. BIENVENUE", "مثال: BIENVENUE", "E.G. WELCOME"),
+                               applyTitle: copy("Appliquer", "تطبيق", "Apply")) {}
+                PromoCodeField(label: copy("Code promo", "رمز التخفيض", "Promo code"), code: $promoInvalid,
+                               placeholder: "", applyTitle: copy("Appliquer", "تطبيق", "Apply"),
+                               error: copy("Ce code promo n’est pas valide.", "رمز التخفيض غير صالح.",
+                                           "This promo code is not valid.")) {}
+            }
+        }
+    }
+
+    private func photos(count: Int) -> [PhotoUploaderItem] {
+        (0..<count).map { PhotoUploaderItem(id: "\($0)", media: .local(Image(taleed: Self.photoSources[$0]))) }
+    }
+
+    private func summary(_ copy: GalleryCopy, shipping: Int?, total: Int?) -> some View {
+        OrderSummary(
+            title: copy("Récapitulatif", "الملخص", "Summary"),
+            lines: [
+                OrderSummaryLine(id: "item", label: copy("Article", "الغرض", "Item"), amount: 800),
+                OrderSummaryLine(id: "fee", label: copy("Frais de plateforme et de service", "رسوم المنصة والخدمة",
+                                                        "Platform & Service Fee"), amount: 90, onInfo: {}),
+                OrderSummaryLine(id: "shipping", label: copy("Livraison", "التوصيل", "Shipping"), amount: shipping),
+            ],
+            totalLabel: copy("Total à payer", "المجموع المستحق", "Total to pay"),
+            total: total
+        )
+    }
+}
+
+/// §5 Navigation patterns and §6 composed modules.
+struct GalleryNavigation: View {
+    @State private var search = "Nike jacket"
+    @State private var tab: ShellTab = .home
+    @State private var showsSheet = false
+    @State private var showsModal = false
+    @State private var showsHero = true
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        let copy = GalleryCopy(locale)
+        GallerySection(id: "app-bars", number: "5.1", title: "App bars", note: "56 pt (D-1), max two actions.", fullBleed: true) {
+            VStack(spacing: TaleedSpacing.s8) {
+                BrandAppBar(showsDivider: true, onNotifications: {}, avatarInitials: "NT", avatarAccessibilityLabel: "Profile",
+                            onAvatar: {})
+                TaleedAppBar(title: copy("Paiement", "الدفع", "Checkout"), onBack: {}, backAccessibilityLabel: "Back",
+                             actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: "Secure")])
+                TaleedAppBar(title: copy("Détail de l’article", "تفاصيل الغرض", "Item Detail"), onBack: {},
+                             backAccessibilityLabel: "Back",
+                             actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: "Secure", isCircled: true)])
+                TaleedAppBar(title: copy("Détail de l’article", "تفاصيل الغرض", "Item details"), onBack: {},
+                             backAccessibilityLabel: "Back",
+                             actions: [AppBarAction(icon: .shareNetwork, accessibilityLabel: "Share", color: TaleedColor.textPrimary) {},
+                                       AppBarAction(icon: .dotsThree, accessibilityLabel: "More", color: TaleedColor.textPrimary) {}])
+                SearchAppBar(text: $search, placeholder: copy("Rechercher un article", "ابحث عن غرض", "Search for an item"))
+                PageHeading(eyebrow: copy("Vendre", "بيع", "Sell"), title: copy("Vendre un article", "بيع غرض", "Sell an item"))
+            }
+            .background(TaleedColor.surfaceGrouped)
+        }
+        GallerySection(id: "bottom-nav", number: "5.2", title: "Bottom navigation", note: "Five destinations (D-2).", fullBleed: true) {
+            BottomNavigation(items: [
+                BottomNavItem(id: ShellTab.home, icon: .houseLine, title: copy("Accueil", "الرئيسية", "Home")),
+                BottomNavItem(id: .explore, icon: .magnifyingGlass, title: copy("Explorer", "استكشاف", "Explore")),
+                BottomNavItem(id: .sell, icon: .plus, title: copy("Vendre", "بيع", "Sell")),
+                BottomNavItem(id: .messages, icon: .chatCircleText, title: copy("Messages", "الرسائل", "Messages")),
+                BottomNavItem(id: .profile, icon: .user, title: copy("Profil", "الملف", "Profile")),
+            ], selection: $tab)
+            .padding(.top, TaleedSpacing.s16)
+            .background(TaleedColor.surfaceGrouped)
+        }
+        GallerySection(id: "sheets", number: "5.3–5.4", title: "Bottom sheet, confirmation modal") {
+            VStack(spacing: TaleedSpacing.s16) {
+                sortSheet(copy)
+                    .clipShape(UnevenRoundedRectangle(topLeadingRadius: TaleedSize.BottomSheet.topRadius,
+                                                      topTrailingRadius: TaleedSize.BottomSheet.topRadius))
+                    .taleedShadow(TaleedElevation.level2)
+                ZStack {
+                    TaleedColor.textPrimary.opacity(0.5)
+                    deleteModal(copy).padding(TaleedSpacing.s16)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.l))
+                HStack(spacing: TaleedSpacing.s8) {
+                    TaleedButton(title: copy("Ouvrir la feuille", "فتح الورقة", "Open sheet"), kind: .tertiary, size: .medium) {
+                        showsSheet = true
+                    }
+                    TaleedButton(title: copy("Ouvrir la fenêtre", "فتح النافذة", "Open modal"), kind: .danger, size: .medium) {
+                        showsModal = true
+                    }
+                }
+            }
+            .taleedSheet(isPresented: $showsSheet) { sortSheet(copy) }
+        }
+        .taleedConfirmation(isPresented: showsModal) { deleteModal(copy) }
+        GallerySection(id: "hero", number: "6", title: "Hero banner, trust strip") {
+            VStack(spacing: TaleedSpacing.s16) {
+                if showsHero {
+                    HeroBanner(title: copy("Donnez une seconde vie à vos affaires.", "امنح أغراضك حياة ثانية.",
+                                           "Give your things a second life."),
+                               ctaTitle: copy("Explorer près de chez vous", "تصفّح بالقرب منك", "Browse near you"),
+                               onCta: {}, onDismiss: { showsHero = false })
+                } else {
+                    TaleedButton(title: "Reset", kind: .hyperlink, size: .medium) { showsHero = true }
+                }
+                TrustStrip()
+            }
+        }
+        GallerySection(id: "trust-full", number: "6", title: "Trust strip, full bleed", fullBleed: true) {
+            TrustStrip(style: .fullBleed)
+        }
+    }
+
+    private func sortSheet(_ copy: GalleryCopy) -> some View {
+        SortSheet(
+            title: copy("Trier par", "الترتيب حسب", "Sort by"),
+            options: [
+                SheetOption(id: 0, title: copy("Plus récents", "الأحدث", "Newest")),
+                SheetOption(id: 1, title: copy("Prix croissant", "السعر تصاعديًا", "Price: low to high")),
+                SheetOption(id: 2, title: copy("Prix décroissant", "السعر تنازليًا", "Price: high to low")),
+            ],
+            selection: 0,
+            applyTitle: copy("Appliquer", "تطبيق", "Apply"),
+            onApply: { _ in showsSheet = false },
+            onClose: { showsSheet = false }
+        )
+    }
+
+    private func deleteModal(_ copy: GalleryCopy) -> ConfirmationModal {
+        ConfirmationModal(
+            title: copy("Supprimer l’annonce ?", "حذف الإعلان؟", "Delete listing?"),
+            message: copy("Cette action est définitive.", "هذا الإجراء نهائي.", "This action is permanent."),
+            cancelTitle: copy("Annuler", "إلغاء", "Cancel"),
+            confirmTitle: copy("Supprimer", "حذف", "Delete"),
+            onCancel: { showsModal = false },
+            onConfirm: { showsModal = false }
+        )
+    }
+}
+#endif

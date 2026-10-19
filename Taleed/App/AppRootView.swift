@@ -36,6 +36,31 @@ struct AppRootView: View {
 
     @ViewBuilder
     private var content: some View {
+        #if DEBUG
+        if let screen = DebugLaunchOptions.launchScreen {
+            debugLaunchScreen(screen)
+        } else {
+            launchContent
+        }
+        #else
+        launchContent
+        #endif
+    }
+
+    #if DEBUG
+    @ViewBuilder
+    private func debugLaunchScreen(_ screen: String) -> some View {
+        if screen == "suspended" {
+            SuspendedView(support: SupportContacts(email: "contact@taleed.app", phone: "+213 540 69 32 36",
+                                                   whatsappURL: URL(string: "https://wa.me/213540693236")))
+        } else {
+            UpdateRequiredView(storeURL: container.environment.appStoreURL)
+        }
+    }
+    #endif
+
+    @ViewBuilder
+    private var launchContent: some View {
         switch container.launch.route {
         case .loading:
             SplashView()

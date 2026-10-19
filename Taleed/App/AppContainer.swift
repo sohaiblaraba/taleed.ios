@@ -21,6 +21,10 @@ final class AppContainer {
         launch = LaunchViewModel(api: api, session: session, environment: environment)
         home = HomeViewModel(api: api)
 
+        #if DEBUG
+        DebugLaunchOptions.apply(to: router)
+        #endif
+
         languageManager.onChange = { [apiSession, home] language in
             apiSession.setLanguage(language)
             Task { await home.load() }
