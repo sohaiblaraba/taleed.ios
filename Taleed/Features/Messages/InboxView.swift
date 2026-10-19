@@ -13,7 +13,7 @@ struct MessagesView: View {
         } content: {
             if session.isSignedIn, let dependencies {
                 // A new list for another member.
-                InboxView(api: dependencies.messages).id(session.user?.id)
+                InboxView(api: dependencies.messages, reads: dependencies.reads).id(session.user?.id)
             } else {
                 SignInPromptView()
             }
@@ -27,12 +27,14 @@ struct MessagesView: View {
 /// member comes back to it.
 struct InboxView: View {
     @State private var model: InboxViewModel
+    let reads: ConversationReads
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
     @Environment(SessionManager.self) private var session
     @Environment(\.scenePhase) private var scenePhase
 
-    init(api: MessagesApi) {
+    init(api: MessagesApi, reads: ConversationReads) {
+        self.reads = reads
         _model = State(initialValue: InboxViewModel(api: api))
     }
 
@@ -64,6 +66,11 @@ struct InboxView: View {
         .onChange(of: isOnScreen) { _, onScreen in
             if onScreen { Task { await refresh() } }
         }
+        // A conversation was read (here or from another tab): its row clears at once, even when the quiet
+        // reload on the way back is skipped as too recent.
+        .onChange(of: reads.latest) { _, mark in
+            if let mark { model.apply(mark) }
+        }
     }
 
     /// The inbox is the screen the member sees: its tab, nothing pushed on it, the app in the foreground.
@@ -72,6 +79,8 @@ struct InboxView: View {
     }
 
     private func refresh() async {
+        // A read the list missed while a conversation covered it.
+        if let mark = reads.latest { model.apply(mark) }
         await model.reloadQuietly()
         // The tab badge with it (`counts.unreadMessages`).
         await session.refresh()

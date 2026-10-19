@@ -20,9 +20,9 @@ protocol TaleedApi: AnyObject {
     func signIn(email: String, password: String) async throws(ApiError) -> (token: String, user: User)
     /// Revokes the session of `token` on the server. The caller deletes the token whatever the answer.
     func signOut(token: String) async throws(ApiError)
-    /// `POST /conversations` with `listingId` and `buyerId` (the `/listings/{id}/chat?with=` link):
-    /// the conversation's id.
-    func openConversation(listingId: String, buyerId: String) async throws(ApiError) -> String
+    /// `POST /conversations` for a `/listings/{id}/chat` link: the conversation's id. `buyerId` (`?with=`)
+    /// only when the seller writes to a member; without it the member writes to the seller.
+    func openConversation(listingId: String, buyerId: String?) async throws(ApiError) -> String
 
     /// Called when the API rejects the token that a request carried (`401 unauthorized`),
     /// with that token. `SessionManager` sets it to sign out globally.
@@ -106,7 +106,7 @@ final class GeneratedTaleedApi: TaleedApi, UploadsApi, DevelopmentApi {
         }
     }
 
-    func openConversation(listingId: String, buyerId: String) async throws(ApiError) -> String {
+    func openConversation(listingId: String, buyerId: String?) async throws(ApiError) -> String {
         let request = ConversationOpen(listingId: listingId, buyerId: buyerId)
         // Opening the same conversation again returns it (slice C, Retrying).
         let conversation = try await caller.call(.read) {

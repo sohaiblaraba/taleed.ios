@@ -168,8 +168,8 @@ struct AppRouterTests {
 
     @Test func listingChatOpensTheConversation() async {
         signedIn.value = true
-        router.resolveConversation = { (listingId: String, buyerId: String) async throws(ApiError) -> String in
-            "conversation-\(listingId)-\(buyerId)"
+        router.resolveConversation = { (listingId: String, buyerId: String?) async throws(ApiError) -> String in
+            "conversation-\(listingId)-\(buyerId ?? "seller")"
         }
         router.open(.listingChat(listingId: "l1", memberId: "m1"))
         await waitUntil { !router.isResolvingLink }
@@ -177,9 +177,25 @@ struct AppRouterTests {
         #expect(router.path(.messages) == [.conversation(id: "conversation-l1-m1", focusesComposer: true)])
     }
 
+    /// `/listings/{id}/chat` without `?with=`: the buyer's conversation with the seller, signing in first.
+    @Test func listingChatAsBuyerSignsInThenOpensTheConversation() async {
+        var asked: [String?] = []
+        router.resolveConversation = { (listingId: String, buyerId: String?) async throws(ApiError) -> String in
+            asked.append(buyerId)
+            return "conversation-\(listingId)"
+        }
+        router.open(url: URL(string: "https://taleed.app/fr/listings/l1/chat")!)
+        #expect(router.authEntry == .signIn)
+        signedIn.value = true
+        router.authSheetDidDismiss()
+        await waitUntil { !router.isResolvingLink && router.selectedTab == .messages }
+        #expect(asked == [nil])
+        #expect(router.path(.messages) == [.conversation(id: "conversation-l1", focusesComposer: true)])
+    }
+
     @Test func listingChatFallsBackToTheListing() async {
         signedIn.value = true
-        router.resolveConversation = { (_: String, _: String) async throws(ApiError) -> String in
+        router.resolveConversation = { (_: String, _: String?) async throws(ApiError) -> String in
             throw .failed(ApiFailure(status: 403, code: .forbidden))
         }
         router.open(.listingChat(listingId: "l1", memberId: "m1"))

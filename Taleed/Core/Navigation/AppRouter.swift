@@ -33,7 +33,8 @@ final class AppRouter {
 
     // Set by `AppContainer`.
     @ObservationIgnored var isSignedIn: () -> Bool = { false }
-    @ObservationIgnored var resolveConversation: ((_ listingId: String, _ buyerId: String) async throws(ApiError) -> String)?
+    /// `POST /conversations`: the conversation about a listing; `buyerId` only for the seller (`?with=`).
+    @ObservationIgnored var resolveConversation: ((_ listingId: String, _ buyerId: String?) async throws(ApiError) -> String)?
     @ObservationIgnored var websiteLinks: () -> WebsiteLinks = { WebsiteLinks() }
     @ObservationIgnored var browser: (URL) -> Void = { InAppBrowser.open($0) }
     /// Called when a destination opens once the shell shows (a link, a push, a launch argument): the
@@ -175,7 +176,7 @@ final class AppRouter {
         selectedTab = tab
     }
 
-    private func resolveListingChat(listingId: String, memberId: String) {
+    private func resolveListingChat(listingId: String, memberId: String?) {
         guard let resolveConversation else {
             open(.screen(.listing(id: listingId)))
             return
@@ -185,10 +186,11 @@ final class AppRouter {
             defer { isResolvingLink = false }
             do {
                 let conversationId = try await resolveConversation(listingId, memberId)
-                // The seller writes first (the "new favorite" notification): the keyboard opens.
+                // The member writes first, like "Envoyer un message" (or the seller after a "new favorite"
+                // notification): the keyboard opens.
                 open(.screen(.conversation(id: conversationId, focusesComposer: true)))
             } catch {
-                // Not the seller (`403 forbidden`), a removed listing…: the listing itself.
+                // Not the seller (`403 forbidden`), one's own listing, a removed listing…: the listing itself.
                 open(.screen(.listing(id: listingId)))
             }
         }

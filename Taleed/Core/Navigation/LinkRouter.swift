@@ -72,8 +72,9 @@ enum LinkRouter {
         }
     }
 
-    /// `/listings/{id}` and `/listings/{id}/chat?with={memberId}`. The website's edit page
-    /// `/listings/{id}/edit` goes Home like any other path (screens.md §1.2, the same on Android).
+    /// `/listings/{id}` and `/listings/{id}/chat`: the conversation about the listing, found or created
+    /// (screens.md §7 G9), with `?with={memberId}` for the seller writing to a member. The website's edit
+    /// page `/listings/{id}/edit` goes Home like any other path (screens.md §1.2, the same on Android).
     private static func listing(_ segments: [String], query: [String: String]) -> AppDestination {
         guard segments.count >= 2, !segments[1].isEmpty else { return .home }
         let id = segments[1]
@@ -81,8 +82,7 @@ enum LinkRouter {
         case 2:
             return .screen(.listing(id: id))
         case 3 where segments[2] == "chat":
-            if let member = query["with"] { return .listingChat(listingId: id, memberId: member) }
-            return .screen(.listing(id: id))
+            return .listingChat(listingId: id, memberId: query["with"])
         default:
             return .home
         }

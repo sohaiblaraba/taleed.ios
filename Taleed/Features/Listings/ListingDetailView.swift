@@ -41,6 +41,7 @@ struct ListingDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.shellTab) private var shellTab
+    @Environment(\.pushRegistration) private var push
 
     struct OfferDraft: Equatable {
         let price: Int
@@ -313,6 +314,8 @@ extension ListingDetailView {
         case let .sent(conversationId):
             toasts.show(l10n.string(.offersOfferSent))
             router.pushSignedIn(.conversation(id: conversationId))
+            // The push permission after the member's first offer, when pushes are on (screens.md §2 G9 Ops).
+            Task { await push?.memberReachedOut() }
         case let .pending(conversationId):
             toasts.show(l10n.string(.offersErrorActive), kind: .info)
             router.pushSignedIn(.conversation(id: conversationId))

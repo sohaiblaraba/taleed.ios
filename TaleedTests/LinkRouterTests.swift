@@ -42,9 +42,11 @@ struct LinkRouterTests {
         #expect(AppRouter.canonicalStack(for: .editListing(id: "l1")) == (.home, [.listing(id: "l1"), .editListing(id: "l1")]))
     }
 
-    @Test func listingChatWithoutMemberOpensTheListing() {
-        #expect(destination("https://taleed.app/listings/l1/chat") == .screen(.listing(id: "l1")))
-        #expect(destination("https://taleed.app/listings/l1/chat?with=") == .screen(.listing(id: "l1")))
+    /// Without `?with=` the member writes to the seller as a buyer (the website's `getOrCreateConversation`).
+    @Test func listingChatWithoutMemberOpensTheBuyersConversation() {
+        #expect(destination("https://taleed.app/listings/l1/chat") == .listingChat(listingId: "l1", memberId: nil))
+        #expect(destination("https://taleed.app/listings/l1/chat?with=") == .listingChat(listingId: "l1", memberId: nil))
+        #expect(destination("taleed://listings/l1/chat") == .listingChat(listingId: "l1", memberId: nil))
     }
 
     @Test func checkoutCarriesOfferAndBundle() {

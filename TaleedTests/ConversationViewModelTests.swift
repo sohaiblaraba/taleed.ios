@@ -202,6 +202,42 @@ struct ConversationViewModelTests {
         #expect(api.conversationCalls == calls + 1)
     }
 
+    /// The phone's clock a day ahead of the server's: an answer received after the conversation loaded
+    /// still wins over its `pendingOffer` (never device time against server time).
+    @Test func anOfferAnsweredAfterLoadingWinsWhateverThePhonesClock() async {
+        let pending = ChatOffer.fixture(status: .pending)
+        api.conversation = .success(.fixture(pendingOffer: pending))
+        api.messagePages = [.success(Page(items: [.fixture("offer", kind: .offer, offer: pending)], nextCursor: nil, total: 1))]
+        let model = ConversationViewModel(conversationId: "c1", api: api, events: events, members: members,
+                                          upload: { _ throws(Taleed.ApiError) in UploadedPhoto(key: "k", url: nil, thumbURL: nil) },
+                                          now: { chatNow.addingTimeInterval(86_400) })
+        await model.load()
+        let card = model.messages.first { $0.id == "offer" }
+        #expect(card.flatMap(model.offer(in:))?.status == .pending)
+
+        // The seller declines: the conversation no longer lists the offer as pending.
+        api.conversation = .success(.fixture())
+        await model.receive(.fixture("update", kind: .offerUpdate, at: 40, text: "Refusée", offer: .fixture(status: .declined)))
+        #expect(card.flatMap(model.offer(in:))?.status == .declined)
+        await model.reloadConversation(automatic: true)
+        #expect(card.flatMap(model.offer(in:))?.status == .declined)
+    }
+
+    /// A conversation loaded after the last message about an offer gives its state now.
+    @Test func aLaterConversationLoadWinsOverOlderMessages() async {
+        let pending = ChatOffer.fixture(status: .pending)
+        api.messagePages = [.success(Page(items: [.fixture("offer", kind: .offer, at: 10, offer: pending)], nextCursor: nil, total: 1))]
+        let model = model()
+        await model.load()
+        let changed = ChatOffer(id: "o1", amount: 2500, status: .pending, expiresAt: chatNow.addingTimeInterval(60), createdAt: chatNow,
+                                senderId: "other", isMine: false, sentBy: .seller, listingId: "l1", bundle: nil, canAccept: true,
+                                canDecline: true, canCounter: true, canCancel: false, canPay: false, counterRange: nil)
+        api.conversation = .success(.fixture(pendingOffer: changed))
+        await model.reloadConversation(automatic: true)
+        let card = model.messages.first { $0.id == "offer" }
+        #expect(card.flatMap(model.offer(in:))?.canAccept == true)
+    }
+
     @Test func theStreamStartsAfterTheNewestMessageAndRetriesFailedSends() async {
         api.messagePages = [.success(Page(items: [.fixture("m9", at: 10)], nextCursor: nil, total: 1))]
         api.sendResults = [.failure(.network)]
@@ -281,6 +317,24 @@ struct InboxViewModelTests {
         await model.list.loadIfNeeded()
         model.markRead(conversationId: "a")
         #expect(model.list.items.first?.unreadCount == 0)
+    }
+
+    /// Back from a conversation within the reload's 2 s: the read mark clears the row, once.
+    @Test func aReadMarkClearsTheRowOnce() async throws {
+        api.inboxPages = [.success(Page(items: [row("a", unread: 3), row("b", unread: 1)], nextCursor: nil, total: 2))]
+        let model = InboxViewModel(api: api)
+        let reads = ConversationReads()
+        await model.list.loadIfNeeded()
+        reads.didRead(conversationId: "a")
+        let mark = try #require(reads.latest)
+        model.apply(mark)
+        #expect(model.list.items.map(\.unreadCount) == [0, 1])
+        // News in "a" since: the same mark applied again leaves it bold.
+        model.list.update(row("a", unread: 2))
+        model.apply(mark)
+        #expect(model.list.items.first?.unreadCount == 2)
+        await model.reloadQuietly()
+        #expect(api.inboxCalls == [false])
     }
 
     @Test func aQuietReloadIsAutomaticAndNotTooOften() async {

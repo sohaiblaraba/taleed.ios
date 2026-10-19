@@ -9,7 +9,7 @@ final class FakeTaleedApi: TaleedApi {
     var catalogResult: Result<Catalog, ApiError> = .success(.fixture())
     var openConversationResult: Result<String, ApiError> = .success("conversation-1")
     private(set) var catalogCalls = 0
-    private(set) var openedConversations: [(listingId: String, buyerId: String)] = []
+    private(set) var openedConversations: [(listingId: String, buyerId: String?)] = []
     var signInResult: Result<(token: String, user: User), ApiError> = .success(("new-token", .fixture()))
     private(set) var meCalls = 0
     private(set) var signedOutTokens: [String] = []
@@ -42,7 +42,7 @@ final class FakeTaleedApi: TaleedApi {
         signedOutTokens.append(token)
     }
 
-    func openConversation(listingId: String, buyerId: String) async throws(ApiError) -> String {
+    func openConversation(listingId: String, buyerId: String?) async throws(ApiError) -> String {
         openedConversations.append((listingId, buyerId))
         return try openConversationResult.get()
     }

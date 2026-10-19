@@ -29,6 +29,7 @@ struct ConversationView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.shellTab) private var shellTab
+    @Environment(\.pushRegistration) private var push
 
     enum Presented: Identifiable {
         case report
@@ -69,9 +70,13 @@ struct ConversationView: View {
                 }
         }
         .task {
-            model.onRead = { [session] counts in
+            model.onRead = { [session, reads = dependencies.reads, id = model.conversationId] counts in
                 session.updateUnreadCounts(messages: counts.messages, notifications: counts.notifications)
+                // The inbox's row loses its bold and counter with the badge.
+                reads.didRead(conversationId: id)
             }
+            // The moment that explains the push permission (screens.md §2 G9 Ops), when pushes are on.
+            model.onSent = { [push] in Task { await push?.memberReachedOut() } }
             await model.loadIfNeeded()
         }
         // The stream runs while the screen shows: closed in the background, under another screen or tab.

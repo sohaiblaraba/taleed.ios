@@ -18,12 +18,16 @@ final class AppContainer {
     let favorites: FavoriteStore
     /// The member's changes to their listings, for every screen that shows them (G8).
     let listingChanges = ListingChangeCenter()
+    /// The conversations the member reads, for the inbox's rows (G9).
+    let conversationReads = ConversationReads()
     /// Brands and sizes of the Explore filter sheet.
     let exploreReferences: ExploreReferenceStore
     let router = AppRouter()
     let toasts: AppToasts
     let uploads: PhotoUploadService
     let welcome: WelcomeGate
+    /// The push permission and `POST /devices`, after the member's first message or offer.
+    let push: PushRegistration
 
     init(environment: AppEnvironment = .current(), tokenStore: TokenStore = KeychainTokenStore()) {
         ImageLoading.configure()
@@ -40,6 +44,10 @@ final class AppContainer {
         toasts = AppToasts(languageManager: languageManager)
         uploads = PhotoUploadService(api: api)
         welcome = WelcomeGate()
+        // No token source until Firebase is set up (G16): nothing is asked or registered meanwhile.
+        push = PushRegistration(api: api, permission: SystemNotificationPermission(), tokenSource: nil,
+                                isEnabled: { [launch] in launch.config?.features.push == true },
+                                language: { [languageManager] in languageManager.language })
 
         // A suspended member who was signed in keeps the screens that still answer (orders, wallet,
         // account deletion), so links to them do not ask to sign in.
@@ -51,7 +59,8 @@ final class AppContainer {
             transaction.disablesAnimations = true
             withTransaction(transaction) { welcome.skipForLink() }
         }
-        session.onSignedOut = { [welcome, router] in
+        session.onSignedOut = { [welcome, router, push] in
+            push.sessionDidEnd()
             welcome.showAfterSignOut()
             router.sessionDidEnd()
             router.selectedTab = .home
@@ -64,7 +73,7 @@ final class AppContainer {
         }
         // The suspended screen is the root of the Profile stack: nothing may cover it (screens.md §0.6).
         session.onSuspended = { [router] in router.popToRoot(.profile) }
-        router.resolveConversation = { [api] (listingId: String, buyerId: String) async throws(ApiError) -> String in
+        router.resolveConversation = { [api] (listingId: String, buyerId: String?) async throws(ApiError) -> String in
             try await api.openConversation(listingId: listingId, buyerId: buyerId)
         }
         router.websiteLinks = { [launch] in launch.config?.links ?? WebsiteLinks() }

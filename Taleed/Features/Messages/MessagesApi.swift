@@ -74,6 +74,28 @@ struct MessagesDependencies {
     let members: any MembersApi
     let reports: any ReportsApi
     let uploads: PhotoUploadService
+    /// The conversations the member just read, for the inbox's rows.
+    let reads: ConversationReads
+}
+
+/// Tells the inbox which conversation the member just read (`POST /conversations/{id}/read`
+/// answered), so that its row loses the bold and the counter at once, as the tab badge does
+/// (screens.md §2 G9), even when the inbox does not reload on the way back.
+@MainActor
+@Observable
+final class ConversationReads {
+    struct Mark: Equatable {
+        let conversationId: String
+        /// Tells two reads of the same conversation apart.
+        let sequence: Int
+    }
+
+    /// The latest read.
+    private(set) var latest: Mark?
+
+    func didRead(conversationId: String) {
+        latest = Mark(conversationId: conversationId, sequence: (latest?.sequence ?? 0) + 1)
+    }
 }
 
 private struct MessagesDependenciesKey: EnvironmentKey {

@@ -141,9 +141,10 @@ enum AppDestination: Hashable, Sendable {
     case inbox
     case profile
     case screen(AppRoute)
-    /// `/listings/{id}/chat?with={memberId}`: `POST /conversations`, then the conversation, or the
-    /// listing when that fails.
-    case listingChat(listingId: String, memberId: String)
+    /// `/listings/{id}/chat`: `POST /conversations`, then the conversation, or the listing when that
+    /// fails. Without `memberId` the member writes to the seller as a buyer (the website's
+    /// `getOrCreateConversation`); with it (`?with=`), the seller writes to that member.
+    case listingChat(listingId: String, memberId: String?)
     /// `/r/{code}`: sign-up with the referral code; Home when signed in.
     case signUp(referralCode: String)
     case paymentReturn(PaymentReturn)

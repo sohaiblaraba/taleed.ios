@@ -43,9 +43,8 @@ final class ConversationViewModel {
     var hasOlder: Bool { olderCursor != nil }
 
     @ObservationIgnored private var olderCursor: String?
-    /// The latest state of each offer, from the newest message about it or the conversation's
-    /// `pendingOffer`: every card of the same offer shows it (slice C, Messages).
-    @ObservationIgnored private var offers: [String: (offer: ChatOffer, asOf: Date)] = [:]
+    /// The latest state of each offer: every card of the same offer shows it (slice C, Messages).
+    @ObservationIgnored private var offers = ChatOfferStates()
     @ObservationIgnored private var isVisible = false
     @ObservationIgnored private var hasMarkedRead = false
     @ObservationIgnored private let api: MessagesApi
@@ -56,6 +55,8 @@ final class ConversationViewModel {
     @ObservationIgnored private let makeClientId: () -> String
     /// Called with the badges after each read mark (the tab badge and the bell).
     @ObservationIgnored var onRead: ((UnreadCounts) -> Void)?
+    /// Called after each message the server confirmed (the push permission after the first one).
+    @ObservationIgnored var onSent: (() -> Void)?
 
     init(conversationId: String, api: MessagesApi, events: ConversationEventsSource, members: MembersApi,
          upload: @escaping (Data) async throws(ApiError) -> UploadedPhoto, now: @escaping () -> Date = Date.init,
@@ -135,7 +136,7 @@ final class ConversationViewModel {
 
     private func apply(_ detail: ConversationDetail) {
         conversation = detail
-        if let pending = detail.pendingOffer { record(pending, asOf: now()) }
+        offers.record(pendingOffer: detail.pendingOffer)
     }
 
     // MARK: Messages
@@ -146,22 +147,17 @@ final class ConversationViewModel {
         var byId = Dictionary(messages.map { ($0.id, $0) }, uniquingKeysWith: { _, new in new })
         for message in incoming {
             byId[message.id] = message
-            if let offer = message.offer { record(offer, asOf: message.createdAt) }
         }
+        offers.record(incoming)
         messages = byId.values.sorted { $0.createdAt == $1.createdAt ? $0.id > $1.id : $0.createdAt > $1.createdAt }
         let confirmed = Set(incoming.compactMap(\.clientId))
         if !confirmed.isEmpty { outgoing.removeAll { confirmed.contains($0.id) } }
     }
 
-    private func record(_ offer: ChatOffer, asOf date: Date) {
-        if let known = offers[offer.id], known.asOf > date { return }
-        offers[offer.id] = (offer, date)
-    }
-
     /// The offer of a card as it stands now: an `OFFER_UPDATE` or the conversation may be newer than the
     /// card's own message.
     func offer(in message: ChatMessage) -> ChatOffer? {
-        message.offer.map { offers[$0.id]?.offer ?? $0 }
+        message.offer.map(offers.current)
     }
 
     /// The rows to draw, newest first: the bubbles on their way, the messages, and a day above each day.
@@ -256,6 +252,7 @@ final class ConversationViewModel {
             let message = try await api.sendMessage(conversationId: conversationId, draft: draft)
             outgoing.removeAll { $0.id == clientId }
             merge([message])
+            onSent?()
         } catch {
             sendFailed(clientId: clientId, draft: draft, error: error)
         }
@@ -335,5 +332,37 @@ final class ConversationViewModel {
     /// the messages come through the stream.
     func returnedToForeground() async {
         await reloadConversation(automatic: true)
+    }
+}
+
+/// The latest state of each offer of a conversation. The server sends each message's offer, and the
+/// conversation's `pendingOffer`, as they stand when it answers: the latest answer wins, in the order the
+/// app received them, never by comparing the phone's clock with the server's.
+struct ChatOfferStates {
+    /// From the messages: the offer and the answer it came in.
+    private var fromMessages: [String: (offer: ChatOffer, answer: Int)] = [:]
+    /// The conversation's `pendingOffer` from its latest load. A load that no longer lists it drops it,
+    /// and a message received after that load wins over it.
+    private var pending: (offer: ChatOffer, answer: Int)?
+    /// Counts the answers, in the order they arrived.
+    private var answers = 0
+
+    mutating func record(_ messages: [ChatMessage]) {
+        answers += 1
+        for offer in messages.compactMap(\.offer) {
+            fromMessages[offer.id] = (offer, answers)
+        }
+    }
+
+    mutating func record(pendingOffer: ChatOffer?) {
+        answers += 1
+        pending = pendingOffer.map { ($0, answers) }
+    }
+
+    /// The offer as it stands now, from the card's own copy.
+    func current(_ offer: ChatOffer) -> ChatOffer {
+        let seen = fromMessages[offer.id]
+        if let pending, pending.offer.id == offer.id, pending.answer > seen?.answer ?? 0 { return pending.offer }
+        return seen?.offer ?? offer
     }
 }

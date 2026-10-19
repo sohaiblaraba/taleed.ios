@@ -25,6 +25,8 @@ final class InboxViewModel {
     var filter: InboxFilter = .all
 
     @ObservationIgnored private let pager: InboxPager
+    /// The last read mark applied, so that an old one never clears a row that has news again.
+    @ObservationIgnored private var appliedReadSequence = 0
     /// Back on screen sooner than this after a load: the list is fresh enough.
     static let quietReloadInterval: Duration = .seconds(2)
 
@@ -50,6 +52,13 @@ final class InboxViewModel {
         pager.isAutomatic = true
         defer { pager.isAutomatic = false }
         await list.refresh()
+    }
+
+    /// A read the conversation screen reported (`ConversationReads`), applied once.
+    func apply(_ mark: ConversationReads.Mark) {
+        guard mark.sequence > appliedReadSequence else { return }
+        appliedReadSequence = mark.sequence
+        markRead(conversationId: mark.conversationId)
     }
 
     /// The member read a conversation: its row loses its counter at once.
