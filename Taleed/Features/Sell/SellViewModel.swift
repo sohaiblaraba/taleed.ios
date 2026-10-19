@@ -36,6 +36,10 @@ struct SellPhoto: Identifiable {
         if case let .failed(error) = upload { return error }
         return nil
     }
+
+    /// Failed, and sending the same photo again may work (no answer, a server failure, a rate limit).
+    /// Too large, a format the API refuses, unreadable: only removing it helps.
+    var canRetry: Bool { error?.canRetrySamePhoto ?? false }
 }
 
 @MainActor
@@ -60,10 +64,15 @@ final class SellViewModel {
 
     @ObservationIgnored private let api: SellApi
     @ObservationIgnored private let upload: (Data) async throws(ApiError) -> UploadedPhoto
+    /// Fetches lists again after the API refused a choice from them, so that picking again offers
+    /// what it knows now.
+    @ObservationIgnored private let refreshLists: (Set<SellReferenceList>) async -> Void
 
-    init(api: SellApi, upload: @escaping (Data) async throws(ApiError) -> UploadedPhoto, wilayaId: Int? = nil) {
+    init(api: SellApi, upload: @escaping (Data) async throws(ApiError) -> UploadedPhoto, wilayaId: Int? = nil,
+         refreshLists: @escaping (Set<SellReferenceList>) async -> Void = { _ in }) {
         self.api = api
         self.upload = upload
+        self.refreshLists = refreshLists
         form.wilayaId = wilayaId
     }
 
@@ -103,9 +112,9 @@ final class SellViewModel {
         }
     }
 
-    /// Sends a failed photo again.
+    /// Sends a failed photo again, when that may work.
     func retry(_ id: SellPhoto.ID) async {
-        guard let photo = photos.first(where: { $0.id == id }), photo.error != nil else { return }
+        guard let photo = photos.first(where: { $0.id == id }), photo.canRetry else { return }
         await send(id)
     }
 
@@ -168,22 +177,26 @@ final class SellViewModel {
             return nil
         }
         isPublishing = true
-        defer { isPublishing = false }
+        var staleLists: Set<SellReferenceList> = []
         do {
             #if DEBUG
             try Self.debugFailure(.publish)
             #endif
-            return try await api.createListing(submission)
+            let listingId = try await api.createListing(submission)
+            isPublishing = false
+            return listingId
         } catch {
             publishError = error
-            if error.code == .invalidRequest { applyIssues(error.issues) }
-            return nil
+            if error.code == .invalidRequest { staleLists = applyIssues(error.issues) }
         }
+        isPublishing = false
+        if !staleLists.isEmpty { await refreshLists(staleLists) }
+        return nil
     }
 
     /// The API's field errors (slice B, Field errors): highlight the fields, and upload again each photo
-    /// whose key it refused (expired, or used by another listing).
-    private func applyIssues(_ issues: [ApiFieldIssue]) {
+    /// whose key it refused (expired, or used by another listing). Returns the lists to fetch again.
+    private func applyIssues(_ issues: [ApiFieldIssue]) -> Set<SellReferenceList> {
         let mapping = SellForm.mapping(of: issues)
         fieldErrors = mapping.errors
         refusals += 1
@@ -192,6 +205,7 @@ final class SellViewModel {
         for id in rejected {
             Task { await self.send(id) }
         }
+        return mapping.staleLists
     }
 
     /// The photos sent, in the order of `photos[]` in the request.
@@ -257,16 +271,26 @@ final class SellViewModel {
     // MARK: Debug
 
     #if DEBUG
-    private enum DebugStep: String { case upload, publish }
+    private enum DebugStep { case upload, publish }
+
+    /// `-TaleedDebugSell upload` fails the first photo upload as if offline, `upload-refused` as too
+    /// large (`413`), `publish` the first publish (screenshots of the offline states, of the retry and of
+    /// a photo to remove, since the simulator has no airplane mode).
+    private enum DebugFailure: String {
+        case upload, publish
+        case uploadRefused = "upload-refused"
+
+        var step: DebugStep { self == .publish ? .publish : .upload }
+        var error: ApiError { self == .uploadRefused ? .failed(ApiFailure(status: 413, code: .fileTooLarge)) : .network }
+    }
+
     private static var debugFailed: Set<String> = []
 
-    /// `-TaleedDebugSell upload` fails the first photo upload as if offline, `publish` the first publish
-    /// (screenshots of the offline states and of the retry, since the simulator has no airplane mode).
     private static func debugFailure(_ step: DebugStep) throws(ApiError) {
-        guard UserDefaults.standard.string(forKey: "TaleedDebugSell") == step.rawValue,
-              !debugFailed.contains(step.rawValue) else { return }
-        debugFailed.insert(step.rawValue)
-        throw .network
+        guard let failure = UserDefaults.standard.string(forKey: "TaleedDebugSell").flatMap(DebugFailure.init(rawValue:)),
+              failure.step == step, !debugFailed.contains(failure.rawValue) else { return }
+        debugFailed.insert(failure.rawValue)
+        throw failure.error
     }
     #endif
 }

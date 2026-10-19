@@ -331,6 +331,22 @@ struct ExploreReferenceStoreTests {
         #expect(fake.brandsCalls == 2)
     }
 
+    @Test func refreshingTheBrandsAsksAgainAndKeepsThemOnFailure() async {
+        let fake = FakeExploreApi()
+        fake.brandsResult = .success([CatalogBrand(id: "b", slug: "zara", name: "Zara")])
+        let store = ExploreReferenceStore(api: fake)
+        await store.loadBrands()
+        fake.brandsResult = .success([CatalogBrand(id: "c", slug: "mango", name: "Mango")])
+        await store.refreshBrands()
+        #expect(store.brands.value?.map(\.slug) == ["mango"])
+        #expect(fake.brandsCalls == 2)
+        fake.brandsResult = .failure(.network)
+        await store.refreshBrands()
+        #expect(store.brands.value?.map(\.slug) == ["mango"])
+        #expect(store.brands.error == nil)
+        #expect(fake.brandsCalls == 3)
+    }
+
     @Test func sizesAreAskedAgainAfterFiveMinutes() async {
         let fake = FakeExploreApi()
         var now = ContinuousClock.now

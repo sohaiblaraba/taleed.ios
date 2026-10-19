@@ -52,7 +52,7 @@ struct SellPhotosSection: View {
     }
 
     /// The photos' error after a refused publish, or, as soon as an upload fails, why (the photo shows
-    /// "Réessayer").
+    /// "Réessayer", or the reason when only removing it helps).
     private var errorText: String? {
         if let error = model.fieldErrors[.photos], error != .photoUploadFailed {
             return SellMessages.text(for: error, language: l10n.language)
@@ -71,7 +71,7 @@ struct SellPhotosSection: View {
         let status: PhotoUploaderItem.Status = switch photo.upload {
         case .uploading: .uploading
         case .uploaded: .ready
-        case let .failed(error): .failed(message: errorMessage(error))
+        case let .failed(error): .failed(message: errorMessage(error), canRetry: photo.canRetry)
         }
         return PhotoUploaderItem(id: photo.id.uuidString, media: media, status: status)
     }

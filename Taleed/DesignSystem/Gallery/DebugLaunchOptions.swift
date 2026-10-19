@@ -25,6 +25,7 @@ import Foundation
 ///     -TaleedDebugVisualSearch YES             show the photo-search button although `GET /config` has it
 ///                                              off (the API then answers `503 feature_disabled`)
 ///     -TaleedDebugSell upload                  the sell form's first photo upload fails offline (then works);
+///                                              `upload-refused`: it fails as too large (413);
 ///                                              `publish`: the first publish fails offline
 ///
 /// The language can be forced the same way with `-app_language ar`.

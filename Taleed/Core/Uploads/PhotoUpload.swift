@@ -143,3 +143,15 @@ final class PhotoUploadService {
         }
     }
 }
+
+extension ApiError {
+    /// Whether sending the same photo again may work: no answer, a server failure or a rate limit. A
+    /// photo too large, in a format the API refuses, or that the device cannot read fails the same way
+    /// every time: the member needs another photo (slice B, Selling).
+    var canRetrySamePhoto: Bool {
+        switch code {
+        case .fileTooLarge, .unsupportedMediaType, .invalidRequest: false
+        default: isTransient || (status ?? 0) >= 500 || code == .rateLimited
+        }
+    }
+}

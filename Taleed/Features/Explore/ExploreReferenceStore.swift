@@ -42,6 +42,21 @@ final class ExploreReferenceStore {
         }
     }
 
+    /// The brands again, now: the API refused a brand that is no longer in its list (sell form, "choose
+    /// again"). A failure keeps the brands on screen.
+    func refreshBrands() async {
+        guard !brands.isLoading else { return }
+        brands.isLoading = true
+        if brands.value == nil { brands.error = nil }
+        defer { brands.isLoading = false }
+        do {
+            brands.value = try await api.brands()
+            brands.error = nil
+        } catch {
+            if brands.value == nil { brands.error = error }
+        }
+    }
+
     /// The sizes, when not loaded in the last 5 minutes. A failure keeps the sizes on screen.
     func loadSizes() async {
         if let loadedAt = sizesLoadedAt, clock() - loadedAt < Self.sizesLifetime { return }

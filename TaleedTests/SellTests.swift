@@ -29,7 +29,7 @@ final class FakeUploads {
     }
 }
 
-private func invalidRequest(_ paths: [String]) -> Taleed.ApiError {
+func invalidRequest(_ paths: [String]) -> Taleed.ApiError {
     let issues = paths.map { #"{"path":"\#($0)","message":"x"}"# }.joined(separator: ",")
     return .from(status: 400, body: Data(#"{"error":{"code":"invalid_request","message":"x","issues":[\#(issues)]}}"#.utf8))
 }
@@ -39,7 +39,7 @@ private let brands = [CatalogBrand(id: "b-hm", slug: "h-m", name: "H&M"), zara,
                       CatalogBrand(id: "b-zr", slug: "zara-home", name: "Zara Home")]
 
 /// A form that passes every check.
-private func validForm() -> SellForm {
+func validForm() -> SellForm {
     var form = SellForm()
     form.title = "  Veste test  "
     form.description = "  Portée deux fois, aucun défaut.  "
@@ -179,6 +179,15 @@ struct SellIssueMappingTests {
         #expect(mapping.errors[.condition] == .conditionRequired)
         #expect(mapping.errors[.description] == .descriptionLength(min: 10, max: 2000))
         #expect(!mapping.hasUnplacedIssues)
+        #expect(mapping.staleLists == [.catalog, .brands])
+    }
+
+    @Test func aRefusedChoiceFetchesItsListAgain() {
+        #expect(SellForm.mapping(of: invalidRequest(["body.categoryId"]).issues).staleLists == [.catalog])
+        #expect(SellForm.mapping(of: invalidRequest(["body.wilayaId"]).issues).staleLists == [.catalog])
+        #expect(SellForm.mapping(of: invalidRequest(["body.brand.id"]).issues).staleLists == [.brands])
+        // A typed name is not from a list; other fields name no list.
+        #expect(SellForm.mapping(of: invalidRequest(["body.brand.name", "body.title"]).issues).staleLists.isEmpty)
     }
 
     @Test func refusedPhotoKeysAreListedByPosition() {
@@ -272,10 +281,13 @@ struct SellViewModelTests {
 
     @Test func publishesTheKeysInDisplayOrder() async {
         let model = await filledModel(photos: 3)
+        // The photos upload at the same time: their keys come in any order.
+        let keys = model.photos.compactMap(\.key)
         model.makeCover(model.photos[2].id)
         #expect(await model.publish() == "lst1")
         #expect(api.sent.count == 1)
-        #expect(api.sent.first?.photoKeys == ["listings/k3", "listings/k1", "listings/k2"])
+        #expect(keys.count == 3)
+        #expect(api.sent.first?.photoKeys == [keys[2], keys[0], keys[1]])
         #expect(api.sent.first?.title == "Veste test")
         #expect(api.sent.first?.wilayaId == 25)
     }

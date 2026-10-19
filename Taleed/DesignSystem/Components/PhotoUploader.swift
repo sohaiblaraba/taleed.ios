@@ -7,8 +7,9 @@ struct PhotoUploaderItem: Identifiable {
         case ready
         /// A spinner over the photo.
         case uploading
-        /// The message on the photo and a retry button.
-        case failed(message: String)
+        /// Failed: "Réessayer" on the photo when sending it again may work (no answer, a server failure),
+        /// otherwise the reason on the photo (too large, a format the API refuses): only removing helps.
+        case failed(message: String, canRetry: Bool)
     }
 
     let id: String
@@ -142,6 +143,12 @@ private struct PhotoTile: View {
 
     private var isCover: Bool { number == 1 }
 
+    /// Failed in a way sending it again cannot fix: the tile keeps only the reason and the remove button.
+    private var needsRemoving: Bool {
+        if case .failed(_, canRetry: false) = item.status { return true }
+        return false
+    }
+
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
         Color.clear
@@ -152,9 +159,11 @@ private struct PhotoTile: View {
             .accessibilityElement()
             .accessibilityLabel(accessibilityText)
             .accessibilityAddTraits(.isImage)
-            .overlay { retryButton }
+            .overlay { failureLayer }
             .overlay(alignment: .topTrailing) { removeButton.padding(TaleedSize.photoUploaderRemoveInset) }
-            .overlay(alignment: .bottomLeading) { coverControl.padding(TaleedSize.photoUploaderRemoveInset) }
+            .overlay(alignment: .bottomLeading) {
+                if !needsRemoving { coverControl.padding(TaleedSize.photoUploaderRemoveInset) }
+            }
     }
 
     private var borderColor: Color {
@@ -169,7 +178,7 @@ private struct PhotoTile: View {
         switch item.status {
         case .ready: break
         case .uploading: parts.append(DesignSystemStrings.string(.commonLoading, locale: locale))
-        case let .failed(message): parts.append(message)
+        case let .failed(message, _): parts.append(message)
         }
         return parts.joined(separator: ", ")
     }
@@ -192,27 +201,59 @@ private struct PhotoTile: View {
         }
     }
 
-    /// A failed photo: the warning and "Réessayer", centred, the whole wash a 44 pt target or more.
+    /// A failed photo: the warning and "Réessayer", centred, the whole wash a 44 pt target or more; or,
+    /// when sending it again cannot work, the warning and the reason (the tile reads it to VoiceOver).
     @ViewBuilder
-    private var retryButton: some View {
-        if case .failed = item.status, let onRetry {
-            Button { onRetry(item.id) } label: {
-                VStack(spacing: TaleedSpacing.s4) {
-                    TaleedIconView(.warningCircle, size: 20, color: TaleedColor.feedbackError)
-                    Text(DesignSystemStrings.string(.commonRetry, locale: locale))
-                        .taleedFont(TaleedFont.buttonSmall)
-                        .foregroundStyle(TaleedColor.feedbackError)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+    private var failureLayer: some View {
+        if case let .failed(message, canRetry) = item.status {
+            if canRetry, let onRetry {
+                retryButton(onRetry)
+            } else {
+                // A small tile: the reason alone when the warning does not fit above it.
+                ViewThatFits(in: .vertical) {
+                    VStack(spacing: TaleedSpacing.s4) {
+                        TaleedIconView(.warningCircle, size: 20, color: TaleedColor.feedbackError)
+                        reason(message, lines: 3)
+                    }
+                    reason(message, lines: 4)
                 }
-                .padding(TaleedSpacing.s4)
+                // Below the remove button.
+                .padding(.horizontal, TaleedSpacing.s4)
+                .padding(.top, TaleedSize.photoUploaderRemoveInset + TaleedSize.photoUploaderRemoveButton)
+                .padding(.bottom, TaleedSpacing.s4)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(DesignSystemStrings.string(.commonRetry, locale: locale) + ", "
-                + DesignSystemStrings.format(.photoUploaderPhoto, locale: locale, number))
         }
+    }
+
+    private func reason(_ message: String, lines: Int) -> some View {
+        Text(message)
+            .taleedFont(TaleedFont.caption)
+            .foregroundStyle(TaleedColor.feedbackError)
+            .multilineTextAlignment(.center)
+            .lineLimit(lines)
+            .minimumScaleFactor(0.6)
+    }
+
+    private func retryButton(_ onRetry: @escaping (PhotoUploaderItem.ID) -> Void) -> some View {
+        Button { onRetry(item.id) } label: {
+            VStack(spacing: TaleedSpacing.s4) {
+                TaleedIconView(.warningCircle, size: 20, color: TaleedColor.feedbackError)
+                Text(DesignSystemStrings.string(.commonRetry, locale: locale))
+                    .taleedFont(TaleedFont.buttonSmall)
+                    .foregroundStyle(TaleedColor.feedbackError)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .padding(TaleedSpacing.s4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(DesignSystemStrings.string(.commonRetry, locale: locale) + ", "
+            + DesignSystemStrings.format(.photoUploaderPhoto, locale: locale, number))
     }
 
     private var removeButton: some View {

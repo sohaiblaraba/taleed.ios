@@ -7,6 +7,8 @@ struct SellView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
     @Environment(\.sellDependencies) private var dependencies
+    @Environment(CatalogStore.self) private var catalog
+    @Environment(ExploreReferenceStore.self) private var references
     @State private var model: SellViewModel?
 
     var body: some View {
@@ -33,9 +35,16 @@ struct SellView: View {
                 return
             }
             let uploads = dependencies.uploads
+            let catalog = catalog
+            let references = references
             model = SellViewModel(api: dependencies.api,
                                   upload: { data async throws(ApiError) in try await uploads.upload(data, purpose: .listingPhoto) },
-                                  wilayaId: session.user?.wilayaId)
+                                  wilayaId: session.user?.wilayaId,
+                                  refreshLists: { lists in
+                                      // "Choose again" offers what the API knows now.
+                                      if lists.contains(.catalog) { await catalog.refresh() }
+                                      if lists.contains(.brands) { await references.refreshBrands() }
+                                  })
         }
         .onChange(of: session.user?.wilayaId) { _, wilayaId in model?.memberWilayaDidLoad(wilayaId) }
     }

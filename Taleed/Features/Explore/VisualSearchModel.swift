@@ -93,10 +93,7 @@ final class VisualSearchModel {
     /// No answer, or the server could not analyze the photo: the same photo may work on a retry. A photo
     /// too large or in a format the API refuses needs another photo.
     static func canRetry(_ error: ApiError) -> Bool {
-        switch error.code {
-        case .fileTooLarge, .unsupportedMediaType, .invalidRequest: false
-        default: error.isTransient || (error.status ?? 0) >= 500 || error.code == .rateLimited
-        }
+        error.canRetrySamePhoto
     }
 
     /// Upright JPEG at 85 %, within 1200 × 1600 like a listing photo, in a temporary file the caller

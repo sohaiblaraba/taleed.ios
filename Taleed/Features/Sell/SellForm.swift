@@ -23,6 +23,14 @@ enum SellFieldError: Equatable, Sendable {
     case tooLong(max: Int)
 }
 
+/// A reference list the sell form picks from.
+enum SellReferenceList: Hashable, Sendable {
+    /// `GET /catalog`: categories, conditions, wilayas.
+    case catalog
+    /// `GET /brands`.
+    case brands
+}
+
 /// The brand of the listing (the website's brand combobox): none ("Sans marque / Autre"), a catalog
 /// brand, or a name the member typed ("Utiliser « … »").
 enum SellBrand: Equatable, Sendable {
@@ -177,6 +185,9 @@ struct SellForm: Equatable, Sendable {
         var rejectedPhotos: [Int] = []
         /// Issues on paths the form does not show: say "check the fields" only.
         var hasUnplacedIssues = false
+        /// The lists to fetch again before the member picks again: the API no longer knows the chosen
+        /// category, wilaya (`GET /catalog`) or brand (`GET /brands`).
+        var staleLists: Set<SellReferenceList> = []
     }
 
     /// The error each `body.<field>` issue shows, and on which field.
@@ -201,6 +212,7 @@ struct SellForm: Equatable, Sendable {
             }
             if let (field, error) = issueFields[parts[1]] {
                 mapping.errors[field] = error
+                if let list = staleList(parts) { mapping.staleLists.insert(list) }
             } else if parts[1] == "photos" {
                 if parts.count >= 3, let index = Int(parts[2]) {
                     if !mapping.rejectedPhotos.contains(index) { mapping.rejectedPhotos.append(index) }
@@ -213,5 +225,15 @@ struct SellForm: Equatable, Sendable {
         }
         mapping.rejectedPhotos.sort()
         return mapping
+    }
+
+    /// The list behind a refused choice: `body.categoryId`, `body.wilayaId` (the catalog) or
+    /// `body.brand.id` (the brands). A typed brand name is not from a list.
+    private static func staleList(_ parts: [String]) -> SellReferenceList? {
+        switch parts[1] {
+        case "categoryId", "wilayaId": .catalog
+        case "brand" where parts.count == 2 || parts[2] == "id": .brands
+        default: nil
+        }
     }
 }
