@@ -19,8 +19,8 @@ extension EnvironmentValues {
 
 /// Edit listing (screens.md §2 G8 and §7 G8; Figma "Sell an Item" as the edit form; website
 /// `listings/[id]/edit`): back and "Modifier l'annonce", then the sell form filled from the listing,
-/// with "Enregistrer les modifications". Pushed from the listing screen and from My listings (and by a
-/// `/listings/{id}/edit` link, over the listing).
+/// with "Enregistrer les modifications". Pushed from the listing screen and from My listings (the
+/// website's `/listings/{id}/edit` link goes Home, screens.md §1.2).
 ///
 /// States: loading, the error with Retry (offline included), "no longer available" (`404`, or not the
 /// member's listing), and a notice when the listing can no longer change (reserved, sold). Saved: the

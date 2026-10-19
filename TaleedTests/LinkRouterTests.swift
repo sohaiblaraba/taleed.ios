@@ -35,11 +35,9 @@ struct LinkRouterTests {
         #expect(destination("https://taleed.app/listings/l1/chat?with=m2") == .listingChat(listingId: "l1", memberId: "m2"))
     }
 
-    /// The website's edit page (G8): the edit form, over the listing, once signed in.
-    @MainActor @Test func listingEditOpensTheEditForm() {
-        #expect(destination("https://taleed.app/listings/l1/edit") == .screen(.editListing(id: "l1")))
-        #expect(destination("https://taleed.app/ar/listings/l1/edit") == .screen(.editListing(id: "l1")))
-        #expect(destination("taleed://listings/l1/edit") == .screen(.editListing(id: "l1")))
+    /// The edit form is reached in the app only (the website's edit page goes Home, screens.md §1.2);
+    /// it sits over the listing and needs a session.
+    @MainActor @Test func theEditFormSitsOverTheListing() {
         #expect(AppRoute.editListing(id: "l1").requiresSignIn)
         #expect(AppRouter.canonicalStack(for: .editListing(id: "l1")) == (.home, [.listing(id: "l1"), .editListing(id: "l1")]))
     }
@@ -94,6 +92,8 @@ struct LinkRouterTests {
         "https://taleed.app/terms",
         "https://taleed.app/guides/vendre",
         "https://taleed.app/listings",
+        "https://taleed.app/listings/l1/edit",
+        "taleed://listings/l1/edit",
         "https://taleed.app/listings/l1/extra",
         "https://taleed.app/listings/l1/edit/more",
         "https://taleed.app/orders/o1/extra",

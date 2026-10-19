@@ -9,6 +9,47 @@ extension String {
     /// (Unicode FSI ... PDI), whatever the app language is.
     var isolatedByContent: String { "\u{2068}\(self)\u{2069}" }
 
+    /// Text built from a format, laid out in the app language's direction. `String(format:locale:)` wraps
+    /// each `%@` argument in an isolate (FSI ... PDI), so an Arabic format that starts with one ("%1$@ (%2$d)")
+    /// has no strong letter left outside it and would run left to right ("(5) معروض للبيع"). Arabic text
+    /// whose first letter outside the isolates is left to right, or that has letters only inside
+    /// isolates, gets a leading right-to-left mark (RLM). Digits alone ("3 / 5") stay as they are.
+    func inParagraphDirection(of language: AppLanguage) -> String {
+        guard language.layoutDirection == .rightToLeft else { return self }
+        switch paragraphStart {
+        case .letter(.leftToRight), .isolatesOnly: return "\u{200F}" + self
+        case .letter, .none: return self
+        }
+    }
+
+    private enum ParagraphStart {
+        /// The first letter (or mark) outside isolates, and its direction (Unicode rule P2).
+        case letter(LayoutDirection)
+        /// No letter outside isolates, but an isolate: nothing gives the paragraph a direction.
+        case isolatesOnly
+        case none
+    }
+
+    private var paragraphStart: ParagraphStart {
+        var depth = 0
+        var hasIsolate = false
+        for scalar in unicodeScalars {
+            switch scalar.value {
+            case 0x2066...0x2068:
+                depth += 1
+                hasIsolate = true
+            case 0x2069: depth = max(0, depth - 1)
+            case 0x200F where depth == 0: return .letter(.rightToLeft)
+            case 0x200E where depth == 0: return .letter(.leftToRight)
+            default:
+                guard depth == 0, scalar.properties.isAlphabetic,
+                      let direction = String(scalar).naturalLayoutDirection else { continue }
+                return .letter(direction)
+            }
+        }
+        return hasIsolate ? .isolatesOnly : .none
+    }
+
     /// The direction of the first letter that has one: right to left for Arabic (and Hebrew, Syriac,
     /// Thaana…) script, left to right for the others; nil without any letter (digits, emoji).
     var naturalLayoutDirection: LayoutDirection? {

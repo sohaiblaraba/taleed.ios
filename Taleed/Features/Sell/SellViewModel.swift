@@ -340,8 +340,9 @@ extension SellViewModel {
         }
     }
 
-    /// The listing again, after it was edited somewhere else: its photos as they are now, then the
-    /// member's new uploads; its values, except the fields the member changed.
+    /// The listing again, after it was edited somewhere else: its values, except the fields the member
+    /// changed; the photos as the member arranged them (order, cover, removals, new uploads), less the
+    /// ones removed elsewhere, then the ones added elsewhere.
     func reloadListing(_ listing: ListingDetail, brands: [CatalogBrand]) {
         guard let old = baseline, old.listingId == listing.id else { return }
         let saved = SellForm.saved(listing, brands: brands)
@@ -351,9 +352,30 @@ extension SellViewModel {
         if reloaded.wilayaId == nil { reloaded.wilayaId = shownWilaya }
         form = reloaded
         baseline = ListingEditBaseline(listingId: listing.id, form: saved, photoIds: listing.photos.map(\.id))
-        let added = photos.filter { if case .kept = $0.upload { false } else { true } }
-        photos = Array((listing.photos.map { SellPhoto(kept: $0) } + added).prefix(Self.maxPhotos))
+        photos = Array(Self.mergedPhotos(photos, known: old.photoIds, fresh: listing.photos).prefix(Self.maxPhotos))
         fieldErrors = [:]
         publishError = nil
+    }
+
+    /// The form's photos (`shown`) after a reload: each kept photo the listing still has stays where the
+    /// member put it, new uploads stay too; photos the listing lost are dropped, and the ones it gained
+    /// since the form loaded (`known`) follow. A photo the member removed stays removed.
+    static func mergedPhotos(_ shown: [SellPhoto], known: [String], fresh: [ListingPhoto]) -> [SellPhoto] {
+        let current = Dictionary(fresh.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var merged: [SellPhoto] = []
+        var keptIds: Set<String> = []
+        for photo in shown {
+            guard case let .kept(kept) = photo.upload else {
+                merged.append(photo)
+                continue
+            }
+            guard let now = current[kept.id], keptIds.insert(kept.id).inserted else { continue }
+            var updated = photo
+            updated.upload = .kept(now)
+            merged.append(updated)
+        }
+        let knownIds = Set(known)
+        let gained = fresh.filter { !knownIds.contains($0.id) && !keptIds.contains($0.id) }
+        return merged + gained.map { SellPhoto(kept: $0) }
     }
 }

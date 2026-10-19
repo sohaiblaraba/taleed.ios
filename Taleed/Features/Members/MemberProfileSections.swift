@@ -7,13 +7,14 @@ struct MemberWardrobeSection: View {
     let onFilter: () -> Void
     @Environment(LanguageManager.self) private var l10n
     @Environment(FavoriteStore.self) private var favorites
+    @Environment(ListingChangeCenter.self) private var listingChanges
 
     var body: some View {
         let list = model.wardrobe
         VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
             if (model.profile?.wardrobeTotal ?? 0) > 0 { toolbar }
             if list.hasLoaded {
-                let items = list.items.filter { !favorites.removedIds.contains($0.id) }
+                let items = listingChanges.cards(list.items.filter { !favorites.removedIds.contains($0.id) })
                 if items.isEmpty {
                     EmptyState(title: emptyTitle, icon: .storefront)
                 } else {

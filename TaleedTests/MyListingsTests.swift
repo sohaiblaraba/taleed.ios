@@ -199,6 +199,22 @@ struct MyListingsTests {
         #expect(DesignSystemStrings.format(.appMyListingsTabCount, locale: Locale(identifier: "fr"), "En vente", 4)
             == "En vente (4)")
     }
+
+    /// Arabic starts at the right: "معروض للبيع (5)" with the count at the left, although the format
+    /// starts with the (isolated) status label.
+    @Test func arabicTabTitlesStartRightToLeft() {
+        let title = DesignSystemStrings.format(.appMyListingsTabCount, locale: Locale(identifier: "ar"), "معروض للبيع", 5)
+        #expect(title.unicodeScalars.first == "\u{200F}")
+        #expect(title.contains("معروض للبيع"))
+        #expect(title.hasSuffix("(5)"))
+        #expect(DesignSystemStrings.format(.appMyListingsTabCount, locale: Locale(identifier: "en"), "Active", 5)
+            == "Active (5)")
+        #expect("\u{200F}x".inParagraphDirection(of: .ar) == "\u{200F}x")
+        #expect("3 / 5".inParagraphDirection(of: .ar) == "3 / 5")
+        #expect("12 مشاهدة".inParagraphDirection(of: .ar) == "12 مشاهدة")
+        #expect("Taleed مرحبا".inParagraphDirection(of: .ar) == "\u{200F}Taleed مرحبا")
+        #expect("\u{2068}x\u{2069} (2)".inParagraphDirection(of: .fr) == "\u{2068}x\u{2069} (2)")
+    }
 }
 
 // MARK: - Change center
@@ -241,5 +257,27 @@ struct ListingChangeCenterTests {
         center.post(.deleted, listingId: "l1")
         await model.sync(with: center)
         #expect(model.loadError?.isNotFound == true)
+    }
+
+    /// Home, Explore and the wardrobes: an edited card shows the new values, a hidden one leaves.
+    @Test func publicCardsFollowTheMembersChanges() {
+        let center = ListingChangeCenter()
+        let cards = [myCard("l1"), myCard("l2"), myCard("other")]
+        #expect(center.cards(cards) == cards)
+        center.post(.updated(editableListing(id: "l1", price: 2300)), listingId: "l1")
+        center.post(.updated(editableListing(id: "l2", status: .hidden)), listingId: "l2")
+        let shown = center.cards(cards)
+        #expect(shown.map(\.id) == ["l1", "other"])
+        #expect(shown.first?.price == 2300)
+        #expect(shown.first?.title == "Robe fleurie Zara")
+        // Back on sale: shown again.
+        center.post(.updated(editableListing(id: "l2", status: .active)), listingId: "l2")
+        #expect(center.cards(cards).map(\.id) == ["l1", "l2", "other"])
+        // A card loaded after the change is the server's word.
+        let fresh = myCard("l1", price: 9900)
+        #expect(center.cards([fresh]).first?.price == 9900)
+        // Deleted: the favorites store leaves it out; the center forgets it.
+        center.post(.deleted, listingId: "l1")
+        #expect(center.latest["l1"] == nil)
     }
 }

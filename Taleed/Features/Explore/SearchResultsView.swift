@@ -19,6 +19,7 @@ struct SearchResultsView: View {
     @Environment(CatalogStore.self) private var catalog
     @Environment(ExploreReferenceStore.self) private var references
     @Environment(FavoriteStore.self) private var favorites
+    @Environment(ListingChangeCenter.self) private var listingChanges
     @Environment(AppToasts.self) private var toasts
     @Environment(SessionManager.self) private var session
     @Environment(\.dismiss) private var dismiss
@@ -141,7 +142,7 @@ struct SearchResultsView: View {
                             .id(Self.topID)
                             .onAppear { Task { await viewModel.topAppeared() } }
                             .onDisappear { viewModel.topDisappeared() }
-                        let listings = list.items.filter { !favorites.removedIds.contains($0.id) }
+                        let listings = listingChanges.cards(list.items.filter { !favorites.removedIds.contains($0.id) })
                         if listings.isEmpty {
                             emptyState.padding(.top, TaleedSpacing.s24)
                         } else {

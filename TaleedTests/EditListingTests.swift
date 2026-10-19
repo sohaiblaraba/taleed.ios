@@ -285,12 +285,38 @@ struct ListingSaveTests {
         await model.addPhotos([Data()])
         api.updates = [.failure(invalidRequest(["body.photos.1.id"]))]
         #expect(await model.save() == .listingChanged)
+        // p2 was removed elsewhere, p3 added elsewhere: it follows the member's photos.
         model.reloadListing(editableListing(photoIds: ["p1", "p3"]), brands: brands)
-        #expect(model.photos.map(\.reference) == [.kept(id: "p1"), .kept(id: "p3"), .added(key: "listings/k1")])
+        #expect(model.photos.map(\.reference) == [.kept(id: "p1"), .added(key: "listings/k1"), .kept(id: "p3")])
         #expect(model.form.priceText == "2300")
         _ = await model.save()
-        #expect(api.sent.last?.photos == [.kept(id: "p1"), .kept(id: "p3"), .added(key: "listings/k1")])
+        #expect(api.sent.last?.photos == [.kept(id: "p1"), .added(key: "listings/k1"), .kept(id: "p3")])
         #expect(api.sent.last?.price == 2300)
+    }
+
+    @Test func aReloadKeepsTheMembersCoverAndRemovals() async {
+        let model = model(editableListing(photoIds: ["p1", "p2", "p3"]))
+        model.makeCover(model.photos[2].id)
+        model.remove(model.photos[2].id)
+        #expect(model.photos.map(\.reference) == [.kept(id: "p3"), .kept(id: "p1")])
+        api.updates = [.failure(invalidRequest(["body.photos.0.id"]))]
+        #expect(await model.save() == .listingChanged)
+        // Elsewhere: p4 added. p2 stays removed, p3 stays the cover.
+        model.reloadListing(editableListing(photoIds: ["p1", "p2", "p3", "p4"]), brands: brands)
+        #expect(model.photos.map(\.reference) == [.kept(id: "p3"), .kept(id: "p1"), .kept(id: "p4")])
+        _ = await model.save()
+        #expect(api.sent.last?.photos == [.kept(id: "p3"), .kept(id: "p1"), .kept(id: "p4")])
+    }
+
+    @Test func aReloadWithTheSameArrangementSendsNoPhotos() async {
+        let model = model()
+        model.form.priceText = "2300"
+        api.updates = [.failure(invalidRequest(["body.photos.0.id"]))]
+        #expect(await model.save() == .listingChanged)
+        model.reloadListing(editableListing(photoIds: ["p1", "p2"]), brands: brands)
+        #expect(model.photos.map(\.reference) == [.kept(id: "p1"), .kept(id: "p2")])
+        _ = await model.save()
+        #expect(api.sent.last?.photos == nil)
     }
 }
 

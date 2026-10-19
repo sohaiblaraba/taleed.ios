@@ -19,8 +19,9 @@ enum DesignSystemStrings {
         string(key, language: AppLanguage(locale: locale))
     }
 
-    /// A string with `%d` / `%@` arguments.
+    /// A string with `%d` / `%@` arguments, starting in the language's direction (`inParagraphDirection`).
     static func format(_ key: L10nKey, locale: Locale, _ arguments: CVarArg...) -> String {
         String(format: string(key, locale: locale), locale: locale, arguments: arguments)
+            .inParagraphDirection(of: AppLanguage(locale: locale))
     }
 }

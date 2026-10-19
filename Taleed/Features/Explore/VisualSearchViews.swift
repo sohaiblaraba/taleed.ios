@@ -193,6 +193,7 @@ struct VisualSearchResultsView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
     @Environment(FavoriteStore.self) private var favorites
+    @Environment(ListingChangeCenter.self) private var listingChanges
     @Environment(AppToasts.self) private var toasts
     @Environment(\.dismiss) private var dismiss
 
@@ -220,7 +221,7 @@ struct VisualSearchResultsView: View {
                 LazyVStack(alignment: .leading, spacing: TaleedSpacing.s16) {
                     header
                         .padding(.horizontal, TaleedLayout.screenMargin)
-                    let listings = list.items.filter { !favorites.removedIds.contains($0.id) }
+                    let listings = listingChanges.cards(list.items.filter { !favorites.removedIds.contains($0.id) })
                     if listings.isEmpty {
                         EmptyState(title: l10n.string(.visualNoResults), actionTitle: l10n.string(.appVisualNewSearch),
                                    action: newSearch)

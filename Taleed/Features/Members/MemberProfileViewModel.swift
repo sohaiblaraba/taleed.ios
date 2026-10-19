@@ -56,6 +56,9 @@ final class MemberProfileViewModel {
     @ObservationIgnored private var backgroundSince: ContinuousClock.Instant?
     /// A `?bundle=1` link not acted on yet.
     @ObservationIgnored private var opensBundle: Bool
+    /// The member changed one of their listings on another screen since their own profile loaded.
+    @ObservationIgnored private var listingsChangedMeanwhile = false
+    @ObservationIgnored private var isShown = false
 
     /// A shorter absence keeps the screen as it is (as the listing screen).
     static let foregroundReloadAfter: Duration = .seconds(60)
@@ -209,6 +212,39 @@ final class MemberProfileViewModel {
         origin.isAutomatic = true
         defer { origin.isAutomatic = false }
         async let refreshed: Bool = refreshListOnScreen()
+        await reload(automatic: true)
+        _ = await refreshed
+    }
+
+    /// The member edited, hid, put back on sale or deleted one of their listings on another screen (My
+    /// listings, the edit form, the listing screen). Their own profile loads again when it shows: the
+    /// wardrobe's cards follow at once (`ListingChangeCenter.cards`), but a listing back on sale and the
+    /// counts come from the server.
+    /// A change that lands while the profile is on screen (the member went back before the answer came)
+    /// reloads at once.
+    func listingsChanged() async {
+        guard profile?.isMe == true else { return }
+        listingsChangedMeanwhile = true
+        if isShown { await reloadAfterListingChanges() }
+    }
+
+    /// The screen shows (again, back from My listings): the profile and the wardrobe again, quietly, after
+    /// `listingsChanged`.
+    func appeared() async {
+        isShown = true
+        await reloadAfterListingChanges()
+    }
+
+    func disappeared() {
+        isShown = false
+    }
+
+    private func reloadAfterListingChanges() async {
+        guard listingsChangedMeanwhile, profile != nil else { return }
+        listingsChangedMeanwhile = false
+        origin.isAutomatic = true
+        defer { origin.isAutomatic = false }
+        async let refreshed: Bool = wardrobe.hasLoaded ? wardrobe.refresh() : false
         await reload(automatic: true)
         _ = await refreshed
     }

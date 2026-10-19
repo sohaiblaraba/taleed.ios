@@ -349,3 +349,39 @@ struct MemberProfileTests {
         #expect(await model.resolvePending(.follow, memberId: "karim") == .follow)
     }
 }
+
+/// The member's own profile after they changed a listing elsewhere (G8).
+@MainActor
+struct MemberProfileListingChangesTests {
+    private let api = FakeMembersApi()
+
+    /// Own profile → My listings → hide or edit → Back: the profile and the wardrobe again (G8).
+    @Test func theOwnProfileReloadsWhenShownAfterAListingChanged() async {
+        api.profile = .success(.fixture(isMe: true, canBundle: false))
+        let model = MemberProfileViewModel(username: "amina", api: api)
+        await model.loadIfNeeded()
+        await model.appeared()
+        #expect(api.memberCalls.count == 1)
+        model.disappeared()
+        await model.listingsChanged()
+        #expect(api.memberCalls.count == 1)
+        await model.appeared()
+        #expect(api.memberCalls.map(\.automatic) == [false, true])
+        #expect(api.wardrobeCalls.count == 2)
+        // Once per change.
+        model.disappeared()
+        await model.appeared()
+        #expect(api.memberCalls.count == 2)
+        // Back before the answer came: the change lands while the profile shows.
+        await model.listingsChanged()
+        #expect(api.memberCalls.count == 3)
+    }
+
+    @Test func anotherMembersProfileIgnoresTheMembersListingChanges() async {
+        let model = MemberProfileViewModel(username: "amina", api: api)
+        await model.loadIfNeeded()
+        await model.appeared()
+        await model.listingsChanged()
+        #expect(api.memberCalls.count == 1)
+    }
+}

@@ -101,6 +101,7 @@ struct ListingMemberItemsSection: View {
     let onSeeAll: (() -> Void)?
     @Environment(LanguageManager.self) private var l10n
     @Environment(FavoriteStore.self) private var favorites
+    @Environment(ListingChangeCenter.self) private var listingChanges
 
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
@@ -132,7 +133,7 @@ struct ListingMemberItemsSection: View {
     }
 
     private var visibleItems: [ListingSummary] {
-        items.filter { !favorites.removedIds.contains($0.id) }
+        listingChanges.cards(items.filter { !favorites.removedIds.contains($0.id) })
     }
 }
 
@@ -141,12 +142,13 @@ struct ListingSimilarSection: View {
     let items: [ListingSummary]
     @Environment(LanguageManager.self) private var l10n
     @Environment(FavoriteStore.self) private var favorites
+    @Environment(ListingChangeCenter.self) private var listingChanges
 
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
             SectionTitle(text: l10n.string(.listingSimilar))
                 .padding(.horizontal, TaleedSpacing.s16)
-            ListingGrid(listings: items.filter { !favorites.removedIds.contains($0.id) })
+            ListingGrid(listings: listingChanges.cards(items.filter { !favorites.removedIds.contains($0.id) }))
         }
         .padding(.vertical, TaleedSpacing.s16)
     }

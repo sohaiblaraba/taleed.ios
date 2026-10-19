@@ -35,6 +35,7 @@ struct MemberProfileView: View {
     @Environment(AppRouter.self) private var router
     @Environment(SessionManager.self) private var session
     @Environment(AppToasts.self) private var toasts
+    @Environment(ListingChangeCenter.self) private var listingChanges
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
@@ -58,6 +59,10 @@ struct MemberProfileView: View {
             content
         }
         .task { await model.loadIfNeeded() }
+        // Own profile: a listing changed in My listings or the edit form shows when back here.
+        .onChange(of: listingChanges.seq) { _, _ in Task { await model.listingsChanged() } }
+        .onAppear { Task { await model.appeared() } }
+        .onDisappear { model.disappeared() }
         // `?bundle=1`: the bundle builder once the profile has loaded, when it offers it.
         .onChange(of: model.profile?.id) { _, _ in
             if model.takeBundleRequest() { start(.shopBundle) }

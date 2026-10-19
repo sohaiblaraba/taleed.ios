@@ -14,6 +14,7 @@ struct HomeView: View {
     @Environment(AppRouter.self) private var router
     @Environment(SessionManager.self) private var session
     @Environment(FavoriteStore.self) private var favorites
+    @Environment(ListingChangeCenter.self) private var listingChanges
     @Environment(AppToasts.self) private var toasts
 
     /// Cards before the trust strip (the wireframe shows ten, then the strip).
@@ -123,7 +124,7 @@ struct HomeView: View {
     private var feedSection: some View {
         let feed = viewModel.feed
         if feed.hasLoaded {
-            let listings = feed.items.filter { !favorites.removedIds.contains($0.id) }
+            let listings = listingChanges.cards(feed.items.filter { !favorites.removedIds.contains($0.id) })
             if listings.isEmpty {
                 EmptyState(title: l10n.string(.homeEmptyFeed), actionTitle: l10n.string(.homeCtaSell),
                            action: { router.selectedTab = .sell }, icon: .storefront)
