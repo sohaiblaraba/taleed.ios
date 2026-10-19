@@ -34,9 +34,10 @@ struct MainShellView: View {
             }
         }
         // Above the tab bar, or above the screen's own bottom bar when it draws the tab bar (Item Detail).
+        // A clear colour takes no touch, so the screen below stays usable; the toasts on it do take theirs
+        // ("Annuler", ×). `allowsHitTesting(false)` here would also turn off the toasts' buttons.
         .overlay {
             Color.clear
-                .allowsHitTesting(false)
                 .taleedToastHost(toasts.state)
                 .padding(.bottom, toastBottomInset)
         }
