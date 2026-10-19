@@ -18,6 +18,7 @@ final class AppContainer {
     let favorites: FavoriteStore
     /// The member's changes to their listings, for every screen that shows them (G8).
     let listingChanges = ListingChangeCenter()
+    let orderChanges = OrderChangeCenter()
     /// The conversations the member reads, for the inbox's rows (G9).
     let conversationReads = ConversationReads()
     /// Brands and sizes of the Explore filter sheet.

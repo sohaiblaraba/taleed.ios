@@ -251,7 +251,7 @@ extension OrderPaymentInfo {
     }
 }
 
-private extension OrderState {
+extension OrderState {
     init(_ status: OrderStatus) {
         self = switch status {
         case .pendingPayment: .pendingPayment

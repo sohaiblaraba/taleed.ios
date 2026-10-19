@@ -166,7 +166,7 @@ final class AppRouter {
             } else {
                 (.home, [.listing(id: target.listingId), route])
             }
-        case .order, .orderPayment: (.profile, [.orders, route])
+        case .order, .orderPayment, .dispute: (.profile, [.orders, route])
         case .favorites, .orders, .wallet, .notifications, .settings, .referrals, .myListings: (.profile, [route])
         case .deleteAccount: (.profile, [.settings, route])
         #if DEBUG

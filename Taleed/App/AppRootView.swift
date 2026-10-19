@@ -20,6 +20,7 @@ struct AppRootView: View {
             .environment(container.toasts)
             .environment(container.favorites)
             .environment(container.listingChanges)
+            .environment(container.orderChanges)
             .environment(container.welcome)
             .environment(container.launch)
             .environment(container.exploreReferences)
@@ -39,6 +40,7 @@ struct AppRootView: View {
             .environment(\.bundleDependencies, BundleDependencies(bundles: container.api, members: container.api))
             .environment(\.checkoutDependencies,
                          CheckoutDependencies(checkout: container.api, listings: container.api, bundles: container.api))
+            .environment(\.ordersDependencies, OrdersDependencies(orders: container.api, uploads: container.uploads))
             .environment(\.memberDependencies,
                          MemberDependencies(members: container.api, reports: container.api, uploads: container.uploads))
             .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in

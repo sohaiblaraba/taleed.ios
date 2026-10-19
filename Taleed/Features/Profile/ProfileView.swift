@@ -38,6 +38,10 @@ struct ProfileView: View {
                                 router.push(.favorites)
                             }
                             .accessibilityIdentifier("profile.favorites")
+                            ListRow(label: l10n.string(.navOrders), showsChevron: true) {
+                                router.push(.orders)
+                            }
+                            .accessibilityIdentifier("profile.orders")
                         }
                         ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
                             router.push(.settings)

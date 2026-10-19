@@ -40,6 +40,8 @@ enum AppRoute: Hashable, Sendable {
     case favorites
     case orders
     case order(id: String)
+    /// The thread of an order's dispute (G12): from the order screen, or once a dispute is opened.
+    case dispute(id: String)
     case wallet
     case notifications
     case settings
@@ -57,7 +59,7 @@ enum AppRoute: Hashable, Sendable {
     /// leave the stacks at sign-out.
     var requiresSignIn: Bool {
         switch self {
-        case .conversation, .bundle, .checkout, .orderPayment, .favorites, .orders, .order, .wallet, .notifications, .referrals,
+        case .conversation, .bundle, .checkout, .orderPayment, .favorites, .orders, .order, .dispute, .wallet, .notifications, .referrals,
              .deleteAccount, .editListing, .bundleBuilder, .myListings:
             true
         case .listing, .member, .search, .visualSearch, .settings:
@@ -76,10 +78,11 @@ enum AppRoute: Hashable, Sendable {
     }
 
     /// The shell hides its tab bar over this screen: Item Detail draws its own; a conversation keeps the
-    /// bottom for its composer, which rises with the keyboard; checkout has none (Figma Buy Now).
+    /// bottom for its composer, which rises with the keyboard, as the dispute thread does; checkout has none
+    /// (Figma Buy Now).
     var hidesShellTabBar: Bool {
         switch self {
-        case .conversation, .checkout: true
+        case .conversation, .checkout, .dispute: true
         default: drawsOwnTabBar
         }
     }
