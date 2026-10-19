@@ -65,6 +65,12 @@ final class FakeCheckoutApi: CheckoutApi {
     var syncs: [Result<OrderPaymentInfo, Taleed.ApiError>] = []
     var payment: Result<URL?, Taleed.ApiError> = .success(URL(string: "https://pay.example/1"))
     var save: Result<SavedAddress, Taleed.ApiError>?
+    var ownOrderAwaitsPayment: Result<Bool, Taleed.ApiError> = .success(true)
+    /// Per wilaya, a call waits here until the test resumes it (out-of-order answers).
+    var communeGates: [Int: CheckedContinuation<Void, Never>] = [:]
+    var gatedWilayas: Set<Int> = []
+    private(set) var communeCalls: [Int] = []
+    private(set) var deskCalls: [Int] = []
     private(set) var quoteRequests: [CheckoutRequest] = []
     private(set) var orderRequests: [OrderRequest] = []
     private(set) var saved: [AddressDraft] = []
@@ -72,8 +78,20 @@ final class FakeCheckoutApi: CheckoutApi {
 
     func checkoutProfile() async throws(Taleed.ApiError) -> CheckoutProfile { try profile.get() }
     func savedAddresses() async throws(Taleed.ApiError) -> [SavedAddress] { addresses }
-    func communes(wilayaId: Int) async throws(Taleed.ApiError) -> [CommuneOption] { communeList }
-    func stopdesks(wilayaId: Int) async throws(Taleed.ApiError) -> [StopdeskOption] { deskList }
+    func communes(wilayaId: Int) async throws(Taleed.ApiError) -> [CommuneOption] {
+        communeCalls.append(wilayaId)
+        if gatedWilayas.contains(wilayaId) {
+            await withCheckedContinuation { communeGates[wilayaId] = $0 }
+        }
+        return communeList.filter { $0.id / 1000 == wilayaId }
+    }
+
+    func stopdesks(wilayaId: Int) async throws(Taleed.ApiError) -> [StopdeskOption] {
+        deskCalls.append(wilayaId)
+        return deskList.filter { ($0.communeId ?? wilayaId * 1000) / 1000 == wilayaId }
+    }
+
+    func isOwnOrderAwaitingPayment(orderId: String) async throws(Taleed.ApiError) -> Bool { try ownOrderAwaitsPayment.get() }
 
     func quote(_ request: CheckoutRequest) async throws(Taleed.ApiError) -> CheckoutPricing {
         quoteRequests.append(request)

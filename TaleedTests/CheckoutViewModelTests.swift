@@ -56,6 +56,61 @@ struct CheckoutViewModelTests {
         #expect(model.phase == .heldByOrder(orderId: "o7"))
     }
 
+    @Test func onlyTheMembersOwnOrderAwaitingPaymentTakesOverThePreview() async {
+        api.profile = .success(CheckoutProfile(name: "K H", phone: nil, wilayaId: nil))
+        listings.listing = .success(.fixture(status: .sold, canBuy: false, orderId: "o9"))
+        api.ownOrderAwaitsPayment = .success(false)
+        let paid = model()
+        await paid.loadIfNeeded()
+        #expect(paid.phase == .unavailable)
+        api.ownOrderAwaitsPayment = .success(true)
+        let pending = model()
+        await pending.loadIfNeeded()
+        #expect(pending.phase == .heldByOrder(orderId: "o9"))
+        api.ownOrderAwaitsPayment = .failure(.network)
+        let offline = model()
+        await offline.loadIfNeeded()
+        #expect(offline.phase == .failed(.network))
+    }
+
+    @Test func backOnTheSameWilayaTheDesksLoadAgain() async {
+        api.addresses = [
+            SavedAddress(id: "alger", recipientName: "Lina K", phone: "0661000000", wilaya: CatalogWilaya(id: 16, name: "Alger"),
+                         communeId: 16001, commune: "Alger", addressLine: "Rue 1", isDefault: true),
+            SavedAddress(id: "oran", recipientName: "Lina K", phone: "0661000000", wilaya: CatalogWilaya(id: 31, name: "Oran"),
+                         communeId: 31001, commune: "Oran", addressLine: "Rue 2", isDefault: false)
+        ]
+        api.communeList = [CommuneOption(id: 16001, name: "Alger Centre"), CommuneOption(id: 31001, name: "Oran")]
+        api.deskList = [StopdeskOption(id: 1, name: "Agence Alger Centre", address: nil, communeId: 16001),
+                        StopdeskOption(id: 2, name: "Agence Bab Ezzouar", address: nil, communeId: 16001)]
+        let model = model()
+        await model.loadIfNeeded()
+        await model.selectKind(.stopdesk)
+        #expect(model.desksForCommune.count == 2)
+        await model.selectKind(.home)
+        await model.selectSavedAddress("oran")
+        await model.selectSavedAddress("alger")
+        await model.selectKind(.stopdesk)
+        #expect(model.hasStopdesksForWilaya)
+        #expect(model.desksForCommune.map(\.id) == [1, 2])
+        #expect(api.deskCalls == [16, 16])
+    }
+
+    @Test func aNewerWilayaWinsOverTheCommunesStillLoading() async {
+        api.communeList = [CommuneOption(id: 16001, name: "Alger Centre"), CommuneOption(id: 31001, name: "Oran")]
+        api.gatedWilayas = [31]
+        let model = model()
+        let first = Task { await model.loadIfNeeded() }
+        while api.communeGates[31] == nil { await Task.yield() }
+        await model.selectWilaya(16)
+        #expect(model.communes.map(\.id) == [16001])
+        api.communeGates[31]?.resume()
+        await first.value
+        #expect(model.communes.map(\.id) == [16001])
+        #expect(!model.isLoadingCommunes)
+        #expect(api.communeCalls == [31, 16])
+    }
+
     @Test func refusalsReplaceTheForm() async {
         for (error, phase) in [(apiFailure(.listingUnavailable), CheckoutViewModel.Phase.unavailable),
                                (apiFailure(.forbidden, status: 403), .forbidden), (apiFailure(.blocked, status: 403), .blocked),

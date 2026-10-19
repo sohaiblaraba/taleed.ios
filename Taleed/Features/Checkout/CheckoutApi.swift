@@ -16,6 +16,9 @@ protocol CheckoutApi: AnyObject {
     func quote(_ request: CheckoutRequest) async throws(ApiError) -> CheckoutPricing
     /// `POST /orders`. A retry with the same `clientId` returns the first order (`replayed`).
     func placeOrder(_ order: OrderRequest) async throws(ApiError) -> PlacedOrder
+    /// `GET /orders/{id}`: true for the member's own order awaiting payment, the only one that takes over
+    /// checkout (website `findPendingOrder`); a paid or shipped order the goods went to does not.
+    func isOwnOrderAwaitingPayment(orderId: String) async throws(ApiError) -> Bool
     /// `POST /orders/{id}/payment/sync`: asks the gateway and confirms a paid order. Repeated freely.
     func syncPayment(orderId: String) async throws(ApiError) -> OrderPaymentInfo
     /// `POST /orders/{id}/payment`: a new payment page for an order that waits for payment.
@@ -60,6 +63,11 @@ extension GeneratedTaleedApi: CheckoutApi {
         let placed = try await caller.call(.write) { try await CheckoutAPI.placeOrder(orderCreate: body, apiConfiguration: $0) }
         return PlacedOrder(order: OrderPaymentInfo(placed.order), paymentURL: URL(apiString: placed.paymentUrl),
                            replayed: placed.replayed)
+    }
+
+    func isOwnOrderAwaitingPayment(orderId: String) async throws(ApiError) -> Bool {
+        let order = try await caller.call(.read) { try await OrdersAPI.getOrder(id: orderId, apiConfiguration: $0) }
+        return order.role == .buyer && order.status == .pendingPayment
     }
 
     func syncPayment(orderId: String) async throws(ApiError) -> OrderPaymentInfo {

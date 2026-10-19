@@ -154,6 +154,7 @@ struct CheckoutFormView: View {
             }
             .disabled(model.form.wilayaId == nil || (model.communes.isEmpty && model.communesError == nil))
             .accessibilityIdentifier("checkout.commune")
+            .task(id: model.form.wilayaId) { await model.loadCommunes() }
             switch model.form.kind {
             case .home:
                 TaleedTextArea(label: l10n.string(.checkoutAddressLine), text: addressBinding,
@@ -170,7 +171,9 @@ struct CheckoutFormView: View {
     @ViewBuilder
     private var stopdeskField: some View {
         let desks = model.desksForCommune
-        let noDesk = model.form.communeId != nil && !model.isLoadingStopdesks && model.stopdesksError == nil && desks.isEmpty
+        // Only once the chosen wilaya's desks arrived: an empty list then really means none in this commune.
+        let noDesk = model.form.communeId != nil && model.hasStopdesksForWilaya && !model.isLoadingStopdesks
+            && model.stopdesksError == nil && desks.isEmpty
         TaleedSelectField(label: l10n.string(.checkoutStopdesk), value: stopdeskTitle, placeholder: l10n.string(.checkoutStopdesk),
                           helper: model.isLoadingStopdesks ? l10n.string(.commonLoading) : nil,
                           error: model.fieldErrors[.stopdesk].map(message)
@@ -185,6 +188,8 @@ struct CheckoutFormView: View {
         }
         .disabled(model.form.communeId == nil || (desks.isEmpty && model.stopdesksError == nil))
         .accessibilityIdentifier("checkout.stopdesk")
+        // The chosen wilaya's desks, whatever path the wilaya came by (a load already there is kept).
+        .task(id: model.form.wilayaId) { await model.loadStopdesks() }
     }
 
     // MARK: Field values

@@ -88,8 +88,14 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
     @ObservationIgnored private var pendingOrder: OrderRequest?
     /// An order went through: nothing quotes again (the goods are now reserved by it).
     @ObservationIgnored private var hasPlacedOrder = false
-    @ObservationIgnored private var communesWilaya: Int?
-    @ObservationIgnored private var stopdesksWilaya: Int?
+    /// The wilaya `communes` / `stopdesks` belong to: nil until its list arrived.
+    private var communesWilaya: Int?
+    private var stopdesksWilaya: Int?
+    /// One per load: a newer load (a newer wilaya) supersedes the one in flight, whose answer is dropped.
+    @ObservationIgnored private var communesGeneration = 0
+    @ObservationIgnored private var stopdesksGeneration = 0
+    @ObservationIgnored private var communesLoadingWilaya: Int?
+    @ObservationIgnored private var stopdesksLoadingWilaya: Int?
 
     init(target: CheckoutTarget, dependencies: CheckoutDependencies) {
         self.target = target
@@ -119,6 +125,9 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
 
     /// The desks of the chosen commune.
     var desksForCommune: [StopdeskOption] { CheckoutRules.desks(stopdesks, communeId: form.communeId) }
+
+    /// The desk list on screen is the chosen wilaya's (so an empty `desksForCommune` really means none).
+    var hasStopdesksForWilaya: Bool { form.wilayaId != nil && stopdesksWilaya == form.wilayaId }
 
     // MARK: Loading
 
@@ -172,16 +181,30 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
     private func loadPreview() async {
         do {
             let preview = try await fetchPreview()
-            if let orderId = preview.orderId, !preview.canBuy {
-                phase = .heldByOrder(orderId: orderId)
-            } else if !preview.canBuy {
-                phase = .unavailable
-            } else {
+            if preview.canBuy {
                 self.preview = preview
                 phase = .form
+            } else if let orderId = preview.orderId {
+                await openHeldGoods(orderId: orderId)
+            } else {
+                phase = .unavailable
             }
         } catch {
             handleBlockingError(error, initial: true)
+        }
+    }
+
+    /// The goods went to an order the member is part of (`orderId`, slice D): only the member's own order
+    /// awaiting payment takes over checkout; a paid, shipped or completed one leaves "no longer for sale".
+    private func openHeldGoods(orderId: String) async {
+        do {
+            let awaitsPayment = try await api.isOwnOrderAwaitingPayment(orderId: orderId)
+            phase = awaitsPayment ? .heldByOrder(orderId: orderId) : .unavailable
+        } catch {
+            switch error.code {
+            case .notFound, .forbidden: phase = .unavailable
+            default: phase = .failed(error)
+            }
         }
     }
 
@@ -221,8 +244,7 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
         form.selectWilaya(id)
         selectedAddressId = nil
         clearFieldErrors([.wilaya, .commune, .stopdesk])
-        communes = []
-        stopdesks = []
+        resetReferenceLists()
         async let communesLoad: Void = loadCommunes()
         async let desksLoad: Void = loadStopdesksIfNeeded()
         await quote()
@@ -255,12 +277,15 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
             form.addressLine = ""
         }
         clearFieldErrors([.recipientName, .phone, .wilaya, .commune, .addressLine])
-        if form.wilayaId != previousWilaya {
-            communes = []
-            stopdesks = []
-            Task { await loadCommunes() }
+        guard form.wilayaId != previousWilaya else {
+            await quote()
+            return
         }
+        resetReferenceLists()
+        async let communesLoad: Void = loadCommunes()
+        async let desksLoad: Void = loadStopdesksIfNeeded()
         await quote()
+        _ = await (communesLoad, desksLoad)
     }
 
     /// "Appliquer": the quote checks the code (case and spaces do not matter).
@@ -520,19 +545,54 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
 // MARK: - Reference lists
 
 extension CheckoutViewModel {
-    /// The wilaya's communes, for the commune picker. Joins nothing: a newer wilaya's list wins.
+    /// A new wilaya: its communes and desks are other ones. The lists and the wilaya they belong to go,
+    /// and the loads in flight are superseded (their answers are dropped).
+    private func resetReferenceLists() {
+        communes = []
+        communesWilaya = nil
+        communesError = nil
+        communesLoadingWilaya = nil
+        communesGeneration += 1
+        isLoadingCommunes = false
+        stopdesks = []
+        stopdesksWilaya = nil
+        stopdesksError = nil
+        stopdesksLoadingWilaya = nil
+        stopdesksGeneration += 1
+        isLoadingStopdesks = false
+    }
+
+    /// The wilaya's communes, for the commune picker. Joins a load of the same wilaya; a newer wilaya's
+    /// load supersedes an older one, so the list on screen is always the chosen wilaya's.
     func loadCommunes() async {
-        guard let wilaya = form.wilayaId, communesWilaya != wilaya || communesError != nil, !isLoadingCommunes else { return }
+        guard let wilaya = form.wilayaId, communesWilaya != wilaya || communesError != nil,
+              communesLoadingWilaya != wilaya else { return }
+        communesGeneration += 1
+        let generation = communesGeneration
+        communesLoadingWilaya = wilaya
         isLoadingCommunes = true
         communesError = nil
-        defer { isLoadingCommunes = false }
+        let result: Result<[CommuneOption], ApiError>
         do {
-            let list = try await api.communes(wilayaId: wilaya)
-            guard form.wilayaId == wilaya else { return }
+            result = .success(try await api.communes(wilayaId: wilaya))
+        } catch {
+            result = .failure(error)
+        }
+        // A newer load owns the state now.
+        guard generation == communesGeneration else { return }
+        communesLoadingWilaya = nil
+        isLoadingCommunes = false
+        guard form.wilayaId == wilaya else {
+            // The wilaya changed without a load of its own: the chosen one's list, now.
+            await loadCommunes()
+            return
+        }
+        switch result {
+        case let .success(list):
             communes = list
             communesWilaya = wilaya
-        } catch {
-            if form.wilayaId == wilaya { communesError = error }
+        case let .failure(error):
+            communesError = error
         }
     }
 
@@ -541,19 +601,34 @@ extension CheckoutViewModel {
         if form.kind == .stopdesk { await loadStopdesks() }
     }
 
-    /// The wilaya's desks, for stop-desk delivery.
+    /// The wilaya's desks, for stop-desk delivery. Same rules as the communes.
     func loadStopdesks() async {
-        guard let wilaya = form.wilayaId, stopdesksWilaya != wilaya || stopdesksError != nil, !isLoadingStopdesks else { return }
+        guard let wilaya = form.wilayaId, stopdesksWilaya != wilaya || stopdesksError != nil,
+              stopdesksLoadingWilaya != wilaya else { return }
+        stopdesksGeneration += 1
+        let generation = stopdesksGeneration
+        stopdesksLoadingWilaya = wilaya
         isLoadingStopdesks = true
         stopdesksError = nil
-        defer { isLoadingStopdesks = false }
+        let result: Result<[StopdeskOption], ApiError>
         do {
-            let list = try await api.stopdesks(wilayaId: wilaya)
-            guard form.wilayaId == wilaya else { return }
+            result = .success(try await api.stopdesks(wilayaId: wilaya))
+        } catch {
+            result = .failure(error)
+        }
+        guard generation == stopdesksGeneration else { return }
+        stopdesksLoadingWilaya = nil
+        isLoadingStopdesks = false
+        guard form.wilayaId == wilaya else {
+            await loadStopdesksIfNeeded()
+            return
+        }
+        switch result {
+        case let .success(list):
             stopdesks = list
             stopdesksWilaya = wilaya
-        } catch {
-            if form.wilayaId == wilaya { stopdesksError = error }
+        case let .failure(error):
+            stopdesksError = error
         }
     }
 }
