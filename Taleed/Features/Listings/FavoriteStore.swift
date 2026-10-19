@@ -84,6 +84,11 @@ final class FavoriteStore {
         return Task { await send(id) }
     }
 
+    /// A listing that is gone (deleted by its seller, or `404` on its screen): lists leave its card out.
+    func markRemoved(_ id: String) {
+        removedIds.insert(id)
+    }
+
     /// The session changed (sign-in, sign-out, another account): the lists reload with the new
     /// member's hearts, so the changes of the previous one no longer apply. Requests still running
     /// keep their answer.

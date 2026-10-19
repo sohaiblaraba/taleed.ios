@@ -23,6 +23,8 @@ struct AppRootView: View {
             .environment(container.launch)
             .environment(container.exploreReferences)
             .environment(\.exploreDependencies, ExploreDependencies(listings: container.api, explore: container.api))
+            .environment(\.listingDependencies,
+                         ListingDependencies(listings: container.api, reports: container.api, uploads: container.uploads))
             .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in
                 #if DEBUG
                 if DebugLaunchOptions.forcesBetaMode { return true }

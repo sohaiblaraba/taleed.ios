@@ -12,6 +12,7 @@ struct MainShellView: View {
     @Environment(WelcomeGate.self) private var welcome
     @Environment(FavoriteStore.self) private var favorites
     @Environment(\.scenePhase) private var scenePhase
+    @State private var tabBarHeight: CGFloat = 0
 
     var body: some View {
         @Bindable var router = router
@@ -23,9 +24,19 @@ struct MainShellView: View {
             tab(.profile) { ProfileView() }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            TaleedBottomNavigation(items: navigationItems, selection: router.tabSelection)
+            // A screen that draws the bar inside its own bottom bar (Item Detail) hides this one.
+            if !drawsOwnTabBar {
+                ShellTabBar()
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tabBarHeight = $0 }
+            }
         }
-        .taleedToastHost(toasts.state)
+        // Above the tab bar, or above the screen's own bottom bar when it draws the tab bar (Item Detail).
+        .overlay {
+            Color.clear
+                .allowsHitTesting(false)
+                .taleedToastHost(toasts.state)
+                .padding(.bottom, drawsOwnTabBar ? toasts.screenBottomBarHeight : tabBarHeight)
+        }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
         .accessibilityHidden(showsWelcome)
         .overlay {
@@ -73,12 +84,41 @@ struct MainShellView: View {
         }
     }
 
+    /// The screen on top draws the tab bar inside its own bottom bar (Item Detail).
+    private var drawsOwnTabBar: Bool {
+        router.path(router.selectedTab).last?.drawsOwnTabBar ?? false
+    }
+
     private var showsWelcome: Bool {
         welcome.isVisible && !session.isSignedIn
     }
 
     private var authSheetPresented: Binding<Bool> {
         Binding(get: { router.authEntry != nil }, set: { if !$0 { router.authEntry = nil } })
+    }
+
+    /// Keeps every tab alive in its own navigation stack, and shows the selected one.
+    private func tab(_ tab: AppTab, @ViewBuilder root: () -> some View) -> some View {
+        let isSelected = router.selectedTab == tab
+        return NavigationStack(path: router.pathBinding(tab)) {
+            root().navigationDestination(for: AppRoute.self) { RouteDestinationView(route: $0) }
+        }
+        .opacity(isSelected ? 1 : 0)
+        .allowsHitTesting(isSelected)
+        .accessibilityHidden(!isSelected)
+    }
+}
+
+/// The five tabs' bottom navigation (decision D-2), with the unread-messages badge. `isEmbedded`: inside
+/// a screen's own bottom bar (Item Detail's buttons, wireframes.md #4.17), which draws the fill.
+struct ShellTabBar: View {
+    var isEmbedded = false
+    @Environment(AppRouter.self) private var router
+    @Environment(LanguageManager.self) private var l10n
+    @Environment(SessionManager.self) private var session
+
+    var body: some View {
+        TaleedBottomNavigation(items: navigationItems, selection: router.tabSelection, isEmbedded: isEmbedded)
     }
 
     private var navigationItems: [BottomNavItem<AppTab>] {
@@ -97,17 +137,6 @@ struct MainShellView: View {
 
     private var unreadMessagesLabel: String? {
         unreadMessages > 0 ? l10n.format(.appA11yUnreadMessages, unreadMessages) : nil
-    }
-
-    /// Keeps every tab alive in its own navigation stack, and shows the selected one.
-    private func tab(_ tab: AppTab, @ViewBuilder root: () -> some View) -> some View {
-        let isSelected = router.selectedTab == tab
-        return NavigationStack(path: router.pathBinding(tab)) {
-            root().navigationDestination(for: AppRoute.self) { RouteDestinationView(route: $0) }
-        }
-        .opacity(isSelected ? 1 : 0)
-        .allowsHitTesting(isSelected)
-        .accessibilityHidden(!isSelected)
     }
 }
 

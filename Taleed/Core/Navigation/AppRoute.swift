@@ -13,7 +13,11 @@ enum AppTab: String, Hashable, CaseIterable, Sendable {
 enum AppRoute: Hashable, Sendable {
     // Browse (G2–G5)
     case listing(id: String)
+    /// The seller's edit form (G8).
+    case editListing(id: String)
     case member(username: String)
+    /// Picking a seller's items for a bundle (G10): "Achète en lot" on a listing.
+    case bundleBuilder(username: String)
     /// Search results with filters (G3): a category from Home, `/browse?…`, `/categories/…`.
     /// `opening`: set by each link that opens the screen (`AppRouter.open`), so that a link gives a fresh
     /// screen with its own filters even when the results open below have the same query.
@@ -45,7 +49,7 @@ enum AppRoute: Hashable, Sendable {
     var requiresSignIn: Bool {
         switch self {
         case .conversation, .bundle, .checkout, .favorites, .orders, .order, .wallet, .notifications, .referrals,
-             .deleteAccount:
+             .deleteAccount, .editListing, .bundleBuilder:
             true
         case .listing, .member, .search, .visualSearch, .settings:
             false
@@ -54,6 +58,12 @@ enum AppRoute: Hashable, Sendable {
             false
         #endif
         }
+    }
+
+    /// The screen draws the tab bar itself, inside its bottom bar (Item Detail): the shell hides its own.
+    var drawsOwnTabBar: Bool {
+        if case .listing = self { return true }
+        return false
     }
 
     /// The same screen with a new identity: a link opens it fresh, never on the state of a screen

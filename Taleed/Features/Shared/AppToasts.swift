@@ -7,6 +7,9 @@ import SwiftUI
 @Observable
 final class AppToasts {
     let state = TaleedToastState()
+    /// The height of the bottom bar of a screen that draws the tab bar itself (Item Detail): toasts
+    /// show above it.
+    var screenBottomBarHeight: CGFloat = 0
     @ObservationIgnored private let languageManager: LanguageManager
 
     init(languageManager: LanguageManager) {

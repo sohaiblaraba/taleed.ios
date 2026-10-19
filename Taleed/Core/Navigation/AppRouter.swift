@@ -132,9 +132,11 @@ final class AppRouter {
 
     /// The tab and the stack a link opens on: the target on top of the screens a member would have
     /// come through, so that back leads somewhere sensible.
-    static func canonicalStack(for route: AppRoute) -> (AppTab, [AppRoute]) {
+    static func canonicalStack(for route: AppRoute) -> (AppTab, [AppRoute]) { // swiftlint:disable:this cyclomatic_complexity
         switch route {
         case .listing, .member: (.home, [route])
+        case let .editListing(id): (.home, [.listing(id: id), route])
+        case let .bundleBuilder(username): (.home, [.member(username: username), route])
         case .search, .visualSearch: (.explore, [route])
         case .conversation, .bundle: (.messages, [route])
         case let .checkout(target):

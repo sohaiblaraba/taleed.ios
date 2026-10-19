@@ -8,11 +8,20 @@ import SwiftUI
 struct RouteDestinationView: View {
     let route: AppRoute
     @Environment(\.exploreDependencies) private var explore
+    @Environment(\.listingDependencies) private var listings
+    @Environment(SessionManager.self) private var session
 
     var body: some View {
         switch route {
-        case .listing: RoutePlaceholderView(route: route)
+        case let .listing(id):
+            if let listings {
+                ListingDetailView(listingId: id, dependencies: listings, memberId: session.user?.id).id(id)
+            } else {
+                RoutePlaceholderView(route: route)
+            }
+        case .editListing: RoutePlaceholderView(route: route)
         case .member: RoutePlaceholderView(route: route)
+        case .bundleBuilder: RoutePlaceholderView(route: route)
         case let .search(query, _):
             // Identity by route (the query and the link's `opening`): a link that replaces the results gets
             // a fresh screen with its filters, even with the same query (SwiftUI would otherwise keep the

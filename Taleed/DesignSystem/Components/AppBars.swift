@@ -9,8 +9,19 @@ struct AppBarAction: Identifiable {
     var color: Color = TaleedColor.blue600
     /// Nil draws a non-interactive indicator (the wireframes' trust shield).
     var action: (() -> Void)?
+    /// An overflow menu instead of `action` (screens.md §2 G4: Report listing): the system pop-up menu.
+    var menu: [AppBarMenuItem] = []
 
     var id: String { icon.rawValue }
+}
+
+/// An entry of an app-bar overflow menu.
+struct AppBarMenuItem: Identifiable {
+    let title: String
+    var isDestructive = false
+    let action: () -> Void
+
+    var id: String { title }
 }
 
 /// The 56 pt app-bar frame: padding 16, white, optional 1 pt bottom border (decision D-1).
@@ -149,7 +160,17 @@ private struct AppBarActionView: View {
             .background {
                 if action.isCircled { Circle().fill(TaleedColor.blue50) }
             }
-        if let handler = action.action {
+        if !action.menu.isEmpty {
+            Menu {
+                ForEach(action.menu) { item in
+                    Button(item.title, role: item.isDestructive ? .destructive : nil, action: item.action)
+                }
+            } label: {
+                icon.minimumHitArea()
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(action.accessibilityLabel)
+        } else if let handler = action.action {
             Button(action: handler) { icon.minimumHitArea() }
                 .buttonStyle(.plain)
                 .accessibilityLabel(action.accessibilityLabel)

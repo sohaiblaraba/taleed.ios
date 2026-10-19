@@ -50,6 +50,8 @@ struct ErrorStateView: View {
 /// "This is no longer available" (`404 not_found`): a removed or hidden listing, a suspended member,
 /// an order that is not the member's.
 struct NotFoundStateView: View {
+    /// A screen's own wording ("Cet article n'est plus disponible."); the generic title otherwise.
+    var title: String?
     var onBack: (() -> Void)?
     @Environment(LanguageManager.self) private var l10n
 
@@ -58,7 +60,7 @@ struct NotFoundStateView: View {
             TaleedIconView(.magnifyingGlass, size: 32, color: TaleedColor.textSecondary)
                 .accessibilityHidden(true)
             VStack(spacing: TaleedSpacing.s8) {
-                Text(l10n.string(.appNotFoundTitle))
+                Text(title ?? l10n.string(.appNotFoundTitle))
                     .taleedFont(TaleedFont.title2)
                     .foregroundStyle(TaleedColor.textPrimary)
                     .accessibilityAddTraits(.isHeader)

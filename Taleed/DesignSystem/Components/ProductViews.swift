@@ -7,21 +7,26 @@ enum ProductMedia {
     case local(Image)
 }
 
-/// Draws a product photo, aspect-fill, with a skeleton while it loads. Photos never mirror.
+/// Draws a product photo, aspect-fill, with a skeleton while it loads. Fitted photos (Item Detail's
+/// gallery, wireframes.md #4.3) sit on white once loaded. Photos never mirror.
 struct ProductMediaView: View {
     let media: ProductMedia
     var contentMode: ContentMode = .fill
 
     var body: some View {
         Rectangle()
-            .fill(TaleedColor.skeleton)
+            .fill(contentMode == .fit ? TaleedColor.surfacePrimary : TaleedColor.skeleton)
             .overlay {
                 switch media {
                 case let .local(image):
                     image.resizable().aspectRatio(contentMode: contentMode)
                 case let .remote(url):
                     LazyImage(url: url) { state in
-                        if let image = state.image { image.resizable().aspectRatio(contentMode: contentMode) }
+                        if let image = state.image {
+                            image.resizable().aspectRatio(contentMode: contentMode)
+                        } else if contentMode == .fit {
+                            Rectangle().fill(TaleedColor.skeleton)
+                        }
                     }
                 }
             }
