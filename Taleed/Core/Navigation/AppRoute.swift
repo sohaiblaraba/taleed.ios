@@ -16,7 +16,9 @@ enum AppRoute: Hashable, Sendable {
     /// The seller's edit form (G8).
     case editListing(id: String)
     /// A member's profile (G5). `wardrobe`: the filter a link asked for (`?category=&sort=`).
-    case member(username: String, wardrobe: WardrobeQuery = WardrobeQuery())
+    /// `opensBundle`: the website's `?bundle=1`; the bundle builder opens over the profile once it has
+    /// loaded, only when the profile offers it (`canBundle`, never the member's own profile).
+    case member(username: String, wardrobe: WardrobeQuery = WardrobeQuery(), opensBundle: Bool = false)
     /// Picking a seller's items for a bundle (G10): "Achète en lot" on a listing.
     case bundleBuilder(username: String)
     /// Search results with filters (G3): a category from Home, `/browse?…`, `/categories/…`.

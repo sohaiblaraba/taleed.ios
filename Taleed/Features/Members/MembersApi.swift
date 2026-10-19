@@ -37,7 +37,7 @@ extension GeneratedTaleedApi: MembersApi {
         -> Page<ListingSummary> {
         let asOf = ContinuousClock.now
         let sort = MemberListingSort(rawValue: query.sort.rawValue)
-        // A slug the API would reject (over 100 characters) names no category: left out.
+        // A slug or id the API would reject (over 100 characters) names no category: left out.
         let category = query.category.flatMap { $0.utf16.count <= ListingSearchParameters.maxSlugLength ? $0 : nil }
         let page = try await caller.call(.read, automatic: automatic) {
             try await MembersAPI.listMemberListings(username: username, category: category, sort: sort, cursor: cursor,
@@ -100,7 +100,7 @@ extension MemberProfile {
             openBundleId: profile.openBundleId,
             wardrobeTotal: profile.wardrobe.total,
             wardrobeCategories: profile.wardrobe.categories.map {
-                WardrobeCategory(slug: $0.slug, name: $0.name, parentName: $0.parent?.name, count: $0.count)
+                WardrobeCategory(id: $0.id, slug: $0.slug, name: $0.name, parentName: $0.parent?.name, count: $0.count)
             },
             shareURL: URL(string: profile.shareUrl)
         )

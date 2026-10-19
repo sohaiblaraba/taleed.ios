@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.3",
+    "version": "1.5.4",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -3587,7 +3587,7 @@
             "name": "category",
             "in": "query",
             "required": false,
-            "description": "Category slug, usually from the profile's `wardrobe.categories`. A top-level category includes its subcategories; an unknown slug is ignored.",
+            "description": "Category slug, usually from the profile's `wardrobe.categories`, or the category's id, as a website profile link carries it in `?category=`. A top-level category includes its subcategories; an unknown slug or id is ignored.",
             "schema": {
               "type": "string",
               "maxLength": 100
@@ -16978,6 +16978,10 @@
       "WardrobeCategory": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "The category's id, as the website's profile links carry it in `?category=`: match a shared link's filter against it."
+          },
           "slug": {
             "type": "string",
             "description": "Pass as `category` to `GET /members/{username}/listings`."
@@ -17001,6 +17005,7 @@
           }
         },
         "required": [
+          "id",
           "slug",
           "name",
           "parent",

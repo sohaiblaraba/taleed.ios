@@ -36,7 +36,7 @@ struct MemberWardrobeSection: View {
     private var emptyTitle: String {
         guard let slug = model.wardrobeQuery.category,
               let categories = model.profile?.wardrobeCategories,
-              let category = categories.first(where: { $0.slug == slug }) else {
+              let category = categories.first(where: { $0.matches(slug) }) else {
             return l10n.string(.memberNoListings)
         }
         return l10n.format(.memberNoListingsInCategory, WardrobeFilterRules.label(for: category, among: categories))

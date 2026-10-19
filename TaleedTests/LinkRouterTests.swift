@@ -119,8 +119,12 @@ struct LinkRouterTests {
             == .screen(.member(username: "amina", wardrobe: WardrobeQuery(category: "women-bags", sort: .priceAsc))))
         // An unknown sort is the default one.
         #expect(destination("/members/amina?sort=cheapest") == .screen(.member(username: "amina")))
-        // The website's "Achète en lot" link opens the bundle builder.
-        #expect(destination("/members/amina?bundle=1") == .screen(.bundleBuilder(username: "amina")))
+        // The website's "Achète en lot" link opens the profile, which opens the builder when it offers it.
+        #expect(destination("/members/amina?bundle=1") == .screen(.member(username: "amina", opensBundle: true)))
+        #expect(destination("/members/amina?bundle=0") == .screen(.member(username: "amina")))
+        // The website's links carry the category's id.
+        #expect(destination("/members/amina?category=cmveeamt8000o9gq3p2reista")
+            == .screen(.member(username: "amina", wardrobe: WardrobeQuery(category: "cmveeamt8000o9gq3p2reista"))))
         #expect(destination("/members/") == .home)
         #expect(destination("/members/amina/extra") == .home)
     }

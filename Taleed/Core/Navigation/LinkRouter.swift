@@ -87,15 +87,15 @@ enum LinkRouter {
         }
     }
 
-    /// `/members/{username}`, with the website's wardrobe filter (`?category=&sort=`); `?bundle=1` (the
-    /// website's "Achète en lot" link) opens the bundle builder over the profile.
+    /// `/members/{username}`, with the website's wardrobe filter (`?category=&sort=`, the category by
+    /// its id or slug); `?bundle=1` (the website's "Achète en lot" link) opens the profile, then the
+    /// bundle builder over it when the loaded profile offers it (the website: never on one's own profile).
     private static func member(_ segments: [String], query: [String: String]) -> AppDestination {
         guard segments.count == 2, let name = username(segments[1]) else { return .home }
-        if query["bundle"] == "1" { return .screen(.bundleBuilder(username: name)) }
         var wardrobe = WardrobeQuery()
-        wardrobe.category = query["category"]
+        wardrobe.category = query["category"].flatMap { $0.isEmpty ? nil : $0 }
         wardrobe.sort = query["sort"].flatMap(WardrobeQuery.Sort.init(rawValue:)) ?? .newest
-        return .screen(.member(username: name, wardrobe: wardrobe))
+        return .screen(.member(username: name, wardrobe: wardrobe, opensBundle: query["bundle"] == "1"))
     }
 
     /// `/categories/{slug}` and `/categories/{parent}/{slug}`: the last slug is the category.

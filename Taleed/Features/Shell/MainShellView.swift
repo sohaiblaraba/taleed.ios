@@ -13,6 +13,8 @@ struct MainShellView: View {
     @Environment(FavoriteStore.self) private var favorites
     @Environment(\.scenePhase) private var scenePhase
     @State private var tabBarHeight: CGFloat = 0
+    /// Confirmation modals draw over the whole window, tab bar included (screens.md §0.9).
+    @State private var confirmations = ConfirmationHost()
 
     var body: some View {
         @Bindable var router = router
@@ -23,6 +25,7 @@ struct MainShellView: View {
             tab(.messages) { MessagesView() }
             tab(.profile) { ProfileView() }
         }
+        .environment(\.confirmationHost, confirmations)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             // A screen that draws the bar inside its own bottom bar (Item Detail) hides this one.
             if !drawsOwnTabBar {
@@ -39,7 +42,9 @@ struct MainShellView: View {
         }
         .onChange(of: router.paths) { _, paths in toasts.keepBottomBars(in: paths) }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
-        .accessibilityHidden(showsWelcome)
+        .accessibilityHidden(showsWelcome || confirmations.presentation(in: router.selectedTab) != nil)
+        // Over the tabs and the tab bar: nothing but the modal's two buttons takes a touch.
+        .confirmationHostOverlay(confirmations, tab: router.selectedTab)
         .overlay {
             if router.isResolvingLink {
                 ProgressView()

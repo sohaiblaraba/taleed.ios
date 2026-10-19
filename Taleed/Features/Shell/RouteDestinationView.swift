@@ -21,9 +21,10 @@ struct RouteDestinationView: View {
                 RoutePlaceholderView(route: route)
             }
         case .editListing: RoutePlaceholderView(route: route)
-        case let .member(username, wardrobe):
+        case let .member(username, wardrobe, opensBundle):
             if let members {
-                MemberProfileView(username: username, wardrobe: wardrobe, dependencies: members, memberId: session.user?.id)
+                MemberProfileView(username: username, wardrobe: wardrobe, opensBundle: opensBundle, dependencies: members,
+                                  memberId: session.user?.id)
                     .id(route)
             } else {
                 RoutePlaceholderView(route: route)

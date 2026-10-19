@@ -31,6 +31,7 @@ final class FakeMembersApi: MembersApi {
     private(set) var wardrobeCalls: [(username: String, query: WardrobeQuery)] = []
     private(set) var followCalls: [Bool] = []
     private(set) var blockCalls: [Bool] = []
+    private(set) var reviewsCalls = 0
 
     func member(username: String, automatic: Bool) async throws(Taleed.ApiError) -> Taleed.MemberProfile {
         memberCalls.append((username, automatic))
@@ -45,7 +46,8 @@ final class FakeMembersApi: MembersApi {
     }
 
     func reviews(username: String, cursor: String?, automatic: Bool) async throws(Taleed.ApiError) -> Page<MemberReview> {
-        try reviewsPage.get()
+        reviewsCalls += 1
+        return try reviewsPage.get()
     }
 
     func setFollowing(username: String, following: Bool) async throws(Taleed.ApiError) -> FollowResult {
@@ -61,9 +63,9 @@ final class FakeMembersApi: MembersApi {
 
 enum MemberFixtures {
     static let categories = [
-        Taleed.WardrobeCategory(slug: "women-clothes", name: "Vêtements", parentName: "Femmes", count: 3),
-        Taleed.WardrobeCategory(slug: "kids-clothes", name: "Vêtements", parentName: "Enfants", count: 1),
-        Taleed.WardrobeCategory(slug: "women-bags", name: "Sacs", parentName: "Femmes", count: 2),
+        Taleed.WardrobeCategory(id: "cat-women-clothes", slug: "women-clothes", name: "Vêtements", parentName: "Femmes", count: 3),
+        Taleed.WardrobeCategory(id: "cat-kids-clothes", slug: "kids-clothes", name: "Vêtements", parentName: "Enfants", count: 1),
+        Taleed.WardrobeCategory(id: "cat-women-bags", slug: "women-bags", name: "Sacs", parentName: "Femmes", count: 2),
     ]
 }
 
@@ -145,6 +147,21 @@ struct MemberProfileTests {
         #expect(WardrobeFilterRules.count(for: nil, total: 6, categories: Self.categories) == 6)
         #expect(WardrobeFilterRules.count(for: "women-bags", total: 6, categories: Self.categories) == 2)
         #expect(WardrobeFilterRules.count(for: "unknown", total: 6, categories: Self.categories) == 0)
+        // A website link names the category by its id.
+        #expect(WardrobeFilterRules.count(for: "cat-women-bags", total: 6, categories: Self.categories) == 2)
+    }
+
+    @Test func aLinkCategoryIdIsKeptAndGoesToTheApiAsItIs() async {
+        let byId = WardrobeQuery(category: "cat-women-bags", sort: .newest)
+        #expect(WardrobeFilterRules.sanitized(byId, categories: Self.categories) == byId)
+        let model = MemberProfileViewModel(username: "amina", wardrobe: byId, api: api)
+        let first = model.wardrobe
+        await model.loadIfNeeded()
+        // Not dropped, and the list that loaded with it stays (no second load).
+        #expect(model.wardrobeQuery == byId)
+        #expect(model.wardrobe === first)
+        #expect(api.wardrobeCalls.map(\.query) == [byId])
+        #expect(model.wardrobeCount == 2)
     }
 
     @Test func aLinkCategoryTheMemberDoesNotSellInIsDropped() {
@@ -209,6 +226,44 @@ struct MemberProfileTests {
         model.wentToBackground(at: start)
         await model.returnedToForeground(at: start + .seconds(61))
         #expect(api.memberCalls.map(\.automatic) == [false, true])
+    }
+
+    @Test func returningAfterAWhileRefreshesTheReviewsOnScreen() async {
+        let model = MemberProfileViewModel(username: "amina", api: api)
+        await model.loadIfNeeded()
+        model.tab = .reviews
+        await model.reviews.loadIfNeeded()
+        #expect(api.reviewsCalls == 1)
+        let start = ContinuousClock.now
+        model.wentToBackground(at: start)
+        await model.returnedToForeground(at: start + .seconds(61))
+        #expect(api.reviewsCalls == 2)
+        // The wardrobe, not on screen, waits.
+        #expect(api.wardrobeCalls.count == 1)
+    }
+
+    // MARK: Bundle link (`?bundle=1`)
+
+    @Test func aBundleLinkOpensTheBuilderOnceWhenTheProfileOffersIt() async {
+        let model = MemberProfileViewModel(username: "amina", opensBundle: true, api: api)
+        #expect(!model.takeBundleRequest())
+        await model.loadIfNeeded()
+        #expect(model.takeBundleRequest())
+        #expect(!model.takeBundleRequest())
+    }
+
+    @Test func aBundleLinkStaysOnTheProfileWhenItIsOwnOrBlocked() async {
+        for profile in [Taleed.MemberProfile.fixture(isMe: true, canBundle: false), .fixture(isBlocked: true, canBundle: false),
+                        .fixture(canBundle: false)] {
+            api.profile = .success(profile)
+            let model = MemberProfileViewModel(username: "amina", opensBundle: true, api: api)
+            await model.loadIfNeeded()
+            #expect(!model.takeBundleRequest())
+        }
+        let plain = MemberProfileViewModel(username: "amina", api: api)
+        api.profile = .success(.fixture())
+        await plain.loadIfNeeded()
+        #expect(!plain.takeBundleRequest())
     }
 
     // MARK: Follow and block

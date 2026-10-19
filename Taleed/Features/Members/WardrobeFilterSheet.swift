@@ -30,8 +30,9 @@ struct WardrobeFilterSheet: View {
                         }
                         ForEach(WardrobeFilterRules.sorted(categories, locale: l10n.language.locale)) { category in
                             option(WardrobeFilterRules.label(for: category, among: categories), count: category.count,
-                                   isSelected: draft.category == category.slug) {
-                                draft.category = category.slug
+                                   isSelected: draft.category.map(category.matches) ?? false) {
+                                // A link's category id already names this chip: kept, so the list stays.
+                                if draft.category.map(category.matches) != true { draft.category = category.slug }
                             }
                         }
                     }

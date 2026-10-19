@@ -66,14 +66,15 @@ enum WardrobeFilterRules {
     /// whole wardrobe for "Toutes les catégories".
     static func count(for category: String?, total: Int, categories: [WardrobeCategory]) -> Int {
         guard let category else { return total }
-        return categories.first { $0.slug == category }?.count ?? 0
+        return categories.first { $0.matches(category) }?.count ?? 0
     }
 
     /// The query a link asked for, without a category the member does not sell in (it would show an
-    /// empty wardrobe the filter cannot undo).
+    /// empty wardrobe the filter cannot undo). A category's id (the website's links) or slug both name
+    /// it, and stay as they are: the API takes either.
     static func sanitized(_ query: WardrobeQuery, categories: [WardrobeCategory]) -> WardrobeQuery {
         var result = query
-        if let category = query.category, !categories.contains(where: { $0.slug == category }) {
+        if let category = query.category, !categories.contains(where: { $0.matches(category) }) {
             result.category = nil
         }
         return result

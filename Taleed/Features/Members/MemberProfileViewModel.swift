@@ -54,12 +54,16 @@ final class MemberProfileViewModel {
     /// The member the profile on screen was loaded for (nil signed out): its flags are theirs.
     @ObservationIgnored private var loadedFor: String??
     @ObservationIgnored private var backgroundSince: ContinuousClock.Instant?
+    /// A `?bundle=1` link not acted on yet.
+    @ObservationIgnored private var opensBundle: Bool
 
     /// A shorter absence keeps the screen as it is (as the listing screen).
     static let foregroundReloadAfter: Duration = .seconds(60)
 
-    init(username: String, wardrobe query: WardrobeQuery = WardrobeQuery(), api: MembersApi, memberId: String? = nil) {
+    init(username: String, wardrobe query: WardrobeQuery = WardrobeQuery(), opensBundle: Bool = false, api: MembersApi,
+         memberId: String? = nil) {
         self.username = username
+        self.opensBundle = opensBundle
         self.api = api
         self.memberId = memberId
         wardrobeQuery = query
@@ -75,6 +79,15 @@ final class MemberProfileViewModel {
     var actions: MemberProfileActions? { profile.map(MemberProfileActions.init) }
 
     func isRunning(_ work: Work) -> Bool { running.contains(work) }
+
+    /// A `?bundle=1` link, once the profile has loaded: true (once) when the profile offers the bundle
+    /// builder. Never on the member's own profile, nor across a block (`canBundle`, the website's
+    /// `bundle === "1" && !isOwnProfile`); the profile stays as it is then.
+    func takeBundleRequest() -> Bool {
+        guard opensBundle, let actions else { return false }
+        opensBundle = false
+        return actions.showsShopBundle
+    }
 
     /// "Voir les # résultats" and the tab title: the items the current category holds.
     var wardrobeCount: Int {
@@ -187,17 +200,26 @@ final class MemberProfileViewModel {
         backgroundSince = instant
     }
 
-    /// Back after a while (screens.md §0.6): the profile and the list on screen again, quietly.
+    /// Back after a while (screens.md §0.6): the profile and the list on screen (wardrobe or reviews)
+    /// again, quietly.
     func returnedToForeground(at instant: ContinuousClock.Instant = .now) async {
         guard let since = backgroundSince else { return }
         backgroundSince = nil
         guard instant - since >= Self.foregroundReloadAfter, profile != nil else { return }
         origin.isAutomatic = true
         defer { origin.isAutomatic = false }
-        let list = tab == .wardrobe ? wardrobe : nil
-        async let refreshed: Bool = list?.hasLoaded == true ? list?.refresh() ?? false : false
+        async let refreshed: Bool = refreshListOnScreen()
         await reload(automatic: true)
         _ = await refreshed
+    }
+
+    /// The list of the tab on screen from its first page, when it has loaded (a list that never loaded
+    /// loads when its tab shows).
+    private func refreshListOnScreen() async -> Bool {
+        switch tab {
+        case .wardrobe: wardrobe.hasLoaded ? await wardrobe.refresh() : false
+        case .reviews: reviews.hasLoaded ? await reviews.refresh() : false
+        }
     }
 
     // MARK: Wardrobe filter

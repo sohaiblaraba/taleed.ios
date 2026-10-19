@@ -255,6 +255,8 @@ private struct TaleedSheetPresenter<Sheet: View>: ViewModifier {
             .presentationBackground(TaleedColor.surfacePrimary)
             .environment(\.locale, locale)
             .environment(\.layoutDirection, layoutDirection)
+            // A confirmation asked from the sheet draws over the sheet, not under it in the window.
+            .environment(\.confirmationHost, nil)
         }
     }
 }
@@ -324,23 +326,5 @@ struct ConfirmationModalCard: View {
     private var confirmButton: some View {
         TaleedButton(title: confirmTitle, kind: .danger, size: .medium, isFullWidth: true,
                      forcedState: forcesConfirmPressed ? .pressed : nil, metrics: .modalAction, action: onConfirm)
-    }
-}
-
-extension View {
-    /// Shows a confirmation modal over a dim scrim.
-    func taleedConfirmation(isPresented: Bool, @ViewBuilder modal: () -> ConfirmationModalCard) -> some View {
-        overlay {
-            if isPresented {
-                ZStack {
-                    TaleedColor.textPrimary.opacity(0.5)
-                        .ignoresSafeArea()
-                        .accessibilityHidden(true)
-                    modal().padding(TaleedLayout.screenMargin)
-                }
-                .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: isPresented)
     }
 }

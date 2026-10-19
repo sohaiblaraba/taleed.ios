@@ -99,7 +99,7 @@ open class MembersAPI {
      A member's wardrobe
      
      - parameter username: (path) Handle without the @, case-insensitive. A member&#39;s former handle still works and returns the member under their current one. 
-     - parameter category: (query) Category slug, usually from the profile&#39;s &#x60;wardrobe.categories&#x60;. A top-level category includes its subcategories; an unknown slug is ignored. (optional)
+     - parameter category: (query) Category slug, usually from the profile&#39;s &#x60;wardrobe.categories&#x60;, or the category&#39;s id, as a website profile link carries it in &#x60;?category&#x3D;&#x60;. A top-level category includes its subcategories; an unknown slug or id is ignored. (optional)
      - parameter sort: (query) Order of a member&#39;s wardrobe. Default &#x60;newest&#x60;. (optional)
      - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
      - parameter apiConfiguration: The configuration for the http request.
@@ -117,7 +117,7 @@ open class MembersAPI {
        - type: http
        - name: bearerAuth
      - parameter username: (path) Handle without the @, case-insensitive. A member&#39;s former handle still works and returns the member under their current one. 
-     - parameter category: (query) Category slug, usually from the profile&#39;s &#x60;wardrobe.categories&#x60;. A top-level category includes its subcategories; an unknown slug is ignored. (optional)
+     - parameter category: (query) Category slug, usually from the profile&#39;s &#x60;wardrobe.categories&#x60;, or the category&#39;s id, as a website profile link carries it in &#x60;?category&#x3D;&#x60;. A top-level category includes its subcategories; an unknown slug or id is ignored. (optional)
      - parameter sort: (query) Order of a member&#39;s wardrobe. Default &#x60;newest&#x60;. (optional)
      - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
      - parameter apiConfiguration: The configuration for the http request.

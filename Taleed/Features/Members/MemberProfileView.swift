@@ -43,10 +43,11 @@ struct MemberProfileView: View {
         var id: String { rawValue }
     }
 
-    init(username: String, wardrobe: WardrobeQuery = WardrobeQuery(), dependencies: MemberDependencies, memberId: String?) {
+    init(username: String, wardrobe: WardrobeQuery = WardrobeQuery(), opensBundle: Bool = false,
+         dependencies: MemberDependencies, memberId: String?) {
         self.dependencies = dependencies
-        _model = State(initialValue: MemberProfileViewModel(username: username, wardrobe: wardrobe, api: dependencies.members,
-                                                            memberId: memberId))
+        _model = State(initialValue: MemberProfileViewModel(username: username, wardrobe: wardrobe, opensBundle: opensBundle,
+                                                            api: dependencies.members, memberId: memberId))
     }
 
     var body: some View {
@@ -57,6 +58,10 @@ struct MemberProfileView: View {
             content
         }
         .task { await model.loadIfNeeded() }
+        // `?bundle=1`: the bundle builder once the profile has loaded, when it offers it.
+        .onChange(of: model.profile?.id) { _, _ in
+            if model.takeBundleRequest() { start(.shopBundle) }
+        }
         .onChange(of: session.user?.id) { _, id in Task { await model.memberDidChange(to: id) } }
         .onChange(of: model.refreshError) { _, error in if let error { toasts.show(error: error) } }
         .onChange(of: model.wardrobe.refreshError) { _, error in if let error { toasts.show(error: error) } }

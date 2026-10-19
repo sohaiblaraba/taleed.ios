@@ -10,6 +10,8 @@ import Foundation
 public struct WardrobeCategory: Sendable, Codable, Hashable {
 
     public static let countRule = NumericRule<Int>(minimum: 1, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
+    /** The category's id, as the website's profile links carry it in `?category=`: match a shared link's filter against it. */
+    public var id: String
     /** Pass as `category` to `GET /members/{username}/listings`. */
     public var slug: String
     public var name: String
@@ -17,7 +19,8 @@ public struct WardrobeCategory: Sendable, Codable, Hashable {
     public var parent: CategoryRef?
     public var count: Int
 
-    public init(slug: String, name: String, parent: CategoryRef?, count: Int) {
+    public init(id: String, slug: String, name: String, parent: CategoryRef?, count: Int) {
+        self.id = id
         self.slug = slug
         self.name = name
         self.parent = parent
@@ -25,6 +28,7 @@ public struct WardrobeCategory: Sendable, Codable, Hashable {
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
+        case id
         case slug
         case name
         case parent
@@ -35,6 +39,7 @@ public struct WardrobeCategory: Sendable, Codable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
         try container.encode(slug, forKey: .slug)
         try container.encode(name, forKey: .name)
         try container.encode(parent, forKey: .parent)
@@ -42,3 +47,5 @@ public struct WardrobeCategory: Sendable, Codable, Hashable {
     }
 }
 
+
+extension WardrobeCategory: Identifiable {}

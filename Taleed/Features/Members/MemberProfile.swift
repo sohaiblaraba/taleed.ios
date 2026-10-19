@@ -50,16 +50,23 @@ struct MemberChecks: Equatable, Sendable {
 
 /// A category of a member's wardrobe, with its number of items.
 struct WardrobeCategory: Identifiable, Equatable, Hashable, Sendable {
+    /// The category's id: what the website's profile links carry in `?category=` (API 1.5.4).
+    let id: String
     let slug: String
     let name: String
     /// The parent category's name ("Femmes"), shown next to a name two categories share.
     let parentName: String?
     let count: Int
 
-    var id: String { slug }
+    /// Whether a `category` value names this category: its slug (the app's filter) or its id (the
+    /// website's links). `GET /members/{username}/listings` takes either.
+    func matches(_ value: String) -> Bool {
+        value == slug || value == id
+    }
 }
 
-/// The wardrobe's filter (`GET /members/{username}/listings`): one category slug and the sort.
+/// The wardrobe's filter (`GET /members/{username}/listings`): one category (its slug, or its id from a
+/// website link) and the sort.
 struct WardrobeQuery: Hashable, Sendable {
     /// `newest` (the default), `price_asc`, `price_desc`.
     enum Sort: String, CaseIterable, Hashable, Sendable {

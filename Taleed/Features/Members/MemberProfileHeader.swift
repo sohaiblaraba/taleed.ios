@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The top of a profile, built on the Figma seller card (design-system §3.4, "Trust before
-/// transaction"): avatar 56 with the verified dot, the handle, the reputation ("★ 5.0 · 1 vente"),
-/// online or last seen, and the verified or official tag; then the bio, the wilaya and "Membre depuis",
+/// The top of a profile, the design-system `SellerCard` (§3.4, "Trust before transaction"): avatar 56
+/// with the verified dot, the handle, the reputation ("★ 5.0 · 1"), online or last seen, and the
+/// verified or official tag; then the bio, the wilaya and "Membre depuis",
 /// the stats strip (sales, followers, following), the "Infos vérifiées" list, and the actions
 /// (screens.md §2 G5 and §7 G5).
 struct MemberProfileHeader: View {
@@ -21,17 +21,13 @@ struct MemberProfileHeader: View {
     let handlers: Handlers
     @Environment(LanguageManager.self) private var l10n
 
-    private static let nameStyle = TaleedTextStyle(size: 18, weight: .regular, lineHeight: nil, letterSpacing: 0, relativeTo: .body)
-    private static let reputationStyle = TaleedTextStyle(size: 13, weight: .regular, lineHeight: nil, letterSpacing: 0,
-                                                         relativeTo: .footnote)
-    private static let statValueStyle = TaleedTextStyle(size: 15, weight: .regular, lineHeight: nil, letterSpacing: 0,
-                                                        relativeTo: .subheadline)
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            identity
+        SellerCard(name: profile.displayName, reputation: reputation,
+                   initials: TaleedAvatar.initials(from: profile.username), imageURL: profile.avatarURL,
+                   isVerified: profile.isVerified && !profile.isOfficial, presence: presence, tag: tag,
+                   stats: stats) {
             details
-            stats
+        } actions: {
             checks
             if actions.showsBlockedNotice {
                 InlineAlert(kind: .warning, title: l10n.format(.appProfileBlockedNotice, profile.displayName.isolatedLeftToRight),
@@ -46,65 +42,29 @@ struct MemberProfileHeader: View {
 
     // MARK: Identity
 
-    private var identity: some View {
-        HStack(alignment: .top, spacing: 14) {
-            TaleedAvatar(initials: TaleedAvatar.initials(from: profile.username), size: 56, imageURL: profile.avatarURL,
-                         isVerified: profile.isVerified && !profile.isOfficial)
-            VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-                Text(verbatim: profile.displayName.isolatedLeftToRight)
-                    .taleedFont(Self.nameStyle)
-                    .foregroundStyle(TaleedColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
-                reputation
-                presence
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .combine)
-            // The official badge replaces the verified one (screens.md §0.3).
-            if profile.isOfficial {
-                TaleedBadge(title: l10n.string(.profileOfficial), tone: .brand, icon: .sealCheck)
-            } else if profile.isVerified {
-                TaleedBadge(title: l10n.string(.profileVerified), tone: .success, icon: .shieldCheck)
-            }
-        }
-    }
-
-    /// "★ 5.0 · 1 vente", the seller card's reputation; no stars before the first review (the website).
-    private var reputation: some View {
+    /// "★ 5.0 · 1", the seller card's reputation; no stars before the first review (the website).
+    private var reputation: SellerCardReputation {
         let sales = l10n.format(.memberSales, profile.salesCount)
-        return Group {
-            if let rating = profile.rating {
-                HStack(spacing: TaleedSpacing.s4) {
-                    TaleedIconView(.star, size: 14, color: TaleedColor.warningIcon)
-                    Text(verbatim: "\(RatingText.average(rating.average)) · \(rating.count)".isolatedLeftToRight)
-                        .taleedFont(Self.reputationStyle)
-                        .foregroundStyle(TaleedColor.textBody)
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(l10n.format(.listingSellerRating, RatingText.average(rating.average), "\(rating.count)"))
-            } else {
-                Text(l10n.string(.reviewsNoReviews))
-                    .taleedFont(Self.reputationStyle)
-                    .foregroundStyle(TaleedColor.textBody)
-            }
+        guard let rating = profile.rating else {
+            return .init(text: l10n.string(.reviewsNoReviews), accessibilityHint: sales)
         }
-        .accessibilityHint(sales)
+        let average = RatingText.average(rating.average)
+        return .init(text: "\(average) · \(rating.count)".isolatedLeftToRight, showsStar: true,
+                     accessibilityLabel: l10n.format(.listingSellerRating, average, "\(rating.count)"),
+                     accessibilityHint: sales)
     }
 
-    @ViewBuilder
-    private var presence: some View {
-        if profile.isOnline {
-            HStack(spacing: 6) {
-                Circle().fill(TaleedColor.feedbackSuccess).frame(width: 6, height: 6).accessibilityHidden(true)
-                Text(l10n.string(.listingOnlineNow))
-                    .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textSecondary)
-            }
-        } else if let lastSeen = profile.lastSeenAt {
-            Text(l10n.format(.listingLastSeen, RelativeTimeText.string(for: lastSeen, locale: l10n.language.formattingLocale)))
-                .taleedFont(TaleedFont.caption)
-                .foregroundStyle(TaleedColor.textSecondary)
-        }
+    private var presence: SellerCardPresence? {
+        if profile.isOnline { return .online(l10n.string(.listingOnlineNow)) }
+        guard let lastSeen = profile.lastSeenAt else { return nil }
+        return .lastSeen(l10n.format(.listingLastSeen, RelativeTimeText.string(for: lastSeen, locale: l10n.language.formattingLocale)))
+    }
+
+    /// The official badge replaces the verified one (screens.md §0.3).
+    private var tag: SellerCardTag? {
+        if profile.isOfficial { return .init(title: l10n.string(.profileOfficial), tone: .brand, icon: .sealCheck) }
+        if profile.isVerified { return .init(title: l10n.string(.profileVerified), tone: .success, icon: .shieldCheck) }
+        return nil
     }
 
     // MARK: Details
@@ -149,69 +109,16 @@ struct MemberProfileHeader: View {
 
     // MARK: Stats
 
-    /// The seller card's stats strip: value over label, three columns; one row per stat when large text
-    /// no longer fits three columns.
-    private var stats: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: TaleedSpacing.s8) {
-                ForEach(statItems, id: \.label) { item in
-                    VStack(spacing: TaleedSpacing.s4) {
-                        statValue(item.value)
-                        statLabel(item.label)
-                    }
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(item.spoken)
-                }
-            }
-            VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-                ForEach(statItems, id: \.label) { item in
-                    HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s8) {
-                        statValue(item.value)
-                        statLabel(item.label)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(item.spoken)
-                }
-            }
-        }
-        .padding(TaleedSpacing.s16)
-        .background(TaleedColor.surfaceGrouped, in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
-        .accessibilityIdentifier("member.stats")
-    }
-
-    private struct StatItem {
-        let value: Int
-        let label: L10nKey
-        let spoken: String
-    }
-
-    private var statItems: [StatItem] {
+    /// The seller card's stats strip: sales, followers, following.
+    private var stats: [SellerCardStat] {
         [
-            StatItem(value: profile.salesCount, label: .appProfileStatSales, spoken: l10n.format(.memberSales, profile.salesCount)),
-            StatItem(value: profile.followersCount, label: .appProfileStatFollowers,
-                     spoken: l10n.format(.memberFollowers, profile.followersCount)),
-            StatItem(value: profile.followingCount, label: .appProfileStatFollowing,
-                     spoken: l10n.format(.memberFollowingCount, profile.followingCount)),
+            .init(value: "\(profile.salesCount)", label: l10n.string(.appProfileStatSales),
+                  accessibilityLabel: l10n.format(.memberSales, profile.salesCount)),
+            .init(value: "\(profile.followersCount)", label: l10n.string(.appProfileStatFollowers),
+                  accessibilityLabel: l10n.format(.memberFollowers, profile.followersCount)),
+            .init(value: "\(profile.followingCount)", label: l10n.string(.appProfileStatFollowing),
+                  accessibilityLabel: l10n.format(.memberFollowingCount, profile.followingCount)),
         ]
-    }
-
-    private func statValue(_ value: Int) -> some View {
-        Text(verbatim: "\(value)")
-            .taleedFont(Self.statValueStyle)
-            .foregroundStyle(TaleedColor.textPrimary)
-            .monospacedDigit()
-    }
-
-    private func statLabel(_ label: L10nKey) -> some View {
-        // One word per label: never broken mid-word (the rows take over first).
-        Text(l10n.string(label))
-            .taleedFont(TaleedFont.meta)
-            .foregroundStyle(TaleedColor.textSecondary)
-            .lineLimit(1)
-            .fixedSize()
     }
 }
 
