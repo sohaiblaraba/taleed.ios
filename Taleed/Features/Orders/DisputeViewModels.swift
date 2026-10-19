@@ -160,10 +160,11 @@ final class DisputeFormViewModel {
     }
 }
 
-/// The dispute thread (screens.md §2 G12 screen 5; slice D "The thread"; website `dispute-thread.tsx`):
-/// `GET /disputes/{id}`, the whole thread oldest first, and, while `canPost`, a composer for some text
-/// (2 000 characters at most), up to 4 photos, or both. Posting is not idempotent: the button is
-/// disabled while it sends, and a failed post reloads the thread before the member tries again.
+/// The dispute thread (screens.md §2 G12 screen 5 and G13 screen 4; slice D "The thread", "The seller's
+/// answer"; website `dispute-thread.tsx`): `GET /disputes/{id}`, the whole thread oldest first, and,
+/// while `canPost`, a composer for some text (2 000 characters at most), up to 4 photos, or both.
+/// Posting is not idempotent: the button is disabled while it sends, and a failed post reloads the
+/// thread before the member tries again. While `canRespond`, the seller accepts or contests the claim.
 @MainActor
 @Observable
 final class DisputeThreadViewModel {
@@ -174,6 +175,10 @@ final class DisputeThreadViewModel {
     private(set) var isSending = false
     /// A failure to tell in a toast.
     var notice: ApiError?
+    /// A success to tell in a toast.
+    var success: L10nKey?
+    /// The answer to the claim being sent.
+    private(set) var answering: DisputeAnswerChoice?
     var draft: String = "" {
         didSet {
             if draft.utf16.count > Self.maxBody { draft = draft.prefix(utf16Units: Self.maxBody) }
@@ -198,7 +203,7 @@ final class DisputeThreadViewModel {
 
     /// Some text or a photo, nothing uploading, nothing sending.
     var canSend: Bool {
-        dispute?.canPost == true && !isSending && !photos.isUploading && (!trimmedDraft.isEmpty || !photos.keys.isEmpty)
+        dispute?.canPost == true && !isSending && answering == nil && !photos.isUploading && (!trimmedDraft.isEmpty || !photos.keys.isEmpty)
     }
 
     func loadIfNeeded() async {
@@ -237,6 +242,21 @@ final class DisputeThreadViewModel {
             } else if !automatic {
                 notice = error
             }
+        }
+    }
+
+    /// "Accepter la réclamation" (once confirmed) or "Contester", while `canRespond`: the dispute as it
+    /// now is (refunded, or under review). An answer that no longer applies reloads the thread.
+    func answer(_ answer: DisputeAnswerChoice) async {
+        guard dispute?.canRespond == true, answering == nil, !isSending else { return }
+        answering = answer
+        defer { answering = nil }
+        do {
+            dispute = try await api.respondToDispute(disputeId: disputeId, answer: answer)
+            success = answer == .accept ? .disputesAcceptDone : .disputesContestDone
+        } catch {
+            notice = error
+            await reload(automatic: true)
         }
     }
 

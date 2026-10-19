@@ -39,6 +39,8 @@ import Foundation
 ///     -TaleedDebugCheckout offline             checkout's first load fails offline (then works)
 ///     -TaleedDebugOrderPayment offline         the payment screen's first sync fails offline (then works)
 ///     -TaleedDebugOrder offline                the order screen's first load fails offline (then works)
+///                                              `carrier`: the first "Bordereau d'expédition" is refused
+///                                              by the carrier (`502 carrier_error` with a `detail`)
 ///     -TaleedDebugOrders offline               the orders list's first page fails offline (then works);
 ///                                              `empty` answers no orders
 ///

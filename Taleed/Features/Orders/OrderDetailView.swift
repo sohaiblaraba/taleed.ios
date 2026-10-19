@@ -9,10 +9,14 @@ import SwiftUI
 ///   pick-up point, funds released on;
 /// - the dispute summary and its thread;
 /// - the goods (one item, or each item of a bundle) and the other member;
-/// - the buyer's buttons, only from `actions` (on a sale, only "Laisser une évaluation"; G13 adds the
-///   seller's): "Payer maintenant", "Confirmer la réception" (after a
-///   confirmation; disabled with its hint while the parcel travels), "Laisser une évaluation",
-///   "Signaler un problème", "Annuler la commande" (after a confirmation); "Envoyer un message";
+/// - the member's buttons, only from `actions`. The buyer's: "Payer maintenant", "Confirmer la
+///   réception" (after a confirmation; disabled with its hint while the parcel travels), "Laisser une
+///   évaluation", "Signaler un problème", "Annuler la commande" (after a confirmation). The seller's
+///   (G13): "Bordereau d'expédition" (after a confirmation; the carrier takes several seconds, then the
+///   label opens in the in-app browser, whose share sheet prints), "Imprimer le bordereau" (a fresh link
+///   on each tap), "Générer le vrai bordereau" (test servers), "Accepter la réclamation" (after a
+///   confirmation) and "Contester", "Laisser une évaluation". A carrier refusal stays under the buttons
+///   with the carrier's own words. Then "Envoyer un message";
 /// - the amounts, the delivery with its tracking number, the timeline with the carrier's scans folded
 ///   under it, and the reviews.
 ///
@@ -33,7 +37,7 @@ struct OrderDetailView: View {
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
     private enum Confirmation: Equatable {
-        case cancel, confirmReceipt
+        case cancel, confirmReceipt, ship, replaceTestLabel, acceptClaim
     }
 
     private enum Sheet: String, Identifiable {
@@ -64,9 +68,14 @@ struct OrderDetailView: View {
             model.notice = nil
             switch notice {
             case let .success(key): toasts.show(l10n.string(key))
+            case let .info(key): toasts.show(l10n.string(key), kind: .info)
             case let .payment(key, kind): toasts.show(l10n.string(key), kind: kind)
             case let .error(error): toasts.show(error: error)
             }
+        }
+        .onChange(of: model.carrierError) { _, error in
+            // The refusal shows under the buttons: say it too.
+            if let error { AccessibilityNotification.Announcement(l10n.message(for: error)).post() }
         }
         .taleedConfirmation(isPresented: confirmation != nil) { confirmationModal }
         .sheet(item: $sheet) { sheet in
@@ -126,6 +135,10 @@ struct OrderDetailView: View {
                 ForEach(Array(memberActions.enumerated()), id: \.offset) { index, action in
                     button(action, isFirst: index == 0)
                 }
+                if model.showsCarrierError, let error = model.carrierError {
+                    InlineAlert(kind: .error, title: l10n.message(for: error), message: error.detail)
+                        .accessibilityIdentifier("order.carrierError")
+                }
                 if let conversationId = order.conversationId {
                     // The other member by role: "Message buyer" on a sale.
                     let label: L10nKey = order.side == .seller ? .appOrderMessageBuyer : .listingMessageSeller
@@ -140,7 +153,7 @@ struct OrderDetailView: View {
     }
 
     @ViewBuilder
-    private func button(_ action: OrderRules.BuyerAction, isFirst: Bool) -> some View {
+    private func button(_ action: OrderRules.MemberAction, isFirst: Bool) -> some View {
         // The first action is the main one (mint, decision D-10); the others are quieter.
         let isBusy = model.busy != nil
         switch action {
@@ -180,6 +193,36 @@ struct OrderDetailView: View {
             }
             .disabled(isBusy)
             .accessibilityIdentifier("order.cancel")
+        case .ship, .printLabel, .replaceTestLabel, .acceptClaim, .contestClaim:
+            SellerOrderButton(action: action, isFirst: isFirst, busy: model.busy, perform: performSellerAction)
+        }
+    }
+
+    /// A seller's button: ship, replace the demo label and accept the claim ask first.
+    private func performSellerAction(_ action: OrderRules.MemberAction) {
+        switch action {
+        case .ship: confirmation = .ship
+        case .replaceTestLabel: confirmation = .replaceTestLabel
+        case .acceptClaim: confirmation = .acceptClaim
+        // No confirmation, as on the website: Taleed mediates, nothing is paid out.
+        case .contestClaim: Task { await model.answerClaim(.contest) }
+        case .printLabel: printLabel()
+        case .pay, .confirmReceipt, .awaitingArrival, .openDispute, .cancel, .review: break
+        }
+    }
+
+    /// Creates the parcel, then opens its label (the website opens it in a new tab).
+    private func ship() {
+        Task {
+            if let url = await model.ship() { InAppBrowser.open(url) }
+        }
+    }
+
+    /// A fresh link to the label, opened in the in-app browser: the carrier's PDF or the printable page,
+    /// printed from its share sheet.
+    private func printLabel() {
+        Task {
+            if let url = await model.labelURL() { InAppBrowser.open(url) }
         }
     }
 
@@ -205,6 +248,19 @@ struct OrderDetailView: View {
                                   },
                                   onCancel: { confirmation = nil },
                                   icon: .checkCircle, tone: .positive)
+        case .ship:
+            shipModal(title: .ordersGetShippingLabel, message: .ordersGetShippingLabelHint)
+        case .replaceTestLabel:
+            shipModal(title: .ordersGetRealShippingLabel, message: .ordersGetRealShippingLabelHint)
+        case .acceptClaim:
+            ConfirmationModalCard(title: l10n.string(.disputesAcceptClaim), message: l10n.string(.disputesAcceptClaimHint),
+                                  confirmTitle: l10n.string(.disputesAcceptClaim),
+                                  onConfirm: {
+                                      confirmation = nil
+                                      Task { await model.answerClaim(.accept) }
+                                  },
+                                  onCancel: { confirmation = nil },
+                                  icon: .checkCircle, tone: .positive)
         case .cancel, nil:
             ConfirmationModalCard(title: l10n.string(.appOrderCancelTitle),
                                   message: l10n.string((model.order?.amounts.walletApplied ?? 0) > 0
@@ -220,9 +276,24 @@ struct OrderDetailView: View {
         }
     }
 
-    // MARK: Sheets
+    /// "Bordereau d'expédition" or "Générer le vrai bordereau": what happens, then "Générer et télécharger".
+    private func shipModal(title: L10nKey, message: L10nKey) -> ConfirmationModalCard {
+        ConfirmationModalCard(title: l10n.string(title), message: l10n.string(message),
+                              confirmTitle: l10n.string(.ordersGenerateAndDownload),
+                              onConfirm: {
+                                  confirmation = nil
+                                  ship()
+                              },
+                              onCancel: { confirmation = nil },
+                              icon: .truck, tone: .positive)
+    }
 
-    private var disputeSheet: some View {
+}
+
+// MARK: - Sheets, amounts, changes
+
+private extension OrderDetailView {
+    var disputeSheet: some View {
         DisputeFormSheet(model: DisputeFormViewModel(orderId: model.orderId, api: dependencies.orders,
                                                      upload: { [uploads = dependencies.uploads] data throws(ApiError) in
                                                          try await uploads.upload(data, purpose: .disputeEvidence)
@@ -240,7 +311,7 @@ struct OrderDetailView: View {
         }
     }
 
-    private var reviewSheet: some View {
+    var reviewSheet: some View {
         ReviewFormSheet(model: ReviewFormViewModel(orderId: model.orderId, api: dependencies.orders)) { outcome in
             switch outcome {
             case let .reviewed(order):
@@ -256,7 +327,7 @@ struct OrderDetailView: View {
 
     // MARK: Amounts
 
-    private func summaryLines(_ order: OrderDetailInfo) -> [OrderSummaryLine] {
+    func summaryLines(_ order: OrderDetailInfo) -> [OrderSummaryLine] {
         OrderRules.amounts(for: order).lines.enumerated().map { index, entry in
             let (line, amount) = entry
             let label: String = switch line {
@@ -272,7 +343,7 @@ struct OrderDetailView: View {
         }
     }
 
-    private func totalLabel(_ order: OrderDetailInfo) -> String {
+    func totalLabel(_ order: OrderDetailInfo) -> String {
         switch OrderRules.amounts(for: order).total {
         case .total: l10n.string(.ordersTotal)
         case .remainderDue: l10n.string(.ordersRemainderDue)
@@ -283,7 +354,7 @@ struct OrderDetailView: View {
     // MARK: Changes
 
     /// The list below shows the new status; a cancelled order put its items back on sale.
-    private func orderChanged(from old: OrderDetailInfo?, to new: OrderDetailInfo?) {
+    func orderChanged(from old: OrderDetailInfo?, to new: OrderDetailInfo?) {
         guard let new, let old, old.status != new.status || old.statusLabel != new.statusLabel else { return }
         orderChanges.post(new)
         if new.status == .cancelled {

@@ -25,7 +25,8 @@ func orderDetail(
     shipDeadline: Date? = nil,
     autoComplete: Date? = nil,
     pickupReady: Bool = false,
-    actions: OrderActionFlags = OrderActionFlags()
+    actions: OrderActionFlags = OrderActionFlags(),
+    dispute: OrderDisputeSummary? = nil
 ) -> OrderDetailInfo {
     OrderDetailInfo(
         id: id, number: "T-000031", side: side, status: status, statusLabel: label, title: "Article", imageURL: nil,
@@ -35,13 +36,14 @@ func orderDetail(
         delivery: OrderDeliveryInfo(kind: stopdesk == nil ? .home : .stopdesk, recipientName: "Yasmine B", phone: "0550123456",
                                     wilaya: "Alger", commune: "Hydra", addressLine: nil, stopdeskName: stopdesk, tracking: nil),
         steps: [], carrierScans: [], payDeadlineAt: payDeadline, shipDeadlineAt: shipDeadline, autoCompleteAt: autoComplete,
-        pickupReady: pickupReady, actions: actions, dispute: nil, myReview: nil, reviewReceived: nil, conversationId: "c1"
+        pickupReady: pickupReady, actions: actions, dispute: dispute, myReview: nil, reviewReceived: nil, conversationId: "c1"
     )
 }
 
-func disputeInfo(id: String = "d1", canPost: Bool = true, messages: Int = 1) -> DisputeInfo {
-    DisputeInfo(id: id, status: .open, statusLabel: "Ouvert", reasonLabel: "Article endommagé", sellerDeadlineAt: nil,
-                resolution: nil, orderId: "o1", orderNumber: "T-000031", side: .buyer, canPost: canPost, canRespond: false,
+func disputeInfo(id: String = "d1", status: DisputeState = .open, side: OrderSide = .buyer, canPost: Bool = true,
+                 canRespond: Bool = false, messages: Int = 1) -> DisputeInfo {
+    DisputeInfo(id: id, status: status, statusLabel: "Ouvert", reasonLabel: "Article endommagé", sellerDeadlineAt: nil,
+                resolution: nil, orderId: "o1", orderNumber: "T-000031", side: side, canPost: canPost, canRespond: canRespond,
                 messages: (0..<messages).map {
                     DisputeMessageInfo(id: "m\($0)", role: .buyer, roleLabel: "Acheteur", authorName: "@yasmine_b", isMine: true,
                                        body: "Message \($0)", photoURLs: [], createdAt: Date(timeIntervalSince1970: 0))
@@ -71,6 +73,18 @@ final class FakeOrdersApi: OrdersApi {
     var reviewResult: Result<OrderDetailInfo, Taleed.ApiError>?
     var paymentURL: Result<URL?, Taleed.ApiError> = .success(URL(string: "https://pay.example/1"))
     var syncResults: [OrderDetailInfo] = []
+    var shipResult: Result<ShipmentResult, Taleed.ApiError> = .success(
+        ShipmentResult(order: orderDetail(side: .seller, status: .prepared, actions: OrderActionFlags(canPrintLabel: true)),
+                       label: ShippingLabelInfo(url: URL(string: "http://localhost:3000/orders/o1/label?exp=1&sig=a")!,
+                                                expiresAt: nil))
+    )
+    var labelResult: Result<ShippingLabelInfo, Taleed.ApiError> = .success(
+        ShippingLabelInfo(url: URL(string: "http://localhost:3000/orders/o1/label?exp=2&sig=b")!, expiresAt: nil)
+    )
+    var answerResult: Result<DisputeInfo, Taleed.ApiError>?
+    private(set) var ships = 0
+    private(set) var labelCalls = 0
+    private(set) var answers: [(disputeId: String, answer: DisputeAnswerChoice)] = []
     private(set) var listCalls: [(OrderSide, Bool)] = []
     private(set) var orderCalls = 0
     private(set) var cancels = 0
@@ -131,6 +145,22 @@ final class FakeOrdersApi: OrdersApi {
     func review(orderId: String, rating: Int, comment: String?) async throws(Taleed.ApiError) -> OrderDetailInfo {
         reviews.append((rating, comment))
         return try (reviewResult ?? .success(orderDetail(status: .completed))).get()
+    }
+
+    func ship(orderId: String) async throws(Taleed.ApiError) -> ShipmentResult {
+        ships += 1
+        return try shipResult.get()
+    }
+
+    func shippingLabel(orderId: String) async throws(Taleed.ApiError) -> ShippingLabelInfo {
+        labelCalls += 1
+        return try labelResult.get()
+    }
+
+    func respondToDispute(disputeId: String, answer: DisputeAnswerChoice) async throws(Taleed.ApiError) -> DisputeInfo {
+        answers.append((disputeId, answer))
+        return try (answerResult ?? .success(disputeInfo(status: answer == .accept ? .resolvedRefund : .underReview,
+                                                         canPost: answer == .contest))).get()
     }
 }
 

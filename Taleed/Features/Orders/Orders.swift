@@ -232,5 +232,27 @@ struct DisputeInfo: Identifiable, Equatable, Sendable {
     let resolvedAt: Date?
 }
 
+/// The parcel's label (`ShippingLabel`): the carrier's document (usually a PDF) or the demo carrier's
+/// printable page. Fetched again on each print, since the demo link stops working at `expiresAt`.
+struct ShippingLabelInfo: Equatable, Sendable {
+    let url: URL
+    let expiresAt: Date?
+}
+
+/// What `POST /orders/{id}/ship` answers: the order, now `PREPARED` with its tracking number, and the
+/// label, nil while the carrier has not given one yet.
+struct ShipmentResult: Equatable, Sendable {
+    let order: OrderDetailInfo
+    let label: ShippingLabelInfo?
+}
+
+/// The seller's answer to the buyer's claim (`POST /disputes/{id}/respond`).
+enum DisputeAnswerChoice: String, Equatable, Sendable {
+    /// The buyer is refunded in full at once: `RESOLVED_REFUND`.
+    case accept = "ACCEPT"
+    /// Taleed mediates: `UNDER_REVIEW`.
+    case contest = "CONTEST"
+}
+
 /// A reason of the dispute form, from `GET /catalog` `disputeReasons`.
 typealias DisputeReasonOption = CatalogDisputeReason

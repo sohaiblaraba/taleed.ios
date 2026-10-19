@@ -58,25 +58,39 @@ enum OrderRules {
         }
     }
 
-    /// A button of the buyer, in the order the screen shows them.
-    enum BuyerAction: Equatable, Sendable {
+    /// A button of the order screen, in the order the screen shows them.
+    enum MemberAction: Equatable, Sendable {
+        // Buyer
         /// "Payer maintenant".
         case pay
         /// "Confirmer la réception", after a confirmation.
         case confirmReceipt
         /// "Confirmer la réception" disabled, with "Disponible dès que le colis est arrivé…".
         case awaitingArrival
-        /// "Laisser une évaluation".
-        case review
         /// "Signaler un problème": the dispute form.
         case openDispute
         /// "Annuler la commande", after a confirmation.
         case cancel
+        // Seller
+        /// "Bordereau d'expédition", after a confirmation: the carrier creates the parcel and its label.
+        case ship
+        /// "Imprimer le bordereau": a fresh link to the label, opened in the browser.
+        case printLabel
+        /// "Générer le vrai bordereau" (test servers only), after a confirmation: a real parcel replaces
+        /// the demo carrier's one.
+        case replaceTestLabel
+        /// "Accepter la réclamation", after a confirmation: the buyer is refunded at once.
+        case acceptClaim
+        /// "Contester": Taleed mediates.
+        case contestClaim
+        // Both
+        /// "Laisser une évaluation".
+        case review
     }
 
     /// The buyer's buttons, from `actions` only (slice D, Actions: never from `status`).
-    static func buyerActions(_ actions: OrderActionFlags) -> [BuyerAction] {
-        var result: [BuyerAction] = []
+    static func buyerActions(_ actions: OrderActionFlags) -> [MemberAction] {
+        var result: [MemberAction] = []
         if actions.canPay { result.append(.pay) }
         if actions.canConfirmReceipt {
             result.append(.confirmReceipt)
@@ -89,13 +103,23 @@ enum OrderRules {
         return result
     }
 
-    /// The member's buttons on the order: the buyer's set, and on a sale the review alone, which
-    /// `canReview` offers either side (screens.md §7 G12/G13 abilities; website `order-actions.tsx`).
-    /// The seller's own buttons (ship, label, answer a dispute) are G13's.
-    static func memberActions(_ actions: OrderActionFlags, side: OrderSide) -> [BuyerAction] {
+    /// The seller's buttons, from `actions` only, in the website's order (`order-actions.tsx`): ship,
+    /// print, replace the demo label, answer the claim, review. The seller never cancels.
+    static func sellerActions(_ actions: OrderActionFlags) -> [MemberAction] {
+        var result: [MemberAction] = []
+        if actions.canShip { result.append(.ship) }
+        if actions.canPrintLabel { result.append(.printLabel) }
+        if actions.canReplaceTestLabel { result.append(.replaceTestLabel) }
+        if actions.canRespondToDispute { result.append(contentsOf: [.acceptClaim, .contestClaim]) }
+        if actions.canReview { result.append(.review) }
+        return result
+    }
+
+    /// The member's buttons on the order, by side (screens.md §7 G12/G13 abilities).
+    static func memberActions(_ actions: OrderActionFlags, side: OrderSide) -> [MemberAction] {
         switch side {
         case .buyer: buyerActions(actions)
-        case .seller: actions.canReview ? [.review] : []
+        case .seller: sellerActions(actions)
         case .unknown: []
         }
     }

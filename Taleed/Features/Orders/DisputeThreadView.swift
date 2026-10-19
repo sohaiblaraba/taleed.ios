@@ -3,7 +3,8 @@ import SwiftUI
 /// The dispute thread (screens.md §2 G12 screen 5 and §7 G12; slice D "The thread"; website
 /// `dispute-thread.tsx`): back and "Fil du litige"; the dispute's status, reason and order, who must
 /// answer until when while it is open, and how it ended; the whole thread oldest first, the member's
-/// own messages at the end side, Taleed support apart with its shield; then, while `canPost`, the
+/// own messages at the end side, Taleed support apart with its shield; the seller's "Accepter la
+/// réclamation" (after a confirmation) and "Contester" while `canRespond` (G13); then, while `canPost`, the
 /// notice that buyer, seller and support see every message, and the composer (text, up to 4 photos);
 /// otherwise "Le litige est résolu — la discussion est close."
 ///
@@ -12,6 +13,7 @@ import SwiftUI
 struct DisputeThreadView: View {
     @State private var model: DisputeThreadViewModel
     @State private var viewer: PhotoViewerState?
+    @State private var confirmsAccept = false
     @FocusState private var isComposerFocused: Bool
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
@@ -49,6 +51,21 @@ struct DisputeThreadView: View {
             model.notice = nil
             toasts.show(error: error)
         }
+        .onChange(of: model.success) { _, key in
+            guard let key else { return }
+            model.success = nil
+            toasts.show(l10n.string(key))
+        }
+        .taleedConfirmation(isPresented: confirmsAccept) {
+            ConfirmationModalCard(title: l10n.string(.disputesAcceptClaim), message: l10n.string(.disputesAcceptClaimHint),
+                                  confirmTitle: l10n.string(.disputesAcceptClaim),
+                                  onConfirm: {
+                                      confirmsAccept = false
+                                      Task { await model.answer(.accept) }
+                                  },
+                                  onCancel: { confirmsAccept = false },
+                                  icon: .checkCircle, tone: .positive)
+        }
         .fullScreenCover(item: $viewer) { state in
             ListingPhotoViewer(photos: state.photos, current: state.index)
                 .appLanguage(l10n.language)
@@ -63,6 +80,11 @@ struct DisputeThreadView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
                             DisputeHeaderCard(dispute: dispute) { router.pushOrGoBack(to: .order(id: dispute.orderId)) }
+                            if dispute.canRespond {
+                                DisputeAnswerButtons(answering: model.answering, isDisabled: model.isSending,
+                                                     onAccept: { confirmsAccept = true },
+                                                     onContest: { Task { await model.answer(.contest) } })
+                            }
                             ForEach(dispute.messages) { message in
                                 DisputeMessageBubble(message: message) { index in
                                     viewer = PhotoViewerState(
@@ -180,6 +202,28 @@ private struct ComposerPhotoButton: View {
     }
 }
 
+/// The seller's answer to the claim (`canRespond`): "Accepter la réclamation", which asks first, and
+/// "Contester" (no confirmation, as on the website).
+private struct DisputeAnswerButtons: View {
+    let answering: DisputeAnswerChoice?
+    let isDisabled: Bool
+    let onAccept: () -> Void
+    let onContest: () -> Void
+    @Environment(LanguageManager.self) private var l10n
+
+    var body: some View {
+        VStack(spacing: TaleedSpacing.s12) {
+            TaleedButton(title: l10n.string(.disputesAcceptClaim), kind: .secondary, size: .large, leadingIcon: .checkCircle,
+                         isLoading: answering == .accept, isFullWidth: true, action: onAccept)
+                .accessibilityIdentifier("dispute.acceptClaim")
+            TaleedButton(title: l10n.string(.disputesContestClaim), kind: .outline, size: .large, leadingIcon: .shieldCheck,
+                         isLoading: answering == .contest, isFullWidth: true, action: onContest)
+                .accessibilityIdentifier("dispute.contestClaim")
+        }
+        .disabled(isDisabled || answering != nil)
+    }
+}
+
 /// The dispute's status, reason and order number (opens the order), who answers until when while it
 /// is open, and how it ended.
 private struct DisputeHeaderCard: View {
@@ -215,7 +259,8 @@ private struct DisputeHeaderCard: View {
             }
             if let resolution = dispute.resolution {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(l10n.string(.disputesResolution)): \(resolution)")
+                    // Verbatim: interpolating into a literal isolates both parts, laid out left to right in Arabic.
+                    Text(verbatim: "\(l10n.string(.disputesResolution)): \(resolution)")
                         .taleedFont(TaleedFont.bodySmall)
                         .foregroundStyle(TaleedColor.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)

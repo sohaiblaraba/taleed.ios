@@ -15420,6 +15420,305 @@
           }
         }
       }
+    },
+    "orders_get_shipping_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وصل الشحن"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shipping label"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bordereau d’expédition"
+          }
+        }
+      }
+    },
+    "orders_get_shipping_label_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُنشأ الوصل ثم يُنزَّل. اطبعه والصقه جيدًا على الطرد، ثم أودعه في أقرب نقطة تجميع أو وكالة. يتم تحديث التتبع تلقائيًا بعد ذلك. المُرسِل المذكور هو Taleed (الحساب التجاري لدى الناقل) — هذا طبيعي: رقم التتبع يربط الطرد بطلبك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The label is generated and downloaded. Print it, stick it flat on the parcel, then drop the parcel at the nearest collection point or agency. Tracking updates automatically afterwards. The sender shown is Taleed (carrier merchant account) — that's expected: the tracking number ties the parcel to your order."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le bordereau est généré puis téléchargé. Imprimez-le, collez-le bien à plat sur le colis, puis déposez le colis au point de collecte ou à l’agence la plus proche. Le suivi se met ensuite à jour automatiquement. L’expéditeur mentionné est Taleed (compte marchand du transporteur) — c’est normal : le numéro de suivi lie le colis à votre commande."
+          }
+        }
+      }
+    },
+    "orders_generate_and_download": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنشاء وتنزيل"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate & download"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer et télécharger"
+          }
+        }
+      }
+    },
+    "orders_label_ready": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوصل جاهز — اطبعه وأودع الطرد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label ready — print it and drop off the parcel."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bordereau prêt — imprimez-le et déposez le colis."
+          }
+        }
+      }
+    },
+    "orders_download_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طباعة الوصل"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Print label"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imprimer le bordereau"
+          }
+        }
+      }
+    },
+    "orders_get_real_shipping_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنشاء الوصل الحقيقي"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate the real label"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Générer le vrai bordereau"
+          }
+        }
+      }
+    },
+    "orders_get_real_shipping_label_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الطلب لديه وصل تجريبي (وضع العرض). سيتم إنشاء طرد حقيقي لدى الناقل ويحل محل القديم — سيتغير رقم التتبع."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This order has a test label (demo mode). A real parcel will be created with the carrier and replaces the old one — the tracking number will change."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette commande a un bordereau de test (mode démo). Un vrai bordereau va être créé chez le transporteur et remplacera l’ancien — le numéro de suivi changera."
+          }
+        }
+      }
+    },
+    "disputes_accept_claim": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبول الادعاء"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept the claim"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepter la réclamation"
+          }
+        }
+      }
+    },
+    "disputes_accept_claim_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُسترد المشتري كامل المبلغ فوراً. هذا أسرع حل."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The buyer is refunded in full, immediately. This is the fastest resolution."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’acheteur est remboursé intégralement et immédiatement. C’est la résolution la plus rapide."
+          }
+        }
+      }
+    },
+    "disputes_contest_claim": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعتراض"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contest"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contester"
+          }
+        }
+      }
+    },
+    "disputes_accept_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم قبول الادعاء — تم رد المبلغ للمشتري."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claim accepted — the buyer has been refunded."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réclamation acceptée — l’acheteur est remboursé."
+          }
+        }
+      }
+    },
+    "disputes_contest_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الاعتراض على الادعاء — ينتقل النزاع إلى وساطة تليد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claim contested — the dispute goes to Taleed mediation."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réclamation contestée — le litige passe en médiation Taleed."
+          }
+        }
+      }
+    },
+    "app_order_label_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم إنشاء الطرد. سيتوفر الوصل هنا فور أن يقدّمه الناقل."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The parcel is created. The label will be available here as soon as the carrier provides it."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le colis est créé. Le bordereau sera disponible ici dès que le transporteur l’aura fourni."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

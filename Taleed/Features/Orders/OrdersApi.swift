@@ -1,8 +1,8 @@
 import SwiftUI
 import TaleedAPI
 
-/// The calls of the orders screens, buyer side (screens.md §2 G12, slice D "Orders", "Disputes",
-/// "Reviews").
+/// The calls of the orders screens, both sides (screens.md §2 G12 and G13, slice D "Orders", "Shipping:
+/// the seller", "Disputes", "Reviews").
 @MainActor
 protocol OrdersApi: AnyObject {
     /// `GET /orders?role=`: newest first, 20 a page, with the tab counters. `automatic`: a refresh the
@@ -27,6 +27,15 @@ protocol OrdersApi: AnyObject {
     func postDisputeMessage(disputeId: String, body: String?, photoKeys: [String]) async throws(ApiError) -> DisputeInfo
     /// `POST /orders/{id}/review`. After a lost answer, `already_reviewed` means it went through.
     func review(orderId: String, rating: Int, comment: String?) async throws(ApiError) -> OrderDetailInfo
+    /// `POST /orders/{id}/ship`: the carrier creates the parcel and its label, which can take several
+    /// seconds. Idempotent: a repeat answers the same parcel. `502 carrier_error` carries the carrier's
+    /// `detail`.
+    func ship(orderId: String) async throws(ApiError) -> ShipmentResult
+    /// `GET /orders/{id}/label`: a fresh link to the label, on each print. The seller only.
+    func shippingLabel(orderId: String) async throws(ApiError) -> ShippingLabelInfo
+    /// `POST /disputes/{id}/respond`: the seller accepts or contests the claim. The same answer again
+    /// changes nothing; another one once the dispute moved on is `invalid_state`.
+    func respondToDispute(disputeId: String, answer: DisputeAnswerChoice) async throws(ApiError) -> DisputeInfo
 }
 
 extension OrdersApi {
@@ -95,6 +104,29 @@ extension GeneratedTaleedApi: OrdersApi {
         let body = ReviewCreate(rating: rating, comment: comment)
         return OrderDetailInfo(try await caller.call(.write) {
             try await ReviewsAPI.reviewOrder(id: orderId, reviewCreate: body, apiConfiguration: $0)
+        })
+    }
+
+    func ship(orderId: String) async throws(ApiError) -> ShipmentResult {
+        // Safe to repeat on the server's side (the same parcel comes back), but it only ever runs on the
+        // seller's tap: a carrier refusal must not be sent again on its own.
+        let prepared = try await caller.call(.write) { try await OrdersAPI.shipOrder(id: orderId, apiConfiguration: $0) }
+        return ShipmentResult(order: OrderDetailInfo(prepared.order), label: prepared.label.flatMap(ShippingLabelInfo.init))
+    }
+
+    func shippingLabel(orderId: String) async throws(ApiError) -> ShippingLabelInfo {
+        let label = try await caller.call(.read) { try await OrdersAPI.getShippingLabel(id: orderId, apiConfiguration: $0) }
+        guard let info = ShippingLabelInfo(label) else {
+            // A link the app cannot open: nothing to print.
+            throw .failed(ApiFailure(status: 409, code: .invalidState))
+        }
+        return info
+    }
+
+    func respondToDispute(disputeId: String, answer: DisputeAnswerChoice) async throws(ApiError) -> DisputeInfo {
+        let body = DisputeResponse(answer: DisputeAnswer(rawValue: answer.rawValue) ?? .unknownDefaultOpenApi)
+        return DisputeInfo(try await caller.call(.write) {
+            try await DisputesAPI.respondDispute(id: disputeId, disputeResponse: body, apiConfiguration: $0)
         })
     }
 }
@@ -219,6 +251,14 @@ private extension DisputeAuthor {
         case .support: .support
         case .unknownDefaultOpenApi: .unknown
         }
+    }
+}
+
+private extension ShippingLabelInfo {
+    init?(_ label: ShippingLabel) {
+        // The browser only opens web links (SFSafariViewController refuses any other scheme).
+        guard let url = URL(apiString: label.url), ["http", "https"].contains(url.scheme?.lowercased()) else { return nil }
+        self.init(url: url, expiresAt: label.expiresAt)
     }
 }
 
