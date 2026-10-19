@@ -125,6 +125,9 @@ final class BundleReviewViewModel {
 
     // MARK: Actions
 
+    /// "Retirer" would cancel the price the seller accepted on the bundle: the screen confirms first.
+    var removalCancelsAcceptedOffer: Bool { bundle?.acceptedOffer != nil }
+
     /// "Retirer": the whole selection again without this item (`PUT`, slice C). Withdraws the bundle's
     /// offers on the server.
     func remove(_ listingId: String) async {
@@ -132,8 +135,7 @@ final class BundleReviewViewModel {
         work = .remove(listingId: listingId)
         defer { work = nil }
         do {
-            let saved = try await api.saveBundleSelection(sellerUsername: username,
-                                                          listingIds: bundle.listingIds.filter { $0 != listingId })
+            let saved = try await api.saveBundleSelection(sellerUsername: username, listingIds: bundle.selection(removing: listingId))
             if saved.id == bundleId {
                 self.bundle = saved
             } else {
@@ -157,10 +159,8 @@ final class BundleReviewViewModel {
         } catch {
             switch error.code {
             case .offerPending:
-                // The offer waits in the conversation about the bundle's first item: open it.
-                if let listingId = bundle?.primaryListingId, let id = try? await api.openConversation(listingId: listingId) {
-                    return .pending(conversationId: id)
-                }
+                // The error names the conversation the offer waits in: open it (API 1.5.6).
+                if let conversationId = error.conversationId { return .pending(conversationId: conversationId) }
                 notice = .information(.offersErrorActive)
                 return .failed
             case .offerOutOfRange:

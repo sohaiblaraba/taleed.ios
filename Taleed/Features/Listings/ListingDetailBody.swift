@@ -82,7 +82,7 @@ struct ListingDetailBody: View {
 private struct ListingBuyerExtras: View {
     let listing: ListingDetail
     let actions: ListingDetailActions
-    let bundle: BundleSelectionState?
+    let bundle: BundleDetail?
     let isSavingBundle: Bool
     let onToggleBundle: () -> Void
     let onBackToBundle: () -> Void
@@ -103,7 +103,7 @@ private struct ListingBuyerExtras: View {
                                  leadingIcon: toggle == .add ? .plus : .x, isLoading: isSavingBundle, isFullWidth: true,
                                  action: onToggleBundle)
                         .accessibilityIdentifier("listing.bundleToggle")
-                    TaleedButton(title: l10n.format(.bundleBackToBundle, bundle?.listingIds.count ?? 0), kind: .hyperlink,
+                    TaleedButton(title: l10n.format(.bundleBackToBundle, bundle?.selection.count ?? 0), kind: .hyperlink,
                                  size: .medium, isFullWidth: true, action: onBackToBundle)
                 }
             }

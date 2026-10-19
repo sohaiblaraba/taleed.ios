@@ -484,4 +484,8 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appBundleNotAvailable = "app_bundle_not_available"
     case appBundleOrdered = "app_bundle_ordered"
     case appBundleClosed = "app_bundle_closed"
+    case appBundleRemoveTitle = "app_bundle_remove_title"
+    case appBundleRemoveBody = "app_bundle_remove_body"
+    case appOfferShowDetails = "app_offer_show_details"
+    case appOfferHideDetails = "app_offer_hide_details"
 }

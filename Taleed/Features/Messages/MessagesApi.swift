@@ -187,7 +187,8 @@ extension ConversationDetail {
             replyBlock: block,
             isBlocked: conversation.isBlocked,
             offerRange: conversation.offerRange.map { AmountRange(min: $0.min, max: $0.max) },
-            pendingOffer: conversation.pendingOffer.map(ChatOffer.init)
+            pendingOffer: conversation.pendingOffer.map(ChatOffer.init),
+            payableOffer: conversation.payableOffer.map(ChatOffer.init)
         )
     }
 }

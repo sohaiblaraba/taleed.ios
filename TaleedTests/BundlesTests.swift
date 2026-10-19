@@ -57,19 +57,42 @@ struct BundleReviewViewModelTests {
         #expect(model.work == nil)
     }
 
+    @Test func removingFromABundleWithAnAcceptedOfferAsksFirst() async {
+        let model = BundleReviewViewModel(bundleId: "b1", api: api)
+        await model.loadIfNeeded()
+        #expect(!model.removalCancelsAcceptedOffer)
+        api.review = .success(fixtureBundle(acceptedOffer: AcceptedOfferRef(id: "o7", amount: 3500)))
+        await model.reload()
+        #expect(model.removalCancelsAcceptedOffer)
+    }
+
+    @Test func everyChangeSendsTheWholeSelection() {
+        let bundle = fixtureBundle(items: [fixtureLine("a"), fixtureLine("b", available: false)])
+        #expect(bundle.selection(adding: "c") == ["a", "b", "c"])
+        #expect(bundle.selection(adding: "a") == ["a", "b"])
+        #expect(bundle.selection(removing: "a") == ["b"])
+        #expect(fixtureBundle(status: .ordered).selection(adding: "c") == ["c"])
+    }
+
     @Test func anOfferOpensItsConversation() async {
         let model = BundleReviewViewModel(bundleId: "b1", api: api)
         await model.loadIfNeeded()
         #expect(await model.makeOffer(amount: 3000) == .sent(conversationId: "c9"))
     }
 
-    @Test func anOfferAlreadyWaitingOpensTheConversationOfTheFirstItem() async {
-        api.offerResult = .failure(apiFailure(.offerPending))
-        api.review = .success(fixtureBundle(items: [fixtureLine("a", available: false), fixtureLine("b")]))
+    @Test func anOfferAlreadyWaitingOpensTheConversationTheErrorNames() async {
+        api.offerResult = .failure(.failed(ApiFailure(status: 409, code: .offerPending, conversationId: "c-wait")))
         let model = BundleReviewViewModel(bundleId: "b1", api: api)
         await model.loadIfNeeded()
-        #expect(await model.makeOffer(amount: 3000) == .pending(conversationId: "c-b"))
-        #expect(api.openedFor == ["b"])
+        #expect(await model.makeOffer(amount: 3000) == .pending(conversationId: "c-wait"))
+    }
+
+    @Test func anOfferAlreadyWaitingWithoutItsConversationSaysSo() async {
+        api.offerResult = .failure(apiFailure(.offerPending))
+        let model = BundleReviewViewModel(bundleId: "b1", api: api)
+        await model.loadIfNeeded()
+        #expect(await model.makeOffer(amount: 3000) == .failed)
+        #expect(model.notice == .information(.offersErrorActive))
     }
 
     @Test func anOfferOutOfRangeReloadsTheBounds() async {

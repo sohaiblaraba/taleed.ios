@@ -3,6 +3,8 @@ import SwiftUI
 /// What the listing screen needs besides the shared stores. Set once at the root (`AppRootView`).
 struct ListingDependencies {
     let listings: any ListingDetailApi
+    /// The bundle toggle ("Ajouter au lot").
+    let bundles: any BundlesApi
     let reports: any ReportsApi
     let uploads: PhotoUploadService
 }
@@ -65,7 +67,9 @@ struct ListingDetailView: View {
 
     init(listingId: String, dependencies: ListingDependencies, memberId: String?) {
         self.dependencies = dependencies
-        _model = State(initialValue: ListingDetailViewModel(listingId: listingId, api: dependencies.listings, memberId: memberId))
+        let model = ListingDetailViewModel(listingId: listingId, api: dependencies.listings, bundles: dependencies.bundles,
+                                           memberId: memberId)
+        _model = State(initialValue: model)
     }
 
     var body: some View {

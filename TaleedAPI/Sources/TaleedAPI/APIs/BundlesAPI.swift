@@ -110,7 +110,7 @@ open class BundlesAPI {
     /**
      Make an offer on a bundle
      - POST /bundles/{id}/offers
-     - One price for every item still for sale, within the bundle's `offerRange`. It goes to the conversation about the bundle's first item, which it opens if needed; while an offer waits for an answer there, another one is `offer_pending`. The seller gets a notification and a push. The seller can only accept it while every item is still for sale.  Requires a bearer token.  Rate limit: 60 per hour per member, on top of the general limit.
+     - One price for every item still for sale, within the bundle's `offerRange`. It goes to the conversation about the bundle's first item, which it opens if needed; while an offer waits for an answer there, another one is `offer_pending`, whose `conversationId` is that conversation: open it. The seller gets a notification and a push. The seller can only accept it while every item is still for sale.  Requires a bearer token.  Rate limit: 60 per hour per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth

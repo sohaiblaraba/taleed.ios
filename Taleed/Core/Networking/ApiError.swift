@@ -32,12 +32,14 @@ struct ApiFailure: Equatable, Sendable {
     /// `listing_unavailable` from checkout only: the member's own order awaiting payment holds the
     /// goods. Open that order instead of saying the item is gone (slice F).
     var orderId: String?
+    /// `offer_pending` only: the conversation where an offer already waits for an answer (API 1.5.6).
+    var conversationId: String?
 }
 
 /// A failed API call, by what the app does about it.
 ///
-/// Parsed from the body `{"error":{"code","message","issues","detail","retryAfter","orderId"}}`. A body
-/// that is not JSON, or a code the app does not know, falls back to the HTTP status: a 4xx means
+/// Parsed from the body `{"error":{"code","message","issues","detail","retryAfter","orderId","conversationId"}}`.
+/// A body that is not JSON, or a code the app does not know, falls back to the HTTP status: a 4xx means
 /// "this could not be done", a 5xx "something went wrong, try again" (api-guide.md, Errors).
 enum ApiError: Error, Equatable, Sendable {
     /// `401 unauthorized`: the token is missing or no longer valid. Handled globally (sign-out).
@@ -98,6 +100,12 @@ enum ApiError: Error, Equatable, Sendable {
     /// `listing_unavailable` from checkout: the member's own order that holds the goods.
     var orderId: String? {
         if case let .failed(failure) = self { return failure.orderId }
+        return nil
+    }
+
+    /// `offer_pending`: the conversation the waiting offer is in, to open instead of making another.
+    var conversationId: String? {
+        if case let .failed(failure) = self { return failure.conversationId }
         return nil
     }
 
@@ -168,7 +176,8 @@ enum ApiError: Error, Equatable, Sendable {
                 code: code,
                 issues: (detail.issues ?? []).map { ApiFieldIssue(path: $0.path, message: $0.message) },
                 detail: detail.detail,
-                orderId: detail.orderId
+                orderId: detail.orderId,
+                conversationId: detail.conversationId
             ))
         }
     }
@@ -200,6 +209,7 @@ private struct EnvelopeDetail: Decodable {
     let issues: [EnvelopeIssue]?
     let detail: String?
     let orderId: String?
+    let conversationId: String?
 }
 
 private struct EnvelopeIssue: Decodable {

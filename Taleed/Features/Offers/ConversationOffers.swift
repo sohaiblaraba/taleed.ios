@@ -15,7 +15,7 @@ extension ConversationViewModel {
     /// The offer pinned under the item strip and its buttons: the one waiting for an answer, or the
     /// accepted one the buyer can pay.
     var pinnedOffer: PinnedOffer? {
-        PinnedOffer.find(conversation: conversation, messages: messages, current: offers.current, now: currentDate)
+        PinnedOffer.find(conversation: conversation, current: offers.current, now: currentDate)
     }
 
     /// "Faire une offre" or "Proposer un prix" next to the composer.

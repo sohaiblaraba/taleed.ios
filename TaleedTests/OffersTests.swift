@@ -9,7 +9,7 @@ struct PinnedOfferTests {
 
     @Test func theOfferWaitingIsPinnedWithItsFlaggedButtons() throws {
         let pending = fixtureOffer(canAccept: true, canDecline: true, canCounter: true, counterRange: AmountRange(min: 1650, max: 5500))
-        let pinned = try #require(PinnedOffer.find(conversation: fixtureConversation(pendingOffer: pending), messages: [],
+        let pinned = try #require(PinnedOffer.find(conversation: fixtureConversation(pendingOffer: pending),
                                                    current: identity, now: chatNow))
         #expect(pinned.offer.id == "o1")
         #expect(pinned.canAccept && pinned.canDecline && pinned.canCounter)
@@ -28,18 +28,31 @@ struct PinnedOfferTests {
 
     @Test func anExpiredOfferIsNotPinnedAndHasNoButtons() {
         let lapsed = fixtureOffer(expiresIn: -10, canAccept: true, canDecline: true, canCancel: true)
-        #expect(PinnedOffer.find(conversation: fixtureConversation(pendingOffer: lapsed), messages: [], current: identity,
+        #expect(PinnedOffer.find(conversation: fixtureConversation(pendingOffer: lapsed), current: identity,
                                  now: chatNow) == nil)
         #expect(!PinnedOffer(offer: lapsed, now: chatNow).hasActions)
     }
 
-    @Test func anAcceptedOfferTheBuyerCanPayIsPinnedWithItsCheckout() throws {
+    @Test func theOfferTheBuyerCanPayIsPinnedWithItsCheckout() throws {
         let accepted = fixtureOffer(id: "o2", status: .accepted, canPay: true)
-        let older = fixtureOffer(id: "o1", status: .declined)
-        let messages = [fixtureOfferMessage("m2", offer: accepted, at: 20), fixtureOfferMessage("m1", offer: older)]
-        let pinned = try #require(PinnedOffer.find(conversation: fixtureConversation(), messages: messages, current: identity,
+        let pinned = try #require(PinnedOffer.find(conversation: fixtureConversation(payableOffer: accepted), current: identity,
                                                    now: chatNow))
         #expect(pinned.payment == CheckoutTarget(listingId: "l1", offerId: "o2", bundleId: nil))
+    }
+
+    @Test func aPayableOfferPaidSinceIsNoLongerPinned() {
+        let accepted = fixtureOffer(id: "o2", status: .accepted, canPay: true)
+        let paid = fixtureOffer(id: "o2", status: .accepted, canPay: false)
+        #expect(PinnedOffer.find(conversation: fixtureConversation(payableOffer: accepted), current: { _ in paid }, now: chatNow) == nil)
+        #expect(PinnedOffer.find(conversation: fixtureConversation(), current: identity, now: chatNow) == nil)
+    }
+
+    @Test func theOfferWaitingWinsOverThePayableOne() throws {
+        let pending = fixtureOffer(id: "o3", canAccept: true)
+        let accepted = fixtureOffer(id: "o2", status: .accepted, canPay: true)
+        let conversation = fixtureConversation(pendingOffer: pending, payableOffer: accepted)
+        let pinned = try #require(PinnedOffer.find(conversation: conversation, current: identity, now: chatNow))
+        #expect(pinned.offer.id == "o3")
     }
 
     @Test func aBundleOfferIsPaidThroughTheBundleCheckout() {
@@ -52,15 +65,15 @@ struct PinnedOfferTests {
         // The card's copy was pending; the offer was withdrawn since.
         let card = fixtureOffer(isMine: true, canCancel: true)
         let withdrawn = fixtureOffer(status: .cancelled, isMine: true)
-        let pinned = PinnedOffer.find(conversation: fixtureConversation(pendingOffer: card), messages: [], current: { _ in withdrawn },
+        let pinned = PinnedOffer.find(conversation: fixtureConversation(pendingOffer: card), current: { _ in withdrawn },
                                       now: chatNow)
         #expect(pinned == nil)
     }
 
     @Test func officialThreadsPinNothing() {
         let pending = fixtureOffer(canAccept: true)
-        #expect(PinnedOffer.find(conversation: fixtureConversation(isOfficial: true, pendingOffer: pending), messages: [],
-                                 current: identity, now: chatNow) == nil)
+        #expect(PinnedOffer.find(conversation: fixtureConversation(isOfficial: true, pendingOffer: pending), current: identity,
+                                 now: chatNow) == nil)
     }
 
     @Test func theBuyerMakesAnOfferAndTheSellerProposesAPrice() {
@@ -78,11 +91,34 @@ struct PinnedOfferTests {
         #expect(ConversationOfferEntry.entry(for: fixtureConversation(), pinned: payable, now: chatNow) == .makeOffer)
     }
 
+    @Test func theBuyerCounteringTheSellersPriceStartsFromAnEmptyField() {
+        // The seller proposed 2 900 DA on a 3 000 DA item: the midpoint (2 950) is above the seller's price.
+        let proposed = fixtureOffer(amount: 2900, sentBy: .seller, counterRange: AmountRange(min: 1200, max: 3000))
+        #expect(OfferAmounts.counterSuggestion(for: proposed) == nil)
+    }
+
     @Test func theCounterStartsHalfwayToTheTop() {
         #expect(OfferAmounts.counterSuggestion(for: fixtureOffer(amount: 4000, counterRange: AmountRange(min: 1650, max: 5500))) == 4750)
         #expect(OfferAmounts.counterSuggestion(for: fixtureOffer(amount: 4001, counterRange: AmountRange(min: 1650, max: 5500))) == 4751)
         #expect(OfferAmounts.counterSuggestion(for: fixtureOffer(amount: 100, counterRange: AmountRange(min: 900, max: 1000))) == 900)
         #expect(OfferAmounts.counterSuggestion(for: fixtureOffer(counterRange: nil)) == nil)
+    }
+
+    @Test func thePinnedCardShrinksWhileTypingAndAtAccessibilitySizes() {
+        #expect(PinnedOfferLayout.of(isComposing: false, isAccessibilitySize: false, isExpanded: false) == .full)
+        #expect(PinnedOfferLayout.of(isComposing: true, isAccessibilitySize: false, isExpanded: true) == .compact)
+        #expect(PinnedOfferLayout.of(isComposing: false, isAccessibilitySize: true, isExpanded: false) == .compact)
+        #expect(PinnedOfferLayout.of(isComposing: false, isAccessibilitySize: true, isExpanded: true) == .expanded)
+    }
+
+    @Test func theCompactCardKeepsTheMostUsefulAction() {
+        let payable = PinnedOffer(offer: fixtureOffer(status: .accepted, canPay: true), now: chatNow)
+        #expect(PinnedOfferMainAction(payable) == .pay(CheckoutTarget(listingId: "l1", offerId: "o1", bundleId: nil)))
+        let answerable = PinnedOffer(offer: fixtureOffer(canAccept: true, canDecline: true, canCounter: true,
+                                                         counterRange: AmountRange(min: 1, max: 9)), now: chatNow)
+        #expect(PinnedOfferMainAction(answerable) == .accept)
+        #expect(PinnedOfferMainAction(PinnedOffer(offer: fixtureOffer(isMine: true, canCancel: true), now: chatNow)) == .withdraw)
+        #expect(PinnedOfferMainAction(PinnedOffer(offer: fixtureOffer(), now: chatNow)) == nil)
     }
 
     @Test func offerErrorsThatReloadTheScreen() {
@@ -198,5 +234,44 @@ struct ConversationOfferActionTests {
         #expect(offers.counters.map(\.1) == [4500])
         #expect(model.pinnedOffer?.offer.id == "o2")
         #expect(model.pinnedOffer?.canWithdraw == true)
+    }
+
+    @Test func anOfferThatLapsesRedrawsWithoutItsButtonsAndReloads() async {
+        var clock = chatNow
+        let pending = fixtureOffer(expiresIn: 0.05, canAccept: true, canDecline: true)
+        api.conversation = .success(fixtureConversation(role: .seller, pendingOffer: pending))
+        let model = ConversationViewModel(conversationId: "c1", api: api, events: events, members: members,
+                                          offers: FakeOffersApi(result: .failure(.network)),
+                                          upload: { _ throws(Taleed.ApiError) in UploadedPhoto(key: "k", url: nil, thumbURL: nil) },
+                                          now: { clock })
+        await model.load()
+        #expect(model.pinnedOffer?.canAccept == true)
+        #expect(model.offerEntry == nil)
+        let ticks = model.clockTick
+        let calls = api.conversationCalls
+        // The screen waits for the deadline, which passes while it shows.
+        let wait = Task { await model.followOfferExpiry() }
+        // Let it start waiting before the clock moves on.
+        try? await Task.sleep(for: .milliseconds(100))
+        clock = chatNow.addingTimeInterval(1)
+        await wait.value
+        #expect(model.clockTick == ticks + 1)
+        #expect(api.conversationCalls == calls + 1)
+        #expect(model.pinnedOffer == nil)
+        #expect(model.offerEntry == .proposePrice)
+    }
+
+    @Test func backOnTheScreenTheConversationReloadsForThePayableOffer() async {
+        let accepted = fixtureOffer(id: "o2", status: .accepted, sentBy: .seller, canPay: true)
+        api.conversation = .success(fixtureConversation(payableOffer: accepted))
+        let model = model(FakeOffersApi(result: .failure(.network)))
+        await model.load()
+        await model.setVisible(true)
+        #expect(model.pinnedOffer?.payment == CheckoutTarget(listingId: "l1", offerId: "o2", bundleId: nil))
+        // Checkout on top, the order paid there.
+        await model.setVisible(false)
+        api.conversation = .success(fixtureConversation())
+        await model.setVisible(true)
+        #expect(model.pinnedOffer == nil)
     }
 }

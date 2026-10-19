@@ -95,14 +95,6 @@ struct AmountRange: Equatable, Sendable {
     func contains(_ amount: Int) -> Bool { amount >= min && amount <= max }
 }
 
-/// The member's open bundle with a seller, as far as the listing screen needs it (`GET /bundles/{id}`,
-/// `PUT /members/{username}/bundle`).
-struct BundleSelectionState: Equatable, Sendable {
-    let id: String
-    /// The items in the order the buyer picked them.
-    let listingIds: [String]
-}
-
 extension ListingDetail {
     /// The listing as a card, for the shared hearts (`FavoriteStore`).
     var summary: ListingSummary {

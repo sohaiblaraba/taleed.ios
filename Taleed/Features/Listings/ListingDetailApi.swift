@@ -11,7 +11,7 @@ protocol ListingOwnerApi: AnyObject {
 }
 
 /// The calls of the listing screen (screens.md §2 G4): the listing, the buyer's actions (message,
-/// offer, bundle toggle) and the seller's (hide, resume, delete).
+/// offer) and the seller's (hide, resume, delete). The bundle toggle goes through `BundlesApi`.
 @MainActor
 protocol ListingDetailApi: ListingOwnerApi {
     /// `GET /listings/{id}`, never to prefetch. `countView`: true only when the member opens the screen
@@ -23,10 +23,6 @@ protocol ListingDetailApi: ListingOwnerApi {
     func openConversation(listingId: String) async throws(ApiError) -> String
     /// `POST /listings/{id}/offers {amount}`: the conversation the offer went to.
     func makeOffer(listingId: String, amount: Int) async throws(ApiError) -> String
-    /// `GET /bundles/{id}`: the items of the member's open bundle.
-    func bundle(id: String) async throws(ApiError) -> BundleSelectionState
-    /// `PUT /members/{username}/bundle {listingIds}`: replaces the whole selection.
-    func saveBundle(sellerUsername: String, listingIds: [String]) async throws(ApiError) -> BundleSelectionState
 }
 
 /// What a report is about: exactly one target (slice C, Reporting).
@@ -86,21 +82,6 @@ extension GeneratedTaleedApi: ListingDetailApi, ReportsApi {
 
     func deleteListing(id: String) async throws(ApiError) {
         try await caller.call(.write) { try await SellingAPI.deleteListing(id: id, apiConfiguration: $0) }
-    }
-
-    func bundle(id: String) async throws(ApiError) -> BundleSelectionState {
-        let bundle = try await caller.call(.read) { try await BundlesAPI.getBundle(id: id, apiConfiguration: $0) }
-        return BundleSelectionState(bundle)
-    }
-
-    func saveBundle(sellerUsername: String, listingIds: [String]) async throws(ApiError) -> BundleSelectionState {
-        let body = BundleSelection(listingIds: listingIds)
-        // A member's action: never repeated on its own (screens.md §0.6). The PUT replaces the whole
-        // selection, so the member's own retry is harmless (slice C, Bundles).
-        let bundle = try await caller.call(.write) {
-            try await BundlesAPI.saveBundle(username: sellerUsername, bundleSelection: body, apiConfiguration: $0)
-        }
-        return BundleSelectionState(bundle)
     }
 
     func report(_ target: ReportTarget, reason: String, details: String?, evidenceKeys: [String]) async throws(ApiError) {
@@ -177,12 +158,6 @@ private extension ListingSellerInfo {
             lastSeenAt: seller.lastSeenAt,
             isOnline: seller.isOnline
         )
-    }
-}
-
-private extension BundleSelectionState {
-    init(_ bundle: BundleReview) {
-        self.init(id: bundle.id, listingIds: bundle.items.map(\.listingId))
     }
 }
 

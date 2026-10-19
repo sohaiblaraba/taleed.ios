@@ -41,7 +41,6 @@ final class FakeListingDetailApi: ListingDetailApi, ReportsApi {
     var offer: Result<String, Taleed.ApiError> = .success("cnv1")
     var visibility: Result<Taleed.ListingDetail, Taleed.ApiError>?
     var deletion: Result<Void, Taleed.ApiError> = .success(())
-    var bundleResult: Result<BundleSelectionState, Taleed.ApiError> = .success(BundleSelectionState(id: "b1", listingIds: ["x"]))
     var report: Result<Void, Taleed.ApiError> = .success(())
     /// Each `GET /listings/{id}`: whether it counted a view, whether the member asked for it.
     struct ListingCall: Equatable {
@@ -50,7 +49,6 @@ final class FakeListingDetailApi: ListingDetailApi, ReportsApi {
     }
 
     private(set) var listingCalls: [ListingCall] = []
-    private(set) var savedBundles: [[String]] = []
     private(set) var offers: [Int] = []
     struct SentReport {
         let target: ReportTarget
@@ -79,13 +77,6 @@ final class FakeListingDetailApi: ListingDetailApi, ReportsApi {
     }
 
     func deleteListing(id: String) async throws(Taleed.ApiError) { try deletion.get() }
-
-    func bundle(id: String) async throws(Taleed.ApiError) -> BundleSelectionState { try bundleResult.get() }
-
-    func saveBundle(sellerUsername: String, listingIds: [String]) async throws(Taleed.ApiError) -> BundleSelectionState {
-        savedBundles.append(listingIds)
-        return BundleSelectionState(id: "b1", listingIds: listingIds)
-    }
 
     func report(_ target: ReportTarget, reason: String, details: String?, evidenceKeys: [String]) async throws(Taleed.ApiError) {
         reports.append(SentReport(target: target, reason: reason, details: details, evidenceKeys: evidenceKeys))
@@ -264,10 +255,11 @@ struct ListingDetailMappingTests {
 @MainActor
 struct ListingDetailViewModelTests {
     private let api = FakeListingDetailApi()
+    private let bundles = FakeBundlesApi()
 
     @Test func aMissingListingShowsNoLongerAvailable() async {
         api.listing = .failure(apiError(404, "not_found"))
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         #expect(model.loadError?.isNotFound == true)
         #expect(model.listing == nil)
@@ -275,7 +267,7 @@ struct ListingDetailViewModelTests {
 
     @Test func aFailedFirstLoadOffersRetryAndAFailedReloadKeepsTheListing() async {
         api.listings = [.failure(.network), .success(.fixture())]
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         #expect(model.loadError == .network)
         await model.retry()
@@ -287,7 +279,7 @@ struct ListingDetailViewModelTests {
     }
 
     @Test func anOfferOpensItsConversation() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         api.offer = .success("cnv9")
         #expect(await model.makeOffer(amount: 2000) == .sent(conversationId: "cnv9"))
@@ -295,15 +287,17 @@ struct ListingDetailViewModelTests {
     }
 
     @Test func aPendingOfferOpensTheExistingConversation() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
-        api.offer = .failure(apiError(409, "offer_pending"))
-        api.conversation = .success("cnv2")
+        let body = #"{"error":{"code":"offer_pending","message":"x","conversationId":"cnv2"}}"#
+        api.offer = .failure(.from(status: 409, body: Data(body.utf8)))
         #expect(await model.makeOffer(amount: 2000) == .pending(conversationId: "cnv2"))
+        api.offer = .failure(apiError(409, "offer_pending"))
+        #expect(await model.makeOffer(amount: 2000) == .failed(apiError(409, "offer_pending")))
     }
 
     @Test func anOutOfRangeOfferReloadsAndShowsTheNewBounds() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         api.offer = .failure(apiError(400, "offer_out_of_range"))
         api.listing = .success(.fixture(price: 3000, offerRange: AmountRange(min: 900, max: 3000)))
@@ -312,7 +306,7 @@ struct ListingDetailViewModelTests {
     }
 
     @Test func aListingNoLongerForSaleFailsAndReloads() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         let unavailable = apiError(409, "listing_unavailable")
         api.offer = .failure(unavailable)
@@ -322,7 +316,7 @@ struct ListingDetailViewModelTests {
     }
 
     @Test func messagingOpensTheConversationAndABlockReloads() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         #expect(await model.messageSeller() == .openConversation("cnv1"))
         api.conversation = .failure(apiError(403, "blocked"))
@@ -333,7 +327,7 @@ struct ListingDetailViewModelTests {
 
     @Test func deletingIsDoneEvenWhenItWasAlreadyGone() async {
         api.listing = .success(.fixture(isOwner: true))
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         #expect(await model.delete() == .deleted)
         api.deletion = .failure(apiError(404, "not_found"))
@@ -345,7 +339,7 @@ struct ListingDetailViewModelTests {
 
     @Test func hidingShowsTheListingTheServerReturns() async {
         api.listing = .success(.fixture(isOwner: true))
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         #expect(await model.setHidden(true) == .done)
         #expect(model.listing?.status == .hidden)
@@ -354,26 +348,26 @@ struct ListingDetailViewModelTests {
 
     @Test func theBundleToggleSendsTheWholeSelection() async {
         api.listing = .success(.fixture(openBundleId: "b1"))
-        api.bundleResult = .success(BundleSelectionState(id: "b1", listingIds: ["x"]))
-        let model = ListingDetailViewModel(listingId: "l1", api: api, memberId: "me")
+        bundles.review = .success(fixtureBundle(items: [fixtureLine("x")]))
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles, memberId: "me")
         await model.loadIfNeeded()
         #expect(model.bundle?.listingIds == ["x"])
         #expect(await model.toggleBundle() == .done)
-        #expect(api.savedBundles == [["x", "l1"]])
+        #expect(bundles.saved == [["x", "l1"]])
         #expect(model.listing?.inMyBundle == true)
         #expect(await model.toggleBundle() == .done)
-        #expect(api.savedBundles.last == ["x"])
+        #expect(bundles.saved.last == ["x"])
         #expect(model.listing?.inMyBundle == false)
     }
 
     @Test func afterSigningInTheActionRunsOnlyIfTheReloadedListingStillOffersIt() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         api.listing = .success(.fixture(isOwner: true))
         #expect(await model.resolvePending(.makeOffer, memberId: "amina") == nil)
         #expect(model.listing?.isOwner == true)
 
-        let other = ListingDetailViewModel(listingId: "l1", api: api)
+        let other = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         api.listing = .success(.fixture())
         await other.loadIfNeeded()
         api.listing = .success(.fixture(acceptedOffer: AcceptedOfferRef(id: "o1", amount: 2000)))

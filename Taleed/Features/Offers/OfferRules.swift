@@ -18,20 +18,17 @@ struct PinnedOffer: Equatable {
     /// "Payer maintenant · X" (`canPay`): checkout at the offer's price.
     let payment: CheckoutTarget?
 
-    /// The offer to pin: the one waiting for an answer, or else the newest accepted offer the buyer can
-    /// still pay. `current` gives an offer as it stands now (`ChatOfferStates`); `messages` are newest
-    /// first. A pending offer past `expiresAt` is no longer pinned (slice C).
-    static func find(conversation: ConversationDetail?, messages: [ChatMessage], current: (ChatOffer) -> ChatOffer,
-                     now: Date) -> PinnedOffer? {
+    /// The offer to pin: the one waiting for an answer, or else the accepted offer the buyer can still
+    /// pay (`payableOffer`, API 1.5.7, however old its messages). `current` gives an offer as it stands
+    /// now (`ChatOfferStates`): a message received after the load may say it was paid meanwhile. A
+    /// pending offer past `expiresAt` is no longer pinned (slice C).
+    static func find(conversation: ConversationDetail?, current: (ChatOffer) -> ChatOffer, now: Date) -> PinnedOffer? {
         guard let conversation, !conversation.isOfficial else { return nil }
         if let pending = conversation.pendingOffer.map(current), pending.displayStatus(at: now) == .pending {
             return PinnedOffer(offer: pending, now: now)
         }
-        var seen = Set<String>()
-        for message in messages {
-            guard let copy = message.offer, seen.insert(copy.id).inserted else { continue }
-            let offer = current(copy)
-            if offer.status == .accepted, offer.canPay { return PinnedOffer(offer: offer, now: now) }
+        if let payable = conversation.payableOffer.map(current), payable.status == .accepted, payable.canPay {
+            return PinnedOffer(offer: payable, now: now)
         }
         return nil
     }
@@ -74,10 +71,12 @@ enum ConversationOfferEntry: Equatable {
 }
 
 enum OfferAmounts {
-    /// The counter-offer the sheet starts from: halfway between the offer and the top of `counterRange`
-    /// (the website's placeholder, §7 G9 "prefilled with the midpoint"), kept inside the bounds.
+    /// The counter-offer the sheet starts from when the seller answers a buyer's offer: halfway between
+    /// the offer and the top of `counterRange` (the website's placeholder, §7 G9 "prefilled with the
+    /// midpoint"), kept inside the bounds. Nil when the buyer answers a price the seller proposed: that
+    /// midpoint is above the seller's own price, so the field starts empty, as on the website.
     static func counterSuggestion(for offer: ChatOffer) -> Int? {
-        guard let range = offer.counterRange else { return nil }
+        guard offer.sentBy == .buyer, let range = offer.counterRange else { return nil }
         let middle = Int((Double(offer.amount + range.max) / 2).rounded())
         return min(max(middle, range.min), range.max)
     }

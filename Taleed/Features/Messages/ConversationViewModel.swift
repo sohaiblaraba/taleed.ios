@@ -38,6 +38,9 @@ final class ConversationViewModel {
     var offerWork: ConversationOfferWork?
     /// The latest toast to show (the screen clears it).
     var notice: Notice?
+    /// Bumped when the pinned offer lapses: `currentDate` reads it, so the cards and buttons drawn for
+    /// the time redraw then (G10).
+    private(set) var clockTick = 0
     /// The composer's text, at most 2 000 characters.
     var text = "" {
         didSet {
@@ -54,6 +57,8 @@ final class ConversationViewModel {
     @ObservationIgnored var offers = ChatOfferStates()
     @ObservationIgnored private var isVisible = false
     @ObservationIgnored private var hasMarkedRead = false
+    /// The screen was hidden (another screen on top, such as checkout) after it showed.
+    @ObservationIgnored private var wasHidden = false
     @ObservationIgnored private let api: MessagesApi
     @ObservationIgnored private let events: ConversationEventsSource
     @ObservationIgnored private let members: MembersApi
@@ -147,7 +152,7 @@ final class ConversationViewModel {
 
     private func apply(_ detail: ConversationDetail) {
         conversation = detail
-        offers.record(pendingOffer: detail.pendingOffer)
+        offers.record(conversationOffers: [detail.pendingOffer, detail.payableOffer].compactMap(\.self))
     }
 
     // MARK: Messages
@@ -171,8 +176,12 @@ final class ConversationViewModel {
         message.offer.map(offers.current)
     }
 
-    /// The time the offer cards and buttons are drawn for.
-    var currentDate: Date { now() }
+    /// The time the offer cards and buttons are drawn for. Redrawn when the pinned offer lapses
+    /// (`followOfferExpiry`).
+    var currentDate: Date {
+        _ = clockTick
+        return now()
+    }
 
     /// The rows to draw, newest first: the bubbles on their way, the messages, and a day above each day.
     func rows(calendar: Calendar = .current) -> [ChatRow] {
@@ -185,10 +194,18 @@ final class ConversationViewModel {
     func setVisible(_ visible: Bool) async {
         guard visible != isVisible else { return }
         isVisible = visible
-        guard visible, conversation != nil else { return }
+        guard visible, conversation != nil else {
+            if !visible, conversation != nil { wasHidden = true }
+            return
+        }
         if !hasMarkedRead { await markRead() }
         // Back on screen: what the member missed comes through the stream, which reopens now.
         await retryFailed()
+        if wasHidden {
+            // Back from checkout or another screen: the offer may have been paid there (`payableOffer`).
+            wasHidden = false
+            await reloadConversation(automatic: true)
+        }
     }
 
     /// `POST /conversations/{id}/read`, then the badges it answers.
@@ -317,6 +334,26 @@ final class ConversationViewModel {
 
     func removePhoto() {
         photo = nil
+    }
+}
+
+extension ConversationViewModel {
+    // MARK: Offer expiry
+
+    /// Waits until the pinned offer lapses at `expiresAt` (no message comes then, slice C), then redraws:
+    /// its buttons go away and the composer's offer button comes back. The conversation reloads for the
+    /// server's `offerRange`. The screen restarts it whenever the pinned offer changes.
+    func followOfferExpiry() async {
+        guard let offer = pinnedOffer?.offer, offer.displayStatus(at: now()) == .pending else { return }
+        let delay = offer.expiresAt.timeIntervalSince(now())
+        do {
+            // A moment after the deadline, so that the server agrees it lapsed.
+            try await Task.sleep(for: .seconds(max(delay, 0) + 1))
+        } catch {
+            return
+        }
+        clockTick += 1
+        await reloadConversation(automatic: true)
     }
 
     // MARK: Menu, block and unblock

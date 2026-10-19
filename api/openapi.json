@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.5",
+    "version": "1.5.7",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -5211,7 +5211,7 @@
           "Offers"
         ],
         "summary": "Make an offer on a listing",
-        "description": "The buyer's offer, from the listing screen: it opens the conversation with the seller if needed. One negotiation at a time: while an offer waits for an answer in the conversation, another one is `offer_pending`. The other member gets a notification and a push. An offer on your own listing is `forbidden`; one on an item no longer for sale is `listing_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 60 per hour per member, on top of the general limit.",
+        "description": "The buyer's offer, from the listing screen: it opens the conversation with the seller if needed. One negotiation at a time: while an offer waits for an answer in the conversation, another one is `offer_pending`, whose `conversationId` is that conversation. The other member gets a notification and a push. An offer on your own listing is `forbidden`; one on an item no longer for sale is `listing_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 60 per hour per member, on top of the general limit.",
         "parameters": [
           {
             "name": "id",
@@ -5361,7 +5361,7 @@
           "Offers"
         ],
         "summary": "Make an offer in a conversation",
-        "description": "By either member, on the conversation's listing: the buyer's offer, or a price the seller proposes to a buyer who only wrote. One negotiation at a time: while an offer waits for an answer in the conversation, another one is `offer_pending`. The other member gets a notification and a push. The bounds are the conversation's `offerRange`.\n\nRequires a bearer token.\n\nRate limit: 60 per hour per member, on top of the general limit.",
+        "description": "By either member, on the conversation's listing: the buyer's offer, or a price the seller proposes to a buyer who only wrote. One negotiation at a time: while an offer waits for an answer in the conversation, another one is `offer_pending`, whose `conversationId` is that conversation. The other member gets a notification and a push. The bounds are the conversation's `offerRange`.\n\nRequires a bearer token.\n\nRate limit: 60 per hour per member, on top of the general limit.",
         "parameters": [
           {
             "name": "id",
@@ -6334,7 +6334,7 @@
           "Bundles"
         ],
         "summary": "Make an offer on a bundle",
-        "description": "One price for every item still for sale, within the bundle's `offerRange`. It goes to the conversation about the bundle's first item, which it opens if needed; while an offer waits for an answer there, another one is `offer_pending`. The seller gets a notification and a push. The seller can only accept it while every item is still for sale.\n\nRequires a bearer token.\n\nRate limit: 60 per hour per member, on top of the general limit.",
+        "description": "One price for every item still for sale, within the bundle's `offerRange`. It goes to the conversation about the bundle's first item, which it opens if needed; while an offer waits for an answer there, another one is `offer_pending`, whose `conversationId` is that conversation: open it. The seller gets a notification and a push. The seller can only accept it while every item is still for sale.\n\nRequires a bearer token.\n\nRate limit: 60 per hour per member, on top of the general limit.",
         "parameters": [
           {
             "name": "id",
@@ -12649,6 +12649,16 @@
               }
             ],
             "type": "object"
+          },
+          "payableOffer": {
+            "nullable": true,
+            "description": "For the buyer: the latest accepted offer of the conversation they can still pay (`canPay` is true), however old the messages loaded. Pin \"Pay now\" with it, which opens checkout at its price. Null for the seller, and when no accepted offer can be paid: an order used it, an item is no longer for sale, or one of you blocked the other. Reload the conversation on return from checkout.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Offer"
+              }
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -12664,7 +12674,8 @@
           "replyDisabledReason",
           "isBlocked",
           "offerRange",
-          "pendingOffer"
+          "pendingOffer",
+          "payableOffer"
         ],
         "description": "A conversation, as its screen shows it."
       },
@@ -13280,6 +13291,10 @@
           },
           "orderId": {
             "description": "Present on `listing_unavailable` from checkout when the goods are reserved by the member's own order awaiting payment: open that order (`GET /orders/{id}`) to pay or cancel it, as the website does, instead of saying the item is gone.",
+            "type": "string"
+          },
+          "conversationId": {
+            "description": "Present on `offer_pending`: the conversation where an offer already waits for an answer. Open it (`GET /conversations/{id}`): its `pendingOffer` is that offer.",
             "type": "string"
           },
           "token": {

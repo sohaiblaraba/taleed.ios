@@ -18,10 +18,10 @@ extension ChatMember {
 extension ConversationDetail {
     static func fixture(id: String = "c1", counterpart: ChatMember? = .fixture(), listing: ChatListing? = .fixture(),
                         isOfficial: Bool = false, canReply: Bool = true, replyBlock: ReplyBlock? = nil, isBlocked: Bool = false,
-                        pendingOffer: ChatOffer? = nil) -> ConversationDetail {
+                        pendingOffer: ChatOffer? = nil, payableOffer: ChatOffer? = nil) -> ConversationDetail {
         ConversationDetail(id: id, role: .buyer, counterpart: counterpart, listing: listing, isOfficial: isOfficial, unreadCount: 2,
                            canReply: canReply, replyBlock: replyBlock, isBlocked: isBlocked, offerRange: nil,
-                           pendingOffer: pendingOffer)
+                           pendingOffer: pendingOffer, payableOffer: payableOffer)
     }
 }
 

@@ -18,9 +18,10 @@ func fixtureOffer(id: String = "o1", amount: Int = 4000, status: ChatOfferStatus
 
 func fixtureConversation(role: ChatRole = .buyer, canReply: Bool = true, isOfficial: Bool = false,
                          offerRange: AmountRange? = AmountRange(min: 1650, max: 5500),
-                         pendingOffer: ChatOffer? = nil) -> ConversationDetail {
+                         pendingOffer: ChatOffer? = nil, payableOffer: ChatOffer? = nil) -> ConversationDetail {
     ConversationDetail(id: "c1", role: role, counterpart: .fixture(), listing: .fixture(), isOfficial: isOfficial, unreadCount: 0,
-                       canReply: canReply, replyBlock: nil, isBlocked: false, offerRange: offerRange, pendingOffer: pendingOffer)
+                       canReply: canReply, replyBlock: nil, isBlocked: false, offerRange: offerRange, pendingOffer: pendingOffer,
+                       payableOffer: payableOffer)
 }
 
 func fixtureOfferMessage(_ id: String, offer: ChatOffer, at seconds: TimeInterval = 0) -> ChatMessage {
@@ -88,7 +89,6 @@ final class FakeBundlesApi: BundlesApi {
     var askResult: Result<String, Taleed.ApiError> = .success("c9")
     private(set) var saved: [[String]] = []
     private(set) var reviewCalls = 0
-    private(set) var openedFor: [String] = []
 
     func bundleReview(id: String, automatic: Bool) async throws(Taleed.ApiError) -> BundleDetail {
         reviewCalls += 1
@@ -107,11 +107,6 @@ final class FakeBundlesApi: BundlesApi {
 
     func askAboutBundle(bundleId: String) async throws(Taleed.ApiError) -> String {
         try askResult.get()
-    }
-
-    func openConversation(listingId: String) async throws(Taleed.ApiError) -> String {
-        openedFor.append(listingId)
-        return "c-\(listingId)"
     }
 }
 

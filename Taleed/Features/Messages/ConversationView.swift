@@ -89,6 +89,8 @@ struct ConversationView: View {
             guard isVisible, model.conversation != nil else { return }
             await model.followLiveUpdates()
         }
+        // The pinned offer's buttons go away when it lapses, with no message from the server (G10).
+        .task(id: model.pinnedOffer.map(OfferExpiryKey.init)) { await model.followOfferExpiry() }
         .onChange(of: model.conversation != nil) { _, loaded in
             // "Message the seller": the keyboard opens with the conversation.
             if loaded, focusesComposer, model.conversation?.canReply == true { composerFocused = true }
@@ -148,11 +150,6 @@ struct ConversationView: View {
         return router.selectedTab == shellTab && router.path(shellTab).last == route
     }
 
-    private struct LiveKey: Hashable {
-        let isLoaded: Bool
-        let isVisible: Bool
-    }
-
     // MARK: Content
 
     @ViewBuilder
@@ -169,7 +166,8 @@ struct ConversationView: View {
                     ConversationListingStrip(listing: listing) { router.push(.listing(id: listing.id)) }
                 }
                 ConversationPinnedOffer(model: model, counterpartName: conversation.counterpart?.displayName,
-                                        sheet: $offerSheet, accepting: $accepting)
+                                        isComposing: composerFocused, sheet: $offerSheet, accepting: $accepting,
+                                        endComposing: { composerFocused = false })
                 ConversationMessageList(model: model, isOfficial: conversation.isOfficial,
                                         openPhoto: { presented = .photo($0) }, openLink: openLink)
             }
@@ -298,5 +296,23 @@ struct ConversationView: View {
         case let .confirmation(key): toasts.show(l10n.string(key))
         case let .information(key): toasts.show(l10n.string(key), kind: .info)
         }
+    }
+}
+
+private struct LiveKey: Hashable {
+    let isLoaded: Bool
+    let isVisible: Bool
+}
+
+/// The pinned offer and its deadline: a new one restarts the wait for its expiry.
+private struct OfferExpiryKey: Hashable {
+    let offerId: String
+    let isPending: Bool
+    let expiresAt: Date
+
+    init(_ pinned: PinnedOffer) {
+        offerId = pinned.offer.id
+        isPending = pinned.offer.status == .pending
+        expiresAt = pinned.offer.expiresAt
     }
 }

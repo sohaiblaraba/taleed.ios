@@ -489,6 +489,52 @@
         }
       }
     },
+    "app_bundle_remove_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le vendeur a accepté votre offre de %@ pour ce lot. Modifier le lot annule cette offre."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل البائع عرضك بقيمة %@ لهذه الحزمة. تعديل الحزمة يلغي هذا العرض."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The seller accepted your offer of %@ for this bundle. Changing the bundle cancels this offer."
+          }
+        }
+      }
+    },
+    "app_bundle_remove_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer cet article du lot ?"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة هذا الغرض من الحزمة؟"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this item from the bundle?"
+          }
+        }
+      }
+    },
     "app_chat_not_sent": {
       "extractionState": "manual",
       "localizations": {
@@ -1787,6 +1833,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Accept the offer of %@?"
+          }
+        }
+      }
+    },
+    "app_offer_hide_details": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réduire l’offre"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصغير العرض"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse the offer"
+          }
+        }
+      }
+    },
+    "app_offer_show_details": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher toute l’offre"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض العرض كاملًا"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the whole offer"
           }
         }
       }

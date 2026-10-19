@@ -90,6 +90,9 @@ struct ConversationDetail: Identifiable, Equatable, Sendable {
     let offerRange: AmountRange?
     /// The offer waiting for an answer, whoever made it (G10 pins it).
     let pendingOffer: ChatOffer?
+    /// For the buyer: the newest accepted offer they can still pay, however old its messages (API 1.5.7).
+    /// G10 pins "Payer maintenant · X" with it. Nil for the seller.
+    let payableOffer: ChatOffer?
 }
 
 /// `offer.status`, and `offerEvent` on `OFFER_UPDATE` messages.

@@ -240,8 +240,9 @@ struct ListingChangeCenterTests {
     @Test func theListingScreenShowsTheSavedListing() async {
         let center = ListingChangeCenter()
         let api = FakeListingDetailApi()
+        let bundles = FakeBundlesApi()
         api.listing = .success(editableListing())
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         model.startFollowing(center)
         await model.loadIfNeeded()
         center.post(.updated(editableListing(price: 2300, condition: "GOOD")), listingId: "l1")

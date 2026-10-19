@@ -25,7 +25,8 @@ struct AppRootView: View {
             .environment(container.exploreReferences)
             .environment(\.exploreDependencies, ExploreDependencies(listings: container.api, explore: container.api))
             .environment(\.listingDependencies,
-                         ListingDependencies(listings: container.api, reports: container.api, uploads: container.uploads))
+                         ListingDependencies(listings: container.api, bundles: container.api, reports: container.api,
+                                             uploads: container.uploads))
             .environment(\.favoritesListApi, container.api)
             .environment(\.sellDependencies, SellDependencies(api: container.api, uploads: container.uploads))
             .environment(\.editListingDependencies, EditListingDependencies(api: container.api, uploads: container.uploads))

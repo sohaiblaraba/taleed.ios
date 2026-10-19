@@ -43,6 +43,21 @@ struct BundleDetail: Identifiable, Equatable, Sendable {
     /// The item checkout and the conversation are about: the first one still for sale (the website's
     /// `primaryListingId`).
     var primaryListingId: String? { (availableItems.first ?? items.first)?.listingId }
+
+    /// The items a change starts from. `PUT /members/{username}/bundle` replaces the whole selection
+    /// (slice C, Bundles), so every change sends all of it: the open bundle's items in the buyer's order,
+    /// none once it was checked out or cancelled (the next change opens a new bundle).
+    var selection: [String] { status == .open ? listingIds : [] }
+
+    /// The whole selection to send without this item ("Retirer", "Retirer du lot").
+    func selection(removing listingId: String) -> [String] {
+        selection.filter { $0 != listingId }
+    }
+
+    /// The whole selection to send with this item at the end ("Ajouter au lot").
+    func selection(adding listingId: String) -> [String] {
+        selection.contains(listingId) ? selection : selection + [listingId]
+    }
 }
 
 /// An item of a bundle (`BundleItem`).
@@ -70,9 +85,6 @@ protocol BundlesApi: AnyObject {
     func makeBundleOffer(bundleId: String, amount: Int) async throws(ApiError) -> OfferActionResult
     /// `POST /bundles/{id}/ask`: posts the bundle's card to the seller (once) and answers the conversation's id.
     func askAboutBundle(bundleId: String) async throws(ApiError) -> String
-    /// `POST /conversations {listingId}`: the buyer's conversation about a listing, to open the one a
-    /// bundle offer waits in (`offer_pending`).
-    func openConversation(listingId: String) async throws(ApiError) -> String
 }
 
 extension GeneratedTaleedApi: BundlesApi {

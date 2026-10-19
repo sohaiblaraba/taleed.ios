@@ -55,9 +55,10 @@ final class ListingDetailViewModel {
     private(set) var refreshError: ApiError?
     private(set) var running: Set<Work> = []
     /// The member's open bundle with this seller, for "Retour à la boutique · N articles".
-    private(set) var bundle: BundleSelectionState?
+    private(set) var bundle: BundleDetail?
 
     @ObservationIgnored private let api: ListingDetailApi
+    @ObservationIgnored private let bundles: BundlesApi
     @ObservationIgnored private var reloadTask: Task<Void, Never>?
     /// The member the listing on screen was loaded for (nil signed out): its flags are theirs.
     @ObservationIgnored private var loadedFor: String??
@@ -74,9 +75,10 @@ final class ListingDetailViewModel {
     /// The `ListingChangeCenter` changes already applied; nil until the screen first syncs.
     @ObservationIgnored private var appliedChangeSeq: Int?
 
-    init(listingId: String, api: ListingDetailApi, memberId: String? = nil) {
+    init(listingId: String, api: ListingDetailApi, bundles: BundlesApi, memberId: String? = nil) {
         self.listingId = listingId
         self.api = api
+        self.bundles = bundles
         self.memberId = memberId
     }
 
@@ -129,7 +131,7 @@ final class ListingDetailViewModel {
             loadError = nil
             refreshError = nil
             loadedFor = .some(member)
-            await loadBundle(of: fresh)
+            await loadBundle(of: fresh, automatic: automatic)
         } catch {
             if error.isNotFound {
                 // Removed, hidden or taken down: "no longer available", even over a listing on screen.
@@ -145,13 +147,13 @@ final class ListingDetailViewModel {
 
     /// The items of the member's open bundle with this seller. Without it, the toggle still works (it
     /// fetches the bundle first); only the count is missing.
-    private func loadBundle(of listing: ListingDetail) async {
+    private func loadBundle(of listing: ListingDetail, automatic: Bool) async {
         guard let bundleId = listing.openBundleId, !listing.isOwner else {
             bundle = nil
             return
         }
         guard bundle?.id != bundleId else { return }
-        bundle = try? await api.bundle(id: bundleId)
+        bundle = try? await bundles.bundleReview(id: bundleId, automatic: automatic)
     }
 
     /// Another member signed in or out: the flags (owner, accepted offer, bundle) are theirs now.
@@ -219,12 +221,10 @@ final class ListingDetailViewModel {
         } catch {
             switch error.code {
             case .offerPending:
-                // The conversation holds the offer waiting for an answer: open it.
-                do {
-                    return .pending(conversationId: try await api.openConversation(listingId: listingId))
-                } catch {
-                    return .failed(error)
-                }
+                // The error names the conversation holding the offer waiting for an answer: open it
+                // (API 1.5.6). Without it, the toast says an offer already waits.
+                if let conversationId = error.conversationId { return .pending(conversationId: conversationId) }
+                return .failed(error)
             case .offerOutOfRange:
                 await reload()
                 let stillOffered = listing.map { ListingDetailActions(listing: $0, isSignedIn: true).showsMakeOffer } ?? false
@@ -242,15 +242,14 @@ final class ListingDetailViewModel {
         guard let listing, let username = listing.seller.username, begin(.bundle) else { return .done }
         defer { end(.bundle) }
         do {
-            var current: [String] = []
+            var current: BundleDetail?
             if let bundleId = listing.openBundleId {
-                let fetched = bundle?.id == bundleId ? bundle : try await api.bundle(id: bundleId)
-                current = fetched?.listingIds ?? []
+                current = bundle?.id == bundleId ? bundle : try await bundles.bundleReview(id: bundleId, automatic: false)
             }
-            let ids = listing.inMyBundle || current.contains(listingId)
-                ? current.filter { $0 != listingId }
-                : current + [listingId]
-            let saved = try await api.saveBundle(sellerUsername: username, listingIds: ids)
+            let ids = listing.inMyBundle || current?.selection.contains(listingId) == true
+                ? current?.selection(removing: listingId) ?? []
+                : current?.selection(adding: listingId) ?? [listingId]
+            let saved = try await bundles.saveBundleSelection(sellerUsername: username, listingIds: ids)
             bundle = saved
             self.listing?.openBundleId = saved.id
             self.listing?.inMyBundle = saved.listingIds.contains(listingId)

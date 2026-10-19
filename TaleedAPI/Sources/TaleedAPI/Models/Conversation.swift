@@ -34,8 +34,10 @@ public struct Conversation: Sendable, Codable, Hashable {
     public var offerRange: OfferRange?
     /** The offer waiting for an answer, whoever made it. */
     public var pendingOffer: Offer?
+    /** For the buyer: the latest accepted offer of the conversation they can still pay (`canPay` is true), however old the messages loaded. Pin \"Pay now\" with it, which opens checkout at its price. Null for the seller, and when no accepted offer can be paid: an order used it, an item is no longer for sale, or one of you blocked the other. Reload the conversation on return from checkout. */
+    public var payableOffer: Offer?
 
-    public init(id: String, role: ConversationRole, counterpart: MemberSummary?, listing: ConversationListing?, isOfficial: Bool, lastMessage: MessagePreview?, unreadCount: Int, lastMessageAt: Date, canReply: Bool, replyDisabledReason: ReplyDisabledReason?, isBlocked: Bool, offerRange: OfferRange?, pendingOffer: Offer?) {
+    public init(id: String, role: ConversationRole, counterpart: MemberSummary?, listing: ConversationListing?, isOfficial: Bool, lastMessage: MessagePreview?, unreadCount: Int, lastMessageAt: Date, canReply: Bool, replyDisabledReason: ReplyDisabledReason?, isBlocked: Bool, offerRange: OfferRange?, pendingOffer: Offer?, payableOffer: Offer?) {
         self.id = id
         self.role = role
         self.counterpart = counterpart
@@ -49,6 +51,7 @@ public struct Conversation: Sendable, Codable, Hashable {
         self.isBlocked = isBlocked
         self.offerRange = offerRange
         self.pendingOffer = pendingOffer
+        self.payableOffer = payableOffer
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
@@ -65,6 +68,7 @@ public struct Conversation: Sendable, Codable, Hashable {
         case isBlocked
         case offerRange
         case pendingOffer
+        case payableOffer
     }
 
     // Encodable protocol methods
@@ -84,6 +88,7 @@ public struct Conversation: Sendable, Codable, Hashable {
         try container.encode(isBlocked, forKey: .isBlocked)
         try container.encode(offerRange, forKey: .offerRange)
         try container.encode(pendingOffer, forKey: .pendingOffer)
+        try container.encode(payableOffer, forKey: .payableOffer)
     }
 }
 

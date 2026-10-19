@@ -6,9 +6,10 @@ import Testing
 @MainActor
 struct ListingDetailLoadingTests {
     private let api = FakeListingDetailApi()
+    private let bundles = FakeBundlesApi()
 
     @Test func theFirstLoadHappensOnce() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         await model.loadIfNeeded()
         #expect(api.listingCalls == [.init(countView: true, automatic: false)])
@@ -16,7 +17,7 @@ struct ListingDetailLoadingTests {
 
     @Test func onlyTheOpeningLoadCountsAView() async {
         api.listings = [.failure(.network), .success(.fixture())]
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         // "Retry" after a failed first load still opens the screen: it counts.
         await model.retry()
@@ -29,7 +30,7 @@ struct ListingDetailLoadingTests {
     }
 
     @Test func returningAfterAWhileReloadsQuietly() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
+        let model = ListingDetailViewModel(listingId: "l1", api: api, bundles: bundles)
         await model.loadIfNeeded()
         let start = ContinuousClock.now
         model.wentToBackground(at: start)

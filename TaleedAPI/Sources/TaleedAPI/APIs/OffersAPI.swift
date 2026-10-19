@@ -198,7 +198,7 @@ open class OffersAPI {
     /**
      Make an offer in a conversation
      - POST /conversations/{id}/offers
-     - By either member, on the conversation's listing: the buyer's offer, or a price the seller proposes to a buyer who only wrote. One negotiation at a time: while an offer waits for an answer in the conversation, another one is `offer_pending`. The other member gets a notification and a push. The bounds are the conversation's `offerRange`.  Requires a bearer token.  Rate limit: 60 per hour per member, on top of the general limit.
+     - By either member, on the conversation's listing: the buyer's offer, or a price the seller proposes to a buyer who only wrote. One negotiation at a time: while an offer waits for an answer in the conversation, another one is `offer_pending`, whose `conversationId` is that conversation. The other member gets a notification and a push. The bounds are the conversation's `offerRange`.  Requires a bearer token.  Rate limit: 60 per hour per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth
@@ -243,7 +243,7 @@ open class OffersAPI {
     /**
      Make an offer on a listing
      - POST /listings/{id}/offers
-     - The buyer's offer, from the listing screen: it opens the conversation with the seller if needed. One negotiation at a time: while an offer waits for an answer in the conversation, another one is `offer_pending`. The other member gets a notification and a push. An offer on your own listing is `forbidden`; one on an item no longer for sale is `listing_unavailable`.  Requires a bearer token.  Rate limit: 60 per hour per member, on top of the general limit.
+     - The buyer's offer, from the listing screen: it opens the conversation with the seller if needed. One negotiation at a time: while an offer waits for an answer in the conversation, another one is `offer_pending`, whose `conversationId` is that conversation. The other member gets a notification and a push. An offer on your own listing is `forbidden`; one on an item no longer for sale is `listing_unavailable`.  Requires a bearer token.  Rate limit: 60 per hour per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth

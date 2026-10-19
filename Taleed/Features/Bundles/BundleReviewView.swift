@@ -12,6 +12,8 @@ import SwiftUI
 struct BundleReviewView: View {
     @State private var model: BundleReviewViewModel
     @State private var offersOnBundle = false
+    /// The item whose "Retirer" waits for confirmation: the bundle has an accepted offer it would cancel.
+    @State private var confirmingRemoval: BundleLine?
     @State private var hasAppeared = false
     let route: AppRoute
     @Environment(LanguageManager.self) private var l10n
@@ -47,6 +49,21 @@ struct BundleReviewView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await model.reload(automatic: true) } }
+        }
+        .taleedConfirmation(isPresented: confirmingRemoval != nil) {
+            ConfirmationModalCard(
+                title: l10n.string(.appBundleRemoveTitle),
+                message: l10n.format(.appBundleRemoveBody,
+                                     PriceFormatter.format(model.bundle?.acceptedOffer?.amount ?? 0, language: l10n.language)),
+                confirmTitle: l10n.string(.bundleRemove),
+                onConfirm: {
+                    guard let item = confirmingRemoval else { return }
+                    confirmingRemoval = nil
+                    Task { await model.remove(item.listingId) }
+                },
+                onCancel: { confirmingRemoval = nil },
+                icon: .warning
+            )
         }
         .onChange(of: model.notice) { _, notice in
             guard let notice else { return }
@@ -110,7 +127,7 @@ struct BundleReviewView: View {
                 BundleItemRow(item: item, isRemoving: model.work == .remove(listingId: item.listingId),
                               isDisabled: model.work != nil,
                               open: { router.push(.listing(id: item.listingId)) },
-                              remove: { Task { await model.remove(item.listingId) } })
+                              remove: { remove(item) })
             }
         }
         if bundle.unavailableCount > 0 {
@@ -229,6 +246,16 @@ struct BundleReviewView: View {
             toasts.show(l10n.string(.appErrorOfferOutOfRange), kind: .error)
         case .failed, .busy:
             break
+        }
+    }
+
+    /// "Retirer": changing the items withdraws the bundle's offers (screens.md §2 G10), so with an
+    /// accepted price the member confirms first (an app-only confirmation, like Accept).
+    private func remove(_ item: BundleLine) {
+        if model.removalCancelsAcceptedOffer {
+            confirmingRemoval = item
+        } else {
+            Task { await model.remove(item.listingId) }
         }
     }
 
