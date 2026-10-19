@@ -13,6 +13,8 @@ import Observation
 @Observable
 final class FavoritesViewModel {
     let list: PagedList<ListingSummary>
+    /// A refresh the member asked for failed while the cards stay on screen: the screen's toast.
+    private(set) var refreshFailure: RefreshFailure?
 
     @ObservationIgnored private let store: FavoriteStore
     @ObservationIgnored private let pager: FavoritesPager
@@ -20,16 +22,19 @@ final class FavoritesViewModel {
     @ObservationIgnored private var appliedSeq: Int
     /// When the app went to the background; nil while in the foreground.
     @ObservationIgnored private var backgroundSince: ContinuousClock.Instant?
+    /// The app came back after `foregroundReloadAfter`: reload quietly once the member is at the top.
+    @ObservationIgnored private var needsQuietReload = false
+    /// The top of the list (the count, or the empty state) is on screen.
+    @ObservationIgnored private var isShowingTop = false
 
     /// A shorter absence keeps the cards as they are (as Home and search).
     static let foregroundReloadAfter: Duration = .seconds(60)
 
     init(api: FavoritesListApi, store: FavoriteStore) {
         self.store = store
-        let pager = FavoritesPager(api: api, store: store)
+        let pager = FavoritesPager(api: api)
         self.pager = pager
         list = PagedList { cursor throws(ApiError) in try await pager.fetch(cursor: cursor) }
-        pager.list = list
         appliedSeq = store.changeSeq
     }
 
@@ -46,9 +51,10 @@ final class FavoritesViewModel {
         return max(0, (list.total ?? list.items.count) - hidden)
     }
 
-    /// Loaded, and no card to show: the empty state.
+    /// Loaded, no card to show and none left to load: the empty state. While later pages remain (every
+    /// card on screen un-hearted), the count and the footer stay, and the footer loads the next page.
     var isEmpty: Bool {
-        list.hasLoaded && cards.isEmpty
+        list.hasLoaded && cards.isEmpty && !list.hasMore
     }
 
     private func isShown(_ listing: ListingSummary) -> Bool {
@@ -64,10 +70,20 @@ final class FavoritesViewModel {
         if await list.reload() { didLoadFirstPage(base: base) }
     }
 
-    /// Pull-to-refresh: the first page again, the cards staying on screen until it arrives.
+    /// Pull-to-refresh: the first page again, the cards staying on screen until it arrives. A failure
+    /// keeps them and shows a toast.
     func refresh() async {
+        await refresh(reportingFailure: true)
+    }
+
+    private func refresh(reportingFailure: Bool) async {
         let base = store.changeSeq
-        if await list.refresh() { didLoadFirstPage(base: base) }
+        if await list.refresh() {
+            didLoadFirstPage(base: base)
+            needsQuietReload = false
+        } else if reportingFailure, let error = list.refreshError {
+            refreshFailure = RefreshFailure(error: error)
+        }
     }
 
     /// The error state's Retry.
@@ -118,66 +134,61 @@ final class FavoritesViewModel {
         backgroundSince = instant
     }
 
-    /// Back after a while (screens.md §0.6): the cards reload quietly (favorites added on the website or
-    /// another device).
+    /// Back from the background (screens.md §0.6, as Home): after `foregroundReloadAfter`, the cards
+    /// reload quietly (favorites added on the website or another device) when the member is at the top
+    /// of the list, or later, when they scroll back to it or come back to this screen. Deeper in the list
+    /// the loaded pages and the scroll stay (the reload would replace them with the first page). A
+    /// failure keeps the cards on screen and shows no toast, since the member did not ask.
     func returnedToForeground(at instant: ContinuousClock.Instant = .now) async {
         guard let since = backgroundSince else { return }
         backgroundSince = nil
-        guard instant - since >= Self.foregroundReloadAfter, list.hasLoaded, !list.isRefreshing else { return }
+        guard instant - since >= Self.foregroundReloadAfter else { return }
+        needsQuietReload = true
+        await reloadQuietlyIfAtTop()
+    }
+
+    /// The top of the list scrolled into view, or the screen showed again.
+    func topAppeared() async {
+        isShowingTop = true
+        await reloadQuietlyIfAtTop()
+    }
+
+    /// The member scrolled down past the top of the list, or another screen covers this one.
+    func topDisappeared() {
+        isShowingTop = false
+    }
+
+    private func reloadQuietlyIfAtTop() async {
+        guard needsQuietReload, isShowingTop, list.hasLoaded else { return }
+        needsQuietReload = false
+        // A load already running brings fresh cards.
+        guard !list.isRefreshing, !list.isLoadingFirstPage else { return }
         pager.isAutomatic = true
         defer { pager.isAutomatic = false }
-        await refresh()
+        await refresh(reportingFailure: false)
     }
 }
 
-/// The pages of `GET /me/favorites`. Its cursors are positions in the list, so a favorite added or
-/// removed after the first page moves the cards that follow: the next page would skip some or repeat
-/// some. After such a change the next page starts again from the top and goes on until it finds cards
-/// that are not on screen yet (`PagedList` drops the repeats).
+/// The pages of `GET /me/favorites`. Since API 1.5.5 its cursors point after the last card sent
+/// (newest first, by when it was favorited), so a heart or un-heart made while the member scrolls moves
+/// no page: the next page goes on from the cursor as received, and the cards hearted meanwhile are
+/// added at the top by the screen.
 @MainActor
 final class FavoritesPager {
-    weak var list: PagedList<ListingSummary>?
     /// Marks the requests of a quiet reload, which pause while the API asks to wait (`429`).
     var isAutomatic = false
 
     private let api: FavoritesListApi
-    private let store: FavoriteStore
-    /// `changeSeq` when the pages on screen were asked for: a later change moved the cursors.
-    private var pagesSeq: Int
-    /// Bounds the walk from the top (24 cards a page).
-    static let maxPagesPerWalk = 100
 
-    init(api: FavoritesListApi, store: FavoriteStore) {
+    init(api: FavoritesListApi) {
         self.api = api
-        self.store = store
-        pagesSeq = store.changeSeq
     }
 
     func fetch(cursor: String?) async throws(ApiError) -> Page<ListingSummary> {
         #if DEBUG
         if let page = try debugPage(cursor: cursor) { return page }
         #endif
-        let seq = store.changeSeq
-        guard let cursor else {
-            pagesSeq = seq
-            return try await api.listFavorites(cursor: nil, automatic: isAutomatic)
-        }
-        guard seq != pagesSeq else {
-            return try await api.listFavorites(cursor: cursor, automatic: isAutomatic)
-        }
-        // The cursor no longer points after the cards on screen: from the top, to the first page with a
-        // card the screen does not have.
-        let known = Set(list?.items.map(\.id) ?? [])
-        var next: String?
-        for _ in 0..<Self.maxPagesPerWalk {
-            let page = try await api.listFavorites(cursor: next, automatic: isAutomatic)
-            if page.nextCursor == nil || page.items.contains(where: { !known.contains($0.id) }) {
-                pagesSeq = seq
-                return page
-            }
-            next = page.nextCursor
-        }
-        return try await api.listFavorites(cursor: next, automatic: isAutomatic)
+        return try await api.listFavorites(cursor: cursor, automatic: isAutomatic)
     }
 
     #if DEBUG

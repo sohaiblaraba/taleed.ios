@@ -107,7 +107,7 @@ open class SellingAPI {
     /**
      The member's own listings
      - GET /me/listings
-     - Everything the member sells or sold, hidden listings included; deleted ones are left out. 24 per page.  Requires a bearer token.
+     - Everything the member sells or sold, hidden listings included; deleted ones are left out. Newest first, 24 per page. Deleting, hiding or selling a listing never shifts the next page.  Requires a bearer token.
      - Bearer Token:
        - type: http
        - name: bearerAuth

@@ -66,7 +66,7 @@ open class FavoritesAPI {
     /**
      The member's favorites
      - GET /me/favorites
-     - Most recently favorited first, 24 per page. Reserved and sold items stay in the list: show their banners. Items taken off the site, or hidden by their seller, are left out.  Requires a bearer token.
+     - Most recently favorited first, 24 per page. Reserved and sold items stay in the list: show their banners. Items taken off the site, or hidden by their seller, are left out. Favoriting or unfavoriting a listing never shifts the next page: keep paging with `nextCursor`.  Requires a bearer token.
      - Bearer Token:
        - type: http
        - name: bearerAuth

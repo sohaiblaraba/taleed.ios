@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.4",
+    "version": "1.5.5",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -2985,7 +2985,7 @@
           "Selling"
         ],
         "summary": "The member's own listings",
-        "description": "Everything the member sells or sold, hidden listings included; deleted ones are left out. 24 per page.\n\nRequires a bearer token.",
+        "description": "Everything the member sells or sold, hidden listings included; deleted ones are left out. Newest first, 24 per page. Deleting, hiding or selling a listing never shifts the next page.\n\nRequires a bearer token.",
         "parameters": [
           {
             "name": "status",
@@ -3348,7 +3348,7 @@
           "Favorites"
         ],
         "summary": "The member's favorites",
-        "description": "Most recently favorited first, 24 per page. Reserved and sold items stay in the list: show their banners. Items taken off the site, or hidden by their seller, are left out.\n\nRequires a bearer token.",
+        "description": "Most recently favorited first, 24 per page. Reserved and sold items stay in the list: show their banners. Items taken off the site, or hidden by their seller, are left out. Favoriting or unfavoriting a listing never shifts the next page: keep paging with `nextCursor`.\n\nRequires a bearer token.",
         "parameters": [
           {
             "name": "cursor",
@@ -7132,7 +7132,7 @@
           "Safety"
         ],
         "summary": "Members you blocked",
-        "description": "For the blocked-members screen of the settings, where each can be unblocked.\n\nRequires a bearer token.",
+        "description": "For the blocked-members screen of the settings, where each can be unblocked. Most recently blocked first, 50 per page. Unblocking a member never shifts the next page.\n\nRequires a bearer token.",
         "parameters": [
           {
             "name": "cursor",

@@ -99,6 +99,7 @@
 		7F7DFEE4602DC25A28DA377B /* TaleedAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEBB2D925BBCCD781E639E20 /* TaleedAssets.swift */; };
 		83374E3E137BD1ADEB12A7CB /* ProductViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC1DCD0A44F1CD527E9B29 /* ProductViews.swift */; };
 		83D97079C8C9746CCBB26C3F /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56D1FE1C3143BBFA8AE7A58 /* WelcomeView.swift */; };
+		8428DAB726C0C89D2A852DC6 /* FavoritesPagingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B29D45BE48ECC2E93DDC0041 /* FavoritesPagingTests.swift */; };
 		88748962E9CEDAA6195DD461 /* PagedListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC59924D66D8A86022DEBE99 /* PagedListView.swift */; };
 		899E0B397E18F7C093014988 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191B9179C3C1A80C0E2B90B8 /* SessionManager.swift */; };
 		8D489E24775A8324F18DA73C /* Skeletons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E566E51411FDE26ADF99D7F /* Skeletons.swift */; };
@@ -311,6 +312,7 @@
 		B048E0B5C1B236D2C083A4D2 /* LaunchViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchViewModelTests.swift; sourceTree = "<group>"; };
 		B0A2E4FD03B16F11F769ED3F /* PagedListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PagedListTests.swift; sourceTree = "<group>"; };
 		B113761F5E7890C6F4A49589 /* PhotoUpload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoUpload.swift; sourceTree = "<group>"; };
+		B29D45BE48ECC2E93DDC0041 /* FavoritesPagingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesPagingTests.swift; sourceTree = "<group>"; };
 		B36533E98CAACED9DB970E57 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		B6053708013FA85F48F601C1 /* TaleedIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaleedIcon.swift; sourceTree = "<group>"; };
 		B71DC7EA935F16C216FF7C5C /* LaunchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchViewModel.swift; sourceTree = "<group>"; };
@@ -399,6 +401,7 @@
 				A6E04C2021A24DCBF57292F5 /* DesignTokenTests.swift */,
 				3834EDF95FB0168DFE51FF08 /* ExploreTests.swift */,
 				0F780B862E9F213ED7BBCC87 /* Fakes.swift */,
+				B29D45BE48ECC2E93DDC0041 /* FavoritesPagingTests.swift */,
 				EF0C7B36BE060DDC29E20EDE /* FavoritesTests.swift */,
 				644FEB04FB885205EAAC6A73 /* FavoriteStoreTests.swift */,
 				C49D8C2150C0C92C9AFFBDD4 /* HomeFeedTests.swift */,
@@ -1022,6 +1025,7 @@
 				9886DD750F461A9735A741B5 /* ExploreTests.swift in Sources */,
 				131395B48DED568BF34C8077 /* Fakes.swift in Sources */,
 				471D77E2BA2A7EFF2616490F /* FavoriteStoreTests.swift in Sources */,
+				8428DAB726C0C89D2A852DC6 /* FavoritesPagingTests.swift in Sources */,
 				B4ADCCFFDE0409F85AE90114 /* FavoritesTests.swift in Sources */,
 				340DC1A93E0C9DB17D2D775D /* HomeFeedTests.swift in Sources */,
 				5EEE716B55FA726E0745BA47 /* LanguageResolutionTests.swift in Sources */,

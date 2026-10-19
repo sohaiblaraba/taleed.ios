@@ -106,7 +106,7 @@ open class SafetyAPI {
     /**
      Members you blocked
      - GET /me/blocks
-     - For the blocked-members screen of the settings, where each can be unblocked.  Requires a bearer token.
+     - For the blocked-members screen of the settings, where each can be unblocked. Most recently blocked first, 50 per page. Unblocking a member never shifts the next page.  Requires a bearer token.
      - Bearer Token:
        - type: http
        - name: bearerAuth

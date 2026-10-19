@@ -7,7 +7,8 @@ import SwiftUI
 ///
 /// Un-hearting a card removes it at once, with "Annuler" on the toast. States: skeleton cards while
 /// the first page loads, the error (offline included) with Retry, the empty state with a way to
-/// Explore, pull-to-refresh, the pagination footer, a quiet reload after a while in the background.
+/// Explore, pull-to-refresh, the pagination footer, a quiet reload after a while in the background
+/// (once the member is back at the top, and without a toast when it fails).
 struct FavoritesView: View {
     @State private var model: FavoritesViewModel
     @Environment(LanguageManager.self) private var l10n
@@ -30,8 +31,9 @@ struct FavoritesView: View {
         .task { await model.load() }
         // Hearts changed here or on another screen (even while this one is under it in the stack).
         .onChange(of: favorites.changeSeq) { _, _ in model.syncWithStore() }
-        .onChange(of: model.list.refreshError) { _, error in
-            if let error { toasts.show(error: error) }
+        // Only a refresh the member asked for: the quiet foreground reload fails silently.
+        .onChange(of: model.refreshFailure) { _, failure in
+            if let failure { toasts.show(error: failure.error) }
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
@@ -51,8 +53,13 @@ struct FavoritesView: View {
                     if model.isEmpty {
                         emptyState
                             .padding(.top, TaleedSpacing.s48)
+                            .onAppear { Task { await model.topAppeared() } }
+                            .onDisappear { model.topDisappeared() }
                     } else {
                         countRow
+                            // Whether the member is at the top: the quiet foreground reload waits for it.
+                            .onAppear { Task { await model.topAppeared() } }
+                            .onDisappear { model.topDisappeared() }
                         ListingGrid(listings: model.cards, onFavorite: heartTapped)
                         PaginationFooter(list: list)
                     }
