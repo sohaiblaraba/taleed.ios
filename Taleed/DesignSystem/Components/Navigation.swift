@@ -261,6 +261,14 @@ private struct TaleedSheetPresenter<Sheet: View>: ViewModifier {
     }
 }
 
+/// The kind of action a confirmation modal asks for.
+enum ConfirmationTone: Sendable {
+    /// Irreversible and destructive (delete, block): Danger, the design-system default.
+    case destructive
+    /// Binding but not destructive (accept an offer).
+    case positive
+}
+
 /// Confirmation modal card (design-system §5.4): icon circle (`errorSoft` + trash), title, message,
 /// "Cancel" (Outline) and the destructive action (Danger), equal widths. Use only for irreversible
 /// confirmations. From accessibility sizes on, the actions stack, the destructive one first, so no
@@ -274,6 +282,9 @@ struct ConfirmationModalCard: View {
     /// Defaults to "Cancel" (`common_cancel`).
     var cancelTitle: String?
     var icon: TaleedIcon = .trash
+    /// `.positive` for a confirmation that is not destructive (accepting an offer): the icon on
+    /// `brandSoft` and a Primary action instead of Danger.
+    var tone: ConfirmationTone = .destructive
     /// Draws the destructive action pressed, for the design-system gallery.
     var forcesConfirmPressed = false
     @Environment(\.locale) private var locale
@@ -287,9 +298,10 @@ struct ConfirmationModalCard: View {
     var body: some View {
         // One stack, gap 14 between the icon circle, title, message and actions (§5.4).
         VStack(alignment: .leading, spacing: TaleedSize.modalGap) {
-            TaleedIconView(icon, size: TaleedSize.modalIconSize, color: TaleedColor.feedbackError)
+            TaleedIconView(icon, size: TaleedSize.modalIconSize,
+                           color: tone == .positive ? TaleedColor.brandPrimary : TaleedColor.feedbackError)
                 .frame(width: TaleedSize.modalIconCircle, height: TaleedSize.modalIconCircle)
-                .background(Circle().fill(TaleedColor.errorSoft))
+                .background(Circle().fill(tone == .positive ? TaleedColor.brandSoft : TaleedColor.errorSoft))
                 .accessibilityHidden(true)
             Text(title)
                 .taleedFont(Self.titleStyle)
@@ -324,7 +336,7 @@ struct ConfirmationModalCard: View {
     }
 
     private var confirmButton: some View {
-        TaleedButton(title: confirmTitle, kind: .danger, size: .medium, isFullWidth: true,
+        TaleedButton(title: confirmTitle, kind: tone == .positive ? .primary : .danger, size: .medium, isFullWidth: true,
                      forcedState: forcesConfirmPressed ? .pressed : nil, metrics: .modalAction, action: onConfirm)
     }
 }

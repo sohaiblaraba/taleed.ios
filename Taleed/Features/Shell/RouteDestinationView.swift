@@ -16,6 +16,7 @@ struct RouteDestinationView: View {
     @Environment(\.editListingDependencies) private var editListing
     @Environment(\.myListingsDependencies) private var myListings
     @Environment(\.messagesDependencies) private var messages
+    @Environment(\.bundleDependencies) private var bundles
     @Environment(ExploreReferenceStore.self) private var references
     @Environment(CatalogStore.self) private var catalog
     @Environment(ListingChangeCenter.self) private var listingChanges
@@ -50,7 +51,12 @@ struct RouteDestinationView: View {
             } else {
                 RoutePlaceholderView(route: route)
             }
-        case .bundleBuilder: RoutePlaceholderView(route: route)
+        case let .bundleBuilder(username):
+            if let bundles {
+                BundleBuilderView(username: username, route: route, dependencies: bundles).id(route)
+            } else {
+                RoutePlaceholderView(route: route)
+            }
         case let .search(query, _):
             // Identity by route (the query and the link's `opening`): a link that replaces the results gets
             // a fresh screen with its filters, even with the same query (SwiftUI would otherwise keep the
@@ -64,7 +70,12 @@ struct RouteDestinationView: View {
             } else {
                 RoutePlaceholderView(route: route)
             }
-        case .bundle: RoutePlaceholderView(route: route)
+        case let .bundle(id):
+            if let bundles {
+                BundleReviewView(bundleId: id, route: route, api: bundles.bundles).id(id)
+            } else {
+                RoutePlaceholderView(route: route)
+            }
         case .checkout: RoutePlaceholderView(route: route)
         case .favorites:
             if let favoritesApi { FavoritesView(api: favoritesApi, store: favorites) } else { RoutePlaceholderView(route: route) }

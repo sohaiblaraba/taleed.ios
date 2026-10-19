@@ -72,6 +72,8 @@ struct MessagesDependencies {
     let messages: any MessagesApi
     let events: any ConversationEventsSource
     let members: any MembersApi
+    /// The offer actions (G10).
+    let offers: any OffersApi
     let reports: any ReportsApi
     let uploads: PhotoUploadService
     /// The conversations the member just read, for the inbox's rows.

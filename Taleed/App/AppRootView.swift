@@ -32,9 +32,10 @@ struct AppRootView: View {
             .environment(\.myListingsDependencies, MyListingsDependencies(listings: container.api, owner: container.api))
             .environment(\.messagesDependencies,
                          MessagesDependencies(messages: container.api, events: container.api, members: container.api,
-                                              reports: container.api, uploads: container.uploads,
+                                              offers: container.api, reports: container.api, uploads: container.uploads,
                                               reads: container.conversationReads))
             .environment(\.pushRegistration, container.push)
+            .environment(\.bundleDependencies, BundleDependencies(bundles: container.api, members: container.api))
             .environment(\.memberDependencies,
                          MemberDependencies(members: container.api, reports: container.api, uploads: container.uploads))
             .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in

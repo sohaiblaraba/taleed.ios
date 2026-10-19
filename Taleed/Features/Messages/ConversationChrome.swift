@@ -106,6 +106,9 @@ struct ChatComposer: View {
     let photo: ComposerPhoto?
     let canSend: Bool
     var focus: FocusState<Bool>.Binding
+    /// "Faire une offre" or "Proposer un prix" above the field (G10); nil when no offer can be made.
+    var offerTitle: String?
+    var onOffer: () -> Void = {}
     let onSend: () -> Void
     let onAddPhoto: () -> Void
     let onRemovePhoto: () -> Void
@@ -113,6 +116,10 @@ struct ChatComposer: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+            if let offerTitle {
+                TaleedButton(title: offerTitle, kind: .tertiary, size: .small, leadingIcon: .money, action: onOffer)
+                    .accessibilityIdentifier("conversation.offer")
+            }
             if let photo { attachedPhoto(photo) }
             HStack(alignment: .bottom, spacing: TaleedSpacing.s8) {
                 Button(action: onAddPhoto) {

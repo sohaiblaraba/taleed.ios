@@ -21,6 +21,10 @@ struct ConversationView: View {
     @State private var showsLibrary = false
     @State private var showsCamera = false
     @State private var pickedItem: PhotosPickerItem?
+    /// The offer sheet showing (G10).
+    @State private var offerSheet: ConversationOfferSheet?
+    /// The offer waiting for "Accepter" to be confirmed (G10).
+    @State private var accepting: ChatOffer?
     @FocusState private var composerFocused: Bool
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
@@ -50,7 +54,7 @@ struct ConversationView: View {
         let uploads = dependencies.uploads
         _model = State(initialValue: ConversationViewModel(
             conversationId: conversationId, api: dependencies.messages, events: dependencies.events,
-            members: dependencies.members,
+            members: dependencies.members, offers: dependencies.offers,
             upload: { data throws(ApiError) in try await uploads.upload(data, purpose: .chatPhoto) }
         ))
     }
@@ -164,9 +168,13 @@ struct ConversationView: View {
                 if let listing = conversation.listing {
                     ConversationListingStrip(listing: listing) { router.push(.listing(id: listing.id)) }
                 }
+                ConversationPinnedOffer(model: model, counterpartName: conversation.counterpart?.displayName,
+                                        sheet: $offerSheet, accepting: $accepting)
                 ConversationMessageList(model: model, isOfficial: conversation.isOfficial,
                                         openPhoto: { presented = .photo($0) }, openLink: openLink)
             }
+            .modifier(ConversationOfferPresenter(model: model, counterpartName: conversation.counterpart?.displayName,
+                                                 sheet: $offerSheet, accepting: $accepting))
         } else {
             LoadingStateView()
         }
@@ -184,6 +192,7 @@ struct ConversationView: View {
             } else {
                 @Bindable var model = model
                 ChatComposer(text: $model.text, photo: model.photo, canSend: model.canSend, focus: $composerFocused,
+                             offerTitle: model.offerEntry.map { l10n.string($0.titleKey) }, onOffer: { offerSheet = .make(for: model) },
                              onSend: { Task { await model.send() } }, onAddPhoto: addPhoto, onRemovePhoto: model.removePhoto)
             }
         }
@@ -286,6 +295,8 @@ struct ConversationView: View {
         case let .error(error): toasts.show(error: error)
         case let .blocked(handle): toasts.show(l10n.format(.appProfileBlockedToast, handle.isolatedLeftToRight))
         case let .unblocked(handle): toasts.show(l10n.format(.appProfileUnblockedToast, handle.isolatedLeftToRight))
+        case let .confirmation(key): toasts.show(l10n.string(key))
+        case let .information(key): toasts.show(l10n.string(key), kind: .info)
         }
     }
 }

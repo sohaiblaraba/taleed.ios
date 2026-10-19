@@ -14,6 +14,10 @@ final class ConversationViewModel {
         /// "@x est bloqué."
         case blocked(handle: String)
         case unblocked(handle: String)
+        /// A confirmation ("Offre envoyée !").
+        case confirmation(L10nKey)
+        /// Information ("Une offre est déjà en attente pour cet article.").
+        case information(L10nKey)
     }
 
     let conversationId: String
@@ -30,6 +34,8 @@ final class ConversationViewModel {
     private(set) var olderError: ApiError?
     private(set) var photo: ComposerPhoto?
     private(set) var isChangingBlock = false
+    /// The offer action running (G10); one at a time.
+    var offerWork: ConversationOfferWork?
     /// The latest toast to show (the screen clears it).
     var notice: Notice?
     /// The composer's text, at most 2 000 characters.
@@ -43,13 +49,16 @@ final class ConversationViewModel {
     var hasOlder: Bool { olderCursor != nil }
 
     @ObservationIgnored private var olderCursor: String?
-    /// The latest state of each offer: every card of the same offer shows it (slice C, Messages).
-    @ObservationIgnored private var offers = ChatOfferStates()
+    /// The latest state of each offer: every card of the same offer shows it (slice C, Messages). The offer
+    /// actions (G10) record their answers in it.
+    @ObservationIgnored var offers = ChatOfferStates()
     @ObservationIgnored private var isVisible = false
     @ObservationIgnored private var hasMarkedRead = false
     @ObservationIgnored private let api: MessagesApi
     @ObservationIgnored private let events: ConversationEventsSource
     @ObservationIgnored private let members: MembersApi
+    /// The offer actions (G10). Nil in tests that do not need them.
+    @ObservationIgnored let offerApi: OffersApi?
     @ObservationIgnored private let upload: (Data) async throws(ApiError) -> UploadedPhoto
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private let makeClientId: () -> String
@@ -59,12 +68,14 @@ final class ConversationViewModel {
     @ObservationIgnored var onSent: (() -> Void)?
 
     init(conversationId: String, api: MessagesApi, events: ConversationEventsSource, members: MembersApi,
+         offers: OffersApi? = nil,
          upload: @escaping (Data) async throws(ApiError) -> UploadedPhoto, now: @escaping () -> Date = Date.init,
          makeClientId: @escaping () -> String = { UUID().uuidString.lowercased() }) {
         self.conversationId = conversationId
         self.api = api
         self.events = events
         self.members = members
+        offerApi = offers
         self.upload = upload
         self.now = now
         self.makeClientId = makeClientId
@@ -159,6 +170,9 @@ final class ConversationViewModel {
     func offer(in message: ChatMessage) -> ChatOffer? {
         message.offer.map(offers.current)
     }
+
+    /// The time the offer cards and buttons are drawn for.
+    var currentDate: Date { now() }
 
     /// The rows to draw, newest first: the bubbles on their way, the messages, and a day above each day.
     func rows(calendar: Calendar = .current) -> [ChatRow] {
@@ -332,37 +346,5 @@ final class ConversationViewModel {
     /// the messages come through the stream.
     func returnedToForeground() async {
         await reloadConversation(automatic: true)
-    }
-}
-
-/// The latest state of each offer of a conversation. The server sends each message's offer, and the
-/// conversation's `pendingOffer`, as they stand when it answers: the latest answer wins, in the order the
-/// app received them, never by comparing the phone's clock with the server's.
-struct ChatOfferStates {
-    /// From the messages: the offer and the answer it came in.
-    private var fromMessages: [String: (offer: ChatOffer, answer: Int)] = [:]
-    /// The conversation's `pendingOffer` from its latest load. A load that no longer lists it drops it,
-    /// and a message received after that load wins over it.
-    private var pending: (offer: ChatOffer, answer: Int)?
-    /// Counts the answers, in the order they arrived.
-    private var answers = 0
-
-    mutating func record(_ messages: [ChatMessage]) {
-        answers += 1
-        for offer in messages.compactMap(\.offer) {
-            fromMessages[offer.id] = (offer, answers)
-        }
-    }
-
-    mutating func record(pendingOffer: ChatOffer?) {
-        answers += 1
-        pending = pendingOffer.map { ($0, answers) }
-    }
-
-    /// The offer as it stands now, from the card's own copy.
-    func current(_ offer: ChatOffer) -> ChatOffer {
-        let seen = fromMessages[offer.id]
-        if let pending, pending.offer.id == offer.id, pending.answer > seen?.answer ?? 0 { return pending.offer }
-        return seen?.offer ?? offer
     }
 }

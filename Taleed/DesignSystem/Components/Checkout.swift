@@ -71,6 +71,16 @@ struct OrderSummaryLine: Identifiable {
     var label: String
     var amount: Int?
     var onInfo: (() -> Void)?
+    /// A value that is not an amount ("dès 400 DA", "calculée au paiement"); shown instead of `amount`.
+    var valueText: String?
+
+    init(id: String, label: String, amount: Int?, onInfo: (() -> Void)? = nil, valueText: String? = nil) {
+        self.id = id
+        self.label = label
+        self.amount = amount
+        self.onInfo = onInfo
+        self.valueText = valueText
+    }
 }
 
 /// Order summary (design-system §4.5): "Summary", amount rows, divider, "Total to pay". "—" while
@@ -89,27 +99,26 @@ struct OrderSummary: View {
                 .foregroundStyle(TaleedColor.textPrimary)
                 .accessibilityAddTraits(.isHeader)
             ForEach(lines) { line in
-                row(line.label, amount: line.amount, style: TaleedFont.bodyRegular, labelColor: TaleedColor.textSecondary,
-                    onInfo: line.onInfo)
+                row(line, style: TaleedFont.bodyRegular, labelColor: TaleedColor.textSecondary)
             }
             Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)
-            row(totalLabel, amount: total, style: TaleedFont.buttonMedium, labelColor: TaleedColor.textPrimary, onInfo: nil)
+            row(OrderSummaryLine(id: "total", label: totalLabel, amount: total), style: TaleedFont.buttonMedium,
+                labelColor: TaleedColor.textPrimary)
         }
         .padding(TaleedSpacing.s16)
         .taleedCard()
     }
 
-    private func row(_ label: String, amount: Int?, style: TaleedTextStyle, labelColor: Color,
-                     onInfo: (() -> Void)?) -> some View {
+    private func row(_ line: OrderSummaryLine, style: TaleedTextStyle, labelColor: Color) -> some View {
         HStack(spacing: TaleedSpacing.s8) {
             // The label takes what is left after the info button, so a label that wraps at large text
             // never pushes the button out (the explanation stays reachable at every size).
             HStack(spacing: TaleedSpacing.s4) {
-                Text(label)
+                Text(line.label)
                     .taleedFont(style)
                     .foregroundStyle(labelColor)
                     .fixedSize(horizontal: false, vertical: true)
-                if let onInfo {
+                if let onInfo = line.onInfo {
                     Button(action: onInfo) {
                         TaleedIconView(.info, size: 16, color: TaleedColor.textSecondary).minimumHitArea()
                     }
@@ -118,10 +127,19 @@ struct OrderSummary: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            AmountText(amount: amount, style: style)
-                .layoutPriority(1)
+            Group {
+                if let valueText = line.valueText {
+                    Text(valueText)
+                        .taleedFont(style)
+                        .foregroundStyle(TaleedColor.textPrimary)
+                        .multilineTextAlignment(.trailing)
+                } else {
+                    AmountText(amount: line.amount, style: style)
+                }
+            }
+            .layoutPriority(1)
         }
-        .accessibilityElement(children: onInfo == nil ? .combine : .contain)
+        .accessibilityElement(children: line.onInfo == nil ? .combine : .contain)
     }
 }
 
