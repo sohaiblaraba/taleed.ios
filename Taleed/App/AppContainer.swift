@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// Builds the app's objects once, with constructor injection.
 ///
@@ -41,7 +42,13 @@ final class AppContainer {
         // A suspended member who was signed in keeps the screens that still answer (orders, wallet,
         // account deletion), so links to them do not ask to sign in.
         router.isSignedIn = { [session] in session.isSignedIn || session.hasSuspendedSession }
-        router.onDestinationOpened = { [welcome] in welcome.skipForLink() }
+        // Without the fade: removing the welcome screen in the frame it appeared left an invisible copy
+        // over the shell that took every touch (a link opening the app while the welcome screen was due).
+        router.onDestinationOpened = { [welcome] in
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { welcome.skipForLink() }
+        }
         session.onSignedOut = { [welcome, router] in
             welcome.showAfterSignOut()
             router.sessionDidEnd()
