@@ -53,12 +53,12 @@ extension ExploreQuery {
         return query
     }
 
-    /// With the keywords typed in the search field: trimmed, at most 100 characters (the API answers
-    /// `400` beyond), none when blank. The filters stay.
+    /// With the keywords typed in the search field: trimmed, at most 100 characters as the API counts
+    /// them (UTF-16; it answers `400` beyond), none when blank. The filters stay.
     func searching(_ text: String) -> ExploreQuery {
         var query = self
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        query.text = trimmed.isEmpty ? nil : String(trimmed.prefix(ListingSearchParameters.maxTextLength))
+        query.text = trimmed.isEmpty ? nil : trimmed.prefix(utf16Units: ListingSearchParameters.maxTextLength)
         return query
     }
 }

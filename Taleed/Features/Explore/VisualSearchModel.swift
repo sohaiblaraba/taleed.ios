@@ -50,6 +50,17 @@ final class VisualSearchModel {
         return await run(photo)
     }
 
+    /// The picked or taken photo could not be read before any search: an iCloud photo that cannot
+    /// download (offline) says so with the network message; a photo the device cannot hand over says it
+    /// is not supported (as the API's `415`). The member picks a photo again (the sheet keeps its
+    /// buttons).
+    func photoUnreadable(downloadFailed: Bool) {
+        guard !isSearching else { return }
+        photo = nil
+        let error: ApiError = downloadFailed ? .network : .failed(ApiFailure(status: 415, code: .unsupportedMediaType))
+        phase = .failed(error, canRetry: false)
+    }
+
     /// Back to choosing a photo (the sheet closed).
     func reset() {
         guard !isSearching else { return }

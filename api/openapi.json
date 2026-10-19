@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.0",
+    "version": "1.5.2",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -285,7 +285,7 @@
           "Auth"
         ],
         "summary": "Sign in with email and password",
-        "description": "No authentication.",
+        "description": "A suspended account gets `banned`, with a `token` for the suspended-account screen: store it as usual. It opens only what a suspended member keeps (sign-out, the orders in progress, the wallet, deleting the account); every other endpoint, `GET /me` included, answers `banned`.\n\nNo authentication.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1998,7 +1998,7 @@
           "Listings"
         ],
         "summary": "Search and browse listings",
-        "description": "Only listings for sale (`ACTIVE`). Without filters this is the home feed. Filters combine; unknown category or brand slugs are ignored. The signed-in member's own items are left out of browsing, but not out of a keyword search.\n\nAuthentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.",
+        "description": "Only listings for sale (`ACTIVE`). Without filters this is the home feed. Filters combine; unknown category or brand slugs are ignored. The signed-in member's own items are left out of browsing, whatever the sort, but not out of a keyword search (`q`).\n\nAuthentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.",
         "parameters": [
           {
             "name": "q",
@@ -13271,6 +13271,10 @@
           },
           "orderId": {
             "description": "Present on `listing_unavailable` from checkout when the goods are reserved by the member's own order awaiting payment: open that order (`GET /orders/{id}`) to pay or cancel it, as the website does, instead of saying the item is gone.",
+            "type": "string"
+          },
+          "token": {
+            "description": "Present on `banned` from `POST /auth/sign-in`: a session for the suspended member, as the website keeps one. Store it like the `AuthSession` token and show the suspended-account screen: it opens only the endpoints that answer no `banned` (sign-out, the orders in progress, the wallet, deleting the account); every other one answers `403 banned`, and `GET /me` too.",
             "type": "string"
           }
         },

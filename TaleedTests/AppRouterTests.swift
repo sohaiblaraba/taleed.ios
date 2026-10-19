@@ -65,7 +65,36 @@ struct AppRouterTests {
         #expect(router.selectedTab == .explore)
         #expect(router.path(.explore).isEmpty)
         router.open(.explore(ExploreQuery(category: "robes")))
-        #expect(router.path(.explore) == [.search(ExploreQuery(category: "robes"))])
+        guard case let .search(query, opening)? = router.path(.explore).first, router.path(.explore).count == 1 else {
+            Issue.record("Expected the results on the Explore tab")
+            return
+        }
+        #expect(query == ExploreQuery(category: "robes"))
+        #expect(opening != nil)
+    }
+
+    @Test func aLinkReopensResultsWithTheSameQueryAsAFreshScreen() {
+        // The member opened the results of a link, then changed their filters on that screen.
+        let link = URL(string: "taleed://categories/women/women-shoes?sort=price_asc")!
+        router.open(url: link)
+        let first = router.path(.explore)
+        router.open(url: link)
+        let second = router.path(.explore)
+        #expect(first.count == 1 && second.count == 1)
+        // A new route identity: the screen starts again from the link's filters.
+        #expect(first != second)
+        guard case let .search(query, _)? = second.first else {
+            Issue.record("Expected the results on the Explore tab")
+            return
+        }
+        #expect(query == ExploreQuery(category: "women-shoes", sort: "price_asc"))
+
+        // Results pushed in the app with the same query differ from the link's too.
+        router.popToRoot(.explore)
+        router.push(.search(ExploreQuery(category: "women-shoes", sort: "price_asc")))
+        let pushed = router.path(.explore)
+        router.open(url: link)
+        #expect(router.path(.explore) != pushed)
     }
 
     @Test func otherTabsKeepTheirStacks() {

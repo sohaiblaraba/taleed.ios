@@ -37,8 +37,8 @@ struct SearchResultsView: View {
                          onBack: { dismiss() }, onSubmit: { viewModel.submitSearch() }, filters: { filterChips })
             .textInputAutocapitalization(.never)
             .onChange(of: viewModel.searchText) { _, text in
-                if text.count > ListingSearchParameters.maxTextLength {
-                    viewModel.searchText = String(text.prefix(ListingSearchParameters.maxTextLength))
+                if text.utf16.count > ListingSearchParameters.maxTextLength {
+                    viewModel.searchText = text.prefix(utf16Units: ListingSearchParameters.maxTextLength)
                 }
             }
         } content: {

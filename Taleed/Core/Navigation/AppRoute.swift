@@ -15,7 +15,9 @@ enum AppRoute: Hashable, Sendable {
     case listing(id: String)
     case member(username: String)
     /// Search results with filters (G3): a category from Home, `/browse?…`, `/categories/…`.
-    case search(ExploreQuery)
+    /// `opening`: set by each link that opens the screen (`AppRouter.open`), so that a link gives a fresh
+    /// screen with its own filters even when the results open below have the same query.
+    case search(ExploreQuery, opening: UUID? = nil)
     case visualSearch(id: String)
     // Messages, offers, bundles, checkout (G9–G11)
     case conversation(id: String)
@@ -51,6 +53,15 @@ enum AppRoute: Hashable, Sendable {
         case .designSystem, .developerMenu:
             false
         #endif
+        }
+    }
+
+    /// The same screen with a new identity: a link opens it fresh, never on the state of a screen
+    /// already in the stack with the same route.
+    var reopened: AppRoute {
+        switch self {
+        case let .search(query, _): .search(query, opening: UUID())
+        default: self
         }
     }
 }

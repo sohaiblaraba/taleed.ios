@@ -67,6 +67,33 @@ struct ListingSearchParametersTests {
         #expect(parameters.sort == nil)
     }
 
+    @Test func lengthsAreCountedAsTheApiCountsThem() {
+        // 60 letters with a shadda and a fatha each: 60 characters for Swift, 180 UTF-16 units for the API.
+        let harakat = String(repeating: "\u{0634}\u{0651}\u{064E}", count: 60)
+        #expect(harakat.count == 60)
+        let text = ListingSearchParameters(ExploreQuery(text: harakat)).text ?? ""
+        #expect(text.utf16.count <= ListingSearchParameters.maxTextLength)
+        // Whole letters only: never a letter without its marks.
+        #expect(text.count == 33 && text.utf16.count == 99)
+        #expect(harakat.hasPrefix(text))
+
+        // Emoji are two units (or more) each.
+        let emoji = String(repeating: "👗", count: 60)
+        #expect(ListingSearchParameters(ExploreQuery(text: emoji)).text == String(repeating: "👗", count: 50))
+        #expect(ListingSearchParameters(ExploreQuery(size: String(repeating: "👗", count: 20))).size?.utf16.count == 30)
+
+        // A slug longer than the API takes names nothing: left out.
+        let slug = String(repeating: "a", count: 101)
+        let parameters = ListingSearchParameters(ExploreQuery(category: slug, brand: slug))
+        #expect(parameters.category == nil && parameters.brand == nil)
+        let fits = String(repeating: "a", count: 100)
+        #expect(ListingSearchParameters(ExploreQuery(category: fits, brand: fits)).category == fits)
+
+        // The search field's keywords too.
+        #expect(ExploreQuery().searching(emoji).text?.utf16.count == 100)
+        #expect("abc".prefix(utf16Units: 100) == "abc")
+    }
+
     @Test func knownValuesPassThrough() {
         let parameters = ListingSearchParameters(ExploreQuery(category: "women", wilaya: 16, condition: "GOOD",
                                                               sort: "price_asc"))

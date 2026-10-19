@@ -75,7 +75,7 @@ open class ListingsAPI {
     /**
      Search and browse listings
      - GET /listings
-     - Only listings for sale (`ACTIVE`). Without filters this is the home feed. Filters combine; unknown category or brand slugs are ignored. The signed-in member's own items are left out of browsing, but not out of a keyword search.  Authentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.
+     - Only listings for sale (`ACTIVE`). Without filters this is the home feed. Filters combine; unknown category or brand slugs are ignored. The signed-in member's own items are left out of browsing, whatever the sort, but not out of a keyword search (`q`).  Authentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.
      - Bearer Token:
        - type: http
        - name: bearerAuth

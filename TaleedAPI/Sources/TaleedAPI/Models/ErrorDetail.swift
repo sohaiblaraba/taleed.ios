@@ -21,14 +21,17 @@ public struct ErrorDetail: Sendable, Codable, Hashable {
     public var retryAfter: Int?
     /** Present on `listing_unavailable` from checkout when the goods are reserved by the member's own order awaiting payment: open that order (`GET /orders/{id}`) to pay or cancel it, as the website does, instead of saying the item is gone. */
     public var orderId: String?
+    /** Present on `banned` from `POST /auth/sign-in`: a session for the suspended member, as the website keeps one. Store it like the `AuthSession` token and show the suspended-account screen: it opens only the endpoints that answer no `banned` (sign-out, the orders in progress, the wallet, deleting the account); every other one answers `403 banned`, and `GET /me` too. */
+    public var token: String?
 
-    public init(code: ErrorCode, message: String, issues: [ErrorIssue]? = nil, detail: String? = nil, retryAfter: Int? = nil, orderId: String? = nil) {
+    public init(code: ErrorCode, message: String, issues: [ErrorIssue]? = nil, detail: String? = nil, retryAfter: Int? = nil, orderId: String? = nil, token: String? = nil) {
         self.code = code
         self.message = message
         self.issues = issues
         self.detail = detail
         self.retryAfter = retryAfter
         self.orderId = orderId
+        self.token = token
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
@@ -38,6 +41,7 @@ public struct ErrorDetail: Sendable, Codable, Hashable {
         case detail
         case retryAfter
         case orderId
+        case token
     }
 
     // Encodable protocol methods
@@ -50,6 +54,7 @@ public struct ErrorDetail: Sendable, Codable, Hashable {
         try container.encodeIfPresent(detail, forKey: .detail)
         try container.encodeIfPresent(retryAfter, forKey: .retryAfter)
         try container.encodeIfPresent(orderId, forKey: .orderId)
+        try container.encodeIfPresent(token, forKey: .token)
     }
 }
 

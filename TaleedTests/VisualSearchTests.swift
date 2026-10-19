@@ -27,6 +27,19 @@ struct VisualSearchTests {
         #expect(fake.uploadedFiles.allSatisfy { !FileManager.default.fileExists(atPath: $0.path) })
     }
 
+    @Test func aPhotoThatCannotBeReadSaysSo() {
+        let model = VisualSearchModel(api: FakeExploreApi())
+        // An iCloud photo that cannot download: the network message, and the buttons to pick again.
+        model.photoUnreadable(downloadFailed: true)
+        #expect(model.phase == .failed(.network, canRetry: false))
+        #expect(model.photo == nil)
+        // A photo the device cannot hand over: not supported, as the API's 415.
+        model.photoUnreadable(downloadFailed: false)
+        #expect(model.phase == .failed(.failed(ApiFailure(status: 415, code: .unsupportedMediaType)), canRetry: false))
+        model.reset()
+        #expect(model.phase == .pick)
+    }
+
     @Test func theFeatureTurnedOffClosesTheSheet() async {
         let fake = FakeExploreApi()
         fake.createResult = .failure(.failed(ApiFailure(status: 503, code: .featureDisabled)))

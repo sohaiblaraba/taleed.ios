@@ -48,14 +48,29 @@ struct VisualSearchSheet: View {
             guard let item else { return }
             pickerItem = nil
             Task {
-                guard let data = try? await item.loadTransferable(type: Data.self) else { return }
+                let data: Data?
+                do {
+                    data = try await item.loadTransferable(type: Data.self)
+                } catch {
+                    // An iCloud photo that cannot download (offline…).
+                    model.photoUnreadable(downloadFailed: true)
+                    return
+                }
+                guard let data else {
+                    model.photoUnreadable(downloadFailed: false)
+                    return
+                }
                 await finish(model.search(data))
             }
         }
         .fullScreenCover(isPresented: $showsCamera) {
             CameraPicker { image in
                 showsCamera = false
-                guard let image, let data = image.jpegData(compressionQuality: 0.95) else { return }
+                guard let image else { return }  // Cancelled.
+                guard let data = image.jpegData(compressionQuality: 0.95) else {
+                    model.photoUnreadable(downloadFailed: false)
+                    return
+                }
                 Task { await finish(model.search(data)) }
             }
             .ignoresSafeArea()

@@ -13,10 +13,11 @@ struct RouteDestinationView: View {
         switch route {
         case .listing: RoutePlaceholderView(route: route)
         case .member: RoutePlaceholderView(route: route)
-        case let .search(query):
-            // Identity by query: a link that replaces the results with other filters gets a fresh screen
-            // (SwiftUI would otherwise keep the previous screen's state at the same place in the stack).
-            if let explore { SearchResultsView(query: query, api: explore.listings).id(query) } else { RoutePlaceholderView(route: route) }
+        case let .search(query, _):
+            // Identity by route (the query and the link's `opening`): a link that replaces the results gets
+            // a fresh screen with its filters, even with the same query (SwiftUI would otherwise keep the
+            // previous screen's state, the member's edited filters, at the same place in the stack).
+            if let explore { SearchResultsView(query: query, api: explore.listings).id(route) } else { RoutePlaceholderView(route: route) }
         case let .visualSearch(id):
             if let explore { VisualSearchResultsView(id: id, api: explore.explore).id(id) } else { RoutePlaceholderView(route: route) }
         case .conversation: RoutePlaceholderView(route: route)

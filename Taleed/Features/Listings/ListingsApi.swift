@@ -46,9 +46,14 @@ extension GeneratedTaleedApi: ListingsApi, FavoritesApi {
 /// The query parameters of `GET /listings` for an `ExploreQuery`, without the values the API would
 /// reject with `400` (screens.md §7 G3): empty text, more than 100 characters, a negative price, a
 /// condition or sort this build does not know. An empty query is the home feed.
+///
+/// Lengths are counted as the API counts them: UTF-16 code units (JavaScript's `length`), not the
+/// characters Swift counts, so Arabic with harakat or emoji stay within the limit.
 struct ListingSearchParameters: Equatable, Sendable {
     static let maxTextLength = 100
     static let maxSizeLength = 30
+    /// Category and brand slugs.
+    static let maxSlugLength = 100
     static let conditions: Set<String> = ["NEW_WITH_TAGS", "NEW_WITHOUT_TAGS", "VERY_GOOD", "GOOD", "SATISFACTORY"]
     static let sorts: Set<String> = ["recommended", "newest", "price_asc", "price_desc"]
 
@@ -63,12 +68,14 @@ struct ListingSearchParameters: Equatable, Sendable {
     var sort: String?
 
     init(_ query: ExploreQuery) {
-        text = Self.trimmed(query.text).map { String($0.prefix(Self.maxTextLength)) }
-        category = Self.trimmed(query.category)
-        brand = Self.trimmed(query.brand)
+        text = Self.trimmed(query.text).map { $0.prefix(utf16Units: Self.maxTextLength) }
+        // A longer slug names no category or brand (the API would answer `400`): left out, like an
+        // unknown slug the API ignores.
+        category = Self.trimmed(query.category).flatMap { $0.utf16.count <= Self.maxSlugLength ? $0 : nil }
+        brand = Self.trimmed(query.brand).flatMap { $0.utf16.count <= Self.maxSlugLength ? $0 : nil }
         wilaya = query.wilaya.flatMap { $0 > 0 ? $0 : nil }
         condition = query.condition.flatMap { Self.conditions.contains($0) ? $0 : nil }
-        size = Self.trimmed(query.size).map { String($0.prefix(Self.maxSizeLength)) }
+        size = Self.trimmed(query.size).map { $0.prefix(utf16Units: Self.maxSizeLength) }
         minPrice = query.minPrice.flatMap { $0 >= 0 ? $0 : nil }
         maxPrice = query.maxPrice.flatMap { $0 >= 0 ? $0 : nil }
         sort = query.sort.flatMap { Self.sorts.contains($0) ? $0 : nil }
@@ -77,6 +84,25 @@ struct ListingSearchParameters: Equatable, Sendable {
     private static func trimmed(_ value: String?) -> String? {
         guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else { return nil }
         return value
+    }
+}
+
+extension String {
+    /// The longest prefix of whole characters that is at most `limit` UTF-16 code units long: the length
+    /// the API (JavaScript) checks. A character is never cut in the middle (a letter and its harakat,
+    /// an emoji).
+    func prefix(utf16Units limit: Int) -> String {
+        guard utf16.count > limit else { return self }
+        var units = 0
+        var end = startIndex
+        for index in indices {
+            let next = self.index(after: index)
+            let length = self[index..<next].utf16.count
+            guard units + length <= limit else { break }
+            units += length
+            end = next
+        }
+        return String(self[..<end])
     }
 }
 

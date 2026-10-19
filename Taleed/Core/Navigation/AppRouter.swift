@@ -102,7 +102,7 @@ final class AppRouter {
         onDestinationOpened?()
         switch destination {
         case .home: show(.home, stack: [])
-        case let .explore(query): show(.explore, stack: query.isEmpty ? [] : [.search(query)])
+        case let .explore(query): show(.explore, stack: query.isEmpty ? [] : [AppRoute.search(query).reopened])
         case .sell: show(.sell, stack: [])
         case .inbox: show(.messages, stack: [])
         case .profile: show(.profile, stack: [])
@@ -111,7 +111,7 @@ final class AppRouter {
                 requireSignIn { [weak self] in self?.open(destination) }
             } else {
                 let (tab, stack) = Self.canonicalStack(for: route)
-                show(tab, stack: stack)
+                show(tab, stack: stack.map(\.reopened))
             }
         case let .listingChat(listingId, memberId):
             if isSignedIn() {

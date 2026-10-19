@@ -23,8 +23,8 @@ struct ExploreView: View {
                          cameraAccessibilityLabel: l10n.string(.navVisualSearch))
                 .textInputAutocapitalization(.never)
                 .onChange(of: text) { _, value in
-                    if value.count > ListingSearchParameters.maxTextLength {
-                        text = String(value.prefix(ListingSearchParameters.maxTextLength))
+                    if value.utf16.count > ListingSearchParameters.maxTextLength {
+                        text = value.prefix(utf16Units: ListingSearchParameters.maxTextLength)
                     }
                 }
         } content: {
@@ -139,6 +139,7 @@ private struct CategoryDisclosureRow: View {
     let hasChildren: Bool
     let action: () -> Void
     @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
         Button(action: action) {
@@ -167,7 +168,10 @@ private struct CategoryDisclosureRow: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
-        .accessibilityAddTraits(isExpanded ? [.isButton, .isSelected] : .isButton)
+        // A disclosure row says whether its subcategories are shown, not "selected"; a category without
+        // subcategories opens its results, like a plain link.
+        .accessibilityValue(hasChildren ? l10n.string(isExpanded ? .appA11yExpanded : .appA11yCollapsed) : "")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
