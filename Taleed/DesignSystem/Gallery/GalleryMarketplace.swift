@@ -18,6 +18,15 @@ struct GalleryMarketplace: View {
             }
         }
         .onAppear { loadProducts(copy) }
+        GallerySection(id: "product-card-states", number: "3.1b", title: "Product card states",
+                       note: "Boosted tag under the condition; strip for reserved, sold or hidden listings.") {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedLayout.productGridGap), GridItem(.flexible())],
+                      spacing: TaleedLayout.productGridGap) {
+                ForEach(stateProducts(copy)) { product in
+                    ProductCard(product: product, onTap: {}, onFavorite: {})
+                }
+            }
+        }
         GallerySection(id: "price", number: "3.2", title: "Price treatment", note: "DA suffix, tabular digits (D-5).") {
             VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
                 HStack(spacing: TaleedSpacing.s16) {
@@ -80,6 +89,17 @@ struct GalleryMarketplace: View {
 
     private func loadProducts(_ copy: GalleryCopy) {
         if products.isEmpty { products = GallerySamples.products(copy) }
+    }
+
+    /// Two sample cards: boosted, and sold.
+    private func stateProducts(_ copy: GalleryCopy) -> [ProductSummary] {
+        let samples = GallerySamples.products(copy)
+        guard samples.count >= 2 else { return [] }
+        var boosted = samples[0]
+        boosted.boostedLabel = DesignSystemStrings.string(.listingBoosted, locale: locale)
+        var sold = samples[1]
+        sold.statusLabel = DesignSystemStrings.string(.listingStatusSold, locale: locale)
+        return [boosted, sold]
     }
 
     /// Optimistic toggle, as features will do it.

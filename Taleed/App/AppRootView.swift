@@ -18,6 +18,7 @@ struct AppRootView: View {
             .environment(container.router)
             .environment(container.catalog)
             .environment(container.toasts)
+            .environment(container.favorites)
             .environment(container.welcome)
             .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in
                 #if DEBUG

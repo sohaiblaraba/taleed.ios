@@ -15,6 +15,8 @@ struct User: Equatable, Sendable {
     /// `counts` of `GET /me`: the Messages tab and the bell badges.
     var unreadMessages = 0
     var unreadNotifications = 0
+    /// The member's wilaya code (profile), nil when not set: Home's "Browse near you".
+    var wilayaId: Int?
 
     /// `@username`, or nil for the few accounts without a username.
     var handle: String? { username.map { "@\($0)" } }

@@ -144,7 +144,8 @@ extension User {
             isVerified: me.isVerified,
             isOfficial: me.isOfficial,
             unreadMessages: me.counts.unreadMessages,
-            unreadNotifications: me.counts.unreadNotifications
+            unreadNotifications: me.counts.unreadNotifications,
+            wilayaId: me.wilaya?.id
         )
     }
 }

@@ -260,6 +260,27 @@ extension ProductCondition {
     }
 }
 
+/// Boosted tag on product cards, under the condition tag: the small tag's shape in `brand/primary`
+/// with a white `sparkle` and label (Figma draws none; the API asks to show the boost, screens.md §0.4).
+struct BoostedTag: View {
+    let title: String
+
+    var body: some View {
+        HStack(spacing: TaleedSpacing.s4) {
+            TaleedIconView(.sparkle, size: 12, color: TaleedColor.textInverse)
+            Text(title)
+                .taleedFont(TaleedFont.tagLabel)
+                .foregroundStyle(TaleedColor.textInverse)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, TaleedSize.conditionTagPaddingX)
+        .padding(.vertical, TaleedSize.conditionTagPaddingY)
+        .frame(minHeight: TaleedSize.conditionTagHeight)
+        .background(Capsule().fill(TaleedColor.brandPrimary))
+        .accessibilityElement(children: .combine)
+    }
+}
+
 /// Size tag on product cards: 19 pt outlined pill ("M", "38").
 struct SizeTag: View {
     let text: String

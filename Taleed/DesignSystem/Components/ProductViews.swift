@@ -49,6 +49,11 @@ struct ProductSummary: Identifiable {
     var rating: Double?
     var isFavorite = false
     var favoriteCount: Int?
+    /// The strip at the bottom of the photo for a listing that is not for sale ("Reserved", "Sold",
+    /// "Hidden"); nil for one on sale.
+    var statusLabel: String?
+    /// The label of the boosted tag under the condition tag ("Boosted"); nil when not boosted.
+    var boostedLabel: String?
 }
 
 /// Product card for the two-column grid (design-system §3.1). The whole card opens the item;
@@ -66,6 +71,9 @@ struct ProductCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 ProductMediaView(media: product.media)
                     .aspectRatio(TaleedSize.productCardWidth / TaleedSize.productCardMediaHeightWithSize, contentMode: .fit)
+                    .overlay(alignment: .bottom) {
+                        if let status = product.statusLabel { ProductStatusStrip(text: status) }
+                    }
                 info
             }
             .background(TaleedColor.surfacePrimary)
@@ -81,11 +89,14 @@ struct ProductCard: View {
             // One row so that, with large text, the tag wraps (and steps its size down) beside the heart
             // instead of running under it; the label is never cut.
             HStack(alignment: .top, spacing: TaleedSpacing.s4) {
-                if let code = product.conditionCode {
-                    ConditionTag(code: code, catalogLabel: product.conditionLabel,
-                                 catalogShortLabel: product.conditionShortLabel)
-                        .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
+                    if let code = product.conditionCode {
+                        ConditionTag(code: code, catalogLabel: product.conditionLabel,
+                                     catalogShortLabel: product.conditionShortLabel)
+                    }
+                    if let boosted = product.boostedLabel { BoostedTag(title: boosted) }
                 }
+                .accessibilityHidden(true)
                 Spacer(minLength: 0)
                 FavoriteButton(isFavorite: product.isFavorite, count: product.favoriteCount, onToggle: onFavorite)
                     .layoutPriority(1)
@@ -138,10 +149,27 @@ struct ProductCard: View {
                                    catalogShortLabel: product.conditionShortLabel, length: .full, language: language)
         }
         let rating = product.rating.map { "★ " + $0.formatted(.number.precision(.fractionLength(1)).locale(locale)) }
-        return [product.title, PriceFormatter.format(product.price, language: language), condition, rating,
-                product.location, product.sizeLabel]
+        return [product.title, PriceFormatter.format(product.price, language: language), product.statusLabel, condition,
+                product.boostedLabel, rating, product.location, product.sizeLabel]
             .compactMap { $0 }
             .joined(separator: ", ")
+    }
+}
+
+/// The strip across the bottom of a card's photo for a listing that is not for sale: `navy/800` at
+/// 85 %, white caption, centred (the website's status strip in the design system's colours).
+struct ProductStatusStrip: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .taleedFont(TaleedFont.tagLabel)
+            .foregroundStyle(TaleedColor.textInverse)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .padding(.horizontal, TaleedSpacing.s8)
+            .background(TaleedColor.navy800.opacity(0.85))
     }
 }
 

@@ -15,6 +15,8 @@ import Foundation
 ///     -TaleedDebugBetaMode YES                 act as if `GET /config` said `betaMode: true`
 ///     -TaleedDebugAppVersion 0.9.0             report another app version (the update screen)
 ///     -welcome_done NO                         show the welcome screen again
+///     -TaleedDebugHomeFeed offline             Home's first feed request fails offline (then works);
+///                                              `empty` answers an empty feed
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor
@@ -27,6 +29,9 @@ enum DebugLaunchOptions {
 
     /// A launch screen to show instead of the launch flow's answer.
     static var launchScreen: String? { UserDefaults.standard.string(forKey: "TaleedDebugLaunchScreen") }
+
+    /// Home's feed for screenshots of its states: `offline` (first request only) or `empty`.
+    static var homeFeed: String? { UserDefaults.standard.string(forKey: "TaleedDebugHomeFeed") }
 
     /// Request access instead of sign-up, as during the invite-only period.
     static var forcesBetaMode: Bool { UserDefaults.standard.bool(forKey: "TaleedDebugBetaMode") }

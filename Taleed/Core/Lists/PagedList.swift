@@ -82,7 +82,9 @@ final class PagedList<Item: Identifiable & Sendable> where Item.ID: Sendable {
             guard current == generation else { return }
             append(page)
         } catch {
-            guard current == generation else { return }
+            // The screen let go of the request (the footer scrolled away): no error; the footer asks
+            // again when it shows.
+            guard current == generation, !Task.isCancelled else { return }
             if error.isInvalidCursor {
                 // The cursor expired (or the list changed too much): start again from the top.
                 isLoadingMore = false
@@ -147,7 +149,8 @@ final class PagedList<Item: Identifiable & Sendable> where Item.ID: Sendable {
             append(page)
             hasLoaded = true
         } catch {
-            guard current == generation else { return }
+            // Cancelled (the screen went away): nothing to report; `loadIfNeeded` starts again.
+            guard current == generation, !Task.isCancelled else { return }
             if hasLoaded {
                 refreshError = error
             } else {

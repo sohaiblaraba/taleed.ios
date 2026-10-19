@@ -190,4 +190,13 @@ enum L10nKey: String, CaseIterable, Sendable {
     case appSuspendedStillAvailable = "app_suspended_still_available"
     case appA11yUnreadMessages = "app_a11y_unread_messages"  // plural
     case appA11yUnreadNotifications = "app_a11y_unread_notifications"  // plural
+
+    // Home and browse feed (G2): website keys.
+    case homeEmptyFeed = "home_empty_feed"
+    case homeCtaSell = "home_cta_sell"
+    case navAllItems = "nav_all_items"
+    case listingBoosted = "listing_boosted"
+    case listingStatusReserved = "listing_status_reserved"
+    case listingStatusSold = "listing_status_sold"
+    case listingStatusHidden = "listing_status_hidden"
 }

@@ -10,6 +10,7 @@ struct MainShellView: View {
     @Environment(SessionManager.self) private var session
     @Environment(AppToasts.self) private var toasts
     @Environment(WelcomeGate.self) private var welcome
+    @Environment(FavoriteStore.self) private var favorites
 
     var body: some View {
         @Bindable var router = router
@@ -49,6 +50,8 @@ struct MainShellView: View {
                 .appLanguage(l10n.language)
         })
         .onAppear { router.shellDidAppear() }
+        // Another member's hearts: the lists reload with theirs.
+        .onChange(of: session.user?.id) { _, _ in favorites.sessionDidChange() }
         .onChange(of: session.isSignedIn) { _, isSignedIn in
             if isSignedIn {
                 welcome.complete()

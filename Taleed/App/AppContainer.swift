@@ -14,6 +14,7 @@ final class AppContainer {
     let launch: LaunchViewModel
     let catalog: CatalogStore
     let home: HomeViewModel
+    let favorites: FavoriteStore
     let router = AppRouter()
     let toasts: AppToasts
     let uploads: PhotoUploadService
@@ -28,7 +29,8 @@ final class AppContainer {
         session = SessionManager(api: api, apiSession: apiSession, tokenStore: tokenStore)
         launch = LaunchViewModel(api: api, session: session, environment: environment)
         catalog = CatalogStore(api: api, language: languageManager.language)
-        home = HomeViewModel(catalog: catalog)
+        home = HomeViewModel(api: api, catalog: catalog)
+        favorites = FavoriteStore(api: api)
         toasts = AppToasts(languageManager: languageManager)
         uploads = PhotoUploadService(api: api)
         welcome = WelcomeGate()
@@ -54,6 +56,10 @@ final class AppContainer {
             try await api.openConversation(listingId: listingId, buyerId: buyerId)
         }
         router.websiteLinks = { [launch] in launch.config?.links ?? WebsiteLinks() }
+        favorites.onFailure = { [toasts] error in toasts.show(error: error) }
+        favorites.onRemoved = { [toasts, languageManager] _ in
+            toasts.show(languageManager.string(.appNotFoundTitle), kind: .info)
+        }
 
         #if DEBUG
         DebugLaunchOptions.apply(to: router)
