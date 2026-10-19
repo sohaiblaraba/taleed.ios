@@ -1,0 +1,12 @@
+{
+  "images": [
+    {
+      "filename": "float-draped-fabric.imageset.png",
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

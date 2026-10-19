@@ -81,7 +81,13 @@ final class LanguageManager {
         return bundle.localizedString(forKey: key.rawValue, value: nil, table: nil)
     }
 
-    private static func bundle(for language: AppLanguage) -> Bundle {
+    /// The app string for `key` in `language`, for code that has no `LanguageManager` at hand
+    /// (design-system components read the language from the `\.locale` environment value).
+    nonisolated static func localizedString(_ key: L10nKey, language: AppLanguage) -> String {
+        bundle(for: language).localizedString(forKey: key.rawValue, value: nil, table: nil)
+    }
+
+    nonisolated private static func bundle(for language: AppLanguage) -> Bundle {
         Bundle.main.path(forResource: language.rawValue, ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
     }
 }
