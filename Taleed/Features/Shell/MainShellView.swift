@@ -35,8 +35,9 @@ struct MainShellView: View {
             Color.clear
                 .allowsHitTesting(false)
                 .taleedToastHost(toasts.state)
-                .padding(.bottom, drawsOwnTabBar ? toasts.screenBottomBarHeight : tabBarHeight)
+                .padding(.bottom, toastBottomInset)
         }
+        .onChange(of: router.paths) { _, paths in toasts.keepBottomBars(in: paths) }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
         .accessibilityHidden(showsWelcome)
         .overlay {
@@ -89,6 +90,13 @@ struct MainShellView: View {
         router.path(router.selectedTab).last?.drawsOwnTabBar ?? false
     }
 
+    /// The bottom bar of the screen on top: its own when it draws the tab bar (measured per screen),
+    /// otherwise the shell's tab bar.
+    private var toastBottomInset: CGFloat {
+        guard let top = router.path(router.selectedTab).last, top.drawsOwnTabBar else { return tabBarHeight }
+        return toasts.bottomBarHeight(tab: router.selectedTab, route: top) ?? tabBarHeight
+    }
+
     private var showsWelcome: Bool {
         welcome.isVisible && !session.isSignedIn
     }
@@ -103,9 +111,22 @@ struct MainShellView: View {
         return NavigationStack(path: router.pathBinding(tab)) {
             root().navigationDestination(for: AppRoute.self) { RouteDestinationView(route: $0) }
         }
+        .environment(\.shellTab, tab)
         .opacity(isSelected ? 1 : 0)
         .allowsHitTesting(isSelected)
         .accessibilityHidden(!isSelected)
+    }
+}
+
+private struct ShellTabKey: EnvironmentKey {
+    static var defaultValue: AppTab? { nil }
+}
+
+extension EnvironmentValues {
+    /// The tab whose navigation stack shows the screen (nil outside the shell's stacks).
+    var shellTab: AppTab? {
+        get { self[ShellTabKey.self] }
+        set { self[ShellTabKey.self] = newValue }
     }
 }
 

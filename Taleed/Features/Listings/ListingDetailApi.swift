@@ -5,9 +5,10 @@ import TaleedAPI
 /// offer, bundle toggle) and the seller's (hide, resume, delete).
 @MainActor
 protocol ListingDetailApi: AnyObject {
-    /// `GET /listings/{id}`: counts a view for the seller, so call it when the member opens the listing,
-    /// never to prefetch. `automatic`: a reload the member did not ask for (return to the foreground).
-    func listing(id: String, automatic: Bool) async throws(ApiError) -> ListingDetail
+    /// `GET /listings/{id}`, never to prefetch. `countView`: true only when the member opens the screen
+    /// (a view for the seller's statistics); every other reload sends `countView=false` (API 1.5.3).
+    /// `automatic`: a reload the member did not ask for (return to the foreground).
+    func listing(id: String, countView: Bool, automatic: Bool) async throws(ApiError) -> ListingDetail
     /// `POST /conversations {listingId}`: the buyer's conversation about the listing (created on the
     /// first call, returned after), its id.
     func openConversation(listingId: String) async throws(ApiError) -> String
@@ -39,18 +40,20 @@ protocol ReportsApi: AnyObject {
 }
 
 extension GeneratedTaleedApi: ListingDetailApi, ReportsApi {
-    func listing(id: String, automatic: Bool) async throws(ApiError) -> ListingDetail {
+    func listing(id: String, countView: Bool, automatic: Bool) async throws(ApiError) -> ListingDetail {
         let asOf = ContinuousClock.now
+        // The parameter is left out for a counted view (its default), as the website loads the page.
         let listing = try await caller.call(.read, automatic: automatic) {
-            try await ListingsAPI.getListing(id: id, apiConfiguration: $0)
+            try await ListingsAPI.getListing(id: id, countView: countView ? nil : false, apiConfiguration: $0)
         }
         return ListingDetail(listing, asOf: asOf)
     }
 
     func openConversation(listingId: String) async throws(ApiError) -> String {
         let request = ConversationOpen(listingId: listingId)
-        // Opening the same conversation again returns it (slice C, Starting a conversation).
-        let conversation = try await caller.call(.read) {
+        // A member's action: never repeated on its own (screens.md §0.6), even though opening the same
+        // conversation again returns it (slice C, Starting a conversation).
+        let conversation = try await caller.call(.write) {
             try await ConversationsAPI.openConversation(conversationOpen: request, apiConfiguration: $0)
         }
         return conversation.id
@@ -87,15 +90,22 @@ extension GeneratedTaleedApi: ListingDetailApi, ReportsApi {
 
     func saveBundle(sellerUsername: String, listingIds: [String]) async throws(ApiError) -> BundleSelectionState {
         let body = BundleSelection(listingIds: listingIds)
-        // The PUT replaces the whole selection: repeating it is harmless (slice C, Bundles).
-        let bundle = try await caller.call(.read) {
+        // A member's action: never repeated on its own (screens.md §0.6). The PUT replaces the whole
+        // selection, so the member's own retry is harmless (slice C, Bundles).
+        let bundle = try await caller.call(.write) {
             try await BundlesAPI.saveBundle(username: sellerUsername, bundleSelection: body, apiConfiguration: $0)
         }
         return BundleSelectionState(bundle)
     }
 
     func report(_ target: ReportTarget, reason: String, details: String?, evidenceKeys: [String]) async throws(ApiError) {
-        let request = ReportCreate(target, reason: reason, details: details, evidenceKeys: evidenceKeys)
+        // The catalog value the member picked, never another category. The sheet only lists reasons
+        // this build can send (`Catalog`), so this fails only on a programming error.
+        guard let reportReason = ReportReason(rawValue: reason), reportReason != .unknownDefaultOpenApi else {
+            let issue = ApiFieldIssue(path: "body.reason", message: "reason unknown to this build")
+            throw .failed(ApiFailure(status: 400, code: .invalidRequest, issues: [issue]))
+        }
+        let request = ReportCreate(target, reason: reportReason, details: details, evidenceKeys: evidenceKeys)
         // A repeat after a lost answer says `already_reported`, which the sheet treats as sent.
         try await caller.call(.write) { try await SafetyAPI.createReport(reportCreate: request, apiConfiguration: $0) }
     }
@@ -171,7 +181,7 @@ private extension BundleSelectionState {
 }
 
 private extension ReportCreate {
-    init(_ target: ReportTarget, reason: String, details: String?, evidenceKeys: [String]) {
+    init(_ target: ReportTarget, reason: ReportReason, details: String?, evidenceKeys: [String]) {
         var listingId: String?
         var memberId: String?
         var conversationId: String?
@@ -182,7 +192,7 @@ private extension ReportCreate {
         }
         self.init(
             listingId: listingId, memberId: memberId, conversationId: conversationId,
-            reason: ReportReason(rawValue: reason) ?? .other,
+            reason: reason,
             details: details, evidenceKeys: evidenceKeys.isEmpty ? nil : evidenceKeys
         )
     }

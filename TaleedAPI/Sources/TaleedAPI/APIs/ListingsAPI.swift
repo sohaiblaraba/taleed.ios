@@ -13,25 +13,27 @@ open class ListingsAPI {
      A listing
      
      - parameter id: (path)  
+     - parameter countView: (query) &#x60;false&#x60; reloads the listing without counting a view: pull-to-refresh, after signing in, after an action error, on return from the background. Count one view when the screen opens (the default, &#x60;true&#x60;), and never load a listing as a prefetch. (optional)
      - parameter apiConfiguration: The configuration for the http request.
      - returns: ListingDetail
      */
-    open class func getListing(id: String, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> ListingDetail {
-        return try await getListingWithRequestBuilder(id: id, apiConfiguration: apiConfiguration).execute().body
+    open class func getListing(id: String, countView: Bool? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> ListingDetail {
+        return try await getListingWithRequestBuilder(id: id, countView: countView, apiConfiguration: apiConfiguration).execute().body
     }
 
     /**
      A listing
      - GET /listings/{id}
-     - Counts as a view for the seller's statistics (never the seller's own views). Sold and reserved listings stay readable; removed ones answer 404, and hidden ones answer 404 to everyone but their seller.  Authentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.
+     - Counts as a view for the seller's statistics (never the seller's own views) unless `countView` is `false`. Sold and reserved listings stay readable; removed ones answer 404, and hidden ones answer 404 to everyone but their seller.  Authentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.
      - Bearer Token:
        - type: http
        - name: bearerAuth
      - parameter id: (path)  
+     - parameter countView: (query) &#x60;false&#x60; reloads the listing without counting a view: pull-to-refresh, after signing in, after an action error, on return from the background. Count one view when the screen opens (the default, &#x60;true&#x60;), and never load a listing as a prefetch. (optional)
      - parameter apiConfiguration: The configuration for the http request.
      - returns: RequestBuilder<ListingDetail> 
      */
-    open class func getListingWithRequestBuilder(id: String, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<ListingDetail> {
+    open class func getListingWithRequestBuilder(id: String, countView: Bool? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<ListingDetail> {
         var localVariablePath = "/listings/{id}"
         let idPreEscape = "\(APIHelper.mapValueToPathItem(id))"
         let idPostEscape = idPreEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
@@ -39,7 +41,11 @@ open class ListingsAPI {
         let localVariableURLString = apiConfiguration.basePath + localVariablePath
         let localVariableParameters: [String: any Sendable]? = nil
 
-        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        var localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        let localVariableQueryParameters: [String: (wrappedValue: (any Sendable)?, isExplode: Bool)] = [
+            "countView": (wrappedValue: countView?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+        ]
+        localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems(localVariableQueryParameters)
 
         let localVariableNillableHeaders: [String: (any Sendable)?] = [
             :

@@ -3,7 +3,8 @@ import SwiftUI
 import UIKit
 
 /// The listing's photos full screen (the website's gallery lightbox): swipe between them, pinch or
-/// double-tap to zoom, the "1 / 4" count, and close. Photos never mirror.
+/// double-tap to zoom, the "1 / 4" count, and close. Photos never mirror. The status bar hides while it
+/// shows: its dark content would be invisible on black.
 struct ListingPhotoViewer: View {
     let photos: [ListingPhoto]
     @State var current: Int
@@ -40,6 +41,7 @@ struct ListingPhotoViewer: View {
             .padding(.top, TaleedSpacing.s8)
         }
         .environment(\.layoutDirection, l10n.language.layoutDirection)
+        .statusBarHidden()
     }
 }
 

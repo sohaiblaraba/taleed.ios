@@ -39,6 +39,7 @@ struct ListingDetailView: View {
     @Environment(AppToasts.self) private var toasts
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.shellTab) private var shellTab
 
     struct OfferDraft: Equatable {
         let price: Int
@@ -82,7 +83,10 @@ struct ListingDetailView: View {
                 }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomBar.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { toasts.screenBottomBarHeight = $0 }
+            // Toasts show above this screen's own bar while it is on top (each listing measures its own).
+            bottomBar.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                if let shellTab { toasts.setBottomBarHeight(height, tab: shellTab, route: .listing(id: model.listingId)) }
+            }
         }
         .task { await model.loadIfNeeded() }
         .onChange(of: session.user?.id) { _, id in Task { await model.memberDidChange(to: id) } }

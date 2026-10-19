@@ -1,8 +1,9 @@
 import Foundation
 import Observation
 
-/// The listing screen (screens.md §2 G4): loads `GET /listings/{id}` when the member opens it (it counts
-/// a view), keeps it while the screen is in the stack, and runs the buyer's and the seller's actions.
+/// The listing screen (screens.md §2 G4): loads `GET /listings/{id}` when the member opens it (that load
+/// counts a view; every later reload sends `countView=false`), keeps it while the screen is in the stack,
+/// and runs the buyer's and the seller's actions.
 ///
 /// Actions return what happened; the screen shows the toast and navigates. The view model never
 /// decides a permission itself: `ListingDetailActions` reads the server's flags.
@@ -62,6 +63,8 @@ final class ListingDetailViewModel {
     @ObservationIgnored private var loadedFor: String??
     @ObservationIgnored private var memberId: String?
     @ObservationIgnored private var backgroundSince: ContinuousClock.Instant?
+    /// The screen's opening load succeeded: it counted the view, and no other load may (API 1.5.3).
+    @ObservationIgnored private var viewCounted = false
 
     /// A shorter absence keeps the listing as it is (as Home and search).
     static let foregroundReloadAfter: Duration = .seconds(60)
@@ -113,7 +116,10 @@ final class ListingDetailViewModel {
             #if DEBUG
             try debugFailFirstLoad()
             #endif
-            let fresh = try await api.listing(id: listingId, automatic: automatic)
+            // Until a load succeeded, the member is still opening the screen (its "Retry" included).
+            let countView = !viewCounted
+            let fresh = try await api.listing(id: listingId, countView: countView, automatic: automatic)
+            viewCounted = true
             listing = fresh
             loadError = nil
             refreshError = nil

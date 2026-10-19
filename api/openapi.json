@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.2",
+    "version": "1.5.3",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -2290,7 +2290,7 @@
           "Listings"
         ],
         "summary": "A listing",
-        "description": "Counts as a view for the seller's statistics (never the seller's own views). Sold and reserved listings stay readable; removed ones answer 404, and hidden ones answer 404 to everyone but their seller.\n\nAuthentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.",
+        "description": "Counts as a view for the seller's statistics (never the seller's own views) unless `countView` is `false`. Sold and reserved listings stay readable; removed ones answer 404, and hidden ones answer 404 to everyone but their seller.\n\nAuthentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.",
         "parameters": [
           {
             "name": "id",
@@ -2300,6 +2300,15 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 64
+            }
+          },
+          {
+            "name": "countView",
+            "in": "query",
+            "required": false,
+            "description": "`false` reloads the listing without counting a view: pull-to-refresh, after signing in, after an action error, on return from the background. Count one view when the screen opens (the default, `true`), and never load a listing as a prefetch.",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],

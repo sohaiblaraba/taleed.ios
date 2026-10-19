@@ -43,7 +43,13 @@ final class FakeListingDetailApi: ListingDetailApi, ReportsApi {
     var deletion: Result<Void, Taleed.ApiError> = .success(())
     var bundleResult: Result<BundleSelectionState, Taleed.ApiError> = .success(BundleSelectionState(id: "b1", listingIds: ["x"]))
     var report: Result<Void, Taleed.ApiError> = .success(())
-    private(set) var listingCalls: [Bool] = []
+    /// Each `GET /listings/{id}`: whether it counted a view, whether the member asked for it.
+    struct ListingCall: Equatable {
+        let countView: Bool
+        let automatic: Bool
+    }
+
+    private(set) var listingCalls: [ListingCall] = []
     private(set) var savedBundles: [[String]] = []
     private(set) var offers: [Int] = []
     struct SentReport {
@@ -55,8 +61,8 @@ final class FakeListingDetailApi: ListingDetailApi, ReportsApi {
 
     private(set) var reports: [SentReport] = []
 
-    func listing(id: String, automatic: Bool) async throws(Taleed.ApiError) -> Taleed.ListingDetail {
-        listingCalls.append(automatic)
+    func listing(id: String, countView: Bool, automatic: Bool) async throws(Taleed.ApiError) -> Taleed.ListingDetail {
+        listingCalls.append(ListingCall(countView: countView, automatic: automatic))
         if !listings.isEmpty { return try listings.removeFirst().get() }
         return try listing.get()
     }
@@ -280,13 +286,6 @@ struct ListingDetailViewModelTests {
         #expect(model.refreshError == .network)
     }
 
-    @Test func theFirstLoadHappensOnce() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
-        await model.loadIfNeeded()
-        await model.loadIfNeeded()
-        #expect(api.listingCalls == [false])
-    }
-
     @Test func anOfferOpensItsConversation() async {
         let model = ListingDetailViewModel(listingId: "l1", api: api)
         await model.loadIfNeeded()
@@ -380,17 +379,5 @@ struct ListingDetailViewModelTests {
         api.listing = .success(.fixture(acceptedOffer: AcceptedOfferRef(id: "o1", amount: 2000)))
         #expect(await other.resolvePending(.buy, memberId: "karim") == .buy)
         #expect(other.actions(isSignedIn: true)?.buy == .payNow(offerId: "o1", amount: 2000))
-    }
-
-    @Test func returningAfterAWhileReloadsQuietly() async {
-        let model = ListingDetailViewModel(listingId: "l1", api: api)
-        await model.loadIfNeeded()
-        let start = ContinuousClock.now
-        model.wentToBackground(at: start)
-        await model.returnedToForeground(at: start + .seconds(10))
-        #expect(api.listingCalls == [false])
-        model.wentToBackground(at: start)
-        await model.returnedToForeground(at: start + .seconds(61))
-        #expect(api.listingCalls == [false, true])
     }
 }

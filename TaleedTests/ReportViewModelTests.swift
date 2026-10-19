@@ -64,4 +64,15 @@ struct ReportViewModelTests {
         #expect(await model.submit() == .sent)
         #expect(api.reports.first?.evidenceKeys == [])
     }
+
+    /// A reason this build cannot encode is never sent as another category (`OTHER`).
+    @Test func aReasonUnknownToThisBuildIsNotSentAsAnotherOne() async {
+        let api = GeneratedTaleedApi(session: ApiSession(environment: .fixture(), language: .fr, configuration: .init()))
+        do {
+            try await api.report(.listing(id: "l1"), reason: "NEW_REASON", details: nil, evidenceKeys: [])
+            Issue.record("an unknown reason was sent")
+        } catch {
+            #expect(error.code == .invalidRequest)
+        }
+    }
 }
