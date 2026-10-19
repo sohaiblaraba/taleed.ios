@@ -6,6 +6,7 @@ import Foundation
 ///     -TaleedDebugTab profile                  select a tab (home, explore, sell, messages, profile)
 ///     -TaleedDebugProfilePath settings,designSystem
 ///     -TaleedGallerySection buttons            scroll the design-system gallery to a section
+///     -TaleedGalleryLargeText YES              turn on the gallery's "Text 200 %" switch
 ///     -TaleedDebugSignIn YES                   open the sign-in sheet
 ///     -TaleedDebugLaunchScreen suspended       show a launch screen (updateRequired, suspended)
 ///
@@ -15,6 +16,8 @@ enum DebugLaunchOptions {
     private static var applied = false
 
     static var gallerySection: String? { UserDefaults.standard.string(forKey: "TaleedGallerySection") }
+
+    static var galleryLargeText: Bool { UserDefaults.standard.bool(forKey: "TaleedGalleryLargeText") }
 
     /// A launch screen to show instead of the launch flow's answer.
     static var launchScreen: String? { UserDefaults.standard.string(forKey: "TaleedDebugLaunchScreen") }

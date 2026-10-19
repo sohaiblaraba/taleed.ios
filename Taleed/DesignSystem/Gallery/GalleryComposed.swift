@@ -12,23 +12,19 @@ struct GalleryComposed: View {
     var body: some View {
         let copy = GalleryCopy(locale)
         GallerySection(id: "item-detail", number: "6.3", title: "Item Detail pieces",
-                       note: "Spec rows, photo count pill and page dots, sticky CTA bar (size.bottomActionBar).",
+                       note: "Spec rows, photo gallery (page dots, count pill, circle buttons), sticky CTA bar.",
                        fullBleed: true) {
             VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
                 specRows(copy)
                 photoHero
                     .padding(.horizontal, TaleedLayout.screenMargin)
                 VStack(spacing: TaleedSpacing.s16) {
-                    BottomActionBar {
-                        ItemDetailActions(offerTitle: copy("Faire une offre", "قدّم عرضًا", "Make an offer"),
-                                          buyTitle: copy("Acheter", "اشترِ الآن", "Buy now"), onOffer: {}, onBuy: {})
-                    }
-                    BottomActionBar {
-                        ItemDetailActions(offerTitle: copy("Faire une offre", "قدّم عرضًا", "Make an offer"),
-                                          buyTitle: copy("Acheter", "اشترِ الآن", "Buy now"), onOffer: {}, onBuy: {})
-                    } footer: {
-                        BottomNavigation(items: navItems(copy), selection: $tab, drawsBackground: false)
-                    }
+                    ItemDetailActionBar(makeOfferLabel: copy("Faire une offre", "قدّم عرضًا", "Make an offer"), onMakeOffer: {},
+                                        buyNowLabel: copy("Acheter", "اشترِ الآن", "Buy now"), onBuyNow: {})
+                    ItemDetailActionBar(makeOfferLabel: copy("Faire une offre", "قدّم عرضًا", "Make an offer"), onMakeOffer: {},
+                                        buyNowLabel: copy("Acheter", "اشترِ الآن", "Buy now"), onBuyNow: {}, footer: {
+                        TaleedBottomNavigation(items: navItems(copy), selection: $tab, isEmbedded: true)
+                    })
                 }
                 .padding(.top, TaleedSpacing.s16)
                 .background(TaleedColor.surfaceGrouped)
@@ -37,8 +33,8 @@ struct GalleryComposed: View {
         GallerySection(id: "search", number: "6.2", title: "Search results pieces",
                        note: "Header with query and filters, saved-search row.", fullBleed: true) {
             VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
-                SearchResultsHeader(text: $query, placeholder: copy("Rechercher un article", "ابحث عن غرض", "Search for an item"),
-                                    onBack: {}, backAccessibilityLabel: copy("Retour", "رجوع", "Back"), filters: {
+                SearchHeader(text: $query, placeholder: copy("Rechercher un article", "ابحث عن غرض", "Search for an item"),
+                             onBack: {}, filters: {
                     ChipRow(spacing: TaleedSpacing.s8) {
                         FilterChip(title: copy("Filtres · 2", "عوامل التصفية · 2", "Filters · 2"), icon: .slidersHorizontal,
                                    tone: .brand) {}
@@ -47,14 +43,25 @@ struct GalleryComposed: View {
                     }
                 })
                 .background(TaleedColor.surfaceGrouped)
+                ResultsSummaryRow(countLabel: copy("126 articles", "126 غرضًا", "126 items"),
+                                  sortLabel: copy("Plus récents", "الأحدث", "Newest")) {}
+                    .padding(.horizontal, TaleedLayout.screenMargin)
                 SavedSearchRow(title: copy("M’avertir des nouvelles annonces", "نبّهني عند نشر إعلانات جديدة",
                                            "Notify me about new listings")) {}
                     .padding(.horizontal, TaleedLayout.screenMargin)
             }
         }
-        GallerySection(id: "sell-steps", number: "6.4", title: "Sell-step pieces", note: "Progress segments, photo tips card.") {
+        GallerySection(id: "sell-steps", number: "6.4", title: "Sell-step pieces",
+                       note: "Progress segments, step intro, category field, photo tips card.") {
             VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
-                SellStepProgress(current: step)
+                StepProgress(current: step)
+                StepIntro(step: DesignSystemStrings.format(.a11yStepProgress, locale: locale, step, 4),
+                          title: copy("Ajoutez vos photos", "أضف صورك", "Add your photos"),
+                          message: copy("Les annonces avec 4 photos ou plus se vendent plus vite.",
+                                        "الإعلانات التي تضم 4 صور أو أكثر تُباع أسرع.",
+                                        "Listings with 4 or more photos sell faster."))
+                CategoryField(label: copy("Catégorie", "الفئة", "Category"),
+                              value: copy("Mode · Vestes", "أزياء · سترات", "Fashion · Jackets")) {}
                 HStack(spacing: TaleedSpacing.s8) {
                     TaleedButton(title: "−", kind: .tertiary, size: .small) { step = max(1, step - 1) }
                     TaleedButton(title: "+", kind: .tertiary, size: .small) { step = min(4, step + 1) }
@@ -79,25 +86,29 @@ struct GalleryComposed: View {
     }
 
     private var photoHero: some View {
-        let photos: [TaleedImage] = [.loginGreenDress, .loginBlueTop, .loginPinkShirt, .loginBrownBag]
-        return TabView(selection: $photo) {
-            ForEach(photos.indices, id: \.self) { index in
-                ProductMediaView(media: .local(Image(taleed: photos[index])), contentMode: .fit)
-                    .background(TaleedColor.surfacePrimary)
-                    .tag(index)
+        let photos: [ProductMedia] = [.loginGreenDress, .loginBlueTop, .loginPinkShirt, .loginBrownBag]
+            .map { .local(Image(taleed: $0)) }
+        return VStack(spacing: TaleedSpacing.s16) {
+            ItemPhotoGallery(photos: photos, height: 240, current: $photo) {
+                VStack {
+                    HStack {
+                        GalleryCircleButton(icon: .arrowLeft, accessibilityLabel: copyBack) {}
+                        Spacer()
+                        GalleryCircleButton(icon: .shareNetwork, accessibilityLabel: "Share") {}
+                        GalleryCircleButton(icon: .heartFill, accessibilityLabel: DesignSystemStrings.string(.favoriteAdd, locale: locale),
+                                            tone: .favorite,
+                                            selectedDescription: DesignSystemStrings.string(.favoriteSaved, locale: locale)) {}
+                    }
+                    Spacer()
+                }
+                .padding(TaleedSpacing.s12)
             }
-        }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .frame(height: 240)
-        .background(TaleedColor.navy300)
-        .overlay(alignment: .bottom) {
-            PhotoPageDots(count: photos.count, current: photo).padding(.bottom, TaleedSpacing.s16)
-        }
-        .overlay(alignment: .bottomTrailing) {
-            PhotoCountPill(index: photo + 1, count: photos.count).padding(.trailing, 16).padding(.bottom, 14)
+            ItemPhotoGallery(photos: photos, height: 200, contentMode: .fill, indicator: .count, current: $photo)
         }
         .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
     }
+
+    private var copyBack: String { DesignSystemStrings.string(.commonBack, locale: locale) }
 
     private func navItems(_ copy: GalleryCopy) -> [BottomNavItem<ShellTab>] {
         [

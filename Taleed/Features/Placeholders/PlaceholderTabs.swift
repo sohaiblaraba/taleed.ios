@@ -1,16 +1,16 @@
 import SwiftUI
 
+// Tabs Figma does not draw (decision D-12) have the centred-title top app bar and a one-line message,
+// as on Android (D7). Sell keeps the wireframe's brand app bar and page heading.
+
 struct ExploreView: View {
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
         ShellScreen {
-            ShellBrandAppBar()
+            TaleedTopAppBar(title: l10n.string(.tabExplore))
         } content: {
-            VStack(spacing: 0) {
-                PageHeading(title: l10n.string(.tabExplore))
-                MessageStateView(text: l10n.string(.searchPlaceholder), icon: .magnifyingGlass)
-            }
+            MessageStateView(text: l10n.string(.searchPlaceholder))
         }
     }
 }
@@ -26,7 +26,7 @@ struct SellView: View {
             VStack(spacing: 0) {
                 PageHeading(eyebrow: l10n.string(.tabSell), title: l10n.string(.sellTitle))
                 if session.isSignedIn {
-                    MessageStateView(text: l10n.string(.sellPlaceholder), icon: .cloudArrowUp)
+                    MessageStateView(text: l10n.string(.sellPlaceholder))
                 } else {
                     SignInPromptView()
                 }
@@ -41,16 +41,27 @@ struct MessagesView: View {
 
     var body: some View {
         ShellScreen {
-            ShellBrandAppBar()
+            TaleedTopAppBar(title: l10n.string(.tabMessages))
         } content: {
-            VStack(spacing: 0) {
-                PageHeading(title: l10n.string(.tabMessages))
-                if session.isSignedIn {
-                    MessageStateView(text: l10n.string(.messagesPlaceholder), icon: .chatCircleText)
-                } else {
-                    SignInPromptView()
-                }
+            if session.isSignedIn {
+                MessageStateView(text: l10n.string(.messagesPlaceholder))
+            } else {
+                SignInPromptView()
             }
+        }
+    }
+}
+
+/// The notifications placeholder, pushed from the bell of the brand app bar (Home and Sell).
+struct NotificationsView: View {
+    @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ShellScreen {
+            TaleedTopAppBar(title: l10n.string(.commonNotifications), onBack: { dismiss() })
+        } content: {
+            MessageStateView(text: l10n.string(.notificationsPlaceholder))
         }
     }
 }

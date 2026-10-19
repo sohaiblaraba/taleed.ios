@@ -9,50 +9,36 @@ struct SettingsView: View {
 
     var body: some View {
         ShellScreen {
-            TaleedAppBar(title: l10n.string(.settingsTitle), onBack: { dismiss() },
-                         backAccessibilityLabel: l10n.string(.commonBack))
+            TaleedTopAppBar(title: l10n.string(.settingsTitle), onBack: { dismiss() })
         } content: {
+            // Flat rows, as Android's SettingsScreen.
             ScrollView {
-                VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
-                    VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-                        Eyebrow(text: l10n.string(.settingsLanguage))
-                        VStack(spacing: 0) {
-                            ForEach(AppLanguage.allCases) { language in
-                                // Each name in its own language.
-                                TaleedRadio(title: language.nativeName, isSelected: language == l10n.language) {
-                                    l10n.select(language)
-                                }
-                                .environment(\.locale, language.locale)
-                            }
-                        }
-                    }
-
+                VStack(alignment: .leading, spacing: 0) {
+                    Eyebrow(text: l10n.string(.settingsLanguage))
+                        .padding(.horizontal, TaleedLayout.screenMargin)
+                        .padding(.top, TaleedSpacing.s24)
+                        .padding(.bottom, TaleedSpacing.s8)
                     VStack(spacing: 0) {
-                        HStack {
-                            Text(l10n.string(.settingsVersion))
-                                .taleedFont(TaleedFont.bodyRegular)
-                                .foregroundStyle(TaleedColor.textPrimary)
-                            Spacer()
-                            Text(verbatim: "\(environment.appVersion) (\(environment.buildNumber))")
-                                .taleedFont(TaleedFont.bodyRegular)
-                                .foregroundStyle(TaleedColor.textSecondary)
-                                .environment(\.layoutDirection, .leftToRight)
+                        ForEach(AppLanguage.allCases) { language in
+                            // Each name in its own language.
+                            TaleedRadio(title: language.nativeName, isSelected: language == l10n.language) {
+                                l10n.select(language)
+                            }
+                            .environment(\.locale, language.locale)
                         }
-                        .padding(.horizontal, TaleedSpacing.s16)
-                        .frame(minHeight: 52)
-                        .accessibilityElement(children: .combine)
-                        #if DEBUG
-                        Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1)
-                        TaleedListRow(title: "Design system", leadingIcon: .sparkle, showsDivider: false) {
-                            router.profilePath.append(.designSystem)
-                        }
-                        #endif
                     }
-                    .taleedCard()
-                    .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+                    .padding(.horizontal, TaleedLayout.screenMargin)
+                    // "1.0.0 (1)" has no direction of its own: it stays left to right in Arabic too.
+                    ListRow(label: l10n.string(.settingsVersion),
+                            trailingText: "\(environment.appVersion) (\(environment.buildNumber))".isolatedLeftToRight)
+                        .padding(.top, TaleedSpacing.s16)
+                    #if DEBUG
+                    ListRow(label: "Design system", leadingIcon: .sparkle, showsChevron: true) {
+                        router.profilePath.append(.designSystem)
+                    }
+                    #endif
                 }
-                .padding(TaleedLayout.screenMargin)
-                .padding(.top, TaleedSpacing.s8)
+                .padding(.bottom, TaleedSpacing.s24)
             }
         }
     }

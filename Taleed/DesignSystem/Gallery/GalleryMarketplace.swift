@@ -10,8 +10,8 @@ struct GalleryMarketplace: View {
         let copy = GalleryCopy(locale)
         GallerySection(id: "product-cards", number: "3.1", title: "Product card",
                        note: "2-column grid, gap 8; whole card opens, heart is optimistic.") {
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedLayout.ProductGrid.gap), GridItem(.flexible())],
-                      spacing: TaleedLayout.ProductGrid.gap) {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedLayout.productGridGap), GridItem(.flexible())],
+                      spacing: TaleedLayout.productGridGap) {
                 ForEach(products.prefix(4)) { product in
                     ProductCard(product: product, onTap: {}, onFavorite: { toggleFavorite(product.id) })
                 }
@@ -25,15 +25,15 @@ struct GalleryMarketplace: View {
                     PriceText(amount: 12500, style: TaleedFont.priceListRow)
                     PriceText(amount: 1_234_567, style: TaleedFont.priceDetail)
                 }
-                PriceDetailBlock(
+                PriceDetail(
                     amount: 4800,
-                    negotiableLabel: copy("Prix négociable", "السعر قابل للتفاوض", "Negotiable price"),
                     meta: [
                         .init(icon: .mapPin, text: copy("Oran · 2,4 km", "وهران · 2.4 كم", "Oran · 2.4 km")),
                         .init(icon: .clock, text: copy("Publié il y a 2 heures", "نُشر منذ ساعتين", "Published 2 hours ago")),
                         .init(icon: .truck, text: copy("Livraison disponible", "التوصيل متاح", "Delivery available")),
                         .init(icon: .eye, text: copy("84 vues", "84 مشاهدة", "84 views")),
-                    ]
+                    ],
+                    negotiableLabel: copy("Prix négociable", "السعر قابل للتفاوض", "Negotiable price")
                 )
             }
         }
@@ -58,8 +58,7 @@ struct GalleryMarketplace: View {
                     .init(value: copy("< 1 h", "< 1 س", "< 1 h"), label: copy("Réponse", "الرد", "Reply")),
                     .init(value: copy("3 ans", "3 سنوات", "3 years"), label: copy("Membre", "عضو", "Member")),
                     .init(value: "98%", label: copy("Positif", "إيجابي", "Positive")),
-                ],
-                viewProfileTitle: copy("Voir le profil", "عرض الملف", "View profile")
+                ]
             ) {}
         }
         GallerySection(id: "empty", number: "3.5", title: "Empty state") {
@@ -74,7 +73,7 @@ struct GalleryMarketplace: View {
         GallerySection(id: "skeletons", number: "3.6", title: "Skeleton cards", note: "Pulse 1.2 s, max six, static with Reduce Motion.") {
             VStack(spacing: TaleedSpacing.s24) {
                 SkeletonCardRow()
-                SkeletonGrid(count: 2)
+                SkeletonProductGrid(count: 2)
             }
         }
     }

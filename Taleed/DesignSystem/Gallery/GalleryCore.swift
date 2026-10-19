@@ -3,7 +3,7 @@ import SwiftUI
 
 /// §2 Core components.
 struct GalleryCoreComponents: View {
-    @Binding var toast: ToastItem?
+    let toasts: TaleedToastState
     @Environment(\.locale) private var locale
 
     var body: some View {
@@ -48,8 +48,9 @@ struct GalleryCoreComponents: View {
             GalleryAlerts()
         }
         GallerySection(id: "toasts", number: "2.14", title: "Toast",
-                       note: "Light = component; dark = feedback after an action (D-11). Auto-dismiss 4 s.") {
-            GalleryToasts(toast: $toast)
+                       note: "Light = component; dark = feedback after an action (D-11). Auto-dismiss 4 s, "
+                           + "up to 3 stacked, swipe sideways.") {
+            GalleryToasts(toasts: toasts)
         }
     }
 }
@@ -82,16 +83,16 @@ private struct GalleryButtons: View {
                                         .disabled(state == .disabled)
                                 }
                             }
+                            TaleedIconOnlyButton(icon: .caretLeft, accessibilityLabel: "Back", kind: kind, isLoading: true) {}
                         }
                     }
                 }
                 VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
                     GalleryCaption(text: copy("Chargement, pleine largeur, icônes", "تحميل، عرض كامل، أيقونات",
                                               "Loading, full width, icons"))
-                    TaleedButton(title: copy("Publier l’annonce", "نشر الإعلان", "Publish listing"), kind: .secondary,
+                    TaleedButton(title: copy("Publier l’annonce", "نشر الإعلان", "Publish listing"),
                                  isLoading: true, isFullWidth: true) {}
-                    TaleedButton(title: copy("Publier l’annonce", "نشر الإعلان", "Publish listing"), kind: .secondary,
-                                 isFullWidth: true) {}
+                    TaleedButton(title: copy("Publier l’annonce", "نشر الإعلان", "Publish listing"), isFullWidth: true) {}
                     TaleedButton(title: copy("Écrire au vendeur", "مراسلة البائع", "Message seller"), kind: .tertiary,
                                  leadingIcon: .chatCircle, trailingIcon: .caretRight, isFullWidth: true) {}
                     TaleedButton(title: copy("Continuer avec l’e-mail", "المتابعة بالبريد الإلكتروني", "Continue with email"),
@@ -116,16 +117,21 @@ private struct GalleryIconButtons: View {
                 TaleedIconButton(icon: .share, accessibilityLabel: "Share") {}
                 TaleedIconButton(icon: .dotsThree, accessibilityLabel: "More") {}.disabled(true)
             }
-            HStack(spacing: TaleedSpacing.s12) {
-                FavoriteControl(isSaved: false) {}
-                FavoriteControl(isSaved: false, count: 7) {}
-                FavoriteControl(isSaved: true) {}
-                FavoriteControl(isSaved: saved, count: count) {
+            FlowRow(spacing: TaleedSpacing.s12) {
+                FavoriteButton(isFavorite: false) {}
+                FavoriteButton(isFavorite: false, count: 7) {}
+                FavoriteButton(isFavorite: true) {}
+                FavoriteButton(isFavorite: saved, count: count) {
                     saved.toggle()
                     count += saved ? 1 : -1
                 }
-                FavoriteCircleButton(isSaved: false) {}
-                FavoriteCircleButton(isSaved: true) {}
+            }
+            GalleryCaption(text: "FavoriteCircleButton, FavoriteHeartToggle: heart-fill when saved")
+            FlowRow(spacing: TaleedSpacing.s12) {
+                FavoriteCircleButton(isFavorite: false) {}
+                FavoriteCircleButton(isFavorite: true) {}
+                FavoriteHeartToggle(isFavorite: false) {}
+                FavoriteHeartToggle(isFavorite: true) {}
             }
         }
     }
@@ -240,11 +246,11 @@ private struct GalleryTags: View {
         let copy = GalleryCopy(locale)
         VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
             FlowRow {
-                TaleedBadge(title: copy("Nouveau", "جديد", "New"), tone: .brand)
-                TaleedBadge(title: copy("Vérifié", "موثّق", "Verified"), tone: .success, icon: .shieldCheck)
-                TaleedBadge(title: copy("Réservé", "محجوز", "Reserved"), tone: .warning)
-                CountBadge(count: 3)
-                CountBadge(count: 128)
+                TaleedBadge(title: DesignSystemStrings.string(.badgeNew, locale: locale), tone: .brand)
+                TaleedBadge(title: DesignSystemStrings.string(.profileVerified, locale: locale), tone: .success, icon: .shieldCheck)
+                TaleedBadge(title: DesignSystemStrings.string(.badgeReserved, locale: locale), tone: .warning)
+                CountBadge(count: 3, accessibilityLabel: copy("3 messages non lus", "3 رسائل غير مقروءة", "3 unread messages"))
+                CountBadge(count: 128, accessibilityLabel: copy("128 messages non lus", "128 رسالة غير مقروءة", "128 unread messages"))
                 SizeTag(text: "M")
                 SizeTag(text: "38")
             }
@@ -299,7 +305,7 @@ private struct GalleryAlerts: View {
             InlineAlert(kind: .info, title: copy("Conseil de sécurité", "نصيحة أمان", "Safety tip"),
                         message: copy("Gardez vos échanges et paiements sur Taleed.", "أبقِ محادثاتك ومدفوعاتك داخل تليد.",
                                       "Keep conversations and payments within Taleed."),
-                        actionTitle: copy("En savoir plus", "اعرف المزيد", "Learn more")) {}
+                        actionTitle: DesignSystemStrings.string(.commonLearnMore, locale: locale)) {}
             InlineAlert(kind: .success, title: copy("Annonce publiée", "تم نشر الإعلان", "Listing published"),
                         message: copy("Votre article est visible par les acheteurs.", "غرضك ظاهر الآن للمشترين.",
                                       "Your item is now visible to buyers."))
@@ -317,18 +323,19 @@ private struct GalleryAlerts: View {
 }
 
 private struct GalleryToasts: View {
-    @Binding var toast: ToastItem?
+    let toasts: TaleedToastState
     @Environment(\.locale) private var locale
 
     var body: some View {
         let copy = GalleryCopy(locale)
+        let string = { (key: L10nKey) in DesignSystemStrings.string(key, locale: locale) }
         let messages: [(TaleedFeedbackKind, String)] = [
-            (.success, copy("Ajouté aux favoris", "أضيف إلى المفضلة", "Added to favorites")),
-            (.error, copy("Impossible d’ajouter aux favoris", "تعذّرت الإضافة إلى المفضلة", "Unable to add to favorites")),
-            (.warning, copy("Limite de favoris atteinte", "تم بلوغ حد المفضلة", "Favorites limit reached")),
-            (.info, copy("Déjà dans vos favoris", "موجود في المفضلة", "Already in favorites")),
+            (.success, string(.favoriteAdded)),
+            (.error, string(.favoriteAddFailed)),
+            (.warning, string(.favoriteLimitReached)),
+            (.info, string(.favoriteAlready)),
         ]
-        let cancel = copy("Annuler", "إلغاء", "Cancel")
+        let cancel = string(.commonCancel)
         VStack(spacing: TaleedSpacing.s8) {
             ForEach(messages, id: \.0) { kind, message in
                 TaleedToast(kind: kind, message: message, style: .light, actionTitle: kind == .success ? cancel : nil,
@@ -338,55 +345,12 @@ private struct GalleryToasts: View {
                 TaleedToast(kind: kind, message: message, actionTitle: kind == .success ? cancel : nil, onAction: {}, onClose: {})
             }
             TaleedButton(title: copy("Afficher un toast", "عرض إشعار", "Show a toast"), kind: .tertiary, size: .medium) {
-                toast = ToastItem(kind: .success, message: messages[0].1, actionTitle: cancel, onAction: {})
+                let index = toasts.toasts.count % messages.count
+                toasts.show(ToastItem(kind: messages[index].0, message: messages[index].1,
+                                      actionTitle: index == 0 ? cancel : nil, onAction: index == 0 ? {} : nil))
             }
         }
     }
 }
 
-/// Lays children out in rows that wrap, leading-aligned (mirrors in right-to-left layouts).
-struct FlowRow: Layout {
-    var spacing: CGFloat = TaleedSpacing.s8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let rows = arrange(width: proposal.width ?? .infinity, subviews: subviews)
-        let height = rows.map(\.height).reduce(0, +) + spacing * CGFloat(max(0, rows.count - 1))
-        return CGSize(width: proposal.width ?? rows.map(\.width).max() ?? 0, height: height)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var top = bounds.minY
-        for row in arrange(width: bounds.width, subviews: subviews) {
-            var leading = bounds.minX
-            for index in row.indices {
-                let size = subviews[index].sizeThatFits(.unspecified)
-                subviews[index].place(at: CGPoint(x: leading, y: top + (row.height - size.height) / 2), proposal: .unspecified)
-                leading += size.width + spacing
-            }
-            top += row.height + spacing
-        }
-    }
-
-    private struct Row {
-        var indices: [Int] = []
-        var width: CGFloat = 0
-        var height: CGFloat = 0
-    }
-
-    private func arrange(width: CGFloat, subviews: Subviews) -> [Row] {
-        var rows: [Row] = [Row()]
-        for index in subviews.indices {
-            let size = subviews[index].sizeThatFits(.unspecified)
-            if !rows[rows.count - 1].indices.isEmpty, rows[rows.count - 1].width + spacing + size.width > width {
-                rows.append(Row())
-            }
-            var row = rows[rows.count - 1]
-            row.width += (row.indices.isEmpty ? 0 : spacing) + size.width
-            row.height = max(row.height, size.height)
-            row.indices.append(index)
-            rows[rows.count - 1] = row
-        }
-        return rows
-    }
-}
 #endif

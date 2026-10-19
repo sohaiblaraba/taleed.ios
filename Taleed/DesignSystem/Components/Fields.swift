@@ -19,6 +19,30 @@ struct FieldLabel: View {
     }
 }
 
+/// The helper line's colour (design-system §2.4–2.6, as Android's FieldHelper): `navy/500`,
+/// `feedback/info` while the field is focused or its picker open, `feedback/error` on error.
+extension TaleedFieldState {
+    var helperColor: Color {
+        switch self {
+        case .error: TaleedColor.feedbackError
+        case .active: TaleedColor.feedbackInfo
+        case .normal, .disabled: TaleedColor.navy500
+        }
+    }
+}
+
+extension View {
+    /// Announces a new field error with VoiceOver (Android marks the error line as a polite live region):
+    /// the error is otherwise only in the field's hint, read when the field gets focus.
+    func announcesFieldError(_ error: String?) -> some View {
+        onChange(of: error) { _, newValue in
+            if let newValue, !newValue.isEmpty {
+                AccessibilityNotification.Announcement(newValue).post()
+            }
+        }
+    }
+}
+
 /// Helper or error text under a field (Body/Small).
 struct FieldHelper: View {
     let text: String
@@ -86,32 +110,25 @@ struct TaleedTextField: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TaleedSize.Input.labelGap) {
+        VStack(alignment: .leading, spacing: TaleedSize.inputLabelGap) {
             if let label {
                 FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textBody)
             }
             input
             if showsMessage, let message = error ?? helper {
-                FieldHelper(text: message, color: helperColor)
+                FieldHelper(text: message, color: state.helperColor)
             }
         }
         .opacity(state == .disabled ? TaleedOpacity.disabledField : 1)
-    }
-
-    private var helperColor: Color {
-        switch state {
-        case .error: TaleedColor.feedbackError
-        case .active: TaleedColor.feedbackInfo
-        case .normal, .disabled: TaleedColor.navy500
-        }
+        .announcesFieldError(error)
     }
 
     private var input: some View {
-        HStack(spacing: TaleedSize.Input.gap) {
+        HStack(spacing: TaleedSize.inputGap) {
             if let leadingIcon {
                 TaleedIconView(
                     leadingIcon,
-                    size: TaleedSize.Input.iconLeading,
+                    size: TaleedSize.inputIconLeading,
                     color: state == .active ? TaleedColor.brandPrimary : TaleedColor.textSecondary
                 )
             }
@@ -124,17 +141,17 @@ struct TaleedTextField: View {
                 .accessibilityHint(error ?? helper ?? "")
             if showsClearButton, !isSecure, !text.isEmpty, state != .disabled {
                 Button { text = "" } label: {
-                    TaleedIconView(.x, size: TaleedSize.Input.iconTrailing, color: TaleedColor.textSecondary)
+                    TaleedIconView(.x, size: TaleedSize.inputIconTrailing, color: TaleedColor.textSecondary)
                         .frame(width: 24, height: 24)
                         .minimumHitArea()
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(DesignSystemStrings.string(.a11yClearText, locale: locale))
+                .accessibilityLabel(DesignSystemStrings.string(.commonClear, locale: locale))
             }
         }
-        .padding(.horizontal, TaleedSize.Input.paddingX)
+        .padding(.horizontal, TaleedSize.inputPaddingX)
         .padding(.vertical, 6)
-        .frame(minHeight: TaleedSize.Input.height)
+        .frame(minHeight: TaleedSize.inputHeight)
         .modifier(FieldBox(state: state))
         .contentShape(Rectangle())
         .onTapGesture { focusField() }
@@ -177,22 +194,22 @@ struct TaleedSelectField: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TaleedSize.Input.labelGap) {
+        VStack(alignment: .leading, spacing: TaleedSize.inputLabelGap) {
             if let label {
                 FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textPrimary)
             }
             Button(action: action) {
-                HStack(spacing: TaleedSize.Select.gap) {
+                HStack(spacing: TaleedSize.selectGap) {
                     Text(value ?? placeholder)
                         .taleedFont(TaleedFont.bodyRegular)
                         .foregroundStyle(value == nil ? TaleedColor.textSecondary : TaleedColor.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
-                    TaleedIconView(.caretDown, size: TaleedSize.Select.caretSize, color: TaleedColor.textSecondary)
+                    TaleedIconView(.caretDown, size: TaleedSize.selectCaretSize, color: TaleedColor.textSecondary)
                 }
-                .padding(.horizontal, TaleedSize.Select.paddingX)
+                .padding(.horizontal, TaleedSize.selectPaddingX)
                 .padding(.vertical, 6)
-                .frame(minHeight: TaleedSize.Select.height)
+                .frame(minHeight: TaleedSize.selectHeight)
                 .modifier(FieldBox(state: state, disabledFill: TaleedColor.surfaceSubtle))
                 .contentShape(Rectangle())
             }
@@ -201,10 +218,11 @@ struct TaleedSelectField: View {
             .accessibilityValue(value ?? placeholder)
             .accessibilityHint(error ?? helper ?? "")
             if let message = error ?? helper {
-                FieldHelper(text: message, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textSecondary)
+                FieldHelper(text: message, color: state.helperColor)
             }
         }
         .opacity(state == .disabled ? TaleedOpacity.disabledField : 1)
+        .announcesFieldError(error)
     }
 }
 
@@ -228,7 +246,7 @@ struct TaleedTextArea: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TaleedSize.Input.labelGap) {
+        VStack(alignment: .leading, spacing: TaleedSize.inputLabelGap) {
             if let label {
                 FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textPrimary)
             }
@@ -238,18 +256,19 @@ struct TaleedTextArea: View {
                 .foregroundStyle(TaleedColor.textPrimary)
                 .tint(TaleedColor.brandPrimary)
                 .focused($isFocused)
-                .padding(TaleedSize.TextArea.padding)
-                .frame(minHeight: TaleedSize.TextArea.height, alignment: .topLeading)
+                .padding(TaleedSize.textAreaPadding)
+                .frame(minHeight: TaleedSize.textAreaHeight, alignment: .topLeading)
                 .modifier(FieldBox(state: state))
                 .contentShape(Rectangle())
                 .onTapGesture { isFocused = true }
                 .accessibilityLabel(label ?? placeholder)
                 .accessibilityHint(error ?? helper ?? "")
             if let message = error ?? helper {
-                FieldHelper(text: message, color: state == .error ? TaleedColor.feedbackError : TaleedColor.navy500)
+                FieldHelper(text: message, color: state.helperColor)
             }
         }
         .opacity(state == .disabled ? TaleedOpacity.disabledField : 1)
+        .announcesFieldError(error)
     }
 }
 

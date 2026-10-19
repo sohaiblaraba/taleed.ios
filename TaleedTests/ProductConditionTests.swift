@@ -51,10 +51,14 @@ struct ProductConditionTests {
         #expect(ProductCondition.satisfactory.tone == .neutral)
     }
 
+    /// The same rule as Android's `avatarInitials`, so a member gets the same initials on both apps.
     @Test func avatarInitials() {
         #expect(TaleedAvatar.initials(from: "Lina N.") == "LN")
         #expect(TaleedAvatar.initials(from: "saf") == "S")
         #expect(TaleedAvatar.initials(from: "Nabia Tariq Benali") == "NT")
-        #expect(TaleedAvatar.initials(from: "") == "")
+        #expect(TaleedAvatar.initials(from: "amina_b") == "AB")
+        #expect(TaleedAvatar.initials(from: "@lina.n") == "LN")
+        #expect(TaleedAvatar.initials(from: "@") == "?")
+        #expect(TaleedAvatar.initials(from: "") == "?")
     }
 }

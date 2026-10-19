@@ -110,8 +110,8 @@ struct SuspendedView: View {
 
     private func contactRow(_ title: String, icon: TaleedIcon, url: URL, showsDivider: Bool = true) -> some View {
         // Emails and phone numbers read left to right in Arabic too.
-        TaleedListRow(title: title.isolatedLeftToRight, leadingIcon: icon, titleColor: TaleedColor.brandPrimary,
-                      showsChevron: false, showsDivider: showsDivider) {
+        ListRow(label: title.isolatedLeftToRight, leadingIcon: icon, showsDivider: showsDivider,
+                labelColor: TaleedColor.brandPrimary) {
             openURL(url)
         }
         .accessibilityAddTraits(.isLink)

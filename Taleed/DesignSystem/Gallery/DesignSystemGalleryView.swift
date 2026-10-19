@@ -5,25 +5,39 @@ import SwiftUI
 /// design-system.md. Open it from Settings → Design system.
 struct DesignSystemGalleryView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.locale) private var locale
-    @State private var toast: ToastItem?
+    @State private var toasts = TaleedToastState()
+    /// "Text 200 %": the gallery at an accessibility text size, to check large text without changing
+    /// the device settings (as Android's gallery switch).
+    @State private var largeText = DebugLaunchOptions.galleryLargeText
 
     var body: some View {
         ShellScreen {
-            TaleedAppBar(title: "Design system", onBack: { dismiss() },
-                         backAccessibilityLabel: DesignSystemStrings.string(.commonBack, locale: locale))
+            VStack(spacing: 0) {
+                TaleedTopAppBar(title: "Design system", onBack: { dismiss() })
+                Toggle(isOn: $largeText) {
+                    Text(verbatim: "Text 200 %")
+                        .taleedFont(TaleedFont.bodyRegular)
+                        .foregroundStyle(TaleedColor.textPrimary)
+                }
+                .toggleStyle(.taleed)
+                .padding(.horizontal, TaleedLayout.screenMargin)
+                .background(TaleedColor.surfacePrimary)
+                .overlay(alignment: .bottom) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
+            }
         } content: {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: TaleedSpacing.s48) {
                         GalleryFoundations()
-                        GalleryCoreComponents(toast: $toast)
+                        GalleryCoreComponents(toasts: toasts)
                         GalleryMarketplace()
                         GallerySellingAndCheckout()
                         GalleryNavigation()
                         GalleryComposed()
                     }
                     .padding(.vertical, TaleedSpacing.s24)
+                    // Off, the full range leaves the device's text size alone.
+                    .dynamicTypeSize(largeText ? .accessibility3 ... .accessibility3 : .xSmall ... .accessibility5)
                 }
                 .onAppear {
                     if let section = DebugLaunchOptions.gallerySection {
@@ -31,7 +45,7 @@ struct DesignSystemGalleryView: View {
                     }
                 }
             }
-            .taleedToast($toast)
+            .taleedToastHost(toasts)
         }
     }
 }
@@ -123,6 +137,52 @@ enum GallerySamples {
                            location: copy("Alger", "الجزائر", "Algiers"),
                            recency: copy("hier", "أمس", "yesterday")),
         ]
+    }
+}
+
+/// Lays children out in rows that wrap, leading-aligned (mirrors in right-to-left layouts).
+struct FlowRow: Layout {
+    var spacing: CGFloat = TaleedSpacing.s8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = arrange(width: proposal.width ?? .infinity, subviews: subviews)
+        let height = rows.map(\.height).reduce(0, +) + spacing * CGFloat(max(0, rows.count - 1))
+        return CGSize(width: proposal.width ?? rows.map(\.width).max() ?? 0, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var top = bounds.minY
+        for row in arrange(width: bounds.width, subviews: subviews) {
+            var leading = bounds.minX
+            for index in row.indices {
+                let size = subviews[index].sizeThatFits(.unspecified)
+                subviews[index].place(at: CGPoint(x: leading, y: top + (row.height - size.height) / 2), proposal: .unspecified)
+                leading += size.width + spacing
+            }
+            top += row.height + spacing
+        }
+    }
+
+    private struct Row {
+        var indices: [Int] = []
+        var width: CGFloat = 0
+        var height: CGFloat = 0
+    }
+
+    private func arrange(width: CGFloat, subviews: Subviews) -> [Row] {
+        var rows: [Row] = [Row()]
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            if !rows[rows.count - 1].indices.isEmpty, rows[rows.count - 1].width + spacing + size.width > width {
+                rows.append(Row())
+            }
+            var row = rows[rows.count - 1]
+            row.width += (row.indices.isEmpty ? 0 : spacing) + size.width
+            row.height = max(row.height, size.height)
+            row.indices.append(index)
+            rows[rows.count - 1] = row
+        }
+        return rows
     }
 }
 #endif

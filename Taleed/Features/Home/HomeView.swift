@@ -24,26 +24,31 @@ struct HomeView: View {
             LoadingStateView()
         case let .failed(error):
             ErrorStateView(error: error) { Task { await viewModel.retry() } }
+        case let .loaded(categories) where categories.isEmpty:
+            VStack(spacing: 0) {
+                searchField
+                    .padding(.horizontal, TaleedLayout.screenMargin)
+                    .padding(.top, TaleedSpacing.s8)
+                MessageStateView(text: l10n.string(.commonEmpty))
+            }
+            .refreshable { await viewModel.load() }
         case let .loaded(categories):
             ScrollView {
-                VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
+                VStack(alignment: .leading, spacing: 0) {
                     searchField
-                    if categories.isEmpty {
-                        MessageStateView(text: l10n.string(.commonEmpty), icon: .magnifyingGlass)
-                    } else {
-                        SectionTitle(text: l10n.string(.homeCategories))
-                            .padding(.top, TaleedSpacing.s8)
-                        VStack(spacing: 0) {
-                            ForEach(Array(categories.enumerated()), id: \.element.id) { index, category in
-                                TaleedListRow(title: category.name, showsDivider: index < categories.count - 1)
-                            }
+                        .padding(.horizontal, TaleedLayout.screenMargin)
+                        .padding(.top, TaleedSpacing.s8)
+                    // Flat full-width rows with start-inset dividers, as Android's Home list.
+                    SectionTitle(text: l10n.string(.homeCategories))
+                        .padding(.horizontal, TaleedLayout.screenMargin)
+                        .padding(.top, TaleedSpacing.s24)
+                        .padding(.bottom, TaleedSpacing.s8)
+                    LazyVStack(spacing: 0) {
+                        ForEach(categories) { category in
+                            ListRow(label: category.name)
                         }
-                        .taleedCard()
-                        .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
                     }
                 }
-                .padding(.horizontal, TaleedLayout.screenMargin)
-                .padding(.top, TaleedSpacing.s8)
                 .padding(.bottom, TaleedSpacing.s24)
             }
             .refreshable { await viewModel.load() }
@@ -54,20 +59,20 @@ struct HomeView: View {
     /// with a hint, not a search field.
     private var searchField: some View {
         Button { router.selectedTab = .explore } label: {
-            HStack(spacing: TaleedSize.Input.gap) {
-                TaleedIconView(.magnifyingGlass, size: TaleedSize.Input.iconLeading, color: TaleedColor.textSecondary)
-                Text(l10n.string(.homeSearchPlaceholder))
+            HStack(spacing: TaleedSize.inputGap) {
+                TaleedIconView(.magnifyingGlass, size: TaleedSize.inputIconLeading, color: TaleedColor.textSecondary)
+                Text(l10n.string(.homeSearchHint))
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, TaleedSize.Input.paddingX)
-            .frame(minHeight: TaleedSize.Input.height)
+            .padding(.horizontal, TaleedSize.inputPaddingX)
+            .frame(minHeight: TaleedSize.inputHeight)
             .taleedCard()
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(l10n.string(.homeSearchPlaceholder))
+        .accessibilityLabel(l10n.string(.homeSearchHint))
         .accessibilityHint(l10n.string(.a11yOpensExplore))
     }
 }

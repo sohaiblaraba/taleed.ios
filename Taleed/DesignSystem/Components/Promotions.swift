@@ -4,7 +4,7 @@ import SwiftUI
 /// the card, a two-line title, a mint CTA and a dismiss button. Photos do not mirror.
 struct HeroBanner: View {
     let title: String
-    let ctaTitle: String
+    let ctaLabel: String
     var background: Image = Image(taleed: .homeHeroBackground)
     var foreground: Image? = Image(taleed: .homeHeroForeground)
     let onCta: () -> Void
@@ -12,12 +12,12 @@ struct HeroBanner: View {
     @Environment(\.locale) private var locale
     @Environment(\.layoutDirection) private var layoutDirection
 
-    private let popOut = TaleedSize.HeroBanner.foregroundOverflowTop
+    private let popOut = TaleedSize.heroBannerForegroundOverflowTop
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: TaleedSize.HeroBanner.radius, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: TaleedSize.heroBannerRadius, style: .continuous)
         content
-            .frame(maxWidth: .infinity, minHeight: TaleedSize.HeroBanner.height, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: TaleedSize.heroBannerHeight, alignment: .leading)
             .background {
                 ZStack {
                     Color.clear
@@ -48,7 +48,7 @@ struct HeroBanner: View {
                     }
                     .buttonStyle(.plain)
                     .padding(6)
-                    .accessibilityLabel(DesignSystemStrings.string(.a11yDismiss, locale: locale))
+                    .accessibilityLabel(DesignSystemStrings.string(.commonDismiss, locale: locale))
                 }
             }
             .padding(.top, popOut)
@@ -65,13 +65,13 @@ struct HeroBanner: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 0)
-            TaleedButton(title: ctaTitle, kind: .secondary, size: .small, isFullWidth: true, action: onCta)
+            TaleedButton(title: ctaLabel, kind: .secondary, size: .small, isFullWidth: true, action: onCta)
         }
         .environment(\.layoutDirection, layoutDirection)
         .frame(width: 160, alignment: .leading)
         .frame(minHeight: 112)
-        .padding(.vertical, 24)
-        .padding(.horizontal, 20)
+        .padding(.vertical, TaleedSize.heroBannerPaddingY)
+        .padding(.horizontal, TaleedSize.heroBannerPaddingX)
     }
 }
 
@@ -91,7 +91,7 @@ struct TrustStrip: View {
         HStack(spacing: TaleedSpacing.s8) {
             item(.shieldCheck, .trustProtectedPay)
             divider
-            item(.truck, .trustDeliveryDz)
+            item(.truck, .trustDelivery)
             divider
             item(.sealCheck, .trustTrustedSellers)
         }
@@ -119,7 +119,7 @@ struct TrustStrip: View {
 
 #Preview("Promotions") {
     VStack(spacing: 24) {
-        HeroBanner(title: "Give your things a second life.", ctaTitle: "Browse near you", onCta: {}, onDismiss: {})
+        HeroBanner(title: "Give your things a second life.", ctaLabel: "Browse near you", onCta: {}, onDismiss: {})
         TrustStrip()
     }
     .padding()

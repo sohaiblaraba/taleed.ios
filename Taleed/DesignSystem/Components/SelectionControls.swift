@@ -34,13 +34,13 @@ private struct SwitchTrack: View {
     var body: some View {
         Capsule()
             .fill(isOn ? TaleedColor.brandPrimary : TaleedColor.toggleOffTrack)
-            .frame(width: TaleedSize.Toggle.width, height: TaleedSize.Toggle.height)
+            .frame(width: TaleedSize.toggleWidth, height: TaleedSize.toggleHeight)
             .overlay(alignment: isOn ? .trailing : .leading) {
                 Circle()
                     .fill(TaleedColor.surfacePrimary)
-                    .frame(width: TaleedSize.Toggle.thumb, height: TaleedSize.Toggle.thumb)
+                    .frame(width: TaleedSize.toggleThumb, height: TaleedSize.toggleThumb)
                     .taleedShadow(isOn ? TaleedElevation.toggleThumbOn : TaleedElevation.toggleThumbOff)
-                    .padding(TaleedSize.Toggle.padding)
+                    .padding(TaleedSize.togglePadding)
             }
             .opacity(isEnabled ? 1 : TaleedOpacity.disabledField)
     }
@@ -52,7 +52,7 @@ struct TaleedCheckboxStyle: ToggleStyle {
         Button {
             configuration.isOn.toggle()
         } label: {
-            HStack(spacing: TaleedSize.Checkbox.labelGap) {
+            HStack(spacing: TaleedSize.checkboxLabelGap) {
                 CheckboxBox(isOn: configuration.isOn)
                 configuration.label
                     .taleedFont(TaleedFont.bodyRegular)
@@ -72,15 +72,15 @@ private struct CheckboxBox: View {
     let isOn: Bool
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: TaleedSize.Checkbox.radius, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: TaleedSize.checkboxRadius, style: .continuous)
         shape
             .fill(isOn ? TaleedColor.brandPrimary : TaleedColor.surfacePrimary)
             .overlay(shape.strokeBorder(isOn ? TaleedColor.brandPrimary : TaleedColor.borderSubtle,
-                                        lineWidth: TaleedSize.Checkbox.borderWidth))
+                                        lineWidth: TaleedSize.checkboxBorderWidth))
             .overlay {
-                if isOn { TaleedIconView(.check, size: TaleedSize.Checkbox.checkIcon, color: TaleedColor.textInverse) }
+                if isOn { TaleedIconView(.check, size: TaleedSize.checkboxCheckIcon, color: TaleedColor.textInverse) }
             }
-            .frame(width: TaleedSize.Checkbox.size, height: TaleedSize.Checkbox.size)
+            .frame(width: TaleedSize.checkboxSize, height: TaleedSize.checkboxSize)
     }
 }
 
@@ -100,13 +100,13 @@ struct RadioIndicator: View {
         Circle()
             .fill(isSelected ? TaleedColor.brandPrimary : TaleedColor.surfacePrimary)
             .overlay(Circle().strokeBorder(isSelected ? TaleedColor.brandPrimary : TaleedColor.borderSubtle,
-                                           lineWidth: TaleedSize.Radio.borderWidth))
+                                           lineWidth: TaleedSize.radioBorderWidth))
             .overlay {
                 if isSelected {
-                    Circle().fill(TaleedColor.textInverse).frame(width: TaleedSize.Radio.dot, height: TaleedSize.Radio.dot)
+                    Circle().fill(TaleedColor.textInverse).frame(width: TaleedSize.radioDot, height: TaleedSize.radioDot)
                 }
             }
-            .frame(width: TaleedSize.Radio.size, height: TaleedSize.Radio.size)
+            .frame(width: TaleedSize.radioSize, height: TaleedSize.radioSize)
             .accessibilityHidden(true)
     }
 }
@@ -120,7 +120,7 @@ struct TaleedRadio: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: TaleedSize.Radio.labelGap) {
+            HStack(spacing: TaleedSize.radioLabelGap) {
                 RadioIndicator(isSelected: isSelected)
                 Text(title)
                     .taleedFont(textStyle)

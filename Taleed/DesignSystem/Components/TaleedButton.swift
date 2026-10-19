@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Button types (design-system §2.1). Main CTAs in the wireframes are `secondary` (mint).
+/// Button types (design-system §2.1), the same as Android's `TaleedButtonType`. `secondary` (mint) is
+/// the main commerce CTA in the wireframes and the default (decision D-10).
 enum TaleedButtonKind: String, CaseIterable, Sendable {
     /// Blue, high emphasis. Sheet "Apply" and secondary flows (decision D-10).
     case primary
@@ -10,8 +11,16 @@ enum TaleedButtonKind: String, CaseIterable, Sendable {
     case tertiary
     /// Text link.
     case hyperlink
+    /// The Login override of Hyperlink ("Browse without signing in"): `blue/900` label with a 2 pt
+    /// `blue/900` bottom border.
+    case hyperlinkUnderlined
     /// Destructive.
     case danger
+    /// Not in the Figma Button set: the white frame Figma draws for "View profile", "Clear filters"
+    /// and the modal "Cancel" (§8.10): `radius.m`, Medium 13/600 padding 16, Large 15/600 padding 24.
+    case outline
+
+    var isHyperlink: Bool { self == .hyperlink || self == .hyperlinkUnderlined }
 }
 
 enum TaleedButtonSize: String, CaseIterable, Sendable {
@@ -19,46 +28,46 @@ enum TaleedButtonSize: String, CaseIterable, Sendable {
 
     var height: CGFloat {
         switch self {
-        case .small: TaleedSize.Button.Small.height
-        case .medium: TaleedSize.Button.Medium.height
-        case .large: TaleedSize.Button.Large.height
+        case .small: TaleedSize.buttonSmallHeight
+        case .medium: TaleedSize.buttonMediumHeight
+        case .large: TaleedSize.buttonLargeHeight
         }
     }
 
     var paddingX: CGFloat {
         switch self {
-        case .small: TaleedSize.Button.Small.paddingX
-        case .medium: TaleedSize.Button.Medium.paddingX
-        case .large: TaleedSize.Button.Large.paddingX
+        case .small: TaleedSize.buttonSmallPaddingX
+        case .medium: TaleedSize.buttonMediumPaddingX
+        case .large: TaleedSize.buttonLargePaddingX
         }
     }
 
     var iconSize: CGFloat {
         switch self {
-        case .small: TaleedSize.Button.Small.iconSize
-        case .medium: TaleedSize.Button.Medium.iconSize
-        case .large: TaleedSize.Button.Large.iconSize
+        case .small: TaleedSize.buttonSmallIconSize
+        case .medium: TaleedSize.buttonMediumIconSize
+        case .large: TaleedSize.buttonLargeIconSize
         }
     }
 
     var iconOnlySize: CGFloat {
         switch self {
-        case .small: TaleedSize.Button.Small.iconOnlySize
-        case .medium: TaleedSize.Button.Medium.iconOnlySize
-        case .large: TaleedSize.Button.Large.iconOnlySize
+        case .small: TaleedSize.buttonSmallIconOnlySize
+        case .medium: TaleedSize.buttonMediumIconOnlySize
+        case .large: TaleedSize.buttonLargeIconOnlySize
         }
     }
 
     var iconOnlyIconSize: CGFloat {
         switch self {
-        case .small: TaleedSize.Button.Small.iconOnlyIconSize
-        case .medium: TaleedSize.Button.Medium.iconOnlyIconSize
-        case .large: TaleedSize.Button.Large.iconOnlyIconSize
+        case .small: TaleedSize.buttonSmallIconOnlyIconSize
+        case .medium: TaleedSize.buttonMediumIconOnlyIconSize
+        case .large: TaleedSize.buttonLargeIconOnlyIconSize
         }
     }
 
     var hyperlinkHeight: CGFloat {
-        self == .small ? TaleedSize.Button.Hyperlink.heightSmall : TaleedSize.Button.Hyperlink.heightMediumLarge
+        self == .small ? TaleedSize.buttonHyperlinkHeightSmall : TaleedSize.buttonHyperlinkHeightMediumLarge
     }
 
     var textStyle: TaleedTextStyle {
@@ -98,28 +107,65 @@ struct TaleedButtonColors: Equatable {
         case (.hyperlink, .normal): return .init(fill: nil, border: nil, content: Palette.blue500)
         case (.hyperlink, .pressed): return .init(fill: nil, border: nil, content: Palette.blue600)
         case (.hyperlink, .disabled): return .init(fill: nil, border: nil, content: Palette.blue200)
+        case (.hyperlinkUnderlined, .normal): return .init(fill: nil, border: nil, content: Palette.blue900)
+        case (.hyperlinkUnderlined, .pressed): return .init(fill: nil, border: nil, content: Palette.blue700)
+        case (.hyperlinkUnderlined, .disabled): return .init(fill: nil, border: nil, content: Palette.blue200)
         case (.danger, .normal): return .init(fill: Palette.feedbackError, border: Palette.feedbackError, content: Palette.textInverse)
         case (.danger, .pressed): return .init(fill: Palette.dangerPressed, border: Palette.dangerPressed, content: Palette.textInverse)
         case (.danger, .disabled): return .init(fill: Palette.dangerDisabled, border: Palette.dangerDisabled, content: Palette.navy400)
+        // Pressed changes only the fill, never the label contrast.
+        case (.outline, .normal): return .init(fill: Palette.surfacePrimary, border: Palette.borderSubtle, content: Palette.textPrimary)
+        case (.outline, .pressed): return .init(fill: Palette.surfaceGrouped, border: Palette.borderSubtle, content: Palette.textPrimary)
+        case (.outline, .disabled): return .init(fill: Palette.surfacePrimary, border: Palette.borderSubtle, content: Palette.navy300)
         }
     }
+}
+
+/// Radius, horizontal padding and label style of a button type at a size.
+struct TaleedButtonMetrics: Equatable {
+    let radius: CGFloat
+    let paddingX: CGFloat
+    let textStyle: TaleedTextStyle
+
+    /// The outline frames' labels: 13/600 and 15/600 with the natural line height.
+    static let outlineMedium = TaleedTextStyle(size: 13, weight: .semibold, lineHeight: nil, letterSpacing: 0,
+                                               relativeTo: .footnote)
+    static let outlineLarge = TaleedTextStyle(size: 15, weight: .semibold, lineHeight: nil, letterSpacing: 0,
+                                              relativeTo: .subheadline)
+
+    static func of(_ kind: TaleedButtonKind, _ size: TaleedButtonSize) -> TaleedButtonMetrics {
+        if kind == .outline {
+            switch size {
+            case .small: return .init(radius: TaleedRadius.m, paddingX: TaleedSize.buttonSmallPaddingX, textStyle: size.textStyle)
+            case .medium: return .init(radius: TaleedRadius.m, paddingX: TaleedSpacing.s16, textStyle: outlineMedium)
+            case .large: return .init(radius: TaleedRadius.m, paddingX: TaleedSpacing.s24, textStyle: outlineLarge)
+            }
+        }
+        return .init(radius: TaleedSize.buttonRadius, paddingX: kind.isHyperlink ? TaleedSize.buttonHyperlinkPaddingX : size.paddingX,
+                     textStyle: size.textStyle)
+    }
+
+    /// The confirmation modal's two actions (§5.4), outline or danger: 40 high, padding 16, 13/600,
+    /// `radius.m` (Android's `ModalActionButton`).
+    static let modalAction = TaleedButtonMetrics(radius: TaleedRadius.m, paddingX: TaleedSpacing.s16, textStyle: outlineMedium)
 }
 
 /// The button style behind `TaleedButton` and `TaleedIconOnlyButton`. Use it on any `Button` whose
 /// label is the design-system content.
 struct TaleedButtonStyle: ButtonStyle {
-    var kind: TaleedButtonKind = .primary
+    var kind: TaleedButtonKind = .secondary
     var size: TaleedButtonSize = .large
     var isIconOnly = false
     var isFullWidth = false
     var minWidth: CGFloat?
+    var metrics: TaleedButtonMetrics?
     /// Draws a state regardless of the finger, for the design-system gallery.
     var forcedState: TaleedButtonState?
 
     func makeBody(configuration: Configuration) -> some View {
         TaleedButtonChrome(
             kind: kind, size: size, isIconOnly: isIconOnly, isFullWidth: isFullWidth, minWidth: minWidth,
-            isPressed: configuration.isPressed, forcedState: forcedState
+            metrics: metrics ?? .of(kind, size), isPressed: configuration.isPressed, forcedState: forcedState
         ) {
             configuration.label
         }
@@ -133,6 +179,7 @@ struct TaleedButtonChrome<Content: View>: View {
     var isIconOnly = false
     var isFullWidth = false
     var minWidth: CGFloat?
+    var metrics: TaleedButtonMetrics
     var isPressed = false
     var forcedState: TaleedButtonState?
     @ViewBuilder let content: Content
@@ -144,31 +191,37 @@ struct TaleedButtonChrome<Content: View>: View {
 
     var body: some View {
         let colors = TaleedButtonColors.of(kind, state)
-        let shape = RoundedRectangle(cornerRadius: TaleedSize.Button.radius, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: metrics.radius, style: .continuous)
         content
             .foregroundStyle(colors.content)
-            .padding(.horizontal, isIconOnly || kind == .hyperlink ? 0 : size.paddingX)
+            .padding(.horizontal, isIconOnly ? 0 : metrics.paddingX)
             .padding(.vertical, isIconOnly ? 0 : 4)
             .frame(
                 minWidth: isIconOnly ? size.iconOnlySize : minWidth,
                 maxWidth: isFullWidth ? .infinity : nil,
-                minHeight: isIconOnly ? size.iconOnlySize : (kind == .hyperlink ? size.hyperlinkHeight : size.height)
+                minHeight: isIconOnly ? size.iconOnlySize : (kind.isHyperlink ? size.hyperlinkHeight : size.height)
             )
+            .frame(width: isIconOnly ? size.iconOnlySize : nil, height: isIconOnly ? size.iconOnlySize : nil)
             .background {
                 if let fill = colors.fill { shape.fill(fill) }
             }
             .overlay {
-                if let border = colors.border { shape.strokeBorder(border, lineWidth: TaleedSize.Button.borderWidth) }
+                if let border = colors.border { shape.strokeBorder(border, lineWidth: TaleedSize.buttonBorderWidth) }
+            }
+            .overlay(alignment: .bottom) {
+                // The Login link's 2 pt bottom border along the frame's bottom edge.
+                if kind == .hyperlinkUnderlined { Rectangle().fill(colors.content).frame(height: 2) }
             }
             .contentShape(shape)
             .minimumHitArea()
     }
 }
 
-/// A text button with optional leading and trailing icons and a loading state.
+/// A text button with optional leading and trailing icons and a loading state. Width hugs the label;
+/// `isFullWidth` for full-width CTAs. The height is a minimum: the label wraps with large text.
 struct TaleedButton: View {
     let title: String
-    var kind: TaleedButtonKind = .primary
+    var kind: TaleedButtonKind = .secondary
     var size: TaleedButtonSize = .large
     var leadingIcon: TaleedIcon?
     var trailingIcon: TaleedIcon?
@@ -179,18 +232,21 @@ struct TaleedButton: View {
     /// Overrides the colour of the leading icon (Login "Continue with email" uses `blue/600`).
     var leadingIconColor: Color?
     var forcedState: TaleedButtonState?
+    /// Overrides the type's metrics (the modal actions).
+    var metrics: TaleedButtonMetrics?
     let action: () -> Void
 
     @Environment(\.locale) private var locale
 
     var body: some View {
+        let resolved = metrics ?? .of(kind, size)
         Button(action: action) {
-            HStack(spacing: TaleedSize.Button.gap) {
+            HStack(spacing: TaleedSize.buttonGap) {
                 if let leadingIcon {
                     TaleedIconView(leadingIcon, size: size.iconSize, color: leadingIconColor)
                 }
                 Text(title)
-                    .taleedFont(size.textStyle)
+                    .taleedFont(resolved.textStyle)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                 if let trailingIcon {
@@ -207,85 +263,58 @@ struct TaleedButton: View {
         }
         // Loading keeps the Default colours even inside a disabled container.
         .buttonStyle(TaleedButtonStyle(kind: kind, size: size, isFullWidth: isFullWidth, minWidth: minWidth,
-                                       forcedState: forcedState ?? (isLoading ? .normal : nil)))
+                                       metrics: resolved, forcedState: forcedState ?? (isLoading ? .normal : nil)))
         .allowsHitTesting(!isLoading)
         .accessibilityLabel(title)
         .accessibilityValue(isLoading ? DesignSystemStrings.string(.commonLoading, locale: locale) : "")
     }
 }
 
-/// An icon-only button (32, 40 or 48 box; 44 pt hit area). Needs an accessibility label.
+/// An icon-only button: a 32, 40 or 48 box with a 20, 24 or 28 icon (Tertiary Medium by default, as
+/// on Android) and a 44 pt hit area. Needs an accessibility label. `isLoading` shows a spinner in the
+/// icon's place and ignores taps.
 struct TaleedIconOnlyButton: View {
     let icon: TaleedIcon
     let accessibilityLabel: String
-    var kind: TaleedButtonKind = .primary
-    var size: TaleedButtonSize = .large
+    var kind: TaleedButtonKind = .tertiary
+    var size: TaleedButtonSize = .medium
+    var isLoading = false
+    /// Overrides the icon colour while enabled.
+    var iconColor: Color?
     var forcedState: TaleedButtonState?
     let action: () -> Void
 
+    @Environment(\.locale) private var locale
+    @Environment(\.isEnabled) private var isEnabled
+
     var body: some View {
         Button(action: action) {
-            Image(taleed: icon)
-                .renderingMode(.template)
-                .resizable()
-                .scaledToFit()
-                .frame(width: size.iconOnlyIconSize, height: size.iconOnlyIconSize)
-                .flipsForRightToLeftLayoutDirection(icon.isDirectional)
+            ZStack {
+                if isLoading {
+                    ProgressView()
+                        .tint(TaleedButtonColors.of(kind, .normal).content)
+                        .frame(width: size.iconOnlyIconSize - 4, height: size.iconOnlyIconSize - 4)
+                } else if let iconColor, isEnabled {
+                    iconImage.foregroundStyle(iconColor)
+                } else {
+                    iconImage
+                }
+            }
         }
-        .buttonStyle(TaleedButtonStyle(kind: kind, size: size, isIconOnly: true, forcedState: forcedState))
+        .buttonStyle(TaleedButtonStyle(kind: kind, size: size, isIconOnly: true,
+                                       forcedState: forcedState ?? (isLoading ? .normal : nil)))
+        .allowsHitTesting(!isLoading)
         .accessibilityLabel(accessibilityLabel)
-    }
-}
-
-/// The outlined button that the seller card ("View profile"), the empty state ("Clear filters") and
-/// the confirmation modal ("Cancel", "Delete") draw outside the Button component (design-system §8.10):
-/// `radius.m`, 13/600 or 15/600 label. Pressed changes only the fill and border, never the label
-/// contrast: white → `surfaceGrouped`, danger → `lit.dangerPressed`.
-struct TaleedOutlineButtonStyle: ButtonStyle {
-    var height: CGFloat = 40
-    var paddingX: CGFloat = TaleedSpacing.s16
-    var textStyle = TaleedOutlineButtonStyle.label13
-    var fill = TaleedColor.surfacePrimary
-    var border = TaleedColor.borderSubtle
-    var foreground = TaleedColor.textPrimary
-    /// Fill and border while the finger is down. Nil derives them from the button's own colours:
-    /// a white button turns `surfaceGrouped`, any other keeps its fill (never a lighter one under a
-    /// light label).
-    var pressedFill: Color?
-    var pressedBorder: Color?
-    var isFullWidth = false
-    /// Draws the pressed look regardless of the finger, for the design-system gallery.
-    var forcesPressed = false
-
-    static let label13 = TaleedTextStyle(size: 13, weight: .semibold, lineHeight: nil, letterSpacing: 0, relativeTo: .footnote)
-    static let label15 = TaleedTextStyle(size: 15, weight: .semibold, lineHeight: nil, letterSpacing: 0, relativeTo: .subheadline)
-
-    /// The modal's destructive action: `feedback/error` fill and border, white label; pressed
-    /// `lit.dangerPressed` #B42318 like the Danger button (§2.1).
-    static func danger(height: CGFloat = 40, isFullWidth: Bool = false, forcesPressed: Bool = false) -> TaleedOutlineButtonStyle {
-        TaleedOutlineButtonStyle(height: height, fill: TaleedColor.feedbackError, border: TaleedColor.feedbackError,
-                                 foreground: TaleedColor.textInverse, pressedFill: TaleedColor.dangerPressed,
-                                 pressedBorder: TaleedColor.dangerPressed, isFullWidth: isFullWidth, forcesPressed: forcesPressed)
+        .accessibilityValue(isLoading ? DesignSystemStrings.string(.commonLoading, locale: locale) : "")
     }
 
-    private var resolvedPressedFill: Color {
-        pressedFill ?? (fill == TaleedColor.surfacePrimary ? TaleedColor.surfaceGrouped : fill)
-    }
-
-    func makeBody(configuration: Configuration) -> some View {
-        let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
-        let isPressed = configuration.isPressed || forcesPressed
-        configuration.label
-            .taleedFont(textStyle)
-            .foregroundStyle(foreground)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, paddingX)
-            .padding(.vertical, 4)
-            .frame(maxWidth: isFullWidth ? .infinity : nil, minHeight: height)
-            .background(shape.fill(isPressed ? resolvedPressedFill : fill))
-            .overlay(shape.strokeBorder(isPressed ? pressedBorder ?? border : border, lineWidth: 1))
-            .contentShape(shape)
-            .minimumHitArea()
+    private var iconImage: some View {
+        Image(taleed: icon)
+            .renderingMode(.template)
+            .resizable()
+            .scaledToFit()
+            .frame(width: size.iconOnlyIconSize, height: size.iconOnlyIconSize)
+            .flipsForRightToLeftLayoutDirection(icon.isDirectional)
     }
 }
 
@@ -294,8 +323,9 @@ struct TaleedOutlineButtonStyle: ButtonStyle {
         ForEach(TaleedButtonKind.allCases, id: \.self) { kind in
             TaleedButton(title: "Publish listing", kind: kind, leadingIcon: .plus) {}
         }
-        TaleedButton(title: "Buy now", kind: .secondary, isLoading: true, isFullWidth: true) {}
-        TaleedIconOnlyButton(icon: .caretLeft, accessibilityLabel: "Back", kind: .hyperlink, size: .medium) {}
+        TaleedButton(title: "Buy now", isLoading: true, isFullWidth: true) {}
+        TaleedIconOnlyButton(icon: .caretLeft, accessibilityLabel: "Back", kind: .hyperlink) {}
+        TaleedIconOnlyButton(icon: .heart, accessibilityLabel: "Save", isLoading: true) {}
     }
     .padding()
 }

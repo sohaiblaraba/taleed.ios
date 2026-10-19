@@ -5,6 +5,12 @@ enum ShellTab: Hashable, CaseIterable {
     case home, explore, sell, messages, profile
 }
 
+/// Screens pushed on the Home and Sell tabs.
+enum ShellRoute: Hashable {
+    /// The notifications placeholder, opened from the brand app bar's bell.
+    case notifications
+}
+
 enum ProfileRoute: Hashable {
     case settings
     #if DEBUG
@@ -19,6 +25,8 @@ enum ProfileRoute: Hashable {
 @Observable
 final class ShellRouter {
     var selectedTab: ShellTab = .home
+    var homePath: [ShellRoute] = []
+    var sellPath: [ShellRoute] = []
     var profilePath: [ProfileRoute] = []
     var isSignInPresented = false
 
@@ -27,10 +35,22 @@ final class ShellRouter {
         Binding(
             get: { self.selectedTab },
             set: { tab in
-                if tab == self.selectedTab, tab == .profile { self.profilePath = [] }
+                if tab == self.selectedTab {
+                    switch tab {
+                    case .home: self.homePath = []
+                    case .sell: self.sellPath = []
+                    case .profile: self.profilePath = []
+                    case .explore, .messages: break
+                    }
+                }
                 self.selectedTab = tab
             }
         )
+    }
+
+    /// Pushes the notifications placeholder on the current tab (the bell shows on Home and Sell).
+    func openNotifications() {
+        if selectedTab == .sell { sellPath.append(.notifications) } else { homePath.append(.notifications) }
     }
 }
 
@@ -44,9 +64,17 @@ struct MainShellView: View {
     var body: some View {
         @Bindable var router = router
         ZStack {
-            tab(.home) { NavigationStack { HomeView(viewModel: home) } }
+            tab(.home) {
+                NavigationStack(path: $router.homePath) {
+                    HomeView(viewModel: home).shellDestinations()
+                }
+            }
             tab(.explore) { NavigationStack { ExploreView() } }
-            tab(.sell) { NavigationStack { SellView() } }
+            tab(.sell) {
+                NavigationStack(path: $router.sellPath) {
+                    SellView().shellDestinations()
+                }
+            }
             tab(.messages) { NavigationStack { MessagesView() } }
             tab(.profile) {
                 NavigationStack(path: $router.profilePath) {
@@ -63,10 +91,11 @@ struct MainShellView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            BottomNavigation(items: navigationItems, selection: router.tabSelection)
+            TaleedBottomNavigation(items: navigationItems, selection: router.tabSelection)
         }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
-        .sheet(isPresented: $router.isSignInPresented) {
+        // The design-system bottom sheet (handle, start-aligned title, close), as Android's sign-in sheet.
+        .taleedSheet(isPresented: $router.isSignInPresented) {
             SignInView()
                 .appLanguage(l10n.language)
         }
@@ -108,21 +137,32 @@ struct ShellScreen<Bar: View, Content: View>: View {
     }
 }
 
-/// The brand app bar of the top-level tabs, with the member's avatar (opens Profile).
+/// The brand app bar of Home and Sell. Signed in, it shows the notifications bell (opens the
+/// notifications placeholder) and the member's avatar (opens Profile), as on Android.
 struct ShellBrandAppBar: View {
     var showsDivider = true
     @Environment(SessionManager.self) private var session
     @Environment(ShellRouter.self) private var router
-    @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
         BrandAppBar(
             showsDivider: showsDivider,
-            avatarInitials: session.user.map { TaleedAvatar.initials(from: $0.username ?? $0.displayName) },
+            onNotifications: session.isSignedIn ? { router.openNotifications() } : nil,
+            avatarInitials: session.user.map { TaleedAvatar.initials(from: $0.displayName) },
             avatarURL: session.user?.avatarURL,
-            avatarAccessibilityLabel: l10n.string(.tabProfile),
-            onAvatar: router.selectedTab == .profile ? nil : { router.selectedTab = .profile }
+            onAvatar: { router.selectedTab = .profile }
         )
+    }
+}
+
+private extension View {
+    /// The screens Home and Sell push.
+    func shellDestinations() -> some View {
+        navigationDestination(for: ShellRoute.self) { route in
+            switch route {
+            case .notifications: NotificationsView()
+            }
+        }
     }
 }
 

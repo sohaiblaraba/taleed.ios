@@ -105,6 +105,11 @@ def color_line(name: str, value: str, opacity=None, doc=None) -> str:
     return "\n".join(lines)
 
 
+def is_token(spec: dict) -> bool:
+    """False for values tokens.json keeps only as a record (`phosphorDefault`: "Treat as a Figma leftover, not a token")."""
+    return "not a token" not in str(spec.get("usedFor", ""))
+
+
 def gen_colors(color: dict) -> str:
     out = ["/// Colours: the scales, the semantic colours (Figma variables) and the recurring literals.",
            "/// `color.blue.500` is `TaleedColor.blue500`, `color.semantic.brandPrimary` is `TaleedColor.brandPrimary`,",
@@ -132,7 +137,7 @@ def gen_colors(color: dict) -> str:
     out.append("")
     out.append("    // MARK: Literals (no Figma variable)")
     for name, spec in color["literal"].items():
-        if name.startswith("$"):
+        if name.startswith("$") or not is_token(spec):
             continue
         out.append(color_line(name, spec["value"], spec.get("opacity"), doc=spec.get("usedFor")))
     out.append("")
@@ -145,7 +150,7 @@ def gen_colors(color: dict) -> str:
             out.append(f"        ColorToken(group: \"{scale}\", name: \"{scale}{step}\", color: {scale}{step}, hex: {hex_literal(value)}, opacity: 1),")
     for group in ["semantic", "literal"]:
         for name, spec in color[group].items():
-            if name.startswith("$"):
+            if name.startswith("$") or not is_token(spec):
                 continue
             out.append(f"        ColorToken(group: \"{group}\", name: \"{name}\", color: {name}, hex: {hex_literal(spec['value'])}, "
                        f"opacity: {num(spec.get('opacity', 1))}),")
@@ -238,31 +243,44 @@ def gen_elevation(elevation: dict) -> str:
     return "\n".join(out)
 
 
-def nested(name: str, values: dict, indent: int, doc: str = None) -> list:
-    pad = "    " * indent
+def flat_entries(values: dict, prefix: str = "") -> list:
+    """Flattens a token group into (lowerCamelCase name, value) pairs: `size.button.small.height` is
+    `buttonSmallHeight`, as tokens.json's naming rule says (the same names as the Android app).
+    A "24/20" padding becomes `…PaddingY` and `…PaddingX`."""
     out = []
-    if doc:
-        out.append(f"{pad}/// {doc}")
-    out.append(f"{pad}enum {name} {{")
     for key, value in values.items():
         if key.startswith("$") or key in ("note", "provenance"):
             continue
-        prop = camel(key)
-        if isinstance(value, bool):
-            out.append(f"{pad}    static let {prop} = {num(value)}")
-        elif isinstance(value, int) and key.lower().endswith(("columns", "photos", "placeholders")):
-            out.append(f"{pad}    static let {prop} = {num(value)}")
-        elif isinstance(value, (int, float)):
-            out.append(f"{pad}    static let {prop}: CGFloat = {num(value)}")
-        elif isinstance(value, str) and value.startswith("radius."):
-            out.append(f"{pad}    static let {prop} = TaleedRadius.{value.split('.')[1]}")
-        elif isinstance(value, dict):
-            if set(k for k in value if not k.startswith("$") and k != "note") == {"value"}:
-                out.append(f"{pad}    static let {prop}: CGFloat = {num(value['value'])}")
+        name = prefix + (key[:1].upper() + key[1:] if prefix else key)
+        name = camel(name) if not prefix else name
+        if isinstance(value, dict):
+            keys = set(k for k in value if not k.startswith("$") and k != "note")
+            if keys == {"value"}:
+                out.append((name, value["value"]))
             else:
-                out.extend(nested(upper_camel(key), value, indent + 1))
-    out.append(f"{pad}}}")
+                out.extend(flat_entries(value, name))
+        elif isinstance(value, str) and re.fullmatch(r"\d+(\.\d+)?/\d+(\.\d+)?", value):
+            y, x = value.split("/")
+            out.append((name + "Y", float(y)))
+            out.append((name + "X", float(x)))
+        else:
+            out.append((name, value))
     return out
+
+
+def gen_flat(enum: str, doc: str, values: dict) -> str:
+    out = [f"/// {doc}", f"enum {enum} {{"]
+    for name, value in flat_entries(values):
+        if isinstance(value, bool):
+            out.append(f"    static let {name} = {num(value)}")
+        elif isinstance(value, int) and name.lower().endswith(("columns", "photos", "placeholders")):
+            out.append(f"    static let {name} = {num(value)}")
+        elif isinstance(value, (int, float)):
+            out.append(f"    static let {name}: CGFloat = {num(value)}")
+        elif isinstance(value, str) and value.startswith("radius."):
+            out.append(f"    static let {name} = TaleedRadius.{value.split('.')[1]}")
+    out.append("}")
+    return "\n".join(out)
 
 
 def gen_motion(motion: dict) -> str:
@@ -284,7 +302,7 @@ def gen_motion(motion: dict) -> str:
 def generate_tokens(tokens: dict) -> None:
     parts = [
         HEADER,
-        "// swiftlint:disable identifier_name nesting file_length line_length",
+        "// swiftlint:disable identifier_name file_length line_length",
         "import SwiftUI",
         "",
         gen_colors(tokens["color"]),
@@ -300,12 +318,14 @@ def generate_tokens(tokens: dict) -> None:
         "",
         gen_simple("TaleedOpacity", "Opacities.", tokens["opacity"], type_name="Double"),
         "",
-        "\n".join(nested("TaleedSize", tokens["size"], 0, "Component sizes, from `size` in tokens.json.")),
+        gen_flat("TaleedSize", "Component sizes, from `size` in tokens.json, flattened: `size.button.small.height` is "
+                 "`TaleedSize.buttonSmallHeight`.", tokens["size"]),
         "",
-        "\n".join(nested("TaleedLayout", tokens["layout"], 0, "Screen layout, from `layout` in tokens.json.")),
+        gen_flat("TaleedLayout", "Screen layout, from `layout` in tokens.json, flattened: `layout.pageHeadingPadding.top` "
+                 "is `TaleedLayout.pageHeadingPaddingTop`.", tokens["layout"]),
         "",
         gen_motion(tokens["motion"]),
-        "// swiftlint:enable identifier_name nesting file_length line_length",
+        "// swiftlint:enable identifier_name file_length line_length",
         "",
     ]
     TOKENS_OUT.parent.mkdir(parents=True, exist_ok=True)

@@ -65,11 +65,11 @@ struct ProductCard: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 0) {
                 ProductMediaView(media: product.media)
-                    .aspectRatio(TaleedSize.ProductCard.width / TaleedSize.ProductCard.mediaHeightWithSize, contentMode: .fit)
+                    .aspectRatio(TaleedSize.productCardWidth / TaleedSize.productCardMediaHeightWithSize, contentMode: .fit)
                 info
             }
             .background(TaleedColor.surfacePrimary)
-            .clipShape(RoundedRectangle(cornerRadius: TaleedSize.ProductCard.radius, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: TaleedSize.productCardRadius, style: .continuous))
             .taleedShadow(TaleedElevation.level1)
             .contentShape(Rectangle())
         }
@@ -78,7 +78,8 @@ struct ProductCard: View {
         .accessibilityLabel(accessibilityText)
         .accessibilityAddTraits(.isButton)
         .overlay(alignment: .top) {
-            // One row so that, with large text, the tag truncates instead of running under the heart.
+            // One row so that, with large text, the tag wraps (and steps its size down) beside the heart
+            // instead of running under it; the label is never cut.
             HStack(alignment: .top, spacing: TaleedSpacing.s4) {
                 if let code = product.conditionCode {
                     ConditionTag(code: code, catalogLabel: product.conditionLabel,
@@ -86,15 +87,15 @@ struct ProductCard: View {
                         .accessibilityHidden(true)
                 }
                 Spacer(minLength: 0)
-                FavoriteControl(isSaved: product.isFavorite, count: product.favoriteCount, action: onFavorite)
+                FavoriteButton(isFavorite: product.isFavorite, count: product.favoriteCount, onToggle: onFavorite)
                     .layoutPriority(1)
             }
-            .padding(TaleedSize.ProductCard.padding)
+            .padding(TaleedSize.productCardPadding)
         }
     }
 
     private var info: some View {
-        VStack(alignment: .leading, spacing: TaleedSize.ProductCard.infoGap) {
+        VStack(alignment: .leading, spacing: TaleedSize.productCardInfoGap) {
             HStack(spacing: TaleedSpacing.s4) {
                 Text(verbatim: product.title)
                     .taleedFont(TaleedFont.cardTitle)
@@ -125,9 +126,9 @@ struct ProductCard: View {
                 if let size = product.sizeLabel { SizeTag(text: size) }
             }
             // Cards without a size tag keep the height of those with one, so grid rows line up.
-            .frame(minHeight: TaleedSize.SizeTag.height, alignment: .leading)
+            .frame(minHeight: TaleedSize.sizeTagHeight, alignment: .leading)
         }
-        .padding(TaleedSize.ProductCard.padding)
+        .padding(TaleedSize.productCardPadding)
     }
 
     private var accessibilityText: String {
@@ -165,13 +166,13 @@ struct ProductListRow: View {
         Button(action: onTap) {
             HStack(alignment: dense ? .top : .center, spacing: dense ? TaleedSpacing.s12 : TaleedSpacing.s16) {
                 ProductMediaView(media: product.media)
-                    .frame(width: dense ? 92 : TaleedSize.ProductListRow.media, height: dense ? 100 : TaleedSize.ProductListRow.media)
+                    .frame(width: dense ? 92 : TaleedSize.productListRowMedia, height: dense ? 100 : TaleedSize.productListRowMedia)
                     .clipShape(RoundedRectangle(cornerRadius: dense ? TaleedRadius.s : TaleedRadius.m, style: .continuous))
                 details
                     .padding(.trailing, dense ? 28 : 0)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(dense ? TaleedSpacing.s8 : TaleedSize.ProductListRow.padding)
+            .padding(dense ? TaleedSpacing.s8 : TaleedSize.productListRowPadding)
             .background(TaleedColor.surfacePrimary,
                         in: RoundedRectangle(cornerRadius: dense ? TaleedRadius.m : TaleedRadius.l, style: .continuous))
             .contentShape(Rectangle())
@@ -179,16 +180,16 @@ struct ProductListRow: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .overlay(alignment: dense ? .topTrailing : .trailing) {
-            favorite.padding(dense ? TaleedSpacing.s8 : TaleedSize.ProductListRow.padding)
+            favorite.padding(dense ? TaleedSpacing.s8 : TaleedSize.productListRowPadding)
         }
     }
 
     @ViewBuilder
     private var favorite: some View {
         if style == .dense {
-            FavoriteCircleButton(isSaved: product.isFavorite, diameter: 28, showsBackground: false, action: onFavorite)
+            FavoriteHeartToggle(isFavorite: product.isFavorite, onToggle: onFavorite)
         } else {
-            FavoriteCircleButton(isSaved: product.isFavorite, action: onFavorite)
+            FavoriteCircleButton(isFavorite: product.isFavorite, onToggle: onFavorite)
         }
     }
 
@@ -252,7 +253,7 @@ struct ProductListContainer<Data: RandomAccessCollection, Row: View>: View where
     }
 }
 
-/// Seller card (design-system §3.4): identity, three stats and "View profile".
+/// Seller card (design-system §3.4): identity, three stats and "View profile" (an Outline Large button).
 struct SellerCard: View {
     struct Stat: Identifiable {
         let value: String
@@ -267,8 +268,8 @@ struct SellerCard: View {
     var isVerified = false
     var verifiedLabel: String?
     var stats: [Stat] = []
-    let viewProfileTitle: String
     let onViewProfile: () -> Void
+    @Environment(\.locale) private var locale
 
     private static let nameStyle = TaleedTextStyle(size: 18, weight: .regular, lineHeight: nil, letterSpacing: 0, relativeTo: .body)
     private static let reputationStyle = TaleedTextStyle(size: 13, weight: .regular, lineHeight: nil, letterSpacing: 0,
@@ -313,9 +314,8 @@ struct SellerCard: View {
                 .padding(TaleedSpacing.s16)
                 .background(TaleedColor.surfaceGrouped, in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
             }
-            Button(viewProfileTitle, action: onViewProfile)
-                .buttonStyle(TaleedOutlineButtonStyle(height: 48, paddingX: TaleedSpacing.s24,
-                                                      textStyle: TaleedOutlineButtonStyle.label15, isFullWidth: true))
+            TaleedButton(title: DesignSystemStrings.string(.sellerViewProfile, locale: locale), kind: .outline, size: .large,
+                         isFullWidth: true, action: onViewProfile)
         }
     }
 }

@@ -46,13 +46,13 @@ struct SkeletonCard: View {
     }
 }
 
-/// A product-card-shaped skeleton for the two-column grid.
-struct ProductCardSkeleton: View {
+/// A product-card-shaped skeleton for the two-column grid (Android `SkeletonProductCard`).
+struct SkeletonProductCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
             Rectangle()
                 .fill(TaleedColor.skeleton)
-                .aspectRatio(TaleedSize.ProductCard.width / TaleedSize.ProductCard.mediaHeightWithSize, contentMode: .fit)
+                .aspectRatio(TaleedSize.productCardWidth / TaleedSize.productCardMediaHeightWithSize, contentMode: .fit)
             VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
                 SkeletonBlock(height: 12)
                 SkeletonBlock(width: 70, height: 14, color: TaleedColor.surfaceSubtle)
@@ -66,16 +66,17 @@ struct ProductCardSkeleton: View {
     }
 }
 
-/// Loading placeholders that keep the layout: a grid of product-card skeletons (at most six).
-struct SkeletonGrid: View {
+/// Loading placeholders that keep the layout: a grid of product-card skeletons, at most six
+/// (Android `SkeletonProductGrid`).
+struct SkeletonProductGrid: View {
     var count = 4
     @Environment(\.locale) private var locale
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedLayout.ProductGrid.gap),
-                            GridItem(.flexible())], spacing: TaleedLayout.ProductGrid.gap) {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedLayout.productGridGap),
+                            GridItem(.flexible())], spacing: TaleedLayout.productGridGap) {
             ForEach(0..<min(count, TaleedMotion.skeletonMaxPlaceholders), id: \.self) { _ in
-                ProductCardSkeleton()
+                SkeletonProductCard()
             }
         }
         .modifier(SkeletonPulse())
@@ -101,7 +102,7 @@ struct SkeletonCardRow: View {
 #Preview("Skeletons") {
     VStack(spacing: 24) {
         SkeletonCardRow()
-        SkeletonGrid(count: 2)
+        SkeletonProductGrid(count: 2)
     }
     .padding()
 }

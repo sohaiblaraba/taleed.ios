@@ -4,8 +4,8 @@ import SwiftUI
 private struct Pill<Content: View>: View {
     let fill: Color
     var border: Color?
-    var height: CGFloat = TaleedSize.Chip.height
-    var paddingX: CGFloat = TaleedSize.Chip.paddingX
+    var height: CGFloat = TaleedSize.chipHeight
+    var paddingX: CGFloat = TaleedSize.chipPaddingX
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -25,14 +25,14 @@ private struct Pill<Content: View>: View {
 struct CategoryChip: View {
     let title: String
     var icon: TaleedIcon?
-    var iconSize: CGFloat = TaleedSize.Chip.iconSize
+    var iconSize: CGFloat = TaleedSize.chipIconSize
     var isSelected = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Pill(fill: isSelected ? TaleedColor.navy800 : TaleedColor.blue50) {
-                HStack(spacing: TaleedSize.Chip.gap) {
+                HStack(spacing: TaleedSize.chipGap) {
                     Text(title)
                         .taleedFont(TaleedFont.caption)
                         .foregroundStyle(isSelected ? TaleedColor.textInverse : TaleedColor.textBody)
@@ -129,7 +129,7 @@ struct RemovableFilterChip: View {
             .minimumHitArea()
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(DesignSystemStrings.format(.a11yRemoveFilter, locale: locale, title))
+        .accessibilityLabel(DesignSystemStrings.format(.commonRemoveFilter, locale: locale, title))
     }
 }
 
@@ -166,9 +166,11 @@ struct TaleedBadge: View {
 }
 
 /// Count badge: 24 circle in `feedback/error`, white 11/800 digits. Shows "99+" above 99, left to
-/// right in every language (never "+99").
+/// right in every language (never "+99"). `accessibilityLabel` says what is counted ("3 unread
+/// messages"), as Android's `contentDescription`.
 struct CountBadge: View {
     let count: Int
+    let accessibilityLabel: String
 
     var body: some View {
         Text(verbatim: (count > 99 ? "99+" : "\(count)").isolatedLeftToRight)
@@ -179,6 +181,8 @@ struct CountBadge: View {
             .frame(minWidth: TaleedSize.countBadge, minHeight: TaleedSize.countBadge)
             .background(Capsule().fill(TaleedColor.feedbackError))
             .environment(\.layoutDirection, .leftToRight)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilityLabel)
     }
 }
 
@@ -215,15 +219,20 @@ struct ConditionTag: View {
 
     var body: some View {
         let tone = ProductCondition(code: code)?.tone ?? .neutral
-        Text(ProductCondition.label(code: code, catalogLabel: catalogLabel, catalogShortLabel: catalogShortLabel,
-                                    length: size.labelLength, language: AppLanguage(locale: locale)))
-            .taleedFont(TaleedFont.tagLabel)
+        let small = size == .small
+        // "Condition always explicit": the label wraps between words and the tag grows; it is never
+        // cut. When one word is still wider than the room, the label steps down in size (Android's
+        // ConditionTag).
+        WordFittingText(text: ProductCondition.label(code: code, catalogLabel: catalogLabel,
+                                                     catalogShortLabel: catalogShortLabel, length: size.labelLength,
+                                                     language: AppLanguage(locale: locale)),
+                        style: TaleedFont.tagLabel, alignment: .center)
             .foregroundStyle(tone.foreground)
-            .lineLimit(1)
-            .padding(.horizontal, size == .small ? TaleedSize.ConditionTag.paddingX : TaleedSize.Chip.paddingX)
-            .padding(.vertical, size == .small ? TaleedSize.ConditionTag.paddingY : 2)
-            .frame(minHeight: size == .small ? TaleedSize.ConditionTag.height : TaleedSize.Chip.height)
-            .background(Capsule().fill(tone.fill))
+            .padding(.horizontal, small ? TaleedSize.conditionTagPaddingX : TaleedSize.chipPaddingX)
+            .padding(.vertical, small ? TaleedSize.conditionTagPaddingY : 2)
+            .frame(minHeight: small ? TaleedSize.conditionTagHeight : TaleedSize.chipHeight)
+            .background(RoundedRectangle(cornerRadius: (small ? TaleedSize.conditionTagHeight : TaleedSize.chipHeight) / 2,
+                                         style: .continuous).fill(tone.fill))
     }
 }
 
@@ -248,46 +257,79 @@ struct SizeTag: View {
             .taleedFont(TaleedFont.caption)
             .foregroundStyle(TaleedColor.textBody)
             .lineLimit(1)
-            .padding(.horizontal, TaleedSize.SizeTag.paddingX)
+            .padding(.horizontal, TaleedSize.sizeTagPaddingX)
             .padding(.vertical, 1)
-            .frame(minHeight: TaleedSize.SizeTag.height)
-            .overlay(Capsule().strokeBorder(TaleedColor.borderSubtle, lineWidth: TaleedSize.SizeTag.borderWidth))
+            .frame(minHeight: TaleedSize.sizeTagHeight)
+            .overlay(Capsule().strokeBorder(TaleedColor.borderSubtle, lineWidth: TaleedSize.sizeTagBorderWidth))
     }
 }
 
-/// Equal-width tabs with a 3 pt indicator under the active one (design-system §2.10).
+/// Tabs (design-system §2.10): equal widths over a 1 pt `border/subtle` line, a 3 pt indicator under
+/// the active one. Labels keep one line: when they no longer fit in equal widths (large text), the
+/// row scrolls sideways instead of breaking words (Android's TaleedTabs).
 struct TaleedTabs: View {
     let titles: [String]
     @Binding var selection: Int
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(titles.enumerated()), id: \.offset) { index, title in
-                let isActive = index == selection
-                Button {
-                    selection = index
-                } label: {
-                    VStack(spacing: TaleedSpacing.s12) {
-                        Text(title)
-                            .taleedFont(TaleedFont.buttonMedium)
-                            .foregroundStyle(isActive ? TaleedColor.brandPrimary : TaleedColor.textBody)
-                            .multilineTextAlignment(.center)
-                        Capsule()
-                            .fill(isActive ? TaleedColor.brandPrimary : .clear)
-                            .frame(height: 3)
-                    }
-                    .padding(.top, TaleedSpacing.s12)
-                    .frame(maxWidth: .infinity, minHeight: TaleedSize.touchTargetMin)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isActive ? .isSelected : [])
+        ViewThatFits(in: .horizontal) {
+            EqualWidthRow { tabs }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) { tabs }
             }
         }
         .overlay(alignment: .bottom) {
-            Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1)
+            Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)
         }
         .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: selection)
+    }
+
+    private var tabs: some View {
+        ForEach(Array(titles.enumerated()), id: \.offset) { index, title in
+            let isActive = index == selection
+            Button {
+                selection = index
+            } label: {
+                VStack(spacing: TaleedSpacing.s12) {
+                    Text(title)
+                        .taleedFont(TaleedFont.buttonMedium)
+                        .foregroundStyle(isActive ? TaleedColor.brandPrimary : TaleedColor.textBody)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.horizontal, TaleedSpacing.s8)
+                    Capsule()
+                        .fill(isActive ? TaleedColor.brandPrimary : .clear)
+                        .frame(height: 3)
+                }
+                .padding(.top, TaleedSpacing.s12)
+                .frame(maxWidth: .infinity, minHeight: TaleedSize.touchTargetMin)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(isActive ? [.isSelected, .isButton] : .isButton)
+        }
+    }
+}
+
+/// Children of equal width sharing the row. Its ideal width is the widest child times the count, so
+/// in a `ViewThatFits` it is chosen only while every child fits its equal share.
+private struct EqualWidthRow: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard !subviews.isEmpty else { return .zero }
+        let count = CGFloat(subviews.count)
+        let widest = subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        let width = proposal.width ?? widest * count
+        let share = width / count
+        let height = subviews.map { $0.sizeThatFits(ProposedViewSize(width: share, height: nil)).height }.max() ?? 0
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let share = bounds.width / CGFloat(max(1, subviews.count))
+        for (index, subview) in subviews.enumerated() {
+            subview.place(at: CGPoint(x: bounds.minX + share * CGFloat(index), y: bounds.minY), anchor: .topLeading,
+                          proposal: ProposedViewSize(width: share, height: bounds.height))
+        }
     }
 }
 
@@ -307,7 +349,7 @@ struct TaleedTabs: View {
         }
         HStack {
             TaleedBadge(title: "Verified", tone: .success, icon: .shieldCheck)
-            CountBadge(count: 3)
+            CountBadge(count: 3, accessibilityLabel: "3 unread messages")
             SizeTag(text: "M")
         }
         TaleedTabs(titles: ["For you", "Nearby", "Following"], selection: .constant(0))

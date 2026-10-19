@@ -17,8 +17,8 @@ struct InlineAlert: View {
                                                       relativeTo: .caption2)
 
     var body: some View {
-        HStack(alignment: .top, spacing: TaleedSize.Alert.gap) {
-            TaleedIconView(icon, size: TaleedSize.Alert.iconSize, color: iconColor)
+        HStack(alignment: .top, spacing: TaleedSize.alertGap) {
+            TaleedIconView(icon, size: TaleedSize.alertIconSize, color: iconColor)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 // Title and message read as one element; the link stays its own element.
@@ -39,8 +39,8 @@ struct InlineAlert: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(TaleedSize.Alert.padding)
-        .background(fill, in: RoundedRectangle(cornerRadius: TaleedSize.Alert.radius, style: .continuous))
+        .padding(TaleedSize.alertPadding)
+        .background(fill, in: RoundedRectangle(cornerRadius: TaleedSize.alertRadius, style: .continuous))
         .accessibilityElement(children: .contain)
     }
 
@@ -114,7 +114,7 @@ struct TaleedToast: View {
                                                     relativeTo: .caption2)
 
     var body: some View {
-        HStack(spacing: TaleedSize.Toast.gap) {
+        HStack(spacing: TaleedSize.toastGap) {
             iconView
             Text(message)
                 .taleedFont(style == .light ? TaleedFont.bodyLarge : Self.darkMessage)
@@ -136,7 +136,7 @@ struct TaleedToast: View {
             }
             if let onClose {
                 Button(action: onClose) {
-                    TaleedIconView(.x, size: TaleedSize.Toast.iconSize,
+                    TaleedIconView(.x, size: TaleedSize.toastIconSize,
                                    color: style == .light ? TaleedColor.navy600 : TaleedColor.navy300)
                         .frame(width: 24, height: 24)
                         .minimumHitArea()
@@ -145,9 +145,9 @@ struct TaleedToast: View {
                 .accessibilityLabel(DesignSystemStrings.string(.commonClose, locale: locale))
             }
         }
-        .padding(TaleedSize.Toast.padding)
+        .padding(TaleedSize.toastPadding)
         .background(style == .light ? TaleedColor.surfacePrimary : TaleedColor.textPrimary,
-                    in: RoundedRectangle(cornerRadius: TaleedSize.Toast.radius, style: .continuous))
+                    in: RoundedRectangle(cornerRadius: TaleedSize.toastRadius, style: .continuous))
         .taleedShadow(TaleedElevation.level2)
         .accessibilityElement(children: .contain)
     }
@@ -155,8 +155,8 @@ struct TaleedToast: View {
     @ViewBuilder
     private var iconView: some View {
         if style == .light {
-            TaleedIconView(icon, size: TaleedSize.Toast.iconSize, color: iconColor)
-                .frame(width: TaleedSize.Toast.iconCircle, height: TaleedSize.Toast.iconCircle)
+            TaleedIconView(icon, size: TaleedSize.toastIconSize, color: iconColor)
+                .frame(width: TaleedSize.toastIconCircle, height: TaleedSize.toastIconCircle)
                 .background(Circle().fill(circleFill))
         } else {
             TaleedIconView(icon, size: 16, color: kind == .success ? TaleedColor.brandAccent : iconColor)
@@ -191,7 +191,7 @@ struct TaleedToast: View {
     }
 }
 
-/// A toast to show. A new value replaces the current toast.
+/// A toast to show.
 struct ToastItem: Identifiable, Equatable {
     let id = UUID()
     var kind: TaleedFeedbackKind
@@ -203,45 +203,106 @@ struct ToastItem: Identifiable, Equatable {
     static func == (lhs: ToastItem, rhs: ToastItem) -> Bool { lhs.id == rhs.id }
 }
 
-private struct ToastPresenter: ViewModifier {
-    @Binding var item: ToastItem?
+/// The toasts shown by `.taleedToastHost(_:)`, newest last (Android's `TaleedToastState`). Toasts
+/// stack (gap 8, `size.toast.stackGap`); at most `maxVisible` stay on screen: a new toast pushes out
+/// the oldest.
+@MainActor
+@Observable
+final class TaleedToastState {
+    private(set) var toasts: [ToastItem] = []
+    let maxVisible: Int
+
+    init(maxVisible: Int = 3) {
+        self.maxVisible = maxVisible
+    }
+
+    func show(_ toast: ToastItem) {
+        toasts.append(toast)
+        if toasts.count > maxVisible { toasts.removeFirst(toasts.count - maxVisible) }
+    }
+
+    func dismiss(_ id: ToastItem.ID) {
+        toasts.removeAll { $0.id == id }
+    }
+
+    func dismissAll() {
+        toasts.removeAll()
+    }
+}
+
+private struct ToastHost: ViewModifier {
+    let state: TaleedToastState
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content.overlay(alignment: .bottom) {
-            if let item {
-                TaleedToast(
-                    kind: item.kind, message: item.message, style: item.style, actionTitle: item.actionTitle,
-                    onAction: item.onAction.map { action in { action(); dismiss() } },
-                    onClose: dismiss
-                )
-                .padding(.horizontal, TaleedLayout.screenMargin)
-                .padding(.bottom, TaleedSpacing.s8)
-                .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
-                .gesture(DragGesture(minimumDistance: 12).onEnded { value in
-                    if value.translation.height > 20 { dismiss() }
-                })
-                .task(id: item.id) {
-                    AccessibilityNotification.Announcement(item.message).post()
-                    try? await Task.sleep(for: .seconds(TaleedMotion.toastAutoDismiss))
-                    if !Task.isCancelled { dismiss() }
+            VStack(spacing: TaleedSize.toastStackGap) {
+                ForEach(state.toasts) { item in
+                    ShownToast(item: item) { state.dismiss(item.id) }
+                        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                 }
             }
+            .padding(.horizontal, TaleedLayout.screenMargin)
+            .padding(.bottom, TaleedSpacing.s8)
         }
-        .animation(.easeInOut(duration: TaleedMotion.transitionMax), value: item)
+        .animation(reduceMotion ? nil : .easeInOut(duration: TaleedMotion.transitionMax), value: state.toasts)
+    }
+}
+
+/// One toast of the stack: its timer, its announcement and its sideways swipe.
+private struct ShownToast: View {
+    let item: ToastItem
+    let onDismiss: () -> Void
+    @State private var dragX: CGFloat = 0
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
+
+    /// 4 s (`motion.toastAutoDismiss`). With VoiceOver the toast stays longer, and one with an action
+    /// ("Cancel") stays until it is used or closed, so it can still be reached (Android lengthens it
+    /// with the accessibility manager's recommended timeout).
+    private var timeout: TimeInterval? {
+        guard voiceOver else { return TaleedMotion.toastAutoDismiss }
+        return item.actionTitle == nil ? TaleedMotion.toastAutoDismiss * 2.5 : nil
     }
 
-    private func dismiss() { item = nil }
+    var body: some View {
+        TaleedToast(
+            kind: item.kind, message: item.message, style: item.style, actionTitle: item.actionTitle,
+            onAction: item.onAction.map { action in { action(); onDismiss() } },
+            onClose: onDismiss
+        )
+        .offset(x: dragX)
+        .opacity(1 - min(0.6, Double(abs(dragX)) / 300))
+        // A sideways swipe dismisses it, as on Android.
+        .gesture(
+            DragGesture(minimumDistance: 12)
+                .onChanged { dragX = $0.translation.width }
+                .onEnded { value in
+                    if abs(value.translation.width) > 120 {
+                        onDismiss()
+                    } else {
+                        withAnimation(.easeOut(duration: TaleedMotion.transitionMin)) { dragX = 0 }
+                    }
+                }
+        )
+        .task(id: item.id) {
+            AccessibilityNotification.Announcement(item.message).post()
+            guard let timeout else { return }
+            try? await Task.sleep(for: .seconds(timeout))
+            if !Task.isCancelled { onDismiss() }
+        }
+    }
 }
 
 extension View {
-    /// Shows `item` as a toast above the bottom inset; it dismisses after 4 s, on swipe down or on ×.
-    func taleedToast(_ item: Binding<ToastItem?>) -> some View {
-        modifier(ToastPresenter(item: item))
+    /// Shows the toasts of `state` above the bottom inset, stacked 8 apart (at most three). Each one
+    /// dismisses after 4 s (longer with VoiceOver), on a sideways swipe or on ×.
+    func taleedToastHost(_ state: TaleedToastState) -> some View {
+        modifier(ToastHost(state: state))
     }
 }
 
-/// Empty state (design-system §3.5): illustration, title, reassurance, one action.
+/// Empty state (design-system §3.5, "Explain · reassure · act"): illustration 84, title 18/400,
+/// description 13/400 145 % (max 360 wide), optional Outline Medium action.
 struct EmptyState: View {
     let title: String
     var message: String?
@@ -257,9 +318,9 @@ struct EmptyState: View {
                                                       relativeTo: .footnote)
 
     var body: some View {
-        VStack(spacing: TaleedSize.EmptyState.gap) {
+        VStack(spacing: TaleedSize.emptyStateGap) {
             artwork
-                .frame(width: TaleedSize.EmptyState.illustration, height: TaleedSize.EmptyState.illustration)
+                .frame(width: TaleedSize.emptyStateIllustration, height: TaleedSize.emptyStateIllustration)
                 .accessibilityHidden(true)
             Text(title)
                 .taleedFont(Self.titleStyle)
@@ -274,8 +335,7 @@ struct EmptyState: View {
                     .frame(maxWidth: 360)
             }
             if let actionTitle, let action {
-                Button(actionTitle, action: action)
-                    .buttonStyle(TaleedOutlineButtonStyle())
+                TaleedButton(title: actionTitle, kind: .outline, size: .medium, action: action)
             }
         }
         .padding(TaleedLayout.screenMargin)
@@ -285,7 +345,7 @@ struct EmptyState: View {
     @ViewBuilder
     private var artwork: some View {
         if let icon {
-            TaleedIconView(icon, size: TaleedSize.EmptyState.icon, color: TaleedColor.brandPrimary)
+            TaleedIconView(icon, size: TaleedSize.emptyStateIcon, color: TaleedColor.brandPrimary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Circle().fill(TaleedColor.brandSoft))
         } else {

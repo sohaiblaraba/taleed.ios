@@ -27,33 +27,34 @@ private struct IconButtonFace: View {
 
     var body: some View {
         let iconColor = !isEnabled ? TaleedColor.navy400 : isActive ? TaleedColor.brandPrimary : TaleedColor.textPrimary
-        TaleedIconView(icon, size: TaleedSize.IconButton.iconSize, color: iconColor)
-            .frame(width: TaleedSize.IconButton.size, height: TaleedSize.IconButton.size)
+        TaleedIconView(icon, size: TaleedSize.iconButtonIconSize, color: iconColor)
+            .frame(width: TaleedSize.iconButtonSize, height: TaleedSize.iconButtonSize)
             .taleedCard(
                 fill: isActive ? TaleedColor.brandSoft : TaleedColor.surfacePrimary,
                 border: isActive ? TaleedColor.brandSoftBorder : TaleedColor.borderSubtle,
-                radius: TaleedSize.IconButton.radius
+                radius: TaleedSize.iconButtonRadius
             )
             .contentShape(Rectangle())
     }
 }
 
-/// The favorite control on product cards and Item Detail (design-system §2.3, decision D-7):
-/// a small tertiary button with a heart and an optional count. Saved = filled heart in mint.
-/// The caller updates `isSaved` and `count` at once (optimistic) and reverts on failure.
-struct FavoriteControl: View {
-    let isSaved: Bool
+/// The favorite control on product cards and Item Detail (design-system §2.3, decision D-7): a
+/// Tertiary Small button with a heart and an optional count. Saved = filled heart in mint; pressed
+/// fills `blue/100`. The caller updates `isFavorite` and `count` at once (optimistic) and reverts on
+/// failure. 32 pt high, 44 pt hit area. Android: `FavoriteButton(isFavorite, onToggle, count)`.
+struct FavoriteButton: View {
+    let isFavorite: Bool
     var count: Int?
-    let action: () -> Void
+    let onToggle: () -> Void
     @Environment(\.locale) private var locale
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: TaleedSize.FavoriteButton.gap) {
+        Button(action: onToggle) {
+            HStack(spacing: TaleedSize.favoriteButtonGap) {
                 TaleedIconView(
-                    isSaved ? .heartFill : .heart,
-                    size: TaleedSize.FavoriteButton.iconSize,
-                    color: isSaved ? TaleedColor.brandAccent : TaleedColor.brandPrimary
+                    isFavorite ? .heartFill : .heart,
+                    size: TaleedSize.favoriteButtonIconSize,
+                    color: isFavorite ? TaleedColor.brandAccent : TaleedColor.brandPrimary
                 )
                 if let count {
                     Text(verbatim: "\(count)")
@@ -62,41 +63,78 @@ struct FavoriteControl: View {
                         .monospacedDigit()
                 }
             }
-            .padding(.horizontal, TaleedSize.FavoriteButton.padding)
-            .frame(minHeight: TaleedSize.FavoriteButton.height)
-            .taleedCard(fill: TaleedColor.blue50, border: TaleedColor.blue100, radius: TaleedSize.FavoriteButton.radius)
-            .minimumHitArea()
+            .padding(.horizontal, TaleedSize.favoriteButtonPadding)
+            .frame(minWidth: 36, minHeight: TaleedSize.favoriteButtonHeight)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(DesignSystemStrings.string(isSaved ? .a11yFavoriteRemove : .a11yFavoriteAdd, locale: locale))
-        .accessibilityValue(count.map { "\($0)" } ?? "")
-        .accessibilityAddTraits(isSaved ? .isSelected : [])
-        .sensoryFeedback(.selection, trigger: isSaved)
+        .buttonStyle(FavoriteButtonStyle())
+        .favoriteSemantics(isFavorite: isFavorite, count: count, locale: locale)
     }
 }
 
-/// The round favorite of product list rows (design-system §3.3): 40 circle, red heart when saved.
+/// `blue/50` with a `blue/100` border; `blue/100` while pressed (Tertiary).
+private struct FavoriteButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .taleedCard(fill: configuration.isPressed ? TaleedColor.blue100 : TaleedColor.blue50, border: TaleedColor.blue100,
+                        radius: TaleedSize.favoriteButtonRadius)
+            .contentShape(Rectangle())
+            .minimumHitArea()
+    }
+}
+
+/// The list-row favorite (design-system §3.3): a 40 circle, grouped fill with a navy heart, or
+/// `errorSoft` with a filled red heart when saved (never colour alone). 44 pt hit area.
 struct FavoriteCircleButton: View {
-    let isSaved: Bool
-    var diameter: CGFloat = 40
-    /// False draws the heart alone (dense search rows: `#778198`, red when saved).
-    var showsBackground = true
-    let action: () -> Void
+    let isFavorite: Bool
+    let onToggle: () -> Void
     @Environment(\.locale) private var locale
 
     var body: some View {
-        Button(action: action) {
-            TaleedIconView(.heart, size: 18, color: isSaved ? TaleedColor.feedbackError
-                : showsBackground ? TaleedColor.textPrimary : TaleedColor.textSecondary)
-                .frame(width: diameter, height: diameter)
-                .background {
-                    if showsBackground { Circle().fill(isSaved ? TaleedColor.errorSoft : TaleedColor.surfaceGrouped) }
-                }
+        Button(action: onToggle) {
+            TaleedIconView(isFavorite ? .heartFill : .heart, size: 18,
+                           color: isFavorite ? TaleedColor.feedbackError : TaleedColor.textPrimary)
+                .frame(width: TaleedSize.productListRowFavorite, height: TaleedSize.productListRowFavorite)
+                .background(Circle().fill(isFavorite ? TaleedColor.errorSoft : TaleedColor.surfaceGrouped))
+                .contentShape(Circle())
                 .minimumHitArea()
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(DesignSystemStrings.string(isSaved ? .a11yFavoriteRemove : .a11yFavoriteAdd, locale: locale))
-        .accessibilityAddTraits(isSaved ? .isSelected : [])
+        .favoriteSemantics(isFavorite: isFavorite, count: nil, locale: locale)
+    }
+}
+
+/// The bare heart of the dense search-results row (design-system §3.3): heart 18 `#778198`, filled
+/// red when saved. 32 pt box, 44 pt hit area.
+struct FavoriteHeartToggle: View {
+    let isFavorite: Bool
+    let onToggle: () -> Void
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        Button(action: onToggle) {
+            TaleedIconView(isFavorite ? .heartFill : .heart, size: 18,
+                           color: isFavorite ? TaleedColor.feedbackError : TaleedColor.textSecondary)
+                .frame(width: 32, height: 32)
+                .contentShape(Rectangle())
+                .minimumHitArea()
+        }
+        .buttonStyle(.plain)
+        .favoriteSemantics(isFavorite: isFavorite, count: nil, locale: locale)
+    }
+}
+
+private extension View {
+    /// The favorite controls read as a toggle "Add to favorites", "In your favorites" when saved, and the
+    /// count through the `favorite_count` plural ("7 favorites"), like Android's checkbox semantics.
+    func favoriteSemantics(isFavorite: Bool, count: Int?, locale: Locale) -> some View {
+        let value = [
+            isFavorite ? DesignSystemStrings.string(.favoriteSaved, locale: locale) : nil,
+            count.map { DesignSystemStrings.format(.favoriteCount, locale: locale, $0) },
+        ].compactMap { $0 }.joined(separator: ", ")
+        return accessibilityLabel(DesignSystemStrings.string(.favoriteAdd, locale: locale))
+            .accessibilityValue(value)
+            .accessibilityAddTraits(isFavorite ? [.isToggle, .isSelected] : .isToggle)
+            .sensoryFeedback(.selection, trigger: isFavorite)
     }
 }
 
@@ -105,9 +143,10 @@ struct FavoriteCircleButton: View {
         TaleedIconButton(icon: .heart, accessibilityLabel: "Save") {}
         TaleedIconButton(icon: .heart, accessibilityLabel: "Save", isActive: true, activeIcon: .heartStraight) {}
         TaleedIconButton(icon: .dotsThree, accessibilityLabel: "More") {}.disabled(true)
-        FavoriteControl(isSaved: true, count: 2) {}
-        FavoriteControl(isSaved: false) {}
-        FavoriteCircleButton(isSaved: true) {}
+        FavoriteButton(isFavorite: true, count: 2) {}
+        FavoriteButton(isFavorite: false) {}
+        FavoriteCircleButton(isFavorite: true) {}
+        FavoriteHeartToggle(isFavorite: true) {}
     }
     .padding()
 }

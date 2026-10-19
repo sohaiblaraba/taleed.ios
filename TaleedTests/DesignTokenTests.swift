@@ -50,11 +50,11 @@ struct DesignTokenTests {
         #expect(TaleedSpacing.catalog.map(\.value) == [4, 8, 12, 16, 24, 32, 48])
         #expect(TaleedRadius.catalog.map(\.value) == [6, 10, 14, 20, 28, 999])
         #expect(TaleedSize.touchTargetMin == 44)
-        #expect(TaleedSize.AppBar.height == 56)
-        #expect(TaleedSize.BottomNav.height == 77)
+        #expect(TaleedSize.appBarHeight == 56)
+        #expect(TaleedSize.bottomNavHeight == 77)
         #expect([TaleedButtonSize.small, .medium, .large].map(\.height) == [32, 40, 48])
-        #expect(TaleedSize.Input.height == 44)
-        #expect(TaleedSize.PhotoUploader.maxPhotos == 5)
+        #expect(TaleedSize.inputHeight == 44)
+        #expect(TaleedSize.photoUploaderMaxPhotos == 5)
         #expect(TaleedOpacity.disabledField == 0.55)
     }
 

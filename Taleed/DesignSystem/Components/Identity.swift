@@ -3,10 +3,11 @@ import SwiftUI
 
 /// Circle avatar with initials or a photo, and an optional verified badge (design-system §2.11).
 struct TaleedAvatar: View {
-    /// The two looks in Figma: the design-system one and the one the wireframes draw (§8.18).
+    /// The two looks in Figma: the design-system one and the one the wireframes draw (§8.18), as
+    /// Android's `AvatarStyle`.
     enum Style: Sendable {
         /// `brandSoft` fill, `brandDark` SemiBold initials.
-        case standard
+        case soft
         /// `blue/100` fill, `blue/700` Bold initials (app bar, Item Detail seller).
         case wireframe
     }
@@ -15,17 +16,17 @@ struct TaleedAvatar: View {
     var size: CGFloat = 40
     var imageURL: URL?
     var isVerified = false
-    var style: Style = .standard
+    var style: Style = .soft
 
     var body: some View {
         Circle()
-            .fill(style == .standard ? TaleedColor.brandSoft : TaleedColor.blue100)
+            .fill(style == .soft ? TaleedColor.brandSoft : TaleedColor.blue100)
             .overlay {
                 Text(verbatim: initials)
                     // Fixed size (the circle does not grow with Dynamic Type), with the brand cascade so
                     // Arabic initials render in Alexandria.
                     .font(Font(initialsStyle.uiFont()))
-                    .foregroundStyle(style == .standard ? TaleedColor.brandDark : TaleedColor.blue700)
+                    .foregroundStyle(style == .soft ? TaleedColor.brandDark : TaleedColor.blue700)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
             }
@@ -45,7 +46,7 @@ struct TaleedAvatar: View {
     }
 
     private var initialsStyle: TaleedTextStyle {
-        TaleedTextStyle(size: Self.initialsSize(for: size), weight: style == .standard ? .semibold : .bold,
+        TaleedTextStyle(size: Self.initialsSize(for: size), weight: style == .soft ? .semibold : .bold,
                         lineHeight: nil, letterSpacing: 0, relativeTo: .body)
     }
 
@@ -61,10 +62,15 @@ struct TaleedAvatar: View {
         }
     }
 
-    /// Up to two initials from a display name: "Lina N." → "LN", "@saf" → "S".
+    /// Initials for an avatar, the same rule as Android's `avatarInitials`: the first letters of the
+    /// first two words of the display name, words split at spaces, "." and "_" after a leading "@"
+    /// ("Lina N." → "LN", "@amina_b" → "AB"), "?" when there are none. Pass the member's `displayName`.
     nonisolated static func initials(from name: String) -> String {
-        let words = name.split(whereSeparator: { $0.isWhitespace }).map { $0.filter { $0.isLetter || $0.isNumber } }
-        return words.filter { !$0.isEmpty }.prefix(2).compactMap(\.first).map { String($0).uppercased() }.joined()
+        let handle = name.hasPrefix("@") ? String(name.dropFirst()) : name
+        let words = handle.split(whereSeparator: { $0 == " " || $0 == "." || $0 == "_" })
+            .filter { !$0.allSatisfy(\.isWhitespace) }
+        let initials = words.prefix(2).compactMap(\.first).map { String($0).uppercased() }.joined()
+        return initials.isEmpty ? "?" : initials
     }
 }
 
@@ -73,8 +79,8 @@ struct VerifiedDot: View {
     var body: some View {
         Circle()
             .fill(TaleedColor.brandAccent)
-            .frame(width: TaleedSize.Avatar.verifiedBadge, height: TaleedSize.Avatar.verifiedBadge)
-            .overlay(Circle().strokeBorder(TaleedColor.surfacePrimary, lineWidth: TaleedSize.Avatar.verifiedBadgeBorder))
+            .frame(width: TaleedSize.avatarVerifiedBadge, height: TaleedSize.avatarVerifiedBadge)
+            .overlay(Circle().strokeBorder(TaleedColor.surfacePrimary, lineWidth: TaleedSize.avatarVerifiedBadgeBorder))
     }
 }
 

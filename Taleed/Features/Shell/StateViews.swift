@@ -1,72 +1,93 @@
 import SwiftUI
 
-/// A full-screen loading state.
+// Full-screen states, the same layout as Android's StateViews: a centred column, padding 24, gap 16.
+
+/// A full-screen loading state: spinner and "Loading…".
 struct LoadingStateView: View {
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
-        VStack(spacing: TaleedSpacing.s12) {
+        CenteredStateColumn {
             ProgressView()
+                .controlSize(.large)
                 .tint(TaleedColor.brandPrimary)
             Text(l10n.string(.commonLoading))
                 .taleedFont(TaleedFont.bodyRegular)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textBody)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .combine)
     }
 }
 
-/// An error message with a Retry button.
+/// An error with Retry: warning icon, the app's message for the error, a Tertiary Medium "Retry".
 struct ErrorStateView: View {
     let error: ApiError
     let retry: () -> Void
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: TaleedSpacing.s24) {
-                InlineAlert(kind: .error, title: l10n.string(error == .network ? .commonErrorNetwork : .commonErrorGeneric))
-                TaleedButton(title: l10n.string(.commonRetry), kind: .secondary, size: .large, isFullWidth: true,
-                             action: retry)
-            }
-            .padding(TaleedLayout.screenMargin)
-            .frame(maxWidth: .infinity)
+        CenteredStateColumn {
+            TaleedIconView(.warningCircle, size: 32, color: TaleedColor.feedbackError)
+                .accessibilityHidden(true)
+            Text(l10n.string(error == .network ? .commonErrorNetwork : .commonErrorGeneric))
+                .taleedFont(TaleedFont.bodyLarge)
+                .foregroundStyle(TaleedColor.textPrimary)
+                .multilineTextAlignment(.center)
+            TaleedButton(title: l10n.string(.commonRetry), kind: .tertiary, size: .medium, action: retry)
         }
-        .defaultScrollAnchor(.center)
     }
 }
 
-/// A short centered text, for placeholders and empty states.
-struct MessageStateView: View {
+/// A short centred text (placeholders, empty lists) with an optional action under it. Android:
+/// `MessageState`.
+struct MessageStateView<Action: View>: View {
     let text: String
-    var icon: TaleedIcon = .sparkle
+    @ViewBuilder let action: Action
 
     var body: some View {
-        ScrollView {
-            EmptyState(title: text, icon: icon)
-                .padding(.vertical, TaleedSpacing.s48)
+        CenteredStateColumn {
+            Text(text)
+                .taleedFont(TaleedFont.bodyLarge)
+                .foregroundStyle(TaleedColor.textBody)
+                .multilineTextAlignment(.center)
+            action
         }
-        .defaultScrollAnchor(.center)
     }
 }
 
-/// "Sign in to continue" with a button that opens the sign-in sheet.
+extension MessageStateView where Action == EmptyView {
+    init(text: String) {
+        self.init(text: text) { EmptyView() }
+    }
+}
+
+/// "Sign in to continue" with a Secondary Large "Sign in" that hugs its label and opens the sign-in
+/// sheet (Android's sign-in placeholder).
 struct SignInPromptView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(ShellRouter.self) private var router
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: TaleedSpacing.s24) {
-                EmptyState(title: l10n.string(.authSignInRequired), icon: .lockKey)
-                TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large, isFullWidth: true) {
-                    router.isSignInPresented = true
-                }
+        MessageStateView(text: l10n.string(.authSignInRequired)) {
+            TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large) {
+                router.isSignInPresented = true
             }
-            .padding(TaleedLayout.screenMargin)
-            .padding(.vertical, TaleedSpacing.s24)
         }
-        .defaultScrollAnchor(.center)
+    }
+}
+
+/// Centres its content in the space (padding 24, gap 16); scrolls when large text makes it taller.
+private struct CenteredStateColumn<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: TaleedSpacing.s16) { content }
+                    .padding(TaleedSpacing.s24)
+                    .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
     }
 }

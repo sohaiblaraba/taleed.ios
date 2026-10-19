@@ -10,7 +10,7 @@ struct PhotoUploaderItem: Identifiable {
 /// and a 2 x 2 grid of small tiles with an add tile. Empty: a dashed upload zone.
 struct PhotoUploader: View {
     let photos: [PhotoUploaderItem]
-    var maxPhotos = TaleedSize.PhotoUploader.maxPhotos
+    var maxPhotos = TaleedSize.photoUploaderMaxPhotos
     let onAdd: () -> Void
     let onRemove: (PhotoUploaderItem.ID) -> Void
     let onMakeCover: (PhotoUploaderItem.ID) -> Void
@@ -22,11 +22,11 @@ struct PhotoUploader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: photos.isEmpty ? TaleedSpacing.s4 : TaleedSpacing.s8) {
             HStack {
-                Text(string(.photosLabel))
+                Text(string(.photoUploaderLabel))
                     .taleedFont(TaleedFont.caption)
                     .foregroundStyle(TaleedColor.textPrimary)
                 Spacer()
-                Text(verbatim: DesignSystemStrings.format(.photosCount, locale: locale, photos.count, maxPhotos))
+                Text(verbatim: DesignSystemStrings.format(.photoUploaderCount, locale: locale, photos.count, maxPhotos))
                     .taleedFont(TaleedFont.bodySmall)
                     .foregroundStyle(TaleedColor.textSecondary)
                     .monospacedDigit()
@@ -45,9 +45,9 @@ struct PhotoUploader: View {
 
     private var helper: String {
         switch photos.count {
-        case 0, 1: string(.photosHelperEmpty)
-        case maxPhotos...: DesignSystemStrings.format(.photosHelperFull, locale: locale, maxPhotos)
-        default: DesignSystemStrings.format(.photosHelperSome, locale: locale, maxPhotos)
+        case 0, 1: string(.photoUploaderHelperEmpty)
+        case maxPhotos...: DesignSystemStrings.format(.photoUploaderHelperFull, locale: locale, maxPhotos)
+        default: DesignSystemStrings.format(.photoUploaderHelperSome, locale: locale, maxPhotos)
         }
     }
 
@@ -56,35 +56,35 @@ struct PhotoUploader: View {
             VStack(spacing: TaleedSpacing.s4) {
                 TaleedIconView(.cloudArrowUp, size: 28, color: TaleedColor.mint500)
                     .frame(width: 48, height: 48)
-                Text(DesignSystemStrings.format(.photosUploadTitle, locale: locale, maxPhotos))
+                Text(DesignSystemStrings.format(.photoUploaderZoneTitle, locale: locale, maxPhotos))
                     .taleedFont(TaleedFont.caption)
                     .foregroundStyle(TaleedColor.mint600)
-                Text(string(.photosUploadSubtitle))
+                Text(string(.photoUploaderZoneBody))
                     .taleedFont(Self.zoneSubtitleStyle)
                     .foregroundStyle(TaleedColor.textSecondary)
             }
             .multilineTextAlignment(.center)
             .padding(TaleedSpacing.s16)
-            .frame(maxWidth: .infinity, minHeight: TaleedSize.PhotoUploader.emptyZoneHeight)
+            .frame(maxWidth: .infinity, minHeight: TaleedSize.photoUploaderEmptyZoneHeight)
             .modifier(DashedMintBox())
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(string(.a11yAddPhotos))
+        .accessibilityLabel(string(.photoUploaderLabel))
     }
 
     private var tiles: some View {
-        HStack(alignment: .top, spacing: TaleedSize.PhotoUploader.tileGap) {
+        HStack(alignment: .top, spacing: TaleedSize.photoUploaderTileGap) {
             if let cover = photos.first {
-                PhotoTile(item: cover, isCover: true, onRemove: onRemove, onMakeCover: onMakeCover)
+                PhotoTile(item: cover, number: 1, onRemove: onRemove, onMakeCover: onMakeCover)
                     .aspectRatio(1, contentMode: .fit)
                     .frame(maxWidth: .infinity)
             }
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedSize.PhotoUploader.tileGap), GridItem(.flexible())],
-                      spacing: TaleedSize.PhotoUploader.tileGap) {
-                ForEach(photos.dropFirst()) { item in
-                    PhotoTile(item: item, isCover: false, onRemove: onRemove, onMakeCover: onMakeCover)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedSize.photoUploaderTileGap), GridItem(.flexible())],
+                      spacing: TaleedSize.photoUploaderTileGap) {
+                ForEach(Array(photos.enumerated().dropFirst()), id: \.element.id) { index, item in
+                    PhotoTile(item: item, number: index + 1, onRemove: onRemove, onMakeCover: onMakeCover)
                         .aspectRatio(1, contentMode: .fit)
                 }
                 if photos.count < maxPhotos {
@@ -103,7 +103,7 @@ struct PhotoUploader: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(string(.a11yAddPhotos))
+        .accessibilityLabel(string(.photoUploaderLabel))
     }
 
     private func string(_ key: L10nKey) -> String { DesignSystemStrings.string(key, locale: locale) }
@@ -121,30 +121,38 @@ private struct DashedMintBox: ViewModifier {
 
 private struct PhotoTile: View {
     let item: PhotoUploaderItem
-    let isCover: Bool
+    /// 1-based position; the first photo is the cover. VoiceOver reads "Photo 2", "Remove photo 2".
+    let number: Int
     let onRemove: (PhotoUploaderItem.ID) -> Void
     let onMakeCover: (PhotoUploaderItem.ID) -> Void
     @Environment(\.locale) private var locale
 
+    private var isCover: Bool { number == 1 }
+
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
+        let photoLabel = DesignSystemStrings.format(.photoUploaderPhoto, locale: locale, number)
         Color.clear
             .overlay { ProductMediaView(media: item.media) }
             .clipShape(shape)
             .overlay(shape.strokeBorder(TaleedColor.borderSubtle, lineWidth: 1))
-            .overlay(alignment: .topTrailing) { removeButton.padding(TaleedSize.PhotoUploader.removeInset) }
-            .overlay(alignment: .bottomLeading) { coverControl.padding(TaleedSize.PhotoUploader.removeInset) }
+            .accessibilityElement()
+            .accessibilityLabel(isCover ? photoLabel + ", " + DesignSystemStrings.string(.photoUploaderCover, locale: locale)
+                : photoLabel)
+            .accessibilityAddTraits(.isImage)
+            .overlay(alignment: .topTrailing) { removeButton.padding(TaleedSize.photoUploaderRemoveInset) }
+            .overlay(alignment: .bottomLeading) { coverControl.padding(TaleedSize.photoUploaderRemoveInset) }
     }
 
     private var removeButton: some View {
         Button { onRemove(item.id) } label: {
-            TaleedIconView(.x, size: TaleedSize.PhotoUploader.removeIcon, color: TaleedColor.textInverse)
-                .frame(width: TaleedSize.PhotoUploader.removeButton, height: TaleedSize.PhotoUploader.removeButton)
+            TaleedIconView(.x, size: TaleedSize.photoUploaderRemoveIcon, color: TaleedColor.textInverse)
+                .frame(width: TaleedSize.photoUploaderRemoveButton, height: TaleedSize.photoUploaderRemoveButton)
                 .background(Circle().fill(TaleedColor.textPrimary))
                 .minimumHitArea()
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(DesignSystemStrings.string(.a11yRemovePhoto, locale: locale))
+        .accessibilityLabel(DesignSystemStrings.format(.photoUploaderRemove, locale: locale, number))
     }
 
     @ViewBuilder
@@ -153,16 +161,18 @@ private struct PhotoTile: View {
             // The "Cover" badge is drawn as a Secondary Small button with a star, but it is a label.
             HStack(spacing: TaleedSpacing.s4) {
                 TaleedIconView(.star, size: 20, color: nil)
-                Text(DesignSystemStrings.string(.photosCover, locale: locale))
+                Text(DesignSystemStrings.string(.photoUploaderCover, locale: locale))
                     .taleedFont(TaleedFont.buttonSmall)
             }
             .foregroundStyle(TaleedColor.mint900)
             .padding(.vertical, 6)
             .padding(.horizontal, TaleedSpacing.s8)
             .taleedCard(fill: TaleedColor.mint400, border: TaleedColor.mint500, radius: TaleedRadius.s)
-            .accessibilityElement(children: .combine)
+            // The tile already says "cover".
+            .accessibilityHidden(true)
         } else {
-            TaleedIconOnlyButton(icon: .star, accessibilityLabel: DesignSystemStrings.string(.a11yMakeCover, locale: locale),
+            TaleedIconOnlyButton(icon: .star,
+                                 accessibilityLabel: DesignSystemStrings.format(.photoUploaderMakeCover, locale: locale, number),
                                  kind: .tertiary, size: .small) { onMakeCover(item.id) }
         }
     }

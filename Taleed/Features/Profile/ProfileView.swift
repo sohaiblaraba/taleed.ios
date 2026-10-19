@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// Profile (decision D-12, Figma does not draw it), the same layout as Android's ProfileScreen: the
+/// centred-title top app bar, the member header or "Sign in", a flat Settings row and "Sign out".
 struct ProfileView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
@@ -7,73 +9,68 @@ struct ProfileView: View {
 
     var body: some View {
         ShellScreen {
-            ShellBrandAppBar()
+            TaleedTopAppBar(title: l10n.string(.tabProfile))
         } content: {
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    PageHeading(title: l10n.string(.tabProfile), showsDivider: false)
-                    VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
-                        if let user = session.user {
-                            ProfileHeader(user: user)
-                        } else {
-                            TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large, isFullWidth: true) {
-                                router.isSignInPresented = true
-                            }
+                VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
+                    if let user = session.user {
+                        MemberHeader(user: user)
+                    } else {
+                        TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large, isFullWidth: true) {
+                            router.isSignInPresented = true
                         }
-
-                        TaleedListRow(title: l10n.string(.settingsTitle), showsDivider: false) {
-                            router.profilePath.append(.settings)
-                        }
-                        .taleedCard()
-                        .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
-
-                        if session.isSignedIn {
-                            TaleedButton(title: l10n.string(.authSignOut), kind: .tertiary, size: .large, isFullWidth: true) {
-                                session.signOut()
-                            }
-                        }
+                        .padding(.horizontal, TaleedLayout.screenMargin)
+                        .padding(.top, TaleedSpacing.s24)
                     }
-                    .padding(.horizontal, TaleedLayout.screenMargin)
-                    .padding(.bottom, TaleedSpacing.s24)
+
+                    ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
+                        router.profilePath.append(.settings)
+                    }
+
+                    if session.isSignedIn {
+                        TaleedButton(title: l10n.string(.authSignOut), kind: .tertiary, size: .large, isFullWidth: true) {
+                            session.signOut()
+                        }
+                        .padding(.horizontal, TaleedLayout.screenMargin)
+                    }
                 }
+                .padding(.bottom, TaleedSpacing.s24)
             }
         }
     }
 }
 
-/// Avatar, `displayName`, `@username` when it differs, and the badge.
-private struct ProfileHeader: View {
+/// Avatar 72, `displayName`, `@username` when it differs, and the badge, centred.
+private struct MemberHeader: View {
     let user: User
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
-        HStack(spacing: TaleedSpacing.s16) {
+        VStack(spacing: TaleedSpacing.s8) {
             TaleedAvatar(
-                initials: TaleedAvatar.initials(from: user.username ?? user.displayName),
-                size: 72,
-                imageURL: user.avatarURL,
-                isVerified: user.isVerified || user.isOfficial
+                initials: TaleedAvatar.initials(from: user.displayName),
+                size: TaleedSize.avatarXxxl,
+                imageURL: user.avatarURL
             )
             .accessibilityHidden(false)
             .accessibilityLabel(l10n.string(.profileAvatar))
-            VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-                Text(verbatim: user.displayName.isolatedByContent)
-                    .taleedFont(TaleedFont.title2)
-                    .foregroundStyle(TaleedColor.textPrimary)
-                if let handle = user.handle, handle != user.displayName {
-                    Text(verbatim: handle.isolatedLeftToRight)
-                        .taleedFont(TaleedFont.bodyRegular)
-                        .foregroundStyle(TaleedColor.textSecondary)
-                }
-                if user.isOfficial {
-                    TaleedBadge(title: l10n.string(.profileOfficial), tone: .brand, icon: .sealCheck)
-                } else if user.isVerified {
-                    TaleedBadge(title: l10n.string(.profileVerified), tone: .success, icon: .shieldCheck)
-                }
+            Text(verbatim: user.displayName.isolatedByContent)
+                .taleedFont(TaleedFont.title2)
+                .foregroundStyle(TaleedColor.textPrimary)
+                .multilineTextAlignment(.center)
+            if let handle = user.handle, handle != user.displayName {
+                Text(verbatim: handle.isolatedLeftToRight)
+                    .taleedFont(TaleedFont.bodyRegular)
+                    .foregroundStyle(TaleedColor.textSecondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            if user.isOfficial {
+                TaleedBadge(title: l10n.string(.profileOfficial), tone: .brand, icon: .sealCheck)
+            } else if user.isVerified {
+                TaleedBadge(title: l10n.string(.profileVerified), tone: .success, icon: .shieldCheck)
+            }
         }
-        .padding(TaleedSpacing.s16)
-        .background(TaleedColor.surfaceGrouped, in: RoundedRectangle(cornerRadius: TaleedRadius.l, style: .continuous))
+        .frame(maxWidth: .infinity)
+        .padding(.top, TaleedSpacing.s24)
+        .padding(.horizontal, TaleedLayout.screenMargin)
     }
 }

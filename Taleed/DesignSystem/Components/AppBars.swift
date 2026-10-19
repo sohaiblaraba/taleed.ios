@@ -20,8 +20,8 @@ private struct AppBarContainer<Content: View>: View {
 
     var body: some View {
         content
-            .padding(.horizontal, TaleedSize.AppBar.paddingX)
-            .frame(maxWidth: .infinity, minHeight: TaleedSize.AppBar.height)
+            .padding(.horizontal, TaleedSize.appBarPaddingX)
+            .frame(maxWidth: .infinity, minHeight: TaleedSize.appBarHeight)
             .background(TaleedColor.surfacePrimary)
             .overlay(alignment: .bottom) {
                 if showsDivider { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
@@ -29,14 +29,16 @@ private struct AppBarContainer<Content: View>: View {
     }
 }
 
-/// Brand app bar (Home, Sell, top-level tabs): wordmark, then notifications and the member's avatar.
+/// Brand app bar (design-system §5.1, Home and Sell): wordmark at the start; the notifications bell
+/// and the member's avatar (36, wireframe style) at the end. `onNotifications` nil hides the bell;
+/// `avatarInitials` nil hides the avatar (signed out).
 struct BrandAppBar: View {
     var showsDivider = false
     var onNotifications: (() -> Void)?
-    /// The member's initials; nil hides the avatar (signed out).
     var avatarInitials: String?
     var avatarURL: URL?
-    var avatarAccessibilityLabel: String = ""
+    /// Defaults to "Profile" (`tab_profile`).
+    var avatarAccessibilityLabel: String?
     var onAvatar: (() -> Void)?
     @Environment(\.locale) private var locale
 
@@ -57,14 +59,14 @@ struct BrandAppBar: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(DesignSystemStrings.string(.a11yNotifications, locale: locale))
+                    .accessibilityLabel(DesignSystemStrings.string(.commonNotifications, locale: locale))
                 }
                 if let avatarInitials {
                     let avatar = TaleedAvatar(initials: avatarInitials, size: 36, imageURL: avatarURL, style: .wireframe)
                     if let onAvatar {
                         Button(action: onAvatar) { avatar.minimumHitArea() }
                             .buttonStyle(.plain)
-                            .accessibilityLabel(avatarAccessibilityLabel)
+                            .accessibilityLabel(avatarAccessibilityLabel ?? DesignSystemStrings.string(.tabProfile, locale: locale))
                     } else {
                         avatar
                     }
@@ -74,14 +76,18 @@ struct BrandAppBar: View {
     }
 }
 
-/// Back + centred title + up to two actions (Item Detail, Checkout, pushed screens).
-struct TaleedAppBar: View {
+/// App bar with back, a centred 16/700 title and up to two actions (design-system §5.1: Item Detail,
+/// Checkout, pushed screens and the tab roots Figma does not draw, decision D-12). The title stays
+/// centred because both sides reserve the same width. `onBack` nil hides the back button (tab roots).
+/// Android: `TaleedTopAppBar`.
+struct TaleedTopAppBar: View {
     let title: String
     var showsDivider = true
-    /// Nil hides the back button (a root screen).
     var onBack: (() -> Void)?
-    var backAccessibilityLabel: String = ""
+    /// Defaults to "Back" (`common_back`).
+    var backAccessibilityLabel: String?
     var actions: [AppBarAction] = []
+    @Environment(\.locale) private var locale
 
     private let sideBox: CGFloat = 40
 
@@ -97,7 +103,9 @@ struct TaleedAppBar: View {
                 HStack(spacing: 0) {
                     HStack(spacing: 0) {
                         if let onBack {
-                            TaleedIconOnlyButton(icon: .caretLeft, accessibilityLabel: backAccessibilityLabel,
+                            TaleedIconOnlyButton(icon: .caretLeft,
+                                                 accessibilityLabel: backAccessibilityLabel
+                                                     ?? DesignSystemStrings.string(.commonBack, locale: locale),
                                                  kind: .hyperlink, size: .medium, action: onBack)
                         }
                     }
@@ -172,7 +180,7 @@ struct SearchAppBar: View {
                             .minimumHitArea()
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(DesignSystemStrings.string(.a11yClearText, locale: locale))
+                    .accessibilityLabel(DesignSystemStrings.string(.commonClear, locale: locale))
                 }
             }
         }
@@ -194,9 +202,9 @@ struct PageHeading: View {
                 .accessibilityAddTraits(.isHeader)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, TaleedLayout.PageHeadingPadding.top)
-        .padding(.horizontal, TaleedLayout.PageHeadingPadding.x)
-        .padding(.bottom, TaleedLayout.PageHeadingPadding.bottom)
+        .padding(.top, TaleedLayout.pageHeadingPaddingTop)
+        .padding(.horizontal, TaleedLayout.pageHeadingPaddingX)
+        .padding(.bottom, TaleedLayout.pageHeadingPaddingBottom)
         .overlay(alignment: .bottom) {
             if showsDivider { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
         }
@@ -236,46 +244,54 @@ struct SectionBand: View {
     }
 }
 
-/// A settings-style list row (decision D-12, screens Figma does not draw): 14 pt title, optional
-/// value, check or chevron, 1 pt bottom border, 52 pt high. Item Detail's spec rows are `SpecRow`.
-struct TaleedListRow: View {
-    let title: String
-    var value: String?
+/// A settings-style row (decision D-12, screens Figma does not draw; built from Item Detail's spec
+/// rows), the same as Android's `ListRow`: flat and full width, at least 56 high, padding 12 / 16,
+/// optional leading icon, Body/Large label, optional trailing text, a check when selected and a caret
+/// when it navigates, then a 1 pt divider inset 16 from the start. Item Detail's spec rows are `SpecRow`.
+struct ListRow: View {
+    let label: String
     var leadingIcon: TaleedIcon?
-    var titleColor: Color = TaleedColor.textPrimary
-    var showsChevron = true
+    var trailingText: String?
+    var showsChevron = false
     var showsDivider = true
+    var labelColor: Color = TaleedColor.textPrimary
     var isSelected = false
     var action: (() -> Void)?
 
     var body: some View {
         let content = HStack(spacing: TaleedSpacing.s12) {
             if let leadingIcon { TaleedIconView(leadingIcon, size: 20, color: TaleedColor.textSecondary) }
-            Text(title)
-                .taleedFont(TaleedFont.bodyRegular)
-                .foregroundStyle(titleColor)
+            Text(label)
+                .taleedFont(TaleedFont.bodyLarge)
+                .foregroundStyle(labelColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            if let value {
-                Text(value)
+            if let trailingText {
+                Text(trailingText)
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textSecondary)
             }
             if isSelected { TaleedIconView(.check, size: 20, color: TaleedColor.brandPrimary) }
-            if showsChevron, action != nil { TaleedIconView(.caretRight, size: 18, color: TaleedColor.textSecondary) }
+            if showsChevron { TaleedIconView(.caretRight, size: 18, color: TaleedColor.textSecondary) }
         }
-        .padding(.vertical, 14)
-        .padding(.horizontal, TaleedSpacing.s16)
-        .frame(minHeight: 52)
-        .overlay(alignment: .bottom) {
-            if showsDivider { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
-        }
+        .padding(.vertical, TaleedSpacing.s12)
+        .padding(.horizontal, TaleedLayout.screenMargin)
+        .frame(maxWidth: .infinity, minHeight: 56)
         .contentShape(Rectangle())
-        if let action {
-            Button(action: action) { content }
-                .buttonStyle(ListRowButtonStyle())
-                .accessibilityAddTraits(isSelected ? .isSelected : [])
-        } else {
-            content.accessibilityElement(children: .combine)
+        VStack(spacing: 0) {
+            if let action {
+                Button(action: action) { content }
+                    .buttonStyle(ListRowButtonStyle())
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+            } else {
+                content.accessibilityElement(children: .combine)
+            }
+            if showsDivider {
+                Rectangle()
+                    .fill(TaleedColor.borderSubtle)
+                    .frame(height: 1)
+                    .padding(.leading, TaleedLayout.screenMargin)
+                    .accessibilityHidden(true)
+            }
         }
     }
 }

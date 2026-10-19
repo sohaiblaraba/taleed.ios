@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Opened as a sheet from every "Sign in" button.
+/// Opened with `.taleedSheet` from every "Sign in" button: the design-system bottom sheet (handle,
+/// start-aligned Title 2 heading, close), as Android's SignInSheet.
 struct SignInView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
@@ -8,18 +9,11 @@ struct SignInView: View {
     @State private var viewModel: SignInViewModel?
 
     var body: some View {
-        VStack(spacing: 0) {
-            TaleedAppBar(
-                title: l10n.string(.authSignIn),
-                actions: [AppBarAction(icon: .x, accessibilityLabel: l10n.string(.commonClose),
-                                       color: TaleedColor.textPrimary) { dismiss() }]
-            )
+        TaleedBottomSheet(title: l10n.string(.authSignIn), titleStyle: TaleedFont.title2, onClose: { dismiss() }, content: {
             if let viewModel {
                 SignInForm(viewModel: viewModel) { dismiss() }
             }
-            Spacer(minLength: 0)
-        }
-        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        })
         .onAppear {
             if viewModel == nil { viewModel = SignInViewModel(session: session) }
         }
@@ -34,29 +28,26 @@ private struct SignInForm: View {
     @FocusState private var passwordFocused: Bool
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: TaleedLayout.formFieldGap) {
-                fields
-                    // The fields lock while signing in; the button stays outside this scope so it keeps
-                    // the Default colours with its spinner (it ignores taps while loading).
-                    .disabled(viewModel.isLoading)
+        // The sheet's gap (18) between the fields, the error and the button, as on Android.
+        VStack(alignment: .leading, spacing: TaleedSize.bottomSheetGap) {
+            fields
+                // The fields lock while signing in; the button stays outside this scope so it keeps
+                // the Default colours with its spinner (it ignores taps while loading).
+                .disabled(viewModel.isLoading)
 
-                if let errorKey = viewModel.errorKey {
-                    InlineAlert(kind: .error, title: l10n.string(errorKey))
-                }
-
-                TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large,
-                             isLoading: viewModel.isLoading, isFullWidth: true, action: submit)
-                    .disabled(!viewModel.canSubmit && !viewModel.isLoading)
+            if let errorKey = viewModel.errorKey {
+                InlineAlert(kind: .error, title: l10n.string(errorKey))
             }
-            .padding(.top, TaleedLayout.FormBodyPadding.top)
-            .padding(.horizontal, TaleedLayout.FormBodyPadding.x)
-            .padding(.bottom, TaleedLayout.FormBodyPadding.bottom)
+
+            TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large,
+                         isLoading: viewModel.isLoading, isFullWidth: true, action: submit)
+                .disabled(!viewModel.canSubmit && !viewModel.isLoading)
         }
+        .padding(.bottom, TaleedSpacing.s8)
     }
 
     private var fields: some View {
-        VStack(alignment: .leading, spacing: TaleedLayout.formFieldGap) {
+        VStack(alignment: .leading, spacing: TaleedSize.bottomSheetGap) {
             TaleedTextField(label: l10n.string(.authEmail), text: $viewModel.email, leadingIcon: .envelope,
                             focus: $emailFocused)
                 .textContentType(.username)
