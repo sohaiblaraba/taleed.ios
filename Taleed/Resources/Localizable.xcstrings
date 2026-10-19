@@ -185,6 +185,52 @@
         }
       }
     },
+    "a11y_opens_explore": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يفتح صفحة الاستكشاف"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens Explore"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvre Explorer"
+          }
+        }
+      }
+    },
+    "a11y_photo_position": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصورة %1$d من %2$d"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo %1$d of %2$d"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo %1$d sur %2$d"
+          }
+        }
+      }
+    },
     "a11y_remove_filter": {
       "extractionState": "manual",
       "localizations": {
@@ -227,6 +273,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Retirer la photo"
+          }
+        }
+      }
+    },
+    "a11y_step_progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطوة %1$d من %2$d"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %1$d of %2$d"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Étape %1$d sur %2$d"
           }
         }
       }
@@ -611,7 +680,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Good"
+            "value": "Good condition"
           }
         },
         "fr": {
@@ -634,7 +703,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "New, tagged"
+            "value": "New with tags"
           }
         },
         "fr": {
@@ -680,13 +749,128 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fair"
+            "value": "Fair condition"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "État satisfaisant"
+          }
+        }
+      }
+    },
+    "condition_short_good": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جيد"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon"
+          }
+        }
+      }
+    },
+    "condition_short_new_with_tags": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جديد بعلامة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New, tagged"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuf, étiqueté"
+          }
+        }
+      }
+    },
+    "condition_short_new_without_tags": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جديد"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Like new"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuf"
+          }
+        }
+      }
+    },
+    "condition_short_satisfactory": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقبول"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fair"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct"
+          }
+        }
+      }
+    },
+    "condition_short_very_good": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ممتاز"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Very good"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Très bon"
           }
         }
       }
@@ -703,7 +887,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Very good"
+            "value": "Very good condition"
           }
         },
         "fr": {
@@ -1078,6 +1262,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "La mise en vente arrive bientôt."
+          }
+        }
+      }
+    },
+    "sell_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيع غرض"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sell an item"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vendre un article"
           }
         }
       }

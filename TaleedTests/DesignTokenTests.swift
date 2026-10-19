@@ -1,3 +1,4 @@
+import CoreText
 import SwiftUI
 @testable import Taleed
 import Testing
@@ -79,11 +80,17 @@ struct DesignTokenTests {
         }
     }
 
-    @Test @MainActor func arabicUsesAlexandria() {
-        #expect(TaleedTypeface(locale: Locale(identifier: "ar")) == .alexandria)
-        #expect(TaleedTypeface(locale: Locale(identifier: "fr")) == .plusJakartaSans)
-        let font = TaleedFont.title1.uiFont(.alexandria)
-        #expect(font.fontName == "Alexandria-SemiBold")
+    /// Plus Jakarta Sans is the primary face in every language; Arabic script cascades to Alexandria.
+    @Test @MainActor func arabicScriptCascadesToAlexandria() {
+        let font = TaleedFont.title1.uiFont()
+        #expect(font.fontName == "PlusJakartaSans-SemiBold")
+        let arabic = "تليد" as NSString
+        let arabicFace = CTFontCreateForString(font as CTFont, arabic, CFRange(location: 0, length: arabic.length))
+        #expect(CTFontCopyPostScriptName(arabicFace) as String == "Alexandria-SemiBold")
+        let latin = "2 500 DA" as NSString
+        let latinFace = CTFontCreateForString(font as CTFont, latin, CFRange(location: 0, length: latin.length))
+        #expect(CTFontCopyPostScriptName(latinFace) as String == "PlusJakartaSans-SemiBold")
+        #expect(Locale(identifier: "ar").isArabic && !Locale(identifier: "fr").isArabic)
     }
 
     @Test func allIconsAndImagesAreInTheCatalog() {

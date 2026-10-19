@@ -36,19 +36,10 @@ private struct SignInForm: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: TaleedLayout.formFieldGap) {
-                TaleedTextField(label: l10n.string(.authEmail), text: $viewModel.email, leadingIcon: .envelope,
-                                focus: $emailFocused)
-                    .textContentType(.username)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .submitLabel(.next)
-                    .onSubmit { passwordFocused = true }
-                TaleedTextField(label: l10n.string(.authPassword), text: $viewModel.password, leadingIcon: .lockKey,
-                                isSecure: true, focus: $passwordFocused)
-                    .textContentType(.password)
-                    .submitLabel(.go)
-                    .onSubmit(submit)
+                fields
+                    // The fields lock while signing in; the button stays outside this scope so it keeps
+                    // the Default colours with its spinner (it ignores taps while loading).
+                    .disabled(viewModel.isLoading)
 
                 if let errorKey = viewModel.errorKey {
                     InlineAlert(kind: .error, title: l10n.string(errorKey))
@@ -62,7 +53,24 @@ private struct SignInForm: View {
             .padding(.horizontal, TaleedLayout.FormBodyPadding.x)
             .padding(.bottom, TaleedLayout.FormBodyPadding.bottom)
         }
-        .disabled(viewModel.isLoading)
+    }
+
+    private var fields: some View {
+        VStack(alignment: .leading, spacing: TaleedLayout.formFieldGap) {
+            TaleedTextField(label: l10n.string(.authEmail), text: $viewModel.email, leadingIcon: .envelope,
+                            focus: $emailFocused)
+                .textContentType(.username)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.next)
+                .onSubmit { passwordFocused = true }
+            TaleedTextField(label: l10n.string(.authPassword), text: $viewModel.password, leadingIcon: .lockKey,
+                            isSecure: true, focus: $passwordFocused)
+                .textContentType(.password)
+                .submitLabel(.go)
+                .onSubmit(submit)
+        }
     }
 
     private func submit() {

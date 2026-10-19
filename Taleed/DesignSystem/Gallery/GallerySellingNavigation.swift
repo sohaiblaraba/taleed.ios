@@ -106,13 +106,14 @@ struct GalleryNavigation: View {
             }
             .background(TaleedColor.surfaceGrouped)
         }
-        GallerySection(id: "bottom-nav", number: "5.2", title: "Bottom navigation", note: "Five destinations (D-2).", fullBleed: true) {
+        GallerySection(id: "bottom-nav", number: "5.2", title: "Bottom navigation",
+                       note: "Five destinations (D-2). One label size for all five; never truncated.", fullBleed: true) {
             BottomNavigation(items: [
                 BottomNavItem(id: ShellTab.home, icon: .houseLine, title: copy("Accueil", "الرئيسية", "Home")),
                 BottomNavItem(id: .explore, icon: .magnifyingGlass, title: copy("Explorer", "استكشاف", "Explore")),
                 BottomNavItem(id: .sell, icon: .plus, title: copy("Vendre", "بيع", "Sell")),
                 BottomNavItem(id: .messages, icon: .chatCircleText, title: copy("Messages", "الرسائل", "Messages")),
-                BottomNavItem(id: .profile, icon: .user, title: copy("Profil", "الملف", "Profile")),
+                BottomNavItem(id: .profile, icon: .user, title: copy("Profil", "الملف الشخصي", "Profile")),
             ], selection: $tab)
             .padding(.top, TaleedSpacing.s16)
             .background(TaleedColor.surfaceGrouped)
@@ -126,6 +127,13 @@ struct GalleryNavigation: View {
                 ZStack {
                     TaleedColor.textPrimary.opacity(0.5)
                     deleteModal(copy).padding(TaleedSpacing.s16)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.l))
+                GalleryCaption(text: copy("« Supprimer » appuyé", "«حذف» مضغوط", "\u{201C}Delete\u{201D} pressed"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                ZStack {
+                    TaleedColor.textPrimary.opacity(0.5)
+                    deleteModal(copy, forcesPressed: true).padding(TaleedSpacing.s16)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.l))
                 HStack(spacing: TaleedSpacing.s8) {
@@ -173,14 +181,15 @@ struct GalleryNavigation: View {
         )
     }
 
-    private func deleteModal(_ copy: GalleryCopy) -> ConfirmationModal {
+    private func deleteModal(_ copy: GalleryCopy, forcesPressed: Bool = false) -> ConfirmationModal {
         ConfirmationModal(
             title: copy("Supprimer l’annonce ?", "حذف الإعلان؟", "Delete listing?"),
             message: copy("Cette action est définitive.", "هذا الإجراء نهائي.", "This action is permanent."),
             cancelTitle: copy("Annuler", "إلغاء", "Cancel"),
             confirmTitle: copy("Supprimer", "حذف", "Delete"),
             onCancel: { showsModal = false },
-            onConfirm: { showsModal = false }
+            onConfirm: { showsModal = false },
+            forcesConfirmPressed: forcesPressed
         )
     }
 }

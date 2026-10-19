@@ -2,7 +2,7 @@ import Foundation
 @testable import Taleed
 import Testing
 
-/// Condition codes map to the Figma short labels in order (decision D-8).
+/// Condition codes map to the short and full labels in order (decision D-8).
 struct ProductConditionTests {
     @Test func codesMapToConditions() {
         #expect(ProductCondition(code: "NEW_WITH_TAGS") == .newWithTags)
@@ -13,20 +13,34 @@ struct ProductConditionTests {
         #expect(ProductCondition(code: "LIKE_NEW") == nil)
     }
 
-    @Test func englishLabelsAreTheFigmaShortLabels() {
-        let labels = ProductCondition.allCases.map { $0.label(in: .en) }
-        #expect(labels == ["New, tagged", "Like new", "Very good", "Good", "Fair"])
+    @Test func englishLabelsAreTheFigmaLabels() {
+        #expect(ProductCondition.allCases.map { $0.label(.short, in: .en) } ==
+            ["New, tagged", "Like new", "Very good", "Good", "Fair"])
+        #expect(ProductCondition.allCases.map { $0.label(.full, in: .en) } ==
+            ["New with tags", "Like new", "Very good condition", "Good condition", "Fair condition"])
     }
 
-    @Test func frenchAndArabicLabelsComeFromTheWebsite() {
-        #expect(ProductCondition.allCases.map { $0.label(in: .fr) } ==
+    @Test func frenchAndArabicShortLabelsAreTheWebsiteShortLabels() {
+        #expect(ProductCondition.allCases.map { $0.label(.short, in: .fr) } ==
+            ["Neuf, étiqueté", "Neuf", "Très bon", "Bon", "Correct"])
+        #expect(ProductCondition.allCases.map { $0.label(.short, in: .ar) } ==
+            ["جديد بعلامة", "جديد", "ممتاز", "جيد", "مقبول"])
+    }
+
+    @Test func frenchAndArabicFullLabelsAreTheWebsiteLabels() {
+        #expect(ProductCondition.allCases.map { $0.label(.full, in: .fr) } ==
             ["Neuf avec étiquette", "Neuf sans étiquette", "Très bon état", "Bon état", "État satisfaisant"])
-        #expect(ProductCondition.veryGood.label(in: .ar) == "حالة ممتازة")
+        #expect(ProductCondition.allCases.map { $0.label(.full, in: .ar) } ==
+            ["جديد مع البطاقة", "جديد بدون بطاقة", "حالة ممتازة", "حالة جيدة", "حالة مقبولة"])
     }
 
-    @Test func unknownCodeFallsBackToTheCatalogLabel() {
-        #expect(ProductCondition.label(code: "REFURBISHED", fallback: "Reconditionné", language: .fr) == "Reconditionné")
-        #expect(ProductCondition.label(code: "GOOD", fallback: "ignored", language: .en) == "Good")
+    @Test func unknownCodeUsesTheCatalogLabels() {
+        #expect(ProductCondition.label(code: "REFURBISHED", catalogLabel: "Reconditionné", catalogShortLabel: "Reconditionné court",
+                                       language: .fr) == "Reconditionné court")
+        #expect(ProductCondition.label(code: "REFURBISHED", catalogLabel: "Reconditionné", language: .fr) == "Reconditionné")
+        #expect(ProductCondition.label(code: "REFURBISHED", catalogLabel: "Reconditionné", catalogShortLabel: "court",
+                                       length: .full, language: .fr) == "Reconditionné")
+        #expect(ProductCondition.label(code: "GOOD", catalogLabel: "ignored", catalogShortLabel: "ignored", language: .en) == "Good")
     }
 
     @Test func tagTonesFollowTheSpec() {

@@ -165,47 +165,58 @@ struct TaleedBadge: View {
     }
 }
 
-/// Count badge: 24 circle in `feedback/error`, white 11/800 digits. Shows "99+" above 99.
+/// Count badge: 24 circle in `feedback/error`, white 11/800 digits. Shows "99+" above 99, left to
+/// right in every language (never "+99").
 struct CountBadge: View {
     let count: Int
 
     var body: some View {
-        Text(verbatim: count > 99 ? "99+" : "\(count)")
+        Text(verbatim: (count > 99 ? "99+" : "\(count)").isolatedLeftToRight)
             .taleedFont(TaleedFont.countBadge)
             .foregroundStyle(TaleedColor.textInverse)
             .monospacedDigit()
             .padding(.horizontal, 6)
             .frame(minWidth: TaleedSize.countBadge, minHeight: TaleedSize.countBadge)
             .background(Capsule().fill(TaleedColor.feedbackError))
+            .environment(\.layoutDirection, .leftToRight)
     }
 }
 
-/// Condition tag (design-system §2.9). Small (22 pt) on cards and photos; large (30 pt) in list
-/// rows and detail. The label always shows (never colour alone).
+/// Condition tag (design-system §2.9). Small (22 pt, short label) on cards and photos; large
+/// (30 pt, full label: "Very good condition") in list rows, search results and detail. The label
+/// always shows (never colour alone).
 struct ConditionTag: View {
-    enum Size: Sendable { case small, large }
+    enum Size: Sendable {
+        case small, large
 
-    let condition: ProductCondition?
-    /// Shown for an unknown API code (the catalog's full label).
-    var fallbackLabel: String = ""
+        var labelLength: ProductCondition.LabelLength { self == .small ? .short : .full }
+    }
+
+    let code: String
+    /// The catalog's `label` and `shortLabel` (`GET /catalog` conditions), shown for a code the app
+    /// does not know.
+    var catalogLabel: String = ""
+    var catalogShortLabel: String?
     var size: Size = .small
     @Environment(\.locale) private var locale
 
     init(_ condition: ProductCondition, size: Size = .small) {
-        self.condition = condition
+        self.code = condition.rawValue
         self.size = size
     }
 
-    /// A tag from an API condition code; unknown codes show `fallbackLabel` in the neutral look.
-    init(code: String, fallbackLabel: String, size: Size = .small) {
-        self.condition = ProductCondition(code: code)
-        self.fallbackLabel = fallbackLabel
+    /// A tag from an API condition code; unknown codes show the catalog labels in the neutral look.
+    init(code: String, catalogLabel: String, catalogShortLabel: String? = nil, size: Size = .small) {
+        self.code = code
+        self.catalogLabel = catalogLabel
+        self.catalogShortLabel = catalogShortLabel
         self.size = size
     }
 
     var body: some View {
-        let tone = condition?.tone ?? .neutral
-        Text(condition?.label(in: AppLanguage(locale: locale)) ?? fallbackLabel)
+        let tone = ProductCondition(code: code)?.tone ?? .neutral
+        Text(ProductCondition.label(code: code, catalogLabel: catalogLabel, catalogShortLabel: catalogShortLabel,
+                                    length: size.labelLength, language: AppLanguage(locale: locale)))
             .taleedFont(TaleedFont.tagLabel)
             .foregroundStyle(tone.foreground)
             .lineLimit(1)

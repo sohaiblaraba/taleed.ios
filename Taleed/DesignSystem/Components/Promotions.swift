@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Home hero banner (wireframe Home #4): photo with a 40 % overlay, a cut-out that pops 24 pt above
+/// Home hero banner (wireframe Home #4): photo with a 40 % overlay (the title's only contrast aid), a cut-out that pops 24 pt above
 /// the card, a two-line title, a mint CTA and a dismiss button. Photos do not mirror.
 struct HeroBanner: View {
     let title: String
@@ -62,7 +62,6 @@ struct HeroBanner: View {
             Text(title)
                 .taleedFont(TaleedFont.headline)
                 .foregroundStyle(TaleedColor.textInverse)
-                .shadow(color: .black.opacity(0.25), radius: 4)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 0)

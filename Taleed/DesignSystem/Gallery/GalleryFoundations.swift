@@ -22,8 +22,9 @@ struct GalleryFoundations: View {
             }
         }
         GallerySection(id: "type", number: "1.3", title: "Typography",
-                       note: copy("Plus Jakarta Sans ; Alexandria en arabe.", "Plus Jakarta Sans؛ Alexandria للعربية.",
-                                  "Plus Jakarta Sans; Alexandria in Arabic.")) {
+                       note: copy("Plus Jakarta Sans partout ; Alexandria pour l’écriture arabe.",
+                                  "Plus Jakarta Sans في كل اللغات؛ Alexandria للحروف العربية.",
+                                  "Plus Jakarta Sans everywhere; Alexandria for Arabic script.")) {
             VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
                 ForEach(TaleedFont.catalog, id: \.name) { item in
                     VStack(alignment: .leading, spacing: 2) {

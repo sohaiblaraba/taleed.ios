@@ -22,8 +22,9 @@ struct TaleedAvatar: View {
             .fill(style == .standard ? TaleedColor.brandSoft : TaleedColor.blue100)
             .overlay {
                 Text(verbatim: initials)
-                    .font(.custom(TaleedTypeface.plusJakartaSans.postScriptName(style == .standard ? .semibold : .bold),
-                                  fixedSize: Self.initialsSize(for: size)))
+                    // Fixed size (the circle does not grow with Dynamic Type), with the brand cascade so
+                    // Arabic initials render in Alexandria.
+                    .font(Font(initialsStyle.uiFont()))
                     .foregroundStyle(style == .standard ? TaleedColor.brandDark : TaleedColor.blue700)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
@@ -41,6 +42,11 @@ struct TaleedAvatar: View {
                 if isVerified { VerifiedDot().padding(.trailing, -2).padding(.bottom, -2) }
             }
             .accessibilityHidden(true)
+    }
+
+    private var initialsStyle: TaleedTextStyle {
+        TaleedTextStyle(size: Self.initialsSize(for: size), weight: style == .standard ? .semibold : .bold,
+                        lineHeight: nil, letterSpacing: 0, relativeTo: .body)
     }
 
     /// Initials size by avatar size (32 → 11, 40 → 14, 48 → 16, 56 → 18, 72 → 24; wireframe 36 → 12, 44 → 16).

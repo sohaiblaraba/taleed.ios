@@ -50,7 +50,8 @@ struct HomeView: View {
         }
     }
 
-    /// Looks like the search field; opens Explore.
+    /// Looks like the search field but is a button that opens Explore, so VoiceOver announces a button
+    /// with a hint, not a search field.
     private var searchField: some View {
         Button { router.selectedTab = .explore } label: {
             HStack(spacing: TaleedSize.Input.gap) {
@@ -67,6 +68,6 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(l10n.string(.homeSearchPlaceholder))
-        .accessibilityAddTraits(.isSearchField)
+        .accessibilityHint(l10n.string(.a11yOpensExplore))
     }
 }

@@ -82,7 +82,7 @@ The Figma design system lives in `Taleed/DesignSystem`:
 |---|---|
 | `Tokens/TaleedTokens.swift` | Colours, text styles, spacing, radius, elevation, opacity, sizes, layout and motion, named as in the design hand-off's `tokens.json` (`TaleedColor.brandPrimary`, `TaleedFont.title1`, `TaleedSpacing.s16`, `TaleedRadius.m`). Generated. |
 | `Icons/TaleedIcon.swift` | The 55 Phosphor icons (`TaleedIconView(.heart, size: 20, color: …)`). Generated. |
-| `Foundation/` | Text-style modifier (`.taleedFont(TaleedFont.bodyRegular)`, Alexandria in Arabic), shadows, images, price formatting (DA suffix), condition codes. `Theme` is the one entry point. |
+| `Foundation/` | Text-style modifier (`.taleedFont(TaleedFont.bodyRegular)`: Plus Jakarta Sans in every language, Alexandria as the cascade for Arabic script), shadows, images, price formatting (DA suffix), condition codes. `Theme` is the one entry point. |
 | `Components/` | Buttons, fields, chips, tags, cards, checkout controls, app bars, bottom navigation, sheets, toasts… They take plain data and closures. |
 | `Gallery/` | Debug-only gallery of every component (Settings → Design system). |
 

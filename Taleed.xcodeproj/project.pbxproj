@@ -42,6 +42,7 @@
 		691FA6A97F57042F7895D1F3 /* OFL-PlusJakartaSans.txt in Resources */ = {isa = PBXBuildFile; fileRef = A837C6AD087E61C82B98F12F /* OFL-PlusJakartaSans.txt */; };
 		6FE3DC4BFA8EBA79BC05406F /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F7A68D1F234FCDAB6174CF /* AppEnvironment.swift */; };
 		71E8FE52B3F5E6911C93512E /* LaunchScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE9244F4BB80E2AA17C2FE46 /* LaunchScreens.swift */; };
+		7332DE389D7AA03374FE1128 /* ComposedPatterns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51C0424AF5F81A4DEB66FC6A /* ComposedPatterns.swift */; };
 		74A89296218FFAA3DE48C78C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF1945ED568E486F99AE8F3 /* SettingsView.swift */; };
 		770EFF7D993944B067574DC6 /* ProductConditionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AB0DF0EDB9A9311D66C9B0 /* ProductConditionTests.swift */; };
 		77CA59B2CF653C598D6FE79B /* MainShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777886244E0B36918AF1176F /* MainShellView.swift */; };
@@ -80,6 +81,7 @@
 		E0204E6F1D1481ED194ACDEF /* L10nKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222E168C064EB3A0C5C881EA /* L10nKey.swift */; };
 		E080070294B72864457AC1E0 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = BD1BCDC35B0BB56C8CAE710B /* NukeUI */; };
 		E1BF54C9DC073FB50B4F1157 /* DesignSystem.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F124576C8840A65A7CDDAB8A /* DesignSystem.xcassets */; };
+		E50C6707A1DA366073765685 /* GalleryComposed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FF7EDA4B80B056B415DE6C /* GalleryComposed.swift */; };
 		EDC61131C21FF71177CE213D /* PlusJakartaSans-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA075CFD59923D90089B6C03 /* PlusJakartaSans-ExtraBold.ttf */; };
 		F140BE4F4ABFB150D151CD8B /* OFL-Alexandria.txt in Resources */ = {isa = PBXBuildFile; fileRef = 059F57241D180D5E5D86044E /* OFL-Alexandria.txt */; };
 		F1BF98132479423B1BF6323D /* PlusJakartaSans-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5B1B87574C5041BDC07615E4 /* PlusJakartaSans-SemiBold.ttf */; };
@@ -116,6 +118,7 @@
 		191B9179C3C1A80C0E2B90B8 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		1C9D79C659169DA4C19C56AC /* GalleryMarketplace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryMarketplace.swift; sourceTree = "<group>"; };
 		1E566E51411FDE26ADF99D7F /* Skeletons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Skeletons.swift; sourceTree = "<group>"; };
+		20FF7EDA4B80B056B415DE6C /* GalleryComposed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryComposed.swift; sourceTree = "<group>"; };
 		222E168C064EB3A0C5C881EA /* L10nKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10nKey.swift; sourceTree = "<group>"; };
 		22C749C144A891516BF2CFBE /* GalleryCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryCore.swift; sourceTree = "<group>"; };
 		2C3A09620F115F4D289E78E9 /* SelectionControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionControls.swift; sourceTree = "<group>"; };
@@ -130,6 +133,7 @@
 		4EF1945ED568E486F99AE8F3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		4F96A5CBE101112F221BAA0A /* Alexandria-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Alexandria-Medium.ttf"; sourceTree = "<group>"; };
 		4FFACD65A7F9493BE1E0CE5D /* Promotions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Promotions.swift; sourceTree = "<group>"; };
+		51C0424AF5F81A4DEB66FC6A /* ComposedPatterns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposedPatterns.swift; sourceTree = "<group>"; };
 		5227C54B5120A423F7EEBA52 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		5406B4C65058A66AB6EA51DF /* Feedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feedback.swift; sourceTree = "<group>"; };
 		5AFD8D2CF8CEBB9E4F11079D /* Alexandria-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Alexandria-Regular.ttf"; sourceTree = "<group>"; };
@@ -415,6 +419,7 @@
 				7BC8414255CE655082CC9B04 /* AppBars.swift */,
 				BAEEEED2F386666F7398AC9C /* Checkout.swift */,
 				C7C5C4D2727D22A4C6B966A2 /* ChipsAndTags.swift */,
+				51C0424AF5F81A4DEB66FC6A /* ComposedPatterns.swift */,
 				5406B4C65058A66AB6EA51DF /* Feedback.swift */,
 				6A253F11E13AED24C585651C /* Fields.swift */,
 				AFB9CBD56016A166B04C24C4 /* IconButtons.swift */,
@@ -496,6 +501,7 @@
 			children = (
 				C9BAF3A5EC871DC0CF94CF75 /* DebugLaunchOptions.swift */,
 				FA2E1171BAB3B0808125C828 /* DesignSystemGalleryView.swift */,
+				20FF7EDA4B80B056B415DE6C /* GalleryComposed.swift */,
 				22C749C144A891516BF2CFBE /* GalleryCore.swift */,
 				05D1194FB3C0505F0685D810 /* GalleryFoundations.swift */,
 				1C9D79C659169DA4C19C56AC /* GalleryMarketplace.swift */,
@@ -658,11 +664,13 @@
 				524703D2B84AB5E5FF214999 /* BidiText.swift in Sources */,
 				53BB599D60904AEE5C10494F /* Checkout.swift in Sources */,
 				AFA0B11E10D0D2568132FE97 /* ChipsAndTags.swift in Sources */,
+				7332DE389D7AA03374FE1128 /* ComposedPatterns.swift in Sources */,
 				3F3AEFA80867DFCA8A6FE1CD /* DebugLaunchOptions.swift in Sources */,
 				4DE3B078AF81FE07781B5ABE /* DesignSystemGalleryView.swift in Sources */,
 				A0B06CB757E8FD38603E7383 /* DesignSystemStrings.swift in Sources */,
 				CE286D2A2BF640BF502F567A /* Feedback.swift in Sources */,
 				C5FF5444FBBF4A5E68C210B8 /* Fields.swift in Sources */,
+				E50C6707A1DA366073765685 /* GalleryComposed.swift in Sources */,
 				B47BED46CE886D4AA0062B09 /* GalleryCore.swift in Sources */,
 				002F4BF55417C5C3FB34976C /* GalleryFoundations.swift in Sources */,
 				CB0C5B57577A9EC2DBD92839 /* GalleryMarketplace.swift in Sources */,

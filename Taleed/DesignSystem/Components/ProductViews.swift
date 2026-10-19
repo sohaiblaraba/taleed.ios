@@ -37,9 +37,11 @@ struct ProductSummary: Identifiable {
     /// Whole dinars.
     var price: Int
     var media: ProductMedia
-    /// API condition code (`VERY_GOOD`) and the catalog label for unknown codes.
+    /// API condition code (`VERY_GOOD`) and the catalog's `label` / `shortLabel` for it
+    /// (`GET /catalog` conditions), which tags show for codes the app does not know.
     var conditionCode: String?
-    var conditionFallbackLabel: String = ""
+    var conditionLabel: String = ""
+    var conditionShortLabel: String?
     var location: String?
     /// "2 hours ago", already formatted.
     var recency: String?
@@ -79,7 +81,8 @@ struct ProductCard: View {
             // One row so that, with large text, the tag truncates instead of running under the heart.
             HStack(alignment: .top, spacing: TaleedSpacing.s4) {
                 if let code = product.conditionCode {
-                    ConditionTag(code: code, fallbackLabel: product.conditionFallbackLabel)
+                    ConditionTag(code: code, catalogLabel: product.conditionLabel,
+                                 catalogShortLabel: product.conditionShortLabel)
                         .accessibilityHidden(true)
                 }
                 Spacer(minLength: 0)
@@ -130,7 +133,8 @@ struct ProductCard: View {
     private var accessibilityText: String {
         let language = AppLanguage(locale: locale)
         let condition = product.conditionCode.map {
-            ProductCondition.label(code: $0, fallback: product.conditionFallbackLabel, language: language)
+            ProductCondition.label(code: $0, catalogLabel: product.conditionLabel,
+                                   catalogShortLabel: product.conditionShortLabel, length: .full, language: language)
         }
         let rating = product.rating.map { "★ " + $0.formatted(.number.precision(.fractionLength(1)).locale(locale)) }
         return [product.title, PriceFormatter.format(product.price, language: language), condition, rating,
@@ -192,7 +196,8 @@ struct ProductListRow: View {
         let dense = style == .dense
         return VStack(alignment: .leading, spacing: dense ? TaleedSpacing.s4 : 7) {
             if let code = product.conditionCode {
-                ConditionTag(code: code, fallbackLabel: product.conditionFallbackLabel, size: dense ? .small : .large)
+                ConditionTag(code: code, catalogLabel: product.conditionLabel, catalogShortLabel: product.conditionShortLabel,
+                             size: .large)
             }
             Text(verbatim: product.title)
                 .taleedFont(dense ? Self.denseNameStyle : Self.nameStyle)
@@ -218,14 +223,32 @@ struct ProductListRow: View {
     }
 }
 
-/// The grouped list container of list rows: `surfaceGrouped`, `radius.l`, rows 8 apart.
-struct ProductListContainer<Content: View>: View {
-    @ViewBuilder let content: Content
+/// The grouped list container of list rows (design-system §3.3): `surfaceGrouped`, `radius.l`, rows
+/// 8 apart with a 1 pt `surface/subtle` divider in the gap.
+struct ProductListContainer<Data: RandomAccessCollection, Row: View>: View where Data.Element: Identifiable {
+    let data: Data
+    @ViewBuilder let row: (Data.Element) -> Row
+
+    init(_ data: Data, @ViewBuilder row: @escaping (Data.Element) -> Row) {
+        self.data = data
+        self.row = row
+    }
 
     var body: some View {
-        VStack(spacing: TaleedSpacing.s8) { content }
-            .padding(TaleedSpacing.s8)
-            .background(TaleedColor.surfaceGrouped, in: RoundedRectangle(cornerRadius: TaleedRadius.l, style: .continuous))
+        VStack(spacing: 0) {
+            ForEach(Array(data.enumerated()), id: \.element.id) { index, element in
+                if index > 0 {
+                    Rectangle()
+                        .fill(TaleedColor.surfaceSubtle)
+                        .frame(height: 1)
+                        .padding(.vertical, (TaleedSpacing.s8 - 1) / 2)
+                        .accessibilityHidden(true)
+                }
+                row(element)
+            }
+        }
+        .padding(TaleedSpacing.s8)
+        .background(TaleedColor.surfaceGrouped, in: RoundedRectangle(cornerRadius: TaleedRadius.l, style: .continuous))
     }
 }
 

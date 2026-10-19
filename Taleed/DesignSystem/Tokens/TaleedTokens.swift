@@ -234,7 +234,7 @@ struct ColorToken: Sendable {
 }
 
 /// Text styles. Figma styles first, then the recurring settings without a style (`typography.derived`).
-/// Apply one with `.taleedFont(TaleedFont.title1)`: it swaps to Alexandria in Arabic.
+/// Apply one with `.taleedFont(TaleedFont.title1)`: Plus Jakarta Sans, with Alexandria as the cascade for Arabic script.
 enum TaleedFont {
     /// Display: 36/600, line 120%.
     static let display = TaleedTextStyle(

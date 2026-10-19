@@ -20,15 +20,11 @@ enum TaleedFontWeight: Int, CaseIterable, Sendable {
     }
 }
 
-/// The two brand faces: Plus Jakarta Sans for Latin, Alexandria for Arabic.
+/// The two brand faces. Plus Jakarta Sans is the primary face in every language (Latin text, digits
+/// and prices); Alexandria is its cascade for Arabic script (design-system §1.3, like the website).
 enum TaleedTypeface: CaseIterable, Sendable {
     case plusJakartaSans
     case alexandria
-
-    /// Alexandria for every text style when the app language is Arabic.
-    init(locale: Locale) {
-        self = locale.language.languageCode == .arabic ? .alexandria : .plusJakartaSans
-    }
 
     var familyPrefix: String {
         switch self {
@@ -45,8 +41,8 @@ enum TaleedTypeface: CaseIterable, Sendable {
         }
     }
 
-    /// The other face, used as the cascade for glyphs this face does not have (Arabic in Latin text,
-    /// Latin in Arabic text).
+    /// The other face, used as the cascade for glyphs this face does not have (Arabic script for
+    /// Plus Jakarta Sans).
     var fallback: TaleedTypeface { self == .alexandria ? .plusJakartaSans : .alexandria }
 
     func postScriptName(_ weight: TaleedFontWeight) -> String { "\(familyPrefix)-\(weight.fileSuffix)" }
@@ -67,9 +63,9 @@ struct TaleedTextStyle: Hashable, Sendable {
         TaleedTextStyle(size: size, weight: weight, lineHeight: lineHeight, letterSpacing: letterSpacing, relativeTo: relativeTo)
     }
 
-    /// The font at the given content size, with the other brand face as cascade.
+    /// The font at the given content size: Plus Jakarta Sans with Alexandria as cascade by default.
     @MainActor
-    func uiFont(_ typeface: TaleedTypeface, sizeCategory: UIContentSizeCategory = .large) -> UIFont {
+    func uiFont(_ typeface: TaleedTypeface = .plusJakartaSans, sizeCategory: UIContentSizeCategory = .large) -> UIFont {
         TaleedFontCache.font(style: self, typeface: typeface, sizeCategory: sizeCategory)
     }
 
@@ -129,20 +125,25 @@ private struct TaleedFontModifier: ViewModifier {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     func body(content: Content) -> some View {
-        let typeface = TaleedTypeface(locale: locale)
         let category = UIContentSizeCategory(dynamicTypeSize)
-        let font = style.uiFont(typeface, sizeCategory: category)
+        let font = style.uiFont(sizeCategory: category)
         let scale = font.pointSize / style.size
         content
             .font(Font(font))
             // Arabic is never letter-spaced.
-            .tracking(typeface == .alexandria ? 0 : style.letterSpacing * scale)
-            .lineSpacing(style.lineSpacing(typeface, scale: scale))
+            .tracking(locale.isArabic ? 0 : style.letterSpacing * scale)
+            .lineSpacing(style.lineSpacing(.plusJakartaSans, scale: scale))
     }
 }
 
+extension Locale {
+    /// Arabic app language: no letter spacing (design-system §7).
+    var isArabic: Bool { language.languageCode == .arabic }
+}
+
 extension View {
-    /// Sets a design-system text style. Scales with Dynamic Type and uses Alexandria in Arabic.
+    /// Sets a design-system text style: Plus Jakarta Sans with Alexandria for Arabic script, scaled
+    /// with Dynamic Type.
     func taleedFont(_ style: TaleedTextStyle) -> some View {
         modifier(TaleedFontModifier(style: style))
     }

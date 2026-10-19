@@ -39,15 +39,11 @@ struct GalleryMarketplace: View {
         }
         GallerySection(id: "list-rows", number: "3.3", title: "Product list row", note: "Standard (108 media) and dense") {
             VStack(spacing: TaleedSpacing.s16) {
-                ProductListContainer {
-                    ForEach(products.suffix(2)) { product in
-                        ProductListRow(product: product, onTap: {}, onFavorite: { toggleFavorite(product.id) })
-                    }
+                ProductListContainer(products.suffix(3)) { product in
+                    ProductListRow(product: product, onTap: {}, onFavorite: { toggleFavorite(product.id) })
                 }
-                ProductListContainer {
-                    ForEach(products.prefix(2)) { product in
-                        ProductListRow(product: product, style: .dense, onTap: {}, onFavorite: { toggleFavorite(product.id) })
-                    }
+                ProductListContainer(products.prefix(2)) { product in
+                    ProductListRow(product: product, style: .dense, onTap: {}, onFavorite: { toggleFavorite(product.id) })
                 }
             }
         }

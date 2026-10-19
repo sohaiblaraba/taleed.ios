@@ -19,15 +19,20 @@ struct InlineAlert: View {
     var body: some View {
         HStack(alignment: .top, spacing: TaleedSize.Alert.gap) {
             TaleedIconView(icon, size: TaleedSize.Alert.iconSize, color: iconColor)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .taleedFont(TaleedFont.bodyLarge)
-                    .foregroundStyle(TaleedColor.textPrimary)
-                if let message {
-                    Text(message)
-                        .taleedFont(Self.messageStyle)
-                        .foregroundStyle(kind == .info ? TaleedColor.navy700 : TaleedColor.textBody)
+                // Title and message read as one element; the link stays its own element.
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .taleedFont(TaleedFont.bodyLarge)
+                        .foregroundStyle(TaleedColor.textPrimary)
+                    if let message {
+                        Text(message)
+                            .taleedFont(Self.messageStyle)
+                            .foregroundStyle(kind == .info ? TaleedColor.navy700 : TaleedColor.textBody)
+                    }
                 }
+                .accessibilityElement(children: .combine)
                 if let actionTitle, let action {
                     TaleedButton(title: actionTitle, kind: .hyperlink, size: .small, action: action)
                 }
@@ -36,7 +41,7 @@ struct InlineAlert: View {
         }
         .padding(TaleedSize.Alert.padding)
         .background(fill, in: RoundedRectangle(cornerRadius: TaleedSize.Alert.radius, style: .continuous))
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
     }
 
     private var icon: TaleedIcon {
@@ -104,7 +109,8 @@ struct TaleedToast: View {
 
     private static let darkMessage = TaleedTextStyle(size: 13, weight: .regular, lineHeight: nil, letterSpacing: 0,
                                                      relativeTo: .footnote)
-    private static let darkAction = TaleedTextStyle(size: 11, weight: .semibold, lineHeight: nil, letterSpacing: 0,
+    /// "Cancel" on the dark toast: 11/400 mint (§2.14).
+    private static let darkAction = TaleedTextStyle(size: 11, weight: .regular, lineHeight: nil, letterSpacing: 0,
                                                     relativeTo: .caption2)
 
     var body: some View {

@@ -39,8 +39,15 @@ enum L10nKey: String, CaseIterable, Sendable {
     case suspendedBody = "suspended_body"
     case suspendedContact = "suspended_contact"
     case homeSearchPlaceholder = "home_search_placeholder"
+    case sellTitle = "sell_title"
 
     // Design system: condition labels (decision D-8), component copy and accessibility labels.
+    // Short labels for the 22 pt tag (website `short…` for fr/ar), full labels for the 30 pt tag.
+    case conditionShortNewWithTags = "condition_short_new_with_tags"
+    case conditionShortNewWithoutTags = "condition_short_new_without_tags"
+    case conditionShortVeryGood = "condition_short_very_good"
+    case conditionShortGood = "condition_short_good"
+    case conditionShortSatisfactory = "condition_short_satisfactory"
     case conditionNewWithTags = "condition_new_with_tags"
     case conditionNewWithoutTags = "condition_new_without_tags"
     case conditionVeryGood = "condition_very_good"
@@ -67,4 +74,7 @@ enum L10nKey: String, CaseIterable, Sendable {
     case a11yDismiss = "a11y_dismiss"
     case a11yMoreInfo = "a11y_more_info"
     case a11yRemoveFilter = "a11y_remove_filter"
+    case a11yOpensExplore = "a11y_opens_explore"
+    case a11yPhotoPosition = "a11y_photo_position"
+    case a11yStepProgress = "a11y_step_progress"
 }

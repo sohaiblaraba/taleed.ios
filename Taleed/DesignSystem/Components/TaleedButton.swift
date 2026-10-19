@@ -205,8 +205,9 @@ struct TaleedButton: View {
                 }
             }
         }
+        // Loading keeps the Default colours even inside a disabled container.
         .buttonStyle(TaleedButtonStyle(kind: kind, size: size, isFullWidth: isFullWidth, minWidth: minWidth,
-                                       forcedState: forcedState))
+                                       forcedState: forcedState ?? (isLoading ? .normal : nil)))
         .allowsHitTesting(!isLoading)
         .accessibilityLabel(title)
         .accessibilityValue(isLoading ? DesignSystemStrings.string(.commonLoading, locale: locale) : "")
@@ -237,8 +238,9 @@ struct TaleedIconOnlyButton: View {
 }
 
 /// The outlined button that the seller card ("View profile"), the empty state ("Clear filters") and
-/// the confirmation modal ("Cancel") draw outside the Button component (design-system §8.10):
-/// white fill, `border/subtle`, `radius.m`, 13/600 or 15/600 label.
+/// the confirmation modal ("Cancel", "Delete") draw outside the Button component (design-system §8.10):
+/// `radius.m`, 13/600 or 15/600 label. Pressed changes only the fill and border, never the label
+/// contrast: white → `surfaceGrouped`, danger → `lit.dangerPressed`.
 struct TaleedOutlineButtonStyle: ButtonStyle {
     var height: CGFloat = 40
     var paddingX: CGFloat = TaleedSpacing.s16
@@ -246,13 +248,33 @@ struct TaleedOutlineButtonStyle: ButtonStyle {
     var fill = TaleedColor.surfacePrimary
     var border = TaleedColor.borderSubtle
     var foreground = TaleedColor.textPrimary
+    /// Fill and border while the finger is down. Nil derives them from the button's own colours:
+    /// a white button turns `surfaceGrouped`, any other keeps its fill (never a lighter one under a
+    /// light label).
+    var pressedFill: Color?
+    var pressedBorder: Color?
     var isFullWidth = false
+    /// Draws the pressed look regardless of the finger, for the design-system gallery.
+    var forcesPressed = false
 
     static let label13 = TaleedTextStyle(size: 13, weight: .semibold, lineHeight: nil, letterSpacing: 0, relativeTo: .footnote)
     static let label15 = TaleedTextStyle(size: 15, weight: .semibold, lineHeight: nil, letterSpacing: 0, relativeTo: .subheadline)
 
+    /// The modal's destructive action: `feedback/error` fill and border, white label; pressed
+    /// `lit.dangerPressed` #B42318 like the Danger button (§2.1).
+    static func danger(height: CGFloat = 40, isFullWidth: Bool = false, forcesPressed: Bool = false) -> TaleedOutlineButtonStyle {
+        TaleedOutlineButtonStyle(height: height, fill: TaleedColor.feedbackError, border: TaleedColor.feedbackError,
+                                 foreground: TaleedColor.textInverse, pressedFill: TaleedColor.dangerPressed,
+                                 pressedBorder: TaleedColor.dangerPressed, isFullWidth: isFullWidth, forcesPressed: forcesPressed)
+    }
+
+    private var resolvedPressedFill: Color {
+        pressedFill ?? (fill == TaleedColor.surfacePrimary ? TaleedColor.surfaceGrouped : fill)
+    }
+
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
+        let isPressed = configuration.isPressed || forcesPressed
         configuration.label
             .taleedFont(textStyle)
             .foregroundStyle(foreground)
@@ -260,8 +282,8 @@ struct TaleedOutlineButtonStyle: ButtonStyle {
             .padding(.horizontal, paddingX)
             .padding(.vertical, 4)
             .frame(maxWidth: isFullWidth ? .infinity : nil, minHeight: height)
-            .background(shape.fill(configuration.isPressed ? TaleedColor.surfaceGrouped : fill))
-            .overlay(shape.strokeBorder(border, lineWidth: 1))
+            .background(shape.fill(isPressed ? resolvedPressedFill : fill))
+            .overlay(shape.strokeBorder(isPressed ? pressedBorder ?? border : border, lineWidth: 1))
             .contentShape(shape)
             .minimumHitArea()
     }

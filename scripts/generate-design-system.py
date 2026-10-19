@@ -184,7 +184,7 @@ def text_style(name: str, spec: dict) -> str:
 
 def gen_typography(typo: dict) -> str:
     out = ["/// Text styles. Figma styles first, then the recurring settings without a style (`typography.derived`).",
-           "/// Apply one with `.taleedFont(TaleedFont.title1)`: it swaps to Alexandria in Arabic.",
+           "/// Apply one with `.taleedFont(TaleedFont.title1)`: Plus Jakarta Sans, with Alexandria as the cascade for Arabic script.",
            "enum TaleedFont {"]
     for name, spec in typo.items():
         if name.startswith("$") or name == "derived":

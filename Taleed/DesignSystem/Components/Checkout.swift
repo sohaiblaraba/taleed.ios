@@ -132,14 +132,19 @@ struct PromoCodeField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
             FieldLabel(text: label, color: error == nil ? TaleedColor.textPrimary : TaleedColor.feedbackError)
-            HStack(alignment: .top, spacing: TaleedSpacing.s8) {
-                TaleedTextField(label: nil, text: $code, placeholder: placeholder, error: error)
+            // Row gap 8, centred (§4.6): the 44 field centres on the 48 button; the error sits under
+            // the row so it never moves the button.
+            HStack(alignment: .center, spacing: TaleedSpacing.s8) {
+                TaleedTextField(label: nil, text: $code, placeholder: placeholder, error: error, showsMessage: false)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .accessibilityLabel(label)
                 TaleedButton(title: applyTitle, kind: .tertiary, size: .large, isLoading: isApplying, minWidth: 96,
                              action: onApply)
                     .disabled(code.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            if let error {
+                FieldHelper(text: error, color: TaleedColor.feedbackError)
             }
         }
     }

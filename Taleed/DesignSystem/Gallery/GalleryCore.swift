@@ -32,6 +32,9 @@ struct GalleryCoreComponents: View {
                 HStack(spacing: TaleedSpacing.s12) {
                     TaleedAvatar(initials: "NT", size: 36, style: .wireframe)
                     TaleedAvatar(initials: "S", size: 44, style: .wireframe)
+                    // Arabic initials take Alexandria through the brand cascade.
+                    TaleedAvatar(initials: TaleedAvatar.initials(from: "أمينة بن علي"), size: 44, style: .wireframe)
+                    TaleedAvatar(initials: TaleedAvatar.initials(from: "كريم سعدي"), size: 48)
                 }
                 SellerRow(name: "Lina N.", reputation: copy("4,9 ★ · 38 ventes · Alger", "4.9 ★ · 38 عملية بيع · الجزائر",
                                                             "4.9 ★ · 38 sales · Algiers"),
@@ -248,11 +251,14 @@ private struct GalleryTags: View {
             GalleryCaption(text: copy("État · petit (22)", "الحالة · صغير (22)", "Condition · small (22)"))
             FlowRow {
                 ForEach(ProductCondition.allCases, id: \.self) { ConditionTag($0) }
-                ConditionTag(code: "NEW_CODE", fallbackLabel: copy("Libellé du catalogue", "تسمية الفهرس", "Catalog label"))
+                ConditionTag(code: "NEW_CODE", catalogLabel: copy("Libellé du catalogue", "تسمية الفهرس", "Catalog label"),
+                             catalogShortLabel: copy("Libellé court", "تسمية قصيرة", "Short label"))
             }
             GalleryCaption(text: copy("État · grand (30)", "الحالة · كبير (30)", "Condition · large (30)"))
             FlowRow {
                 ForEach(ProductCondition.allCases, id: \.self) { ConditionTag($0, size: .large) }
+                ConditionTag(code: "NEW_CODE", catalogLabel: copy("Libellé du catalogue", "تسمية الفهرس", "Catalog label"),
+                             catalogShortLabel: copy("Libellé court", "تسمية قصيرة", "Short label"), size: .large)
             }
             TaleedTabs(titles: [copy("Pour vous", "لك", "For you"), copy("À proximité", "بالقرب منك", "Nearby"),
                                 copy("Abonnements", "المتابَعون", "Following")], selection: $tab)

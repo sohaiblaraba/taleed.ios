@@ -21,6 +21,7 @@ struct DesignSystemGalleryView: View {
                         GalleryMarketplace()
                         GallerySellingAndCheckout()
                         GalleryNavigation()
+                        GalleryComposed()
                     }
                     .padding(.vertical, TaleedSpacing.s24)
                 }
@@ -118,7 +119,7 @@ enum GallerySamples {
                            recency: copy("il y a 2 heures", "منذ ساعتين", "2 hours ago")),
             ProductSummary(id: "6", title: copy("Pull rose", "كنزة وردية", "Pink knit"), price: 1500,
                            media: .local(Image(taleed: .loginPinkShirt)), conditionCode: "UNKNOWN_CODE",
-                           conditionFallbackLabel: copy("Libellé du catalogue", "تسمية الفهرس", "Catalog label"),
+                           conditionLabel: copy("Libellé du catalogue", "تسمية الفهرس", "Catalog label"),
                            location: copy("Alger", "الجزائر", "Algiers"),
                            recency: copy("hier", "أمس", "yesterday")),
         ]

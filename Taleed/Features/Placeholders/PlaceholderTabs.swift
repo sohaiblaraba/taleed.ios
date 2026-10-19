@@ -24,7 +24,7 @@ struct SellView: View {
             ShellBrandAppBar()
         } content: {
             VStack(spacing: 0) {
-                PageHeading(eyebrow: l10n.string(.tabSell), title: l10n.string(.tabSell))
+                PageHeading(eyebrow: l10n.string(.tabSell), title: l10n.string(.sellTitle))
                 if session.isSignedIn {
                     MessageStateView(text: l10n.string(.sellPlaceholder), icon: .cloudArrowUp)
                 } else {

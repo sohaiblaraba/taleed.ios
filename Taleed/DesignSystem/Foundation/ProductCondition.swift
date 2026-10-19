@@ -1,7 +1,7 @@
 import Foundation
 
-/// The five item conditions, by API code (decision D-8). Each has a short label in the app strings
-/// and the colours of its tag.
+/// The five item conditions, by API code (decision D-8). Each has a short label (22 pt tag on cards
+/// and photos), a full label (30 pt tag in list rows, search results and detail) and tag colours.
 enum ProductCondition: String, CaseIterable, Sendable {
     case newWithTags = "NEW_WITH_TAGS"
     case newWithoutTags = "NEW_WITHOUT_TAGS"
@@ -9,28 +9,47 @@ enum ProductCondition: String, CaseIterable, Sendable {
     case good = "GOOD"
     case satisfactory = "SATISFACTORY"
 
+    /// Which of the two labels a tag shows.
+    enum LabelLength: Sendable {
+        /// "New, tagged", "Like new", "Very good", "Good", "Fair" (fr/ar: the website's `short…` labels,
+        /// the same as the catalog's `shortLabel`).
+        case short
+        /// "New with tags", "Like new", "Very good condition", "Good condition", "Fair condition"
+        /// (fr/ar: the website's full labels, the same as the catalog's `label`).
+        case full
+    }
+
     /// The condition of an API code, nil for a code the app does not know yet.
     init?(code: String) {
         self.init(rawValue: code)
     }
 
-    /// The string key of the short label: "New, tagged", "Like new", "Very good", "Good", "Fair" in English.
-    var labelKey: L10nKey {
-        switch self {
-        case .newWithTags: .conditionNewWithTags
-        case .newWithoutTags: .conditionNewWithoutTags
-        case .veryGood: .conditionVeryGood
-        case .good: .conditionGood
-        case .satisfactory: .conditionSatisfactory
+    func labelKey(_ length: LabelLength) -> L10nKey {
+        switch (self, length) {
+        case (.newWithTags, .short): .conditionShortNewWithTags
+        case (.newWithoutTags, .short): .conditionShortNewWithoutTags
+        case (.veryGood, .short): .conditionShortVeryGood
+        case (.good, .short): .conditionShortGood
+        case (.satisfactory, .short): .conditionShortSatisfactory
+        case (.newWithTags, .full): .conditionNewWithTags
+        case (.newWithoutTags, .full): .conditionNewWithoutTags
+        case (.veryGood, .full): .conditionVeryGood
+        case (.good, .full): .conditionGood
+        case (.satisfactory, .full): .conditionSatisfactory
         }
     }
 
-    func label(in language: AppLanguage) -> String {
-        DesignSystemStrings.string(labelKey, language: language)
+    func label(_ length: LabelLength = .short, in language: AppLanguage) -> String {
+        DesignSystemStrings.string(labelKey(length), language: language)
     }
 
-    /// The short label of an API code, or `fallback` (the catalog's full label) for an unknown code.
-    static func label(code: String, fallback: String, language: AppLanguage) -> String {
-        ProductCondition(code: code)?.label(in: language) ?? fallback
+    /// The label of an API code. Known codes use the app strings: in fr and ar they are the catalog's
+    /// `shortLabel` / `label`; in en they keep Figma's copy ("Like new", where the catalog says "New").
+    /// An unknown code shows the catalog's `shortLabel` (short tags, decision 6), then its `label`.
+    static func label(code: String, catalogLabel: String, catalogShortLabel: String? = nil,
+                      length: LabelLength = .short, language: AppLanguage) -> String {
+        if let condition = ProductCondition(code: code) { return condition.label(length, in: language) }
+        if length == .short, let catalogShortLabel, !catalogShortLabel.isEmpty { return catalogShortLabel }
+        return catalogLabel
     }
 }

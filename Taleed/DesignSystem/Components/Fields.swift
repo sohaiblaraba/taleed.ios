@@ -64,6 +64,9 @@ struct TaleedTextField: View {
     var error: String?
     var isSecure = false
     var showsClearButton = true
+    /// False draws the error or helper text outside the field (promo code row): the field still takes
+    /// the Error look.
+    var showsMessage = true
     /// External focus, for moving focus between fields. Without it the field manages its own focus.
     var focus: FocusState<Bool>.Binding?
     /// Draws the focused state without focus, for the design-system gallery.
@@ -88,7 +91,7 @@ struct TaleedTextField: View {
                 FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textBody)
             }
             input
-            if let message = error ?? helper {
+            if showsMessage, let message = error ?? helper {
                 FieldHelper(text: message, color: helperColor)
             }
         }

@@ -236,8 +236,8 @@ struct SectionBand: View {
     }
 }
 
-/// A list row in the style of Item Detail's spec rows: label, optional value, optional chevron,
-/// 1 pt bottom border. Used for settings and other simple lists (decision D-12).
+/// A settings-style list row (decision D-12, screens Figma does not draw): 14 pt title, optional
+/// value, check or chevron, 1 pt bottom border, 52 pt high. Item Detail's spec rows are `SpecRow`.
 struct TaleedListRow: View {
     let title: String
     var value: String?
