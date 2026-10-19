@@ -10,8 +10,9 @@ enum OrderRules {
         case payDeadline(Date)
         /// Seller, awaiting payment: "En attente du paiement — l'acheteur a jusqu'au {date}…"
         case awaitingPayment(Date)
-        /// Buyer, paid or prepared: the seller ships before then, or the buyer is refunded.
-        case sellerShipsBy(Date)
+        /// Buyer, paid or prepared: the seller ships before then, or the buyer is refunded; on cash on
+        /// delivery (nothing paid yet), or the order is cancelled.
+        case sellerShipsBy(Date, cashOnDelivery: Bool)
         /// Seller, paid: "À expédier avant le {date}".
         case shipBy(Date)
         /// Seller, prepared: "Bordereau prêt — déposez le colis en agence avant le {date}".
@@ -50,7 +51,7 @@ enum OrderRules {
     private static func shipNotice(_ order: OrderDetailInfo) -> Notice? {
         guard let deadline = order.shipDeadlineAt else { return nil }
         switch (order.side, order.status) {
-        case (.buyer, .paid), (.buyer, .prepared): return .sellerShipsBy(deadline)
+        case (.buyer, .paid), (.buyer, .prepared): return .sellerShipsBy(deadline, cashOnDelivery: order.cashOnDelivery != nil)
         case (.seller, .paid): return .shipBy(deadline)
         case (.seller, .prepared): return .dropOffBy(deadline)
         default: return nil
@@ -86,6 +87,17 @@ enum OrderRules {
         if actions.canOpenDispute { result.append(.openDispute) }
         if actions.canCancel { result.append(.cancel) }
         return result
+    }
+
+    /// The member's buttons on the order: the buyer's set, and on a sale the review alone, which
+    /// `canReview` offers either side (screens.md §7 G12/G13 abilities; website `order-actions.tsx`).
+    /// The seller's own buttons (ship, label, answer a dispute) are G13's.
+    static func memberActions(_ actions: OrderActionFlags, side: OrderSide) -> [BuyerAction] {
+        switch side {
+        case .buyer: buyerActions(actions)
+        case .seller: actions.canReview ? [.review] : []
+        case .unknown: []
+        }
     }
 
     /// A line of the order's amounts.

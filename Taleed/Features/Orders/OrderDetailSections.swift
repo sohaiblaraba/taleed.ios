@@ -45,8 +45,9 @@ struct OrderNoticesView: View {
             InlineAlert(kind: .warning, title: l10n.format(.ordersPayDeadline, OrderText.dateTime(date, locale: locale)))
         case let .awaitingPayment(date):
             InlineAlert(kind: .warning, title: l10n.format(.ordersAwaitingPaymentSeller, OrderText.dateTime(date, locale: locale)))
-        case let .sellerShipsBy(date):
-            InlineAlert(kind: .info, title: l10n.format(.appOrderSellerShipsBy, OrderText.date(date, locale: locale)))
+        case let .sellerShipsBy(date, cashOnDelivery):
+            InlineAlert(kind: .info, title: l10n.format(cashOnDelivery ? .appOrderSellerShipsByCod : .appOrderSellerShipsBy,
+                                                        OrderText.date(date, locale: locale)))
         case let .shipBy(date):
             InlineAlert(kind: .info, title: l10n.format(.ordersShipBy, OrderText.date(date, locale: locale)))
         case let .dropOffBy(date):

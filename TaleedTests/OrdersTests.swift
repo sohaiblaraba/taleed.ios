@@ -28,7 +28,10 @@ struct OrderRulesTests {
 
     @Test func theShipDeadlineReadsByRoleAndStatus() {
         let date = Date(timeIntervalSince1970: 100)
-        #expect(OrderRules.notices(for: orderDetail(status: .paid, shipDeadline: date)) == [.sellerShipsBy(date)])
+        #expect(OrderRules.notices(for: orderDetail(status: .paid, shipDeadline: date)) == [.sellerShipsBy(date, cashOnDelivery: false)])
+        let cash = CashCollection(total: 2550, deliveryFee: 0)
+        #expect(OrderRules.notices(for: orderDetail(status: .paid, cash: cash, shipDeadline: date))
+            == [.sellerShipsBy(date, cashOnDelivery: true), .cashOnDelivery(cash)])
         #expect(OrderRules.notices(for: orderDetail(side: .seller, status: .paid, shipDeadline: date)) == [.shipBy(date)])
         #expect(OrderRules.notices(for: orderDetail(side: .seller, status: .prepared, shipDeadline: date)) == [.dropOffBy(date)])
         #expect(OrderRules.notices(for: orderDetail(status: .shipped, shipDeadline: date)).isEmpty)
@@ -161,15 +164,24 @@ struct OrderDetailViewModelTests {
         let model = OrderDetailViewModel(orderId: "o1", api: api)
         await model.loadIfNeeded()
         #expect(model.order?.status == .shipped)
-        #expect(model.buyerActions == [.awaitingArrival, .openDispute])
+        #expect(model.memberActions == [.awaitingArrival, .openDispute])
     }
 
     @Test func theSellerSeesNoBuyerButtons() async {
         let api = FakeOrdersApi()
-        api.defaultOrder = orderDetail(side: .seller, actions: OrderActionFlags(canCancel: true))
+        api.defaultOrder = orderDetail(side: .seller, actions: OrderActionFlags(canPay: true, canCancel: true))
         let model = OrderDetailViewModel(orderId: "o1", api: api)
         await model.loadIfNeeded()
-        #expect(model.buyerActions.isEmpty)
+        #expect(model.memberActions.isEmpty)
+    }
+
+    @Test func theSellerCanReviewACompletedSale() async {
+        let api = FakeOrdersApi()
+        api.defaultOrder = orderDetail(side: .seller, actions: OrderActionFlags(canCancel: true, canReview: true))
+        let model = OrderDetailViewModel(orderId: "o1", api: api)
+        await model.loadIfNeeded()
+        #expect(model.memberActions == [.review])
+        #expect(OrderRules.memberActions(OrderActionFlags(canReview: true), side: .unknown).isEmpty)
     }
 
     @Test func aMissingOrderIsNoLongerAvailable() async {
@@ -188,7 +200,7 @@ struct OrderDetailViewModelTests {
         await model.confirmReceipt()
         #expect(api.confirms == 1)
         #expect(model.order?.status == .completed)
-        #expect(model.buyerActions == [.review])
+        #expect(model.memberActions == [.review])
         #expect(model.notice == .success(.ordersReceiptConfirmed))
         #expect(model.busy == nil)
     }

@@ -15329,6 +15329,75 @@
         }
       }
     },
+    "app_order_seller_ships_by_cod": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على البائع إرسال الطرد قبل %@، وإلا سيُلغى الطلب."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The seller must ship before %@, or the order will be cancelled."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le vendeur doit expédier avant le %@, sinon la commande sera annulée."
+          }
+        }
+      }
+    },
+    "app_order_cancel_body_no_wallet": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُعاد الأغراض إلى البيع."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The items go back on sale."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les articles sont remis en vente."
+          }
+        }
+      }
+    },
+    "app_order_message_buyer": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مراسلة المشتري"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message buyer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer un message à l’acheteur"
+          }
+        }
+      }
+    },
     "app_dispute_description_min": {
       "extractionState": "manual",
       "localizations": {

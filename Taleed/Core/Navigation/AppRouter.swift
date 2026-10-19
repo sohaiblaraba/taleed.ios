@@ -82,6 +82,18 @@ final class AppRouter {
         push(newRoute)
     }
 
+    /// Opens a screen that may already sit right under the current one (an order under its dispute
+    /// thread): goes back to it rather than stacking a copy (screens.md §1, no duplicate screens on a
+    /// stack). Pushes it when the current screen was reached another way, such as a link.
+    func pushOrGoBack(to route: AppRoute) {
+        let stack = paths[selectedTab] ?? []
+        if stack.count >= 2, stack[stack.count - 2] == route {
+            pop()
+        } else {
+            push(route)
+        }
+    }
+
     func pop() {
         guard !(paths[selectedTab]?.isEmpty ?? true) else { return }
         paths[selectedTab]?.removeLast()

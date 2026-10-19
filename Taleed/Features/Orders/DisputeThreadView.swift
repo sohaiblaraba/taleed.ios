@@ -62,7 +62,7 @@ struct DisputeThreadView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
-                            DisputeHeaderCard(dispute: dispute) { router.push(.order(id: dispute.orderId)) }
+                            DisputeHeaderCard(dispute: dispute) { router.pushOrGoBack(to: .order(id: dispute.orderId)) }
                             ForEach(dispute.messages) { message in
                                 DisputeMessageBubble(message: message) { index in
                                     viewer = PhotoViewerState(

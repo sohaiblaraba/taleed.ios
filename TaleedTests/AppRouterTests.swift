@@ -106,6 +106,27 @@ struct AppRouterTests {
         #expect(router.path(.explore) == [.search(ExploreQuery(text: "zara"))])
     }
 
+    @Test func theOrderUnderItsDisputeThreadIsReachedByGoingBack() {
+        router.selectedTab = .profile
+        router.push(.orders)
+        router.push(.order(id: "o1"))
+        router.push(.dispute(id: "d1"))
+        router.pushOrGoBack(to: .order(id: "o1"))
+        #expect(router.path(.profile) == [.orders, .order(id: "o1")])
+    }
+
+    @Test func aThreadReachedByALinkPushesItsOrder() {
+        router.selectedTab = .profile
+        router.push(.dispute(id: "d1"))
+        router.pushOrGoBack(to: .order(id: "o1"))
+        #expect(router.path(.profile) == [.dispute(id: "d1"), .order(id: "o1")])
+        router.push(.order(id: "o2"))
+        router.push(.dispute(id: "d2"))
+        router.pushOrGoBack(to: .order(id: "o1"))
+        #expect(router.path(.profile).last == .order(id: "o1"))
+        #expect(router.path(.profile).count == 5)
+    }
+
     @Test func reselectingTheTabReturnsToItsFirstScreen() {
         router.push(.listing(id: "l1"))
         router.push(.member(username: "amina"))

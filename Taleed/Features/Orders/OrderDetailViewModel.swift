@@ -43,9 +43,10 @@ final class OrderDetailViewModel {
         self.followUpDelay = followUpDelay
     }
 
-    var buyerActions: [OrderRules.BuyerAction] {
-        guard let order, order.side == .buyer else { return [] }
-        return OrderRules.buyerActions(order.actions)
+    /// The member's buttons, from `actions` only: the buyer's, or the review on a sale.
+    var memberActions: [OrderRules.BuyerAction] {
+        guard let order else { return [] }
+        return OrderRules.memberActions(order.actions, side: order.side)
     }
 
     // MARK: Loading

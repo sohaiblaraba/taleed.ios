@@ -9,7 +9,8 @@ import SwiftUI
 ///   pick-up point, funds released on;
 /// - the dispute summary and its thread;
 /// - the goods (one item, or each item of a bundle) and the other member;
-/// - the buyer's buttons, only from `actions`: "Payer maintenant", "Confirmer la réception" (after a
+/// - the buyer's buttons, only from `actions` (on a sale, only "Laisser une évaluation"; G13 adds the
+///   seller's): "Payer maintenant", "Confirmer la réception" (after a
 ///   confirmation; disabled with its hint while the parcel travels), "Laisser une évaluation",
 ///   "Signaler un problème", "Annuler la commande" (after a confirmation); "Envoyer un message";
 /// - the amounts, the delivery with its tracking number, the timeline with the carrier's scans folded
@@ -119,14 +120,16 @@ struct OrderDetailView: View {
 
     @ViewBuilder
     private func actions(_ order: OrderDetailInfo) -> some View {
-        let buyerActions = model.buyerActions
-        if !buyerActions.isEmpty || order.conversationId != nil {
+        let memberActions = model.memberActions
+        if !memberActions.isEmpty || order.conversationId != nil {
             VStack(spacing: TaleedSpacing.s12) {
-                ForEach(Array(buyerActions.enumerated()), id: \.offset) { index, action in
+                ForEach(Array(memberActions.enumerated()), id: \.offset) { index, action in
                     button(action, isFirst: index == 0)
                 }
                 if let conversationId = order.conversationId {
-                    TaleedButton(title: l10n.string(.listingMessageSeller), kind: .tertiary, size: .large, leadingIcon: .chatCircle,
+                    // The other member by role: "Message buyer" on a sale.
+                    let label: L10nKey = order.side == .seller ? .appOrderMessageBuyer : .listingMessageSeller
+                    TaleedButton(title: l10n.string(label), kind: .tertiary, size: .large, leadingIcon: .chatCircle,
                                  isFullWidth: true) {
                         router.push(.conversation(id: conversationId))
                     }
@@ -203,7 +206,9 @@ struct OrderDetailView: View {
                                   onCancel: { confirmation = nil },
                                   icon: .checkCircle, tone: .positive)
         case .cancel, nil:
-            ConfirmationModalCard(title: l10n.string(.appOrderCancelTitle), message: l10n.string(.appOrderCancelBody),
+            ConfirmationModalCard(title: l10n.string(.appOrderCancelTitle),
+                                  message: l10n.string((model.order?.amounts.walletApplied ?? 0) > 0
+                                      ? .appOrderCancelBody : .appOrderCancelBodyNoWallet),
                                   confirmTitle: l10n.string(.ordersCancelOrder),
                                   onConfirm: {
                                       confirmation = nil
