@@ -48,6 +48,10 @@ public struct ListingDetail: Sendable, Codable, Hashable {
     public var canMessage: Bool
     /** Show the \"shop a bundle\" entry point: the seller has at least two items for sale, the viewer is not the seller, and neither member blocked the other. */
     public var canBundle: Bool
+    /** The signed-in member's bundle with this seller, still to check out (`GET /bundles/{id}`), as the seller profile's `openBundleId`. Null when signed out, for the seller, or when there is none. */
+    public var openBundleId: String?
+    /** This listing is an item of `openBundleId`: the bundle toggle reads \"Remove from the bundle\" instead of \"Add to the bundle\". Change the selection with `PUT /members/{username}/bundle`, sending the whole list. Always false when signed out and for the seller. */
+    public var inMyBundle: Bool
     /** Up to 5 other items for sale by the same seller. */
     public var memberItems: [ListingCard]
     /** Up to 5 recent items from the same category. */
@@ -57,7 +61,7 @@ public struct ListingDetail: Sendable, Codable, Hashable {
     public var createdAt: Date
     public var updatedAt: Date
 
-    public init(id: String, title: String, description: String, price: Int, protectionFee: Int, size: String?, brand: ListingBrand?, condition: ListingCondition, status: ListingStatus, photos: [Photo], category: ListingCategory, shipsFrom: Wilaya?, viewsCount: Int, favoritesCount: Int, isFavorited: Bool, isBoosted: Bool, isOwner: Bool, seller: ListingSeller, acceptedOffer: AcceptedOffer?, canBuy: Bool, orderId: String?, offerRange: OfferRange?, canMessage: Bool, canBundle: Bool, memberItems: [ListingCard], similar: [ListingCard], shareUrl: String, createdAt: Date, updatedAt: Date) {
+    public init(id: String, title: String, description: String, price: Int, protectionFee: Int, size: String?, brand: ListingBrand?, condition: ListingCondition, status: ListingStatus, photos: [Photo], category: ListingCategory, shipsFrom: Wilaya?, viewsCount: Int, favoritesCount: Int, isFavorited: Bool, isBoosted: Bool, isOwner: Bool, seller: ListingSeller, acceptedOffer: AcceptedOffer?, canBuy: Bool, orderId: String?, offerRange: OfferRange?, canMessage: Bool, canBundle: Bool, openBundleId: String?, inMyBundle: Bool, memberItems: [ListingCard], similar: [ListingCard], shareUrl: String, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.title = title
         self.description = description
@@ -82,6 +86,8 @@ public struct ListingDetail: Sendable, Codable, Hashable {
         self.offerRange = offerRange
         self.canMessage = canMessage
         self.canBundle = canBundle
+        self.openBundleId = openBundleId
+        self.inMyBundle = inMyBundle
         self.memberItems = memberItems
         self.similar = similar
         self.shareUrl = shareUrl
@@ -114,6 +120,8 @@ public struct ListingDetail: Sendable, Codable, Hashable {
         case offerRange
         case canMessage
         case canBundle
+        case openBundleId
+        case inMyBundle
         case memberItems
         case similar
         case shareUrl
@@ -149,6 +157,8 @@ public struct ListingDetail: Sendable, Codable, Hashable {
         try container.encode(offerRange, forKey: .offerRange)
         try container.encode(canMessage, forKey: .canMessage)
         try container.encode(canBundle, forKey: .canBundle)
+        try container.encode(openBundleId, forKey: .openBundleId)
+        try container.encode(inMyBundle, forKey: .inMyBundle)
         try container.encode(memberItems, forKey: .memberItems)
         try container.encode(similar, forKey: .similar)
         try container.encode(shareUrl, forKey: .shareUrl)

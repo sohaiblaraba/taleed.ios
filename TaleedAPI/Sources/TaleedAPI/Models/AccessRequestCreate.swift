@@ -13,12 +13,12 @@ public struct AccessRequestCreate: Sendable, Codable, Hashable {
     public static let emailRule = StringRule(minLength: nil, maxLength: 255, pattern: nil)
     public static let phoneRule = StringRule(minLength: nil, maxLength: 30, pattern: nil)
     public static let messageRule = StringRule(minLength: nil, maxLength: 1000, pattern: nil)
-    public static let referralCodeRule = StringRule(minLength: nil, maxLength: nil, pattern: "^[0-9a-f]{8}$")
+    public static let referralCodeRule = StringRule(minLength: nil, maxLength: 100, pattern: nil)
     public var name: String
     public var email: String
     public var phone: String?
     public var message: String?
-    /** A member's 8-character invite code. An unknown or ineligible code is ignored, never an error. */
+    /** A member's invite code: 8 hexadecimal characters, case-insensitive, spaces around it ignored. A malformed, empty, unknown or ineligible code is ignored, never an error; only a value over 100 characters is `invalid_request`. */
     public var referralCode: String?
 
     public init(name: String, email: String, phone: String? = nil, message: String? = nil, referralCode: String? = nil) {

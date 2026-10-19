@@ -19,13 +19,16 @@ public struct ErrorDetail: Sendable, Codable, Hashable {
     public var detail: String?
     /** Present on `rate_limited`: seconds to wait before the same request can pass. The `Retry-After` header carries it too. */
     public var retryAfter: Int?
+    /** Present on `listing_unavailable` from checkout when the goods are reserved by the member's own order awaiting payment: open that order (`GET /orders/{id}`) to pay or cancel it, as the website does, instead of saying the item is gone. */
+    public var orderId: String?
 
-    public init(code: ErrorCode, message: String, issues: [ErrorIssue]? = nil, detail: String? = nil, retryAfter: Int? = nil) {
+    public init(code: ErrorCode, message: String, issues: [ErrorIssue]? = nil, detail: String? = nil, retryAfter: Int? = nil, orderId: String? = nil) {
         self.code = code
         self.message = message
         self.issues = issues
         self.detail = detail
         self.retryAfter = retryAfter
+        self.orderId = orderId
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
@@ -34,6 +37,7 @@ public struct ErrorDetail: Sendable, Codable, Hashable {
         case issues
         case detail
         case retryAfter
+        case orderId
     }
 
     // Encodable protocol methods
@@ -45,6 +49,7 @@ public struct ErrorDetail: Sendable, Codable, Hashable {
         try container.encodeIfPresent(issues, forKey: .issues)
         try container.encodeIfPresent(detail, forKey: .detail)
         try container.encodeIfPresent(retryAfter, forKey: .retryAfter)
+        try container.encodeIfPresent(orderId, forKey: .orderId)
     }
 }
 

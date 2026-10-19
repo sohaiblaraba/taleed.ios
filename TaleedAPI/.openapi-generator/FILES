@@ -10,6 +10,7 @@ Sources/TaleedAPI/APIs/AuthAPI.swift
 Sources/TaleedAPI/APIs/BundlesAPI.swift
 Sources/TaleedAPI/APIs/CheckoutAPI.swift
 Sources/TaleedAPI/APIs/ConversationsAPI.swift
+Sources/TaleedAPI/APIs/DevelopmentAPI.swift
 Sources/TaleedAPI/APIs/DisputesAPI.swift
 Sources/TaleedAPI/APIs/FavoritesAPI.swift
 Sources/TaleedAPI/APIs/ListingsAPI.swift
@@ -195,6 +196,8 @@ Sources/TaleedAPI/Models/Review.swift
 Sources/TaleedAPI/Models/ReviewCreate.swift
 Sources/TaleedAPI/Models/ReviewPage.swift
 Sources/TaleedAPI/Models/ShipmentPrepared.swift
+Sources/TaleedAPI/Models/ShipmentSimulation.swift
+Sources/TaleedAPI/Models/ShipmentSimulationStep.swift
 Sources/TaleedAPI/Models/ShippingLabel.swift
 Sources/TaleedAPI/Models/SignInRequest.swift
 Sources/TaleedAPI/Models/SignUpRequest.swift
@@ -204,6 +207,7 @@ Sources/TaleedAPI/Models/Stopdesk.swift
 Sources/TaleedAPI/Models/StopdeskList.swift
 Sources/TaleedAPI/Models/TopUp.swift
 Sources/TaleedAPI/Models/TopUpCreate.swift
+Sources/TaleedAPI/Models/TopUpPage.swift
 Sources/TaleedAPI/Models/TopUpStarted.swift
 Sources/TaleedAPI/Models/TopUpStatus.swift
 Sources/TaleedAPI/Models/Upload.swift
@@ -211,6 +215,9 @@ Sources/TaleedAPI/Models/UploadPurpose.swift
 Sources/TaleedAPI/Models/UsernameChange.swift
 Sources/TaleedAPI/Models/VerificationStatus.swift
 Sources/TaleedAPI/Models/VisualSearch.swift
+Sources/TaleedAPI/Models/Voucher.swift
+Sources/TaleedAPI/Models/VoucherPage.swift
+Sources/TaleedAPI/Models/VoucherReason.swift
 Sources/TaleedAPI/Models/VoucherState.swift
 Sources/TaleedAPI/Models/VoucherStatus.swift
 Sources/TaleedAPI/Models/Wallet.swift
@@ -278,6 +285,7 @@ docs/ConversationSummary.md
 docs/ConversationSummaryPage.md
 docs/ConversationsAPI.md
 docs/DeliveryType.md
+docs/DevelopmentAPI.md
 docs/DevicePlatform.md
 docs/DeviceRegistration.md
 docs/Dispute.md
@@ -395,6 +403,8 @@ docs/ReviewsAPI.md
 docs/SafetyAPI.md
 docs/SellingAPI.md
 docs/ShipmentPrepared.md
+docs/ShipmentSimulation.md
+docs/ShipmentSimulationStep.md
 docs/ShippingLabel.md
 docs/SignInRequest.md
 docs/SignUpRequest.md
@@ -404,6 +414,7 @@ docs/Stopdesk.md
 docs/StopdeskList.md
 docs/TopUp.md
 docs/TopUpCreate.md
+docs/TopUpPage.md
 docs/TopUpStarted.md
 docs/TopUpStatus.md
 docs/Upload.md
@@ -414,6 +425,9 @@ docs/VerificationAPI.md
 docs/VerificationStatus.md
 docs/VisualSearch.md
 docs/VisualSearchAPI.md
+docs/Voucher.md
+docs/VoucherPage.md
+docs/VoucherReason.md
 docs/VoucherState.md
 docs/VoucherStatus.md
 docs/Wallet.md

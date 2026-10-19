@@ -10,16 +10,21 @@ import Foundation
 public struct ConditionOption: Sendable, Codable, Hashable {
 
     public var value: ListingCondition
+    /** The full label, for the listing screen, the sell form and filters. */
     public var label: String
+    /** The short label listing cards show in their condition chip, such as \"Neuf, étiqueté\" or \"Très bon\". */
+    public var shortLabel: String
 
-    public init(value: ListingCondition, label: String) {
+    public init(value: ListingCondition, label: String, shortLabel: String) {
         self.value = value
         self.label = label
+        self.shortLabel = shortLabel
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
         case value
         case label
+        case shortLabel
     }
 
     // Encodable protocol methods
@@ -28,6 +33,7 @@ public struct ConditionOption: Sendable, Codable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(value, forKey: .value)
         try container.encode(label, forKey: .label)
+        try container.encode(shortLabel, forKey: .shortLabel)
     }
 }
 

@@ -92,6 +92,50 @@ open class WalletAPI {
     }
 
     /**
+     Top-ups
+     
+     - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: TopUpPage
+     */
+    open class func listTopUps(cursor: String? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> TopUpPage {
+        return try await listTopUpsWithRequestBuilder(cursor: cursor, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     Top-ups
+     - GET /wallet/top-ups
+     - The member's top-ups, newest first, 20 per page, the ones started on the website included. It reads what is stored and asks no gateway: to settle a `PENDING` one, call `POST /wallet/top-ups/{id}/sync`. This is how the app recovers a top-up whose id it lost (reinstalled during the payment, for example): when the wallet opens, sync the `PENDING` top-ups of the first page, as the website's wallet page checks the latest top-up on every visit.  Requires a bearer token.
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<TopUpPage> 
+     */
+    open class func listTopUpsWithRequestBuilder(cursor: String? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<TopUpPage> {
+        let localVariablePath = "/wallet/top-ups"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters: [String: any Sendable]? = nil
+
+        var localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        let localVariableQueryParameters: [String: (wrappedValue: (any Sendable)?, isExplode: Bool)] = [
+            "cursor": (wrappedValue: cursor?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+        ]
+        localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems(localVariableQueryParameters)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<TopUpPage>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
      The wallet history
      
      - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)

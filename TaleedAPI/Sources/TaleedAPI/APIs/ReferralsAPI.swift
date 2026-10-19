@@ -52,4 +52,48 @@ open class ReferralsAPI {
 
         return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
     }
+
+    /**
+     The member's vouchers
+     
+     - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: VoucherPage
+     */
+    open class func listVouchers(cursor: String? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> VoucherPage {
+        return try await listVouchersWithRequestBuilder(cursor: cursor, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     The member's vouchers
+     - GET /me/vouchers
+     - Every voucher the member received, in the order of the website's referral dialog: `ACTIVE` first, then `USED`, then `EXPIRED`, newest first within each. 20 per page. Active ones add up to `voucherBalance` of `GET /wallet`.  Requires a bearer token.
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<VoucherPage> 
+     */
+    open class func listVouchersWithRequestBuilder(cursor: String? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<VoucherPage> {
+        let localVariablePath = "/me/vouchers"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters: [String: any Sendable]? = nil
+
+        var localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        let localVariableQueryParameters: [String: (wrappedValue: (any Sendable)?, isExplode: Bool)] = [
+            "cursor": (wrappedValue: cursor?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+        ]
+        localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems(localVariableQueryParameters)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<VoucherPage>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
 }

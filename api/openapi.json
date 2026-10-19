@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -107,6 +107,10 @@
     {
       "name": "Referrals",
       "description": "Inviting new members, and the vouchers it earns."
+    },
+    {
+      "name": "Development",
+      "description": "Development and staging servers only: test helpers that stand in for a mock driver, such as the demo carrier. Elsewhere, production included, they answer 404 like an unknown path. Never use them in a release build's flows."
     }
   ],
   "paths": {
@@ -7229,7 +7233,7 @@
           "Checkout"
         ],
         "summary": "Price a checkout",
-        "description": "Everything the checkout screen shows: the delivery fees of both types, every amount, the payment methods. Quote again whenever the member changes a detail: the delivery, the commune, the promo code, the wallet switch, the payment method. A promo code that cannot be used is reported in `promoError`, the rest of the quote still stands. Your own listing is `forbidden`; goods no longer for sale are `listing_unavailable`; no delivery quote from the carrier is `shipping_unavailable` (retry); a payment method not offered is `payment_method_unavailable`, and none offered at all is `payment_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 120 per 10 minutes per member, on top of the general limit.",
+        "description": "Everything the checkout screen shows: the delivery fees of both types, every amount, the payment methods. Quote again whenever the member changes a detail: the delivery, the commune, the promo code, the wallet switch, the payment method. A promo code that cannot be used is reported in `promoError`, the rest of the quote still stands. Your own listing is `forbidden`; goods no longer for sale are `listing_unavailable`, with `orderId` when they are reserved by the member's own order awaiting payment (open it instead); no delivery quote from the carrier is `shipping_unavailable` (retry); a payment method not offered is `payment_method_unavailable`, and none offered at all is `payment_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 120 per 10 minutes per member, on top of the general limit.",
         "requestBody": {
           "required": true,
           "content": {
@@ -7380,7 +7384,7 @@
           "Checkout"
         ],
         "summary": "Place an order",
-        "description": "Prices the order again, reserves the items and takes what `useWallet` puts down from the wallet. Cash on delivery, or a wallet that paid it all, confirms the order at once (`PAID`): the seller ships. Otherwise it waits for payment (`PENDING_PAYMENT`) until `payDeadlineAt`: open `paymentUrl`. A promo code that cannot be used is `promo_invalid` here, and a total that changed since the quote is `price_changed`. Your own listing is `forbidden`; goods no longer for sale are `listing_unavailable`; no delivery quote from the carrier is `shipping_unavailable` (retry); a payment method not offered is `payment_method_unavailable`, and none offered at all is `payment_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 30 per hour per member, on top of the general limit.",
+        "description": "Prices the order again, reserves the items and takes what `useWallet` puts down from the wallet. Cash on delivery, or a wallet that paid it all, confirms the order at once (`PAID`): the seller ships. Otherwise it waits for payment (`PENDING_PAYMENT`) until `payDeadlineAt`: open `paymentUrl`. A promo code that cannot be used is `promo_invalid` here, and a total that changed since the quote is `price_changed`. Your own listing is `forbidden`; goods no longer for sale are `listing_unavailable`, with `orderId` when they are reserved by the member's own order awaiting payment (open it instead); no delivery quote from the carrier is `shipping_unavailable` (retry); a payment method not offered is `payment_method_unavailable`, and none offered at all is `payment_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 30 per hour per member, on top of the general limit.",
         "requestBody": {
           "required": true,
           "content": {
@@ -10091,6 +10095,101 @@
       }
     },
     "/wallet/top-ups": {
+      "get": {
+        "operationId": "listTopUps",
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Top-ups",
+        "description": "The member's top-ups, newest first, 20 per page, the ones started on the website included. It reads what is stored and asks no gateway: to settle a `PENDING` one, call `POST /wallet/top-ups/{id}/sync`. This is how the app recovers a top-up whose id it lost (reinstalled during the payment, for example): when the wallet opens, sync the `PENDING` top-ups of the first page, as the website's wallet page checks the latest top-up on every visit.\n\nRequires a bearer token.",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "`nextCursor` from the previous page.",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopUpPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error codes: `invalid_request`.",
+            "x-error-codes": [
+              "invalid_request"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error codes: `unauthorized`.",
+            "x-error-codes": [
+              "unauthorized"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error codes: `rate_limited`.",
+            "x-error-codes": [
+              "rate_limited"
+            ],
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
       "post": {
         "operationId": "startTopUp",
         "tags": [
@@ -10878,6 +10977,242 @@
           }
         ]
       }
+    },
+    "/me/vouchers": {
+      "get": {
+        "operationId": "listVouchers",
+        "tags": [
+          "Referrals"
+        ],
+        "summary": "The member's vouchers",
+        "description": "Every voucher the member received, in the order of the website's referral dialog: `ACTIVE` first, then `USED`, then `EXPIRED`, newest first within each. 20 per page. Active ones add up to `voucherBalance` of `GET /wallet`.\n\nRequires a bearer token.",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "`nextCursor` from the previous page.",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoucherPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error codes: `invalid_request`.",
+            "x-error-codes": [
+              "invalid_request"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error codes: `unauthorized`.",
+            "x-error-codes": [
+              "unauthorized"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error codes: `rate_limited`.",
+            "x-error-codes": [
+              "rate_limited"
+            ],
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/orders/{id}/shipment/simulate": {
+      "post": {
+        "operationId": "simulateShipment",
+        "tags": [
+          "Development"
+        ],
+        "summary": "Move a demo parcel forward (development only)",
+        "description": "DEVELOPMENT ONLY: never call it from a release build's flows. It exists only on servers whose carrier is the demo one (`SHIPPING_DRIVER=mock`, development and staging); everywhere else, production included, it answers `404 not_found` like an unknown path, before checking the session. It does what the website's \"Simulate\" buttons on the order page do: it records the carrier's scan, and the order, its notifications and its chat follow as for a real scan. `transit` needs a `PREPARED` order (the seller created the parcel with `POST /orders/{id}/ship`), `arrived` a `SHIPPED` one not arrived yet, and `delivered` a `SHIPPED` one; any other step, or an order without a parcel, is `invalid_state`. Only the order's buyer or seller, or an admin, can call it; anyone else gets `not_found`. Reload the order (`GET /orders/{id}`) afterwards.\n\nRequires a bearer token.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentSimulation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Done. No content."
+          },
+          "400": {
+            "description": "Error codes: `invalid_request`.",
+            "x-error-codes": [
+              "invalid_request"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error codes: `unauthorized`.",
+            "x-error-codes": [
+              "unauthorized"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error codes: `banned`.",
+            "x-error-codes": [
+              "banned"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error codes: `not_found`.",
+            "x-error-codes": [
+              "not_found"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error codes: `invalid_state`.",
+            "x-error-codes": [
+              "invalid_state"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error codes: `rate_limited`.",
+            "x-error-codes": [
+              "rate_limited"
+            ],
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -10924,8 +11259,8 @@
           },
           "referralCode": {
             "type": "string",
-            "pattern": "^[0-9a-f]{8}$",
-            "description": "A member's 8-character invite code. An unknown or ineligible code is ignored, never an error."
+            "maxLength": 100,
+            "description": "A member's invite code: 8 hexadecimal characters, case-insensitive, spaces around it ignored. A malformed, empty, unknown or ineligible code is ignored, never an error; only a value over 100 characters is `invalid_request`."
           }
         },
         "required": [
@@ -12198,12 +12533,18 @@
             "$ref": "#/components/schemas/ListingCondition"
           },
           "label": {
-            "type": "string"
+            "type": "string",
+            "description": "The full label, for the listing screen, the sell form and filters."
+          },
+          "shortLabel": {
+            "type": "string",
+            "description": "The short label listing cards show in their condition chip, such as \"Neuf, étiqueté\" or \"Très bon\"."
           }
         },
         "required": [
           "value",
-          "label"
+          "label",
+          "shortLabel"
         ]
       },
       "Conversation": {
@@ -12927,6 +13268,10 @@
             "description": "Present on `rate_limited`: seconds to wait before the same request can pass. The `Retry-After` header carries it too.",
             "type": "integer",
             "minimum": 1
+          },
+          "orderId": {
+            "description": "Present on `listing_unavailable` from checkout when the goods are reserved by the member's own order awaiting payment: open that order (`GET /orders/{id}`) to pay or cancel it, as the website does, instead of saying the item is gone.",
+            "type": "string"
           }
         },
         "required": [
@@ -13372,6 +13717,15 @@
             "type": "boolean",
             "description": "Show the \"shop a bundle\" entry point: the seller has at least two items for sale, the viewer is not the seller, and neither member blocked the other."
           },
+          "openBundleId": {
+            "nullable": true,
+            "description": "The signed-in member's bundle with this seller, still to check out (`GET /bundles/{id}`), as the seller profile's `openBundleId`. Null when signed out, for the seller, or when there is none.",
+            "type": "string"
+          },
+          "inMyBundle": {
+            "type": "boolean",
+            "description": "This listing is an item of `openBundleId`: the bundle toggle reads \"Remove from the bundle\" instead of \"Add to the bundle\". Change the selection with `PUT /members/{username}/bundle`, sending the whole list. Always false when signed out and for the seller."
+          },
           "memberItems": {
             "type": "array",
             "items": {
@@ -13425,6 +13779,8 @@
           "offerRange",
           "canMessage",
           "canBundle",
+          "openBundleId",
+          "inMyBundle",
           "memberItems",
           "similar",
           "shareUrl",
@@ -15906,6 +16262,27 @@
         ],
         "description": "The parcel exists at the carrier."
       },
+      "ShipmentSimulation": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "$ref": "#/components/schemas/ShipmentSimulationStep"
+          }
+        },
+        "required": [
+          "step"
+        ],
+        "description": "The demo carrier's next move."
+      },
+      "ShipmentSimulationStep": {
+        "type": "string",
+        "enum": [
+          "transit",
+          "arrived",
+          "delivered"
+        ],
+        "description": "A move of the demo carrier. `transit`: the parcel leaves for the buyer's wilaya, and a `PREPARED` order is `SHIPPED`. `arrived`: the parcel reaches the buyer's pick-up desk (`STOPDESK`) or goes out for delivery (`HOME`), on a `SHIPPED` order: the buyer can confirm receipt. `delivered`: the parcel is delivered, on a `SHIPPED` order, and the order is `DELIVERED`."
+      },
       "ShippingLabel": {
         "type": "object",
         "properties": {
@@ -15976,8 +16353,8 @@
           },
           "referralCode": {
             "type": "string",
-            "pattern": "^[0-9a-f]{8}$",
-            "description": "A member's 8-character invite code. An unknown or ineligible code is ignored, never an error."
+            "maxLength": 100,
+            "description": "A member's invite code: 8 hexadecimal characters, case-insensitive, spaces around it ignored. A malformed, empty, unknown or ineligible code is ignored, never an error; only a value over 100 characters is `invalid_request`."
           }
         },
         "required": [
@@ -16127,6 +16504,33 @@
         ],
         "description": "A top-up to start."
       },
+      "TopUpPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopUp"
+            }
+          },
+          "nextCursor": {
+            "nullable": true,
+            "description": "Pass as `cursor` to get the next page. Null on the last page.",
+            "type": "string"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of items across all pages."
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor",
+          "total"
+        ],
+        "description": "A page of top-ups, newest first."
+      },
       "TopUpStarted": {
         "type": "object",
         "properties": {
@@ -16268,6 +16672,97 @@
           "expiresAt"
         ],
         "description": "A search by photo and one page of its results."
+      },
+      "Voucher": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Its value. Integer DZD."
+          },
+          "status": {
+            "$ref": "#/components/schemas/VoucherStatus"
+          },
+          "statusLabel": {
+            "type": "string",
+            "description": "In the response language, as the website's referral dialog shows it: \"Usable on orders of 1,500 DA or more\" while `ACTIVE`, else \"Used\" or \"Expired\"."
+          },
+          "reason": {
+            "$ref": "#/components/schemas/VoucherReason"
+          },
+          "label": {
+            "type": "string",
+            "description": "`reason`, in the response language, such as \"Voucher — referral\"."
+          },
+          "expiresAt": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time",
+            "description": "When it lapses, or lapsed. The website shows it while `ACTIVE` only. ISO 8601, UTC."
+          },
+          "orderId": {
+            "nullable": true,
+            "description": "`USED`: the order it was spent on, for `GET /orders/{id}`.",
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When it was granted. ISO 8601, UTC."
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "status",
+          "statusLabel",
+          "reason",
+          "label",
+          "expiresAt",
+          "orderId",
+          "createdAt"
+        ],
+        "description": "A voucher the member received. It takes money off an eligible order on its own at checkout, and is never withdrawn."
+      },
+      "VoucherPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Voucher"
+            }
+          },
+          "nextCursor": {
+            "nullable": true,
+            "description": "Pass as `cursor` to get the next page. Null on the last page.",
+            "type": "string"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of items across all pages."
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor",
+          "total"
+        ],
+        "description": "A page of the member's vouchers: `ACTIVE` first, then `USED`, then `EXPIRED`, newest first within each."
+      },
+      "VoucherReason": {
+        "type": "string",
+        "enum": [
+          "referral_listing",
+          "referral_sale",
+          "verification"
+        ],
+        "description": "Why the voucher was granted. `referral_listing`: a member the member invited put their first items on sale. `referral_sale`: that member completed a first sale. `verification`: the welcome voucher of an identity verification. Each voucher carries its localized `label`."
       },
       "VoucherState": {
         "type": "object",

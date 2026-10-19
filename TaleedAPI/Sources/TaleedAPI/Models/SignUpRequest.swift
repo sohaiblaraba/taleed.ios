@@ -14,14 +14,14 @@ public struct SignUpRequest: Sendable, Codable, Hashable {
     public static let usernameRule = StringRule(minLength: nil, maxLength: nil, pattern: "^[a-zA-Z0-9][a-zA-Z0-9._-]{2,29}$")
     public static let emailRule = StringRule(minLength: nil, maxLength: 255, pattern: nil)
     public static let passwordRule = StringRule(minLength: 8, maxLength: 128, pattern: nil)
-    public static let referralCodeRule = StringRule(minLength: nil, maxLength: nil, pattern: "^[0-9a-f]{8}$")
+    public static let referralCodeRule = StringRule(minLength: nil, maxLength: 100, pattern: nil)
     public var firstName: String
     public var lastName: String
     /** 3 to 30 characters: letters, digits, `.`, `_` and `-`, starting with a letter or a digit. Case-insensitive. */
     public var username: String
     public var email: String
     public var password: String
-    /** A member's 8-character invite code. An unknown or ineligible code is ignored, never an error. */
+    /** A member's invite code: 8 hexadecimal characters, case-insensitive, spaces around it ignored. A malformed, empty, unknown or ineligible code is ignored, never an error; only a value over 100 characters is `invalid_request`. */
     public var referralCode: String?
 
     public init(firstName: String, lastName: String, username: String, email: String, password: String, referralCode: String? = nil) {
