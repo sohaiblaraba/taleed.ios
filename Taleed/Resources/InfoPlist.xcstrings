@@ -1,0 +1,30 @@
+{
+  "sourceLanguage": "fr",
+  "strings": {
+    "NSCameraUsageDescription": {
+      "comment": "Camera permission prompt (photo search; later listing and chat photos).",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taleed utilise l’appareil photo pour photographier vos articles."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستخدم تليد الكاميرا لتصوير أغراضك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taleed uses the camera to take photos of your items."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

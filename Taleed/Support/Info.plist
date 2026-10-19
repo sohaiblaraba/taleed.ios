@@ -41,6 +41,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Taleed utilise l’appareil photo pour photographier vos articles.</string>
 #if TALEED_ALLOWS_LOCAL_NETWORKING
 	<key>NSAppTransportSecurity</key>
 	<dict>

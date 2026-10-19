@@ -85,6 +85,34 @@ struct SkeletonProductGrid: View {
     }
 }
 
+/// Loading placeholders for a results list (design-system §3.3 dense rows): media 92 × 100 and three
+/// bars per row, at most six rows.
+struct SkeletonProductList: View {
+    var count = 4
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        VStack(spacing: TaleedSpacing.s12) {
+            ForEach(0..<min(count, TaleedMotion.skeletonMaxPlaceholders), id: \.self) { _ in
+                HStack(alignment: .top, spacing: TaleedSpacing.s12) {
+                    SkeletonBlock(width: 92, height: 100, radius: TaleedRadius.s)
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                        SkeletonBlock(width: 90, height: 22)
+                        SkeletonBlock(height: 14)
+                        SkeletonBlock(width: 80, height: 16, color: TaleedColor.surfaceSubtle)
+                    }
+                    .padding(.top, TaleedSpacing.s4)
+                }
+                .padding(TaleedSpacing.s8)
+                .background(TaleedColor.surfacePrimary, in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+            }
+        }
+        .modifier(SkeletonPulse())
+        .accessibilityElement()
+        .accessibilityLabel(DesignSystemStrings.string(.commonLoading, locale: locale))
+    }
+}
+
 /// The specimen's row of three skeleton cards.
 struct SkeletonCardRow: View {
     @Environment(\.locale) private var locale

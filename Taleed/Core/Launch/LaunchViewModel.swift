@@ -24,6 +24,9 @@ final class LaunchViewModel {
 
     private var phase: Phase = .loading
     private(set) var config: RemoteConfig?
+    /// Debug builds: `-TaleedDebugVisualSearch YES` shows the photo-search button while the server has
+    /// it off (screenshots, and the `503 feature_disabled` path). Cleared by that answer.
+    private var forcesVisualSearch = false
 
     @ObservationIgnored private let api: TaleedApi
     @ObservationIgnored private let session: SessionManager
@@ -33,6 +36,22 @@ final class LaunchViewModel {
         self.api = api
         self.session = session
         self.environment = environment
+        #if DEBUG
+        forcesVisualSearch = UserDefaults.standard.bool(forKey: "TaleedDebugVisualSearch")
+        #endif
+    }
+
+    /// Search by photo is offered (`features.visualSearch` of `GET /config`, slice B).
+    var isVisualSearchEnabled: Bool {
+        forcesVisualSearch || (config?.features.visualSearch ?? false)
+    }
+
+    /// The API answered `503 feature_disabled` to a photo search: hide the button at once, then read
+    /// `GET /config` again (slice B, Search by photo).
+    func visualSearchWasDisabled() async {
+        forcesVisualSearch = false
+        config?.features.visualSearch = false
+        if let fresh = try? await api.config() { config = fresh }
     }
 
     var route: Route {

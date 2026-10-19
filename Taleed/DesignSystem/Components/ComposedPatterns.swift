@@ -79,9 +79,14 @@ struct ResultsSummaryRow: View {
     let countLabel: String
     let sortLabel: String
     let onSort: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(spacing: TaleedSpacing.s8) {
+        // From accessibility text sizes on, the sort goes under the count so that neither breaks mid-word.
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+            : AnyLayout(HStackLayout(spacing: TaleedSpacing.s8))
+        layout {
             Text(countLabel)
                 .taleedFont(PatternStyles.body13)
                 .foregroundStyle(TaleedColor.textPrimary)

@@ -15,6 +15,8 @@ final class AppContainer {
     let catalog: CatalogStore
     let home: HomeViewModel
     let favorites: FavoriteStore
+    /// Brands and sizes of the Explore filter sheet.
+    let exploreReferences: ExploreReferenceStore
     let router = AppRouter()
     let toasts: AppToasts
     let uploads: PhotoUploadService
@@ -31,6 +33,7 @@ final class AppContainer {
         catalog = CatalogStore(api: api, language: languageManager.language)
         home = HomeViewModel(api: api, catalog: catalog)
         favorites = FavoriteStore(api: api)
+        exploreReferences = ExploreReferenceStore(api: api)
         toasts = AppToasts(languageManager: languageManager)
         uploads = PhotoUploadService(api: api)
         welcome = WelcomeGate()

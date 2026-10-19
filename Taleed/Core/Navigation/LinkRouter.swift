@@ -114,8 +114,9 @@ enum LinkRouter {
             wilaya: query["wilaya"].flatMap { Int($0) },
             condition: query["condition"],
             size: query["size"],
-            minPrice: query["minPrice"].flatMap { Int($0) },
-            maxPrice: query["maxPrice"].flatMap { Int($0) },
+            // The website's own addresses say `min` and `max` (`FiltersBar`); the API's names work too.
+            minPrice: (query["minPrice"] ?? query["min"]).flatMap { Int($0) },
+            maxPrice: (query["maxPrice"] ?? query["max"]).flatMap { Int($0) },
             sort: query["sort"]
         )
     }

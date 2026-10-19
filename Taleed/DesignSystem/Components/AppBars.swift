@@ -161,12 +161,16 @@ private struct AppBarActionView: View {
     }
 }
 
-/// Search app bar: magnifying glass, the query field and a clear button.
+/// Search app bar: magnifying glass, the query field and a clear button. With `onCamera`, an empty
+/// field ends with the photo-search button instead (the website's search bar; Phosphor has no camera
+/// glyph in the design system, so it uses the system's).
 struct SearchAppBar: View {
     @Binding var text: String
     var placeholder: String
     var showsDivider = true
     var onSubmit: () -> Void = {}
+    var onCamera: (() -> Void)?
+    var cameraAccessibilityLabel: String?
     @FocusState private var isFocused: Bool
     @Environment(\.locale) private var locale
 
@@ -193,6 +197,17 @@ struct SearchAppBar: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(DesignSystemStrings.string(.commonClear, locale: locale))
+                } else if let onCamera {
+                    Button(action: onCamera) {
+                        Image(systemName: "camera")
+                            .font(.system(size: 18, weight: .regular))
+                            .foregroundStyle(TaleedColor.textSecondary)
+                            .frame(width: 40, height: 40)
+                            .minimumHitArea()
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(cameraAccessibilityLabel ?? "")
+                    .accessibilityIdentifier("search.camera")
                 }
             }
         }

@@ -17,6 +17,9 @@ import Foundation
 ///     -welcome_done NO                         show the welcome screen again
 ///     -TaleedDebugHomeFeed offline             Home's first feed request fails offline (then works);
 ///                                              `empty` answers an empty feed
+///     -TaleedDebugSearchResults offline        the first search-results request fails offline (then works)
+///     -TaleedDebugVisualSearch YES             show the photo-search button although `GET /config` has it
+///                                              off (the API then answers `503 feature_disabled`)
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor

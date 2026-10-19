@@ -1,19 +1,8 @@
 import SwiftUI
 
 // Tabs Figma does not draw (decision D-12) have the centred-title top app bar and a one-line message,
-// as on Android (D7). Sell keeps the wireframe's brand app bar and page heading.
-
-struct ExploreView: View {
-    @Environment(LanguageManager.self) private var l10n
-
-    var body: some View {
-        ShellScreen {
-            TaleedTopAppBar(title: l10n.string(.tabExplore))
-        } content: {
-            MessageStateView(text: l10n.string(.searchPlaceholder))
-        }
-    }
-}
+// as on Android (D7). Sell keeps the wireframe's brand app bar and page heading. Explore is in
+// `Features/Explore`.
 
 struct SellView: View {
     @Environment(LanguageManager.self) private var l10n

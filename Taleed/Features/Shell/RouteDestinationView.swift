@@ -7,13 +7,18 @@ import SwiftUI
 /// the screen is in the stack: going back shows the screen below with its scroll, filters and data.
 struct RouteDestinationView: View {
     let route: AppRoute
+    @Environment(\.exploreDependencies) private var explore
 
     var body: some View {
         switch route {
         case .listing: RoutePlaceholderView(route: route)
         case .member: RoutePlaceholderView(route: route)
-        case .search: RoutePlaceholderView(route: route)
-        case .visualSearch: RoutePlaceholderView(route: route)
+        case let .search(query):
+            // Identity by query: a link that replaces the results with other filters gets a fresh screen
+            // (SwiftUI would otherwise keep the previous screen's state at the same place in the stack).
+            if let explore { SearchResultsView(query: query, api: explore.listings).id(query) } else { RoutePlaceholderView(route: route) }
+        case let .visualSearch(id):
+            if let explore { VisualSearchResultsView(id: id, api: explore.explore).id(id) } else { RoutePlaceholderView(route: route) }
         case .conversation: RoutePlaceholderView(route: route)
         case .bundle: RoutePlaceholderView(route: route)
         case .checkout: RoutePlaceholderView(route: route)

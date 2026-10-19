@@ -20,6 +20,9 @@ struct AppRootView: View {
             .environment(container.toasts)
             .environment(container.favorites)
             .environment(container.welcome)
+            .environment(container.launch)
+            .environment(container.exploreReferences)
+            .environment(\.exploreDependencies, ExploreDependencies(listings: container.api, explore: container.api))
             .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in
                 #if DEBUG
                 if DebugLaunchOptions.forcesBetaMode { return true }

@@ -41,6 +41,7 @@ What every screen group reuses (screens.md §0 and §1, api-guide.md):
 | In-app browser | `Core/Navigation/InAppBrowser.swift` (`router.openWebsite(.terms)`) |
 | Developer menu (debug builds only) | `Features/Developer/DeveloperMenuView.swift` (Settings → Developer menu) |
 | Listing cards: `GET /listings` (`ListingsApi`, `ListingSearchParameters`), the card model `ListingSummary`, the card and two-column grid (`ListingCardView`, `ListingGrid`) | `Features/Listings/`, `Core/Models/Listing.swift` |
+| Explore (G3): the tab's search field and category tree, search results with filter chips, the filter and sort sheets, search by photo and its results; `ExploreApi` (`GET /brands`, `GET /sizes`, `POST`/`GET /visual-searches`), brands and sizes in `ExploreReferenceStore` | `Features/Explore/` |
 | Hearts shared by every screen: optimistic, reverts on failure, `404` removes the card, sign-in first when signed out; a card loaded after the change shows the server's state again (`FavoriteStore`, in the environment) | `Features/Listings/FavoriteStore.swift` |
 
 Links can be tried on the simulator with the app's scheme, which reads like a path:
