@@ -25,6 +25,9 @@ struct TaleedTabs: View {
             Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)
         }
         .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: selection)
+        // Capped like the app bar and the tab bar: at accessibility sizes three labels no longer fit the
+        // width (Arabic ran off the screen); the large content viewer shows a label bigger.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     private func tabs(labelPadding: CGFloat) -> some View {
@@ -49,6 +52,7 @@ struct TaleedTabs: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityShowsLargeContentViewer { Text(title) }
             .accessibilityAddTraits(isActive ? [.isSelected, .isButton] : .isButton)
         }
     }

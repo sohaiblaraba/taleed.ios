@@ -275,3 +275,21 @@ struct ConversationOfferActionTests {
         #expect(model.pinnedOffer == nil)
     }
 }
+
+// MARK: - Polish P4
+
+struct OfferAmountFieldTests {
+    /// The typed amount is grouped like the bounds under it; only its digits count.
+    @Test func theAmountIsGroupedAsTyped() {
+        #expect(OfferAmountSheet.grouped("3500", language: .fr) == "3\u{202F}500")
+        #expect(OfferAmountSheet.grouped("3\u{202F}5000", language: .fr) == "35\u{202F}000")
+        #expect(OfferAmountSheet.grouped("3500", language: .ar) == "3.500")
+        #expect(OfferAmountSheet.grouped("", language: .fr) == "")
+        #expect(OfferAmountInput(text: "3\u{202F}500", range: AmountRange(min: 1440, max: 4800)) == .valid(3500))
+    }
+
+    @Test func thePlaceholderIsAnAmountInsideTheBounds() {
+        #expect(OfferAmountSheet.example(in: AmountRange(min: 1440, max: 4800)) == 3100)
+        #expect(OfferAmountSheet.example(in: AmountRange(min: 120, max: 150)) == 120)
+    }
+}

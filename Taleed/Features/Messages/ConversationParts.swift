@@ -63,11 +63,12 @@ struct ChatMemberName: View {
 /// The badge of a listing that is no longer for sale ("Réservé", "Vendu", "Indisponible").
 struct ChatListingStatusBadge: View {
     let status: ChatListingStatus
+    var size: TaleedBadge.Size = .regular
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
         if let key = ChatText.listingStatusKey(status) {
-            TaleedBadge(title: l10n.string(key), tone: ChatText.listingStatusTone(status))
+            TaleedBadge(title: l10n.string(key), tone: ChatText.listingStatusTone(status), size: size)
                 .fixedSize()
         }
     }
@@ -89,28 +90,33 @@ struct ChatDayLabel: View {
 }
 
 /// A centered status pill: an offer answered, an order step, an automatic notice. The text comes from
-/// the server, in the response language.
+/// the server, in the response language. A pill that opens something (an order) says so: brand text and
+/// a caret after it. Its 44 pt target reaches past the pill without spacing the column out.
 struct ChatPill: View {
     let text: String
     var action: (() -> Void)?
 
     var body: some View {
-        let pill = Text(text)
-            .taleedFont(TaleedFont.caption)
-            .foregroundStyle(TaleedColor.textBody)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, TaleedSpacing.s12)
-            .padding(.vertical, 6)
-            .background(Capsule().fill(TaleedColor.surfacePrimary))
-            .overlay(Capsule().strokeBorder(TaleedColor.borderSubtle))
+        let isLink = action != nil
+        let pill = HStack(spacing: TaleedSpacing.s4) {
+            Text(text)
+                .taleedFont(TaleedFont.caption)
+                .foregroundStyle(isLink ? TaleedColor.brandPrimary : TaleedColor.textBody)
+                .multilineTextAlignment(.center)
+            if isLink {
+                TaleedIconView(.caretRight, size: 12, color: TaleedColor.brandPrimary)
+            }
+        }
+        .padding(.horizontal, TaleedSpacing.s12)
+        .padding(.vertical, 6)
+        .background(Capsule().fill(TaleedColor.surfacePrimary))
+        .overlay(Capsule().strokeBorder(isLink ? TaleedColor.brandSoftBorder : TaleedColor.borderSubtle))
         HStack {
             if let action {
                 Button(action: action) {
-                    HStack(spacing: TaleedSpacing.s4) {
-                        pill
-                    }
-                    .frame(minHeight: TaleedSize.touchTargetMin)
-                    .contentShape(Rectangle())
+                    pill
+                        .contentShape(Capsule())
+                        .minimumHitArea()
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(.isLink)
@@ -156,7 +162,8 @@ struct ChatBubbleContent {
     var text: String?
     var announcement: [AnnouncementBlock] = []
     var callToAction: ChatCallToAction?
-    let time: String
+    /// Nil while the message is not sent yet: no time until the server has it.
+    let time: String?
 }
 
 enum ChatBubblePhoto {
@@ -164,18 +171,25 @@ enum ChatBubblePhoto {
     case local(UIImage)
 }
 
+/// How a bubble on its way looks: sent, still sending (faded), or not sent (faded, red outline).
+enum ChatBubbleDelivery {
+    case sent, sending, failed
+}
+
 /// A `TEXT` message: on the trailing side when it is the member's, at most 75 % of the width (85 % for
 /// an announcement).
 struct ChatBubble: View {
     let content: ChatBubbleContent
     let isMine: Bool
+    var delivery: ChatBubbleDelivery = .sent
     var openPhoto: ((URL) -> Void)?
     var openLink: ((URL) -> Void)?
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
-        // Sized to its content (a short message makes a short bubble); the time ends on the bubble's side.
-        VStack(alignment: isMine ? .trailing : .leading, spacing: TaleedSpacing.s8) {
+        // Sized to its content (a short message makes a short bubble). Words and captions start on the
+        // leading edge as text messages do; the time ends on the bubble's side.
+        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
             if let photo = content.photo { photoView(photo) }
             if !content.announcement.isEmpty {
                 AnnouncementView(blocks: content.announcement, color: ChatBubbleStyle.text(isMine: isMine))
@@ -183,23 +197,45 @@ struct ChatBubble: View {
                 Text(verbatim: text.isolatedByContent)
                     .taleedFont(TaleedFont.bodyLarge)
                     .foregroundStyle(ChatBubbleStyle.text(isMine: isMine))
+                    .multilineTextAlignment(.leading)
                     .textSelection(.enabled)
                     .fixedSize(horizontal: false, vertical: true)
+                    // Lines follow the message's own script (Latin from the left, Arabic from the right),
+                    // whatever the app language, as the inbox preview.
+                    .environment(\.layoutDirection, text.naturalLayoutDirection ?? l10n.language.layoutDirection)
             }
             if let cta = content.callToAction, let url = cta.url {
                 TaleedButton(title: cta.label, kind: .primary, size: .small) { openLink?(url) }
             }
-            Text(content.time)
-                .taleedFont(TaleedFont.meta)
-                .foregroundStyle(ChatBubbleStyle.meta(isMine: isMine))
+            if let time = content.time {
+                if isMine {
+                    // Holds the row; the time itself is drawn at the trailing edge below.
+                    timeText(time).hidden()
+                } else {
+                    timeText(time)
+                }
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if isMine, let time = content.time { timeText(time) }
         }
         .padding(.horizontal, TaleedSpacing.s12)
         .padding(.vertical, TaleedSpacing.s8)
         .background(ChatBubbleStyle.fill(isMine: isMine), in: ChatBubbleStyle.shape)
+        .opacity(delivery == .sent ? 1 : delivery == .sending ? 0.7 : 0.55)
+        .overlay {
+            if delivery == .failed { ChatBubbleStyle.shape.strokeBorder(TaleedColor.feedbackError, lineWidth: 1.5) }
+        }
         .environment(\.openURL, OpenURLAction { url in
             openLink?(url)
             return .handled
         })
+    }
+
+    private func timeText(_ time: String) -> some View {
+        Text(time)
+            .taleedFont(TaleedFont.meta)
+            .foregroundStyle(ChatBubbleStyle.meta(isMine: isMine))
     }
 
     @ViewBuilder

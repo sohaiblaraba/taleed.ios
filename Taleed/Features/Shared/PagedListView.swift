@@ -24,6 +24,10 @@ struct PagedListView<Item: Identifiable & Sendable, Content: View, Empty: View>:
     var refresh: (() async -> Void)?
     /// The error state's Retry. Default: `list.reload()`.
     var retry: (() async -> Void)?
+    /// Centres the empty state in the list's space, as the error state, instead of near the top.
+    var centersEmpty = false
+    /// The first load's placeholder (skeleton rows); the spinner with "Chargement…" by default.
+    var placeholder: AnyView?
     @ViewBuilder let content: ([Item]) -> Content
     @ViewBuilder let empty: () -> Empty
     @Environment(LanguageManager.self) private var l10n
@@ -34,9 +38,16 @@ struct PagedListView<Item: Identifiable & Sendable, Content: View, Empty: View>:
             if list.hasLoaded {
                 ScrollView {
                     if list.items.isEmpty {
-                        empty()
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, TaleedSpacing.s48)
+                        if centersEmpty {
+                            empty()
+                                .padding(TaleedSpacing.s24)
+                                .frame(maxWidth: .infinity)
+                                .containerRelativeFrame(.vertical)
+                        } else {
+                            empty()
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, TaleedSpacing.s48)
+                        }
                     } else {
                         content(list.items)
                         PaginationFooter(list: list)
@@ -51,6 +62,9 @@ struct PagedListView<Item: Identifiable & Sendable, Content: View, Empty: View>:
                         if let retry { await retry() } else { await list.reload() }
                     }
                 }
+            } else if let placeholder {
+                ScrollView { placeholder }
+                    .scrollDisabled(true)
             } else {
                 LoadingStateView()
             }

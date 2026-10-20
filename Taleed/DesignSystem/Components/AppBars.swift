@@ -128,6 +128,9 @@ struct TaleedTopAppBar: View {
     /// Defaults to "Back" (`common_back`).
     var backAccessibilityLabel: String?
     var actions: [AppBarAction] = []
+    /// False hides the title while the page's own large heading says the same (it fades in once the
+    /// heading scrolled away).
+    var showsTitle = true
     @Environment(\.locale) private var locale
 
     private let sideBox: CGFloat = 40
@@ -144,6 +147,9 @@ struct TaleedTopAppBar: View {
                     .accessibilityShowsLargeContentViewer()
                     .padding(.horizontal, sideWidth + TaleedSpacing.s12)
                     .accessibilityAddTraits(.isHeader)
+                    .opacity(showsTitle ? 1 : 0)
+                    .accessibilityHidden(!showsTitle)
+                    .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: showsTitle)
                 HStack(spacing: 0) {
                     HStack(spacing: 0) {
                         if let onBack {

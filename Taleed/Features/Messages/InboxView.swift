@@ -15,7 +15,8 @@ struct MessagesView: View {
                 // A new list for another member.
                 InboxView(api: dependencies.messages, reads: dependencies.reads).id(session.user?.id)
             } else {
-                SignInPromptView()
+                // The empty-state pattern of the app's other prompts: icon, title, body, "Se connecter".
+                SignInPromptView(icon: .chatCircleText, title: l10n.string(.appChatSignedOutTitle))
             }
         }
     }
@@ -44,10 +45,14 @@ struct InboxView: View {
                 TaleedTabs(titles: InboxFilter.allCases.map(title), selection: filterSelection)
                     .accessibilityIdentifier("inbox.filter")
             }
-            PagedListView(list: model.list) { _ in
+            PagedListView(list: model.list, centersEmpty: true, placeholder: AnyView(SkeletonConversationList())) { _ in
                 let rows = model.visibleItems
                 if rows.isEmpty, !model.list.hasMore {
-                    emptyState.padding(.top, TaleedSpacing.s48)
+                    // Centred in the list's space, as the error state.
+                    emptyState
+                        .padding(TaleedSpacing.s24)
+                        .frame(maxWidth: .infinity)
+                        .containerRelativeFrame(.vertical)
                 } else {
                     LazyVStack(spacing: 0) {
                         ForEach(rows) { conversation in
@@ -110,43 +115,58 @@ struct InboxRow: View {
     let conversation: InboxConversation
     let open: () -> Void
     @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var isUnread: Bool { conversation.unreadCount > 0 }
+
+    /// From accessibility text sizes on, the time goes under the name and the item and the last message
+    /// take two lines each, so none of them is cut to a few letters.
+    private var isLarge: Bool { dynamicTypeSize.isAccessibilitySize }
 
     var body: some View {
         Button(action: open) {
             HStack(alignment: .center, spacing: TaleedSpacing.s12) {
                 avatar
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s8) {
+                    let header = isLarge
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+                        : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: TaleedSpacing.s8))
+                    header {
                         ChatMemberName(member: conversation.counterpart,
                                        style: TaleedFont.bodyLarge.with(weight: isUnread ? .bold : .semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(RelativeTimeText.string(for: conversation.lastMessageAt, locale: l10n.language.formattingLocale))
+                        Text(ChatText.inboxTime(conversation.lastMessageAt, locale: l10n.language.formattingLocale))
                             .taleedFont(TaleedFont.meta)
                             .foregroundStyle(isUnread ? TaleedColor.brandPrimary : TaleedColor.textSecondary)
                             .lineLimit(1)
+                            .fixedSize()
                     }
                     if let listing = conversation.listing {
                         HStack(spacing: TaleedSpacing.s8) {
                             Text(verbatim: listing.title.isolatedByContent)
                                 .taleedFont(TaleedFont.caption)
                                 .foregroundStyle(TaleedColor.textSecondary)
-                                .lineLimit(1)
-                            ChatListingStatusBadge(status: listing.status)
+                                .lineLimit(isLarge ? 2 : 1)
+                            // The 22 pt tag, drawn over the line's own height: a "Vendu" row is as tall
+                            // as the others.
+                            ChatListingStatusBadge(status: listing.status, size: .compact)
+                                .padding(.vertical, -4)
                         }
                     }
                     HStack(spacing: TaleedSpacing.s8) {
-                        // Nothing sent yet: the item's line above says what the conversation is about.
-                        Text(verbatim: (conversation.lastMessage?.text ?? "").isolatedByContent)
+                        // Nothing sent yet: the line stays (empty), so every row has one height; the item's
+                        // line above says what the conversation is about.
+                        Text(verbatim: (conversation.lastMessage?.text ?? " ").isolatedByContent)
                             .taleedFont(isUnread ? TaleedFont.bodyRegular.with(weight: .semibold) : TaleedFont.bodyRegular)
                             .foregroundStyle(isUnread ? TaleedColor.textPrimary : TaleedColor.textBody)
-                            .lineLimit(1)
+                            .lineLimit(isLarge ? 2 : 1)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         if isUnread {
                             // "9+" above 9 (§7 G9).
                             CountBadge(count: conversation.unreadCount,
                                        accessibilityLabel: l10n.format(.appBadgeUnreadMessages, conversation.unreadCount), maxCount: 9)
+                                // Over the line's height, as the status tag: unread rows keep the same height.
+                                .padding(.vertical, -3)
                         }
                     }
                 }
@@ -158,7 +178,9 @@ struct InboxRow: View {
         }
         .buttonStyle(InboxRowButtonStyle())
         .overlay(alignment: .bottom) {
-            Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).padding(.leading, TaleedLayout.screenMargin + 60)
+            // From the text column: margin, the 48 pt avatar, its 4 pt badge room and the 12 pt gap.
+            Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1)
+                .padding(.leading, TaleedLayout.screenMargin + 48 + 4 + TaleedSpacing.s12)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)

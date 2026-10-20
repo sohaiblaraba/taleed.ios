@@ -47,6 +47,21 @@ struct ReportViewModelTests {
         #expect(model.error == .network)
     }
 
+    /// A failed send's alert goes as soon as the form changes, so it never sits next to a new error.
+    @Test func theSendErrorClearsWhenTheFormChanges() async {
+        let model = model()
+        model.reason = "SCAM"
+        api.report = .failure(.rateLimited(retryAfter: 3600))
+        _ = await model.submit()
+        #expect(model.error != nil)
+        model.details = "Plus de détails"
+        #expect(model.error == nil)
+        _ = await model.submit()
+        #expect(model.error != nil)
+        await model.addEvidence(Data())
+        #expect(model.error == nil)
+    }
+
     /// The field stops at 2 000 characters (`TaleedTextArea.maxLength`), so the model holds what the
     /// field shows; longer details (never from the field) are not sent.
     @Test func detailsOver2000AreNotSentAndScreenshotsStopAt3() async {

@@ -152,15 +152,27 @@ struct ChipRow<Content: View>: View {
 }
 
 /// Badge (design-system §2.8): "New" (brand), "Verified" with a shield (success), "Reserved" (warning).
+/// `compact` is the small tag's 22 pt shape (padding 8 / 4), for a status inside a dense list row.
+/// `isOnTint` keeps a brand badge visible on a `brandSoft` surface (a pinned offer, the member's own
+/// offer card): a `brandSoftBorder` outline around the same fill.
 struct TaleedBadge: View {
+    enum Size: Sendable {
+        case regular, compact
+    }
+
     let title: String
     var tone: TaleedTone = .brand
     var icon: TaleedIcon?
+    var size: Size = .regular
+    var isOnTint = false
 
     var body: some View {
-        Pill(fill: tone.fill) {
+        let compact = size == .compact
+        Pill(fill: tone.fill, border: isOnTint && tone == .brand ? TaleedColor.brandSoftBorder : nil,
+             height: compact ? TaleedSize.conditionTagHeight : TaleedSize.chipHeight,
+             paddingX: compact ? TaleedSize.conditionTagPaddingX : TaleedSize.chipPaddingX) {
             HStack(spacing: TaleedSpacing.s4) {
-                if let icon { TaleedIconView(icon, size: 14, color: tone.foreground) }
+                if let icon { TaleedIconView(icon, size: compact ? 12 : 14, color: tone.foreground) }
                 Text(title).taleedFont(TaleedFont.tagLabel)
             }
             .foregroundStyle(tone.foreground)

@@ -39,14 +39,16 @@ struct OfferAmountSheet: View {
                         .foregroundStyle(TaleedColor.textBody)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                TaleedTextField(label: l10n.string(.offersOfferAmount), text: $text, placeholder: "",
+                TaleedTextField(label: l10n.string(.offersOfferAmount), text: $text,
+                                placeholder: PriceFormatter.number(Self.example(in: range), language: l10n.language),
                                 leadingIcon: .money, helper: showsRangeError ? nil : rangeText,
                                 error: showsRangeError ? rangeText : nil, focus: $isFocused)
                     .keyboardType(.numberPad)
                     .accessibilityIdentifier("offer.amount")
                     .onChange(of: text) { _, value in
-                        let digits = OfferAmountInput.normalizedDigits(value)
-                        if digits != value { text = digits }
+                        // Grouped as the bounds under it ("3 500", Arabic "3.500"); only the digits count.
+                        let shown = Self.grouped(value, language: l10n.language)
+                        if shown != value { text = shown }
                         showsRangeError = false
                     }
                 TaleedButton(title: l10n.string(.offersSendOffer), kind: .primary, size: .large, isLoading: isSending,
@@ -55,10 +57,26 @@ struct OfferAmountSheet: View {
                     .accessibilityIdentifier("offer.send")
             }
         })
-        .onAppear { isFocused = true }
+        .onAppear {
+            text = Self.grouped(text, language: l10n.language)
+            isFocused = true
+        }
     }
 
     private var input: OfferAmountInput { OfferAmountInput(text: text, range: range) }
+
+    /// The typed digits grouped by thousands in the app language; empty without digits.
+    static func grouped(_ text: String, language: AppLanguage) -> String {
+        let digits = OfferAmountInput.normalizedDigits(text)
+        guard let value = Int(digits) else { return "" }
+        return PriceFormatter.number(value, language: language)
+    }
+
+    /// The placeholder's example: the middle of the bounds, rounded to the hundred, kept inside them.
+    static func example(in range: AmountRange) -> Int {
+        let middle = (Double(range.min + range.max) / 2 / 100).rounded() * 100
+        return min(max(Int(middle), range.min), range.max)
+    }
 
     /// "L'offre doit être comprise entre 750 DA et 2 500 DA." under the field: the bounds, in red once
     /// an amount outside them was sent.

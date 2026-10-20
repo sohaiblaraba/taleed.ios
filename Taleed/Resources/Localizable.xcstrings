@@ -2732,19 +2732,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أعد المحاولة أو أزل لقطة الشاشة هذه لإرسال البلاغ."
+            "value": "أعد إرسال لقطة الشاشة هذه أو أزلها لإرسال البلاغ."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retry or remove this screenshot to send the report."
+            "value": "Send this screenshot again or remove it to send the report."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Réessayez ou retirez cette capture pour envoyer le signalement."
+            "value": "Renvoyez ou retirez cette capture pour envoyer le signalement."
           }
         }
       }
@@ -21034,6 +21034,75 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "app_chat_signed_out_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محادثاتك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your conversations"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos conversations"
+          }
+        }
+      }
+    },
+    "report_reason_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر سببًا"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a reason"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez un motif"
+          }
+        }
+      }
+    },
+    "app_offer_accepted_price": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السعر المقبول: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted price: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prix accepté : %@"
           }
         }
       }

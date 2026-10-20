@@ -82,10 +82,11 @@ extension ApiError {
         return Int((Double(seconds) / 60).rounded(.up))
     }
 
-    /// Hours to show for a wait over an hour ("try again in 24 hours"): a daily limit (identity
-    /// verification, 5 a day) can ask for up to 86 400 s. Nil for an hour or less.
+    /// Hours to show for a wait of about an hour or more ("try again in 1 hour", "in 24 hours"): a
+    /// daily limit (identity verification, 5 a day) can ask for up to 86 400 s. A wait that would read
+    /// "60 minutes" (3 541 s to 3 600 s) reads "1 hour". Nil under that.
     var rateLimitHours: Int? {
-        guard let seconds = retryAfter, seconds > 3600 else { return nil }
+        guard let seconds = retryAfter, seconds > 3540 else { return nil }
         return Int((Double(seconds) / 3600).rounded(.up))
     }
 

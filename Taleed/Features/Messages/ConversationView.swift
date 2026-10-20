@@ -139,7 +139,9 @@ struct ConversationView: View {
                     confirmsBlock = false
                     Task { await model.setBlocked(true) }
                 },
-                onCancel: { confirmsBlock = false }
+                onCancel: { confirmsBlock = false },
+                // Blocking is not deleting: the prohibit sign, the trash stays for deletions.
+                icon: .prohibit
             )
         }
     }
@@ -164,6 +166,7 @@ struct ConversationView: View {
             VStack(spacing: 0) {
                 if let listing = conversation.listing {
                     ConversationListingStrip(listing: listing) { router.push(.listing(id: listing.id)) }
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 ConversationPinnedOffer(model: model, counterpartName: conversation.counterpart?.displayName,
                                         isComposing: composerFocused, sheet: $offerSheet, accepting: $accepting,
@@ -223,13 +226,14 @@ struct ConversationView: View {
         if actions.unblock {
             items.append(AppBarMenuItem(title: l10n.string(.appProfileUnblock), icon: .user) { Task { await model.setBlocked(false) } })
         }
-        if actions.block {
-            items.append(AppBarMenuItem(title: l10n.string(.appProfileBlock), icon: .warningCircle, isDestructive: true) {
-                confirmsBlock = true
-            })
-        }
         if actions.report {
             items.append(AppBarMenuItem(title: l10n.string(.reportAction), icon: .warning) { presented = .report })
+        }
+        // The destructive entry last, after the menu's divider.
+        if actions.block {
+            items.append(AppBarMenuItem(title: l10n.string(.appProfileBlock), icon: .prohibit, isDestructive: true) {
+                confirmsBlock = true
+            })
         }
         return items
     }

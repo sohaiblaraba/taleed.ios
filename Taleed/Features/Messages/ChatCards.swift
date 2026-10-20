@@ -59,9 +59,53 @@ struct ChatCard<Content: View>: View {
     }
 }
 
-/// An `OFFER` card (slice C, §7 G9): the eyebrow, the status, a bundle's items, the amount and, while it
-/// waits, when it expires. Its buttons (accept, decline, counter, withdraw, pay) are the offers group's
-/// (G10); they follow the offer's `can…` flags.
+/// An offer's status as one pill everywhere (cards, the pinned offer and its row): pending in the brand
+/// tone, accepted in the success tone, closed neutral. On a `brandSoft` surface (the member's own card,
+/// the pinned offer) the pill keeps an outline so "En attente" still reads as a pill.
+struct OfferStatusBadge: View {
+    let status: ChatOfferStatus
+    var isOnTint = false
+    @Environment(LanguageManager.self) private var l10n
+
+    var body: some View {
+        TaleedBadge(title: l10n.string(ChatText.offerStatusKey(status)), tone: ChatText.offerStatusTone(status), isOnTint: isOnTint)
+            .fixedSize()
+            .accessibilityIdentifier("offer.status")
+    }
+}
+
+/// An offer's eyebrow ("OFFRE SUR UN LOT · 3 ARTICLES", "FAIRE UNE OFFRE", "OFFRE DU VENDEUR") with its
+/// icon, on a row of its own so that it never has to share the width with the status.
+struct OfferEyebrow: View {
+    let offer: ChatOffer
+    /// One line at its full width (to test whether it fits next to the status).
+    var isSingleLine = false
+    @Environment(LanguageManager.self) private var l10n
+
+    var body: some View {
+        HStack(spacing: TaleedSpacing.s4) {
+            TaleedIconView(offer.bundle == nil ? .money : .storefront, size: 14, color: TaleedColor.textBody)
+            Text(text.uppercased(with: l10n.language.locale))
+                .taleedFont(TaleedFont.eyebrow)
+                .foregroundStyle(TaleedColor.textBody)
+                .fixedSize(horizontal: isSingleLine, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// "Offre sur un lot · 2 articles", "Faire une offre" or "Offre du vendeur" (§7 G9).
+    private var text: String {
+        switch ChatText.offerEyebrow(offer) {
+        case let .bundle(count): l10n.format(.offersBundleOffer, count)
+        case .buyer: l10n.string(.offersMakeOffer)
+        case .seller: l10n.string(.offersSellerOffer)
+        }
+    }
+}
+
+/// An `OFFER` card (slice C, §7 G9): the eyebrow, a bundle's items, the amount with its status under it
+/// and, while it waits, when it expires. Its buttons (accept, decline, counter, withdraw, pay) are the
+/// offers group's (G10); they follow the offer's `can…` flags.
 struct ChatOfferCard: View {
     let offer: ChatOffer
     let isMine: Bool
@@ -72,39 +116,31 @@ struct ChatOfferCard: View {
     var body: some View {
         let status = offer.displayStatus(at: now)
         ChatCard(isMine: isMine) {
-            HStack(alignment: .center, spacing: TaleedSpacing.s8) {
-                HStack(spacing: TaleedSpacing.s4) {
-                    TaleedIconView(offer.bundle == nil ? .money : .storefront, size: 14, color: TaleedColor.textBody)
-                    Text(eyebrow.uppercased(with: l10n.language.locale))
-                        .taleedFont(TaleedFont.eyebrow)
-                        .foregroundStyle(TaleedColor.textBody)
-                        .lineLimit(2)
-                }
-                Spacer(minLength: 0)
-                TaleedBadge(title: l10n.string(ChatText.offerStatusKey(status)), tone: ChatText.offerStatusTone(status))
-                    .fixedSize()
-            }
+            OfferEyebrow(offer: offer)
             if let bundle = offer.bundle {
                 Divider()
                 ForEach(bundle.items) { ChatBundleItemRow(item: $0, openListing: openListing) }
                 Divider()
             }
             PriceText(amount: offer.amount, style: TaleedFont.priceDetail)
-            if status == .pending {
-                let relative = RelativeTimeText.string(for: offer.expiresAt, now: now, locale: l10n.language.formattingLocale)
-                Text(l10n.format(.offersExpiresIn, relative))
-                    .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textBody)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: TaleedSpacing.s8) { statusLine(status) }
+                VStack(alignment: .leading, spacing: TaleedSpacing.s4) { statusLine(status) }
             }
         }
         .accessibilityElement(children: .contain)
     }
 
-    private var eyebrow: String {
-        switch ChatText.offerEyebrow(offer) {
-        case let .bundle(count): l10n.format(.offersBundleOffer, count)
-        case .buyer: l10n.string(.offersMakeOffer)
-        case .seller: l10n.string(.offersSellerOffer)
+    /// The status pill, then the time left while the offer waits.
+    @ViewBuilder
+    private func statusLine(_ status: ChatOfferStatus) -> some View {
+        OfferStatusBadge(status: status, isOnTint: isMine)
+        if status == .pending {
+            let relative = RelativeTimeText.string(for: offer.expiresAt, now: now, locale: l10n.language.formattingLocale)
+            Text(l10n.format(.offersExpiresIn, relative))
+                .taleedFont(TaleedFont.caption)
+                .foregroundStyle(TaleedColor.textBody)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

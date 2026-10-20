@@ -260,3 +260,34 @@ struct AnnouncementHTMLTests {
         #expect(blocks == [.paragraph(AttributedString("Bonjour\nà tous"))])
     }
 }
+
+// MARK: - Polish P4
+
+struct InboxTimeTests {
+    private let algiers: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Africa/Algiers") ?? .current
+        return calendar
+    }()
+
+    /// Short times keep the item's title readable: "34 s", "7 h", "hier", "3 j", then the date.
+    @Test func inboxTimesAreShort() {
+        let fr = Locale(identifier: "fr")
+        func time(_ ago: TimeInterval) -> String {
+            ChatText.inboxTime(chatNow.addingTimeInterval(-ago), now: chatNow, locale: fr, calendar: algiers)
+                .replacingOccurrences(of: "\u{A0}", with: " ").replacingOccurrences(of: "\u{202F}", with: " ")
+        }
+        let now = chatNow
+        #expect(time(34) == "34 s")
+        #expect(time(5 * 60) == "5 min")
+        #expect(time(7 * 3600) == "7 h")
+        #expect(time(30 * 3600) == "hier")
+        #expect(time(3 * 86400) == "3 j")
+        let old = ChatText.inboxTime(now.addingTimeInterval(-20 * 86400), now: now, locale: fr, calendar: algiers)
+        #expect(old.contains("août") || old.contains("sept."), "\(old)")
+        // Arabic keeps Latin digits (decision D-5).
+        let arabic = ChatText.inboxTime(now.addingTimeInterval(-7 * 3600), now: now, locale: AppLanguage.ar.formattingLocale,
+                                        calendar: algiers)
+        #expect(arabic.contains("7"), "\(arabic)")
+    }
+}

@@ -15,6 +15,8 @@ struct BundleReviewView: View {
     /// The item whose "Retirer" waits for confirmation: the bundle has an accepted offer it would cancel.
     @State private var confirmingRemoval: BundleLine?
     @State private var hasAppeared = false
+    /// The large heading "Récapitulatif du lot" is on screen: the app bar leaves its title out.
+    @State private var headingVisible = true
     let route: AppRoute
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
@@ -31,7 +33,8 @@ struct BundleReviewView: View {
 
     var body: some View {
         ShellScreen {
-            TaleedTopAppBar(title: l10n.string(.bundleReviewTitle), onBack: { dismiss() })
+            TaleedTopAppBar(title: l10n.string(.bundleReviewTitle), onBack: { dismiss() },
+                            showsTitle: model.bundle == nil || !headingVisible)
         } content: {
             content
                 .taleedSheet(isPresented: $offersOnBundle) { offerSheet }
@@ -84,6 +87,8 @@ struct BundleReviewView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     PageHeading(eyebrow: l10n.string(.bundleReviewEyebrow), title: l10n.string(.bundleReviewTitle))
+                        // The bar's title shows once the heading has scrolled under it.
+                        .onGeometryChange(for: Bool.self) { $0.frame(in: .scrollView).maxY > 0 } action: { headingVisible = $0 }
                     VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
                         seller(bundle)
                         switch state {
@@ -122,6 +127,11 @@ struct BundleReviewView: View {
 
     @ViewBuilder
     private func items(_ bundle: BundleDetail) -> some View {
+        if bundle.unavailableCount > 0 {
+            // Above the items, so the greyed ones come with their reason (below them it ended under the bar).
+            InlineAlert(kind: .warning, title: l10n.format(.bundleUnavailableNotice, bundle.unavailableCount))
+                .accessibilityIdentifier("bundle.unavailableNotice")
+        }
         VStack(spacing: TaleedSpacing.s12) {
             ForEach(bundle.items) { item in
                 BundleItemRow(item: item, isRemoving: model.work == .remove(listingId: item.listingId),
@@ -129,10 +139,6 @@ struct BundleReviewView: View {
                               open: { router.push(.listing(id: item.listingId)) },
                               remove: { remove(item) })
             }
-        }
-        if bundle.unavailableCount > 0 {
-            InlineAlert(kind: .warning, title: l10n.format(.bundleUnavailableNotice, bundle.unavailableCount))
-                .accessibilityIdentifier("bundle.unavailableNotice")
         }
         if let accepted = bundle.acceptedOffer {
             InlineAlert(kind: .success,
@@ -206,7 +212,8 @@ struct BundleReviewView: View {
         TaleedButton(title: buyTitle, kind: .secondary, size: .large, leadingIcon: .storefront, isFullWidth: true) {
             if let checkout = model.checkout { router.pushSignedIn(.checkout(checkout)) }
         }
-        .disabled(model.checkout == nil)
+        // Off while the items save, as the bundle's other actions.
+        .disabled(model.checkout == nil || model.work != nil)
         .accessibilityIdentifier("bundle.buy")
     }
 

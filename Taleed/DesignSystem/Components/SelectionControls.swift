@@ -92,9 +92,12 @@ extension ToggleStyle where Self == TaleedCheckboxStyle {
     static var taleedCheckbox: TaleedCheckboxStyle { TaleedCheckboxStyle() }
 }
 
-/// The 22 pt radio circle (8 pt white dot when selected).
+/// The 22 pt radio circle (8 pt white dot when selected). It grows with the text size, so it does not
+/// shrink to a dot next to large labels.
 struct RadioIndicator: View {
     let isSelected: Bool
+    @ScaledMetric(relativeTo: .body) private var size = TaleedSize.radioSize
+    @ScaledMetric(relativeTo: .body) private var dot = TaleedSize.radioDot
 
     var body: some View {
         Circle()
@@ -103,10 +106,11 @@ struct RadioIndicator: View {
                                            lineWidth: TaleedSize.radioBorderWidth))
             .overlay {
                 if isSelected {
-                    Circle().fill(TaleedColor.textInverse).frame(width: TaleedSize.radioDot, height: TaleedSize.radioDot)
+                    Circle().fill(TaleedColor.textInverse).frame(width: min(dot, 12), height: min(dot, 12))
                 }
             }
-            .frame(width: TaleedSize.radioSize, height: TaleedSize.radioSize)
+            // Up to 32 pt: larger would take the label's room and break its words.
+            .frame(width: min(size, 32), height: min(size, 32))
             .accessibilityHidden(true)
     }
 }
@@ -132,6 +136,9 @@ struct TaleedRadio: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if indicatorEdge == .trailing { RadioIndicator(isSelected: isSelected) }
             }
+            // At least 12 pt above and below the label at every size: a label on several lines never
+            // touches the next row.
+            .padding(.vertical, TaleedSpacing.s12)
             .frame(minHeight: TaleedSize.touchTargetMin)
             .contentShape(Rectangle())
         }

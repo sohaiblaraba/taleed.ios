@@ -58,7 +58,10 @@ struct PinnedOfferCard: View {
     let onCounter: () -> Void
     let onWithdraw: () -> Void
     let onPay: (CheckoutTarget) -> Void
+    /// The full card's eyebrow row has room for the status too.
+    @State private var statusInHeader = true
     @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var offer: ChatOffer { pinned.offer }
 
@@ -77,19 +80,25 @@ struct PinnedOfferCard: View {
 
     // MARK: Compact
 
-    /// The status, the amount and the caret on one row, then the main action.
+    /// The status, the amount and the caret on one row, then the main action. The amount wraps rather
+    /// than being cut ("3 9…") at large text sizes.
     private var compactCard: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
             HStack(alignment: .center, spacing: TaleedSpacing.s8) {
-                statusBadge
-                Text(PriceFormatter.format(offer.amount, language: l10n.language))
-                    .taleedFont(TaleedFont.sectionTitle)
-                    .foregroundStyle(TaleedColor.textPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .accessibilityLabel(summary)
-                    .accessibilityIdentifier("offer.pinned.summary")
-                Spacer(minLength: 0)
+                // At accessibility sizes the amount goes under the status, with the row's whole width.
+                let lead = dynamicTypeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: TaleedSpacing.s4))
+                    : AnyLayout(HStackLayout(spacing: TaleedSpacing.s8))
+                lead {
+                    statusBadge
+                    Text(PriceFormatter.format(offer.amount, language: l10n.language))
+                        .taleedFont(TaleedFont.sectionTitle)
+                        .foregroundStyle(TaleedColor.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityLabel(summary)
+                        .accessibilityIdentifier("offer.pinned.summary")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 layoutCaret
             }
             if let main = PinnedOfferMainAction(pinned) { mainButton(main) }
@@ -122,10 +131,9 @@ struct PinnedOfferCard: View {
         }
     }
 
+    /// The same pill as the cards in the thread, outlined on the card's `brandSoft`.
     private var statusBadge: some View {
-        let status = offer.displayStatus(at: now)
-        return TaleedBadge(title: l10n.string(ChatText.offerStatusKey(status)), tone: ChatText.offerStatusTone(status))
-            .fixedSize()
+        OfferStatusBadge(status: offer.displayStatus(at: now), isOnTint: true)
     }
 
     // MARK: Full
@@ -133,47 +141,71 @@ struct PinnedOfferCard: View {
     private var fullCard: some View {
         let status = offer.displayStatus(at: now)
         return VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-            HStack(alignment: .center, spacing: TaleedSpacing.s8) {
-                HStack(spacing: TaleedSpacing.s4) {
-                    TaleedIconView(offer.bundle == nil ? .money : .storefront, size: 14, color: TaleedColor.textBody)
-                    Text(eyebrow.uppercased(with: l10n.language.locale))
-                        .taleedFont(TaleedFont.eyebrow)
-                        .foregroundStyle(TaleedColor.textBody)
-                        .lineLimit(2)
+            // The status shares the eyebrow's row only while the eyebrow fits there on one line; otherwise
+            // the eyebrow keeps the row (with the caret) and the status goes under the amount, so a
+            // bundle's item count is never cut.
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .center, spacing: TaleedSpacing.s8) {
+                    OfferEyebrow(offer: offer, isSingleLine: true)
+                    Spacer(minLength: TaleedSpacing.s8)
+                    statusBadge
+                    layoutCaret
                 }
-                .accessibilityElement(children: .combine)
-                Spacer(minLength: 0)
-                statusBadge
-                layoutCaret
+                .onAppear { statusInHeader = true }
+                HStack(alignment: .center, spacing: TaleedSpacing.s8) {
+                    OfferEyebrow(offer: offer)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    layoutCaret
+                }
+                .onAppear { statusInHeader = false }
             }
             Text(summary)
                 .taleedFont(TaleedFont.sectionTitle)
                 .foregroundStyle(TaleedColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("offer.pinned.summary")
-            if status == .pending {
-                // The time left, every minute (the card itself redraws when the offer lapses).
-                TimelineView(.everyMinute) { context in
-                    let relative = RelativeTimeText.string(for: offer.expiresAt, now: max(context.date, now),
-                                                           locale: l10n.language.formattingLocale)
-                    Text(l10n.format(.offersExpiresIn, relative))
-                        .taleedFont(TaleedFont.caption)
-                        .foregroundStyle(TaleedColor.textBody)
+            if !statusInHeader {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: TaleedSpacing.s8) { statusLine(status) }
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s4) { statusLine(status) }
                 }
+            } else if status == .pending {
+                expiry
             }
             if pinned.hasActions { actions }
         }
     }
 
+    /// The status pill, then the time left while the offer waits (every minute; the card itself redraws
+    /// when the offer lapses).
+    @ViewBuilder
+    private func statusLine(_ status: ChatOfferStatus) -> some View {
+        statusBadge
+        if status == .pending { expiry }
+    }
+
+    private var expiry: some View {
+        TimelineView(.everyMinute) { context in
+            let relative = RelativeTimeText.string(for: offer.expiresAt, now: max(context.date, now),
+                                                   locale: l10n.language.formattingLocale)
+            Text(l10n.format(.offersExpiresIn, relative))
+                .taleedFont(TaleedFont.caption)
+                .foregroundStyle(TaleedColor.textBody)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// "Accepter", "Refuser" and "Contre-offre" on one row while they fit (the pinned area stays
+    /// compact), stacked otherwise; then paying and withdrawing.
     @ViewBuilder
     private var actions: some View {
-        if pinned.canAccept || pinned.canDecline {
+        if pinned.canAccept || pinned.canDecline || pinned.canCounter {
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: TaleedSpacing.s8) { answerButtons }
+                // Each button its label's width plus an equal share of the room left.
+                GrowRow(spacing: TaleedSpacing.s8) { answerButtons }
                 VStack(spacing: TaleedSpacing.s8) { answerButtons }
             }
         }
-        if pinned.canCounter { counterButton }
         if let payment = pinned.payment { payButton(payment) }
         if pinned.canWithdraw { withdrawButton }
     }
@@ -187,12 +219,14 @@ struct PinnedOfferCard: View {
                 .disabled(work != nil)
                 .accessibilityIdentifier("offer.decline")
         }
+        if pinned.canCounter { counterButton }
     }
 
     // MARK: Buttons
 
+    /// Secondary (mint), as the app's other commerce actions (Buy now, Pay, Shop bundles).
     private var acceptButton: some View {
-        TaleedButton(title: l10n.string(.offersAccept), kind: .primary, size: .medium, isLoading: isRunning(.accept),
+        TaleedButton(title: l10n.string(.offersAccept), kind: .secondary, size: .medium, isLoading: isRunning(.accept),
                      isFullWidth: true, action: onAccept)
             .disabled(work != nil)
             .accessibilityIdentifier("offer.accept")
@@ -211,8 +245,10 @@ struct PinnedOfferCard: View {
             .accessibilityIdentifier("offer.pay")
     }
 
+    /// A destructive step without confirmation (as on the website): the error-coloured text button,
+    /// still a 44 pt target.
     private var withdrawButton: some View {
-        TaleedButton(title: l10n.string(.offersCancelOffer), kind: .hyperlink, size: .medium,
+        TaleedButton(title: l10n.string(.offersCancelOffer), kind: .hyperlinkDanger, size: .medium,
                      isLoading: isRunning(.withdraw), isFullWidth: true, action: onWithdraw)
             .disabled(work != nil)
             .accessibilityIdentifier("offer.withdraw")
@@ -222,18 +258,11 @@ struct PinnedOfferCard: View {
         work == .respond(response, offerId: offer.id)
     }
 
-    /// "Offre sur un lot · 2 articles", "Faire une offre" or "Offre du vendeur" (§7 G9).
-    private var eyebrow: String {
-        switch ChatText.offerEyebrow(offer) {
-        case let .bundle(count): l10n.format(.offersBundleOffer, count)
-        case .buyer: l10n.string(.offersMakeOffer)
-        case .seller: l10n.string(.offersSellerOffer)
-        }
-    }
-
-    /// "Vous avez proposé 4 000 DA" or "@amina propose 4 000 DA".
+    /// "Vous avez proposé 4 000 DA" or "@amina propose 4 000 DA" while the offer waits; once accepted,
+    /// what was agreed: "Prix accepté : 4 000 DA".
     private var summary: String {
         let amount = PriceFormatter.format(offer.amount, language: l10n.language)
+        if offer.status == .accepted { return l10n.format(.appOfferAcceptedPrice, amount) }
         return offer.isMine
             ? l10n.format(.offersYouOffered, amount)
             : l10n.format(.offersTheyOffered, counterpartName.isolatedLeftToRight, amount)
@@ -268,6 +297,9 @@ struct ConversationPinnedOffer: View {
                             onCounter: { sheet = .counter(pinned.offer) },
                             onWithdraw: { respond(.withdraw, to: pinned.offer) },
                             onPay: { router.pushSignedIn(.checkout($0)) })
+                // Its whole height, never squeezed by the thread under it (a wrapped "Payer maintenant ·
+                // 3 900 DA" at large text sizes ran out of its button).
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

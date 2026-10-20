@@ -40,13 +40,24 @@ final class ReportViewModel {
     static let maxDetailsLength = 2000
 
     let target: ReportTarget
-    var reason: String?
+    var reason: String? {
+        didSet { if reason != oldValue { formChanged() } }
+    }
     /// Capped by the field itself (`TaleedTextArea.maxLength`), so what is shown is what is sent.
-    var details: String = ""
-    private(set) var evidence: [Evidence] = []
+    var details: String = "" {
+        didSet { if details != oldValue { formChanged() } }
+    }
+    private(set) var evidence: [Evidence] = [] {
+        didSet { formChanged() }
+    }
     private(set) var isSending = false
-    /// The last failure, shown above the button.
+    /// The last failure, shown above the button until the form changes (an older failure would sit
+    /// next to a new one, unrelated).
     private(set) var error: ApiError?
+
+    private func formChanged() {
+        if !isSending, error != nil { error = nil }
+    }
 
     @ObservationIgnored private let api: ReportsApi
     @ObservationIgnored private let upload: (Data) async throws(ApiError) -> UploadedPhoto

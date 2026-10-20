@@ -16,6 +16,9 @@ enum TaleedButtonKind: String, CaseIterable, Sendable {
     case hyperlinkUnderlined
     /// Destructive.
     case danger
+    /// The text link of a destructive step that needs no confirmation ("Annuler l'offre"): Hyperlink's
+    /// shape with the `feedback/error` label, so it does not read like a positive action.
+    case hyperlinkDanger
     /// Not in the Figma Button set: the white frame Figma draws for "View profile", "Clear filters"
     /// and the modal "Cancel" (§8.10): `radius.m`, Medium 13/600 padding 16, Large 15/600 padding 24.
     case outline
@@ -23,7 +26,7 @@ enum TaleedButtonKind: String, CaseIterable, Sendable {
     /// border, `mint/900` label (pair it with a `blue/600` leading icon).
     case mintSoft
 
-    var isHyperlink: Bool { self == .hyperlink || self == .hyperlinkUnderlined }
+    var isHyperlink: Bool { self == .hyperlink || self == .hyperlinkUnderlined || self == .hyperlinkDanger }
 }
 
 enum TaleedButtonSize: String, CaseIterable, Sendable {
@@ -113,6 +116,9 @@ struct TaleedButtonColors: Equatable {
         case (.hyperlinkUnderlined, .normal): return .init(fill: nil, border: nil, content: Palette.blue900)
         case (.hyperlinkUnderlined, .pressed): return .init(fill: nil, border: nil, content: Palette.blue700)
         case (.hyperlinkUnderlined, .disabled): return .init(fill: nil, border: nil, content: Palette.blue200)
+        case (.hyperlinkDanger, .normal): return .init(fill: nil, border: nil, content: Palette.feedbackError)
+        case (.hyperlinkDanger, .pressed): return .init(fill: nil, border: nil, content: Palette.dangerPressed)
+        case (.hyperlinkDanger, .disabled): return .init(fill: nil, border: nil, content: Palette.navy300)
         case (.danger, .normal): return .init(fill: Palette.feedbackError, border: Palette.feedbackError, content: Palette.textInverse)
         case (.danger, .pressed): return .init(fill: Palette.dangerPressed, border: Palette.dangerPressed, content: Palette.textInverse)
         case (.danger, .disabled): return .init(fill: Palette.dangerDisabled, border: Palette.dangerDisabled, content: Palette.navy400)
@@ -250,6 +256,8 @@ struct TaleedButton: View {
     var body: some View {
         let resolved = metrics ?? .of(kind, size)
         Button(action: action) {
+            // While loading, the label is hidden outright (never faded under the spinner), its size kept.
+            let hidesLabel = isLoading && !keepsLabelWhileLoading
             HStack(spacing: TaleedSize.buttonGap) {
                 if isLoading, keepsLabelWhileLoading {
                     ProgressView()
@@ -266,9 +274,10 @@ struct TaleedButton: View {
                     TaleedIconView(trailingIcon, size: size.iconSize, color: nil)
                 }
             }
-            .opacity(isLoading && !keepsLabelWhileLoading ? 0 : 1)
+            .opacity(hidesLabel ? 0 : 1)
+            .animation(nil, value: hidesLabel)
             .overlay {
-                if isLoading, !keepsLabelWhileLoading {
+                if hidesLabel {
                     ProgressView()
                         .tint(TaleedButtonColors.of(kind, .normal).content)
                 }

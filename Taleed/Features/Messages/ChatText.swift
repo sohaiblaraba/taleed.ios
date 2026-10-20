@@ -115,6 +115,40 @@ enum ChatText {
         return formatter.string(from: date)
     }
 
+    /// The inbox's short time of the last message, so the item's title keeps its room: "34 s", "5 min",
+    /// "7 h" within a day, "hier", "3 j" within a week, then the date ("12 oct.", with the year when it is
+    /// not this one). VoiceOver reads the full relative time instead.
+    static func inboxTime(_ date: Date, now: Date = Date(), locale: Locale, calendar: Calendar = .current) -> String {
+        var calendar = calendar
+        calendar.locale = locale
+        let seconds = max(0, now.timeIntervalSince(date))
+        let units = DateComponentsFormatter()
+        units.calendar = calendar
+        units.unitsStyle = .short
+        units.maximumUnitCount = 1
+        if seconds < 86400 {
+            units.allowedUnits = seconds < 60 ? [.second] : seconds < 3600 ? [.minute] : [.hour]
+            return units.string(from: seconds) ?? ""
+        }
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: now)).day ?? 0
+        if days <= 1 {
+            let relative = RelativeDateTimeFormatter()
+            relative.locale = locale
+            relative.dateTimeStyle = .named
+            return relative.localizedString(from: DateComponents(day: -1))
+        }
+        if days < 7 {
+            units.allowedUnits = [.day]
+            return units.string(from: TimeInterval(days * 86400)) ?? ""
+        }
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.calendar = calendar
+        let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
+        formatter.setLocalizedDateFormatFromTemplate(sameYear ? "dMMM" : "dMMMy")
+        return formatter.string(from: date)
+    }
+
     /// The day above a day's messages: "Aujourd'hui", "Hier", then "12 oct. 2026" (the system's
     /// relative names, nothing to translate).
     static func day(_ date: Date, locale: Locale) -> String {

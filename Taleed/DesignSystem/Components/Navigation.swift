@@ -143,6 +143,8 @@ struct TaleedSheetHeading: View {
     /// Greys the close button out while the sheet must stay up (a request under way).
     var isCloseDisabled = false
     @Environment(\.locale) private var locale
+    /// The close icon grows with the title's text size (20 pt at the default size).
+    @ScaledMetric(relativeTo: .title3) private var closeIconSize: CGFloat = 20
 
     var body: some View {
         VStack(spacing: TaleedSize.bottomSheetGap) {
@@ -158,8 +160,8 @@ struct TaleedSheetHeading: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if let onClose {
                     Button(action: onClose) {
-                        TaleedIconView(.x, size: 20, color: TaleedColor.textSecondary)
-                            .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
+                        TaleedIconView(.x, size: min(closeIconSize, 40), color: TaleedColor.textSecondary)
+                            .frame(minWidth: TaleedSize.touchTargetMin, minHeight: TaleedSize.touchTargetMin)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)

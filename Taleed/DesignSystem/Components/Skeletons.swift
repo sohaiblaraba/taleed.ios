@@ -128,6 +128,35 @@ struct SkeletonProductList: View {
     }
 }
 
+/// Loading placeholder of a conversation list (the inbox): per row the 48 pt avatar circle and three
+/// bars (name, item, last message), at the rows' margins and height, at most six rows.
+struct SkeletonConversationList: View {
+    var count = 6
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<min(count, TaleedMotion.skeletonMaxPlaceholders), id: \.self) { index in
+                HStack(alignment: .center, spacing: TaleedSpacing.s12) {
+                    SkeletonBlock(width: 48, height: 48)
+                        .padding(.trailing, 4)
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                        SkeletonBlock(width: index.isMultiple(of: 2) ? 120 : 96, height: 14)
+                        SkeletonBlock(width: 150, height: 11, color: TaleedColor.surfaceSubtle)
+                        SkeletonBlock(height: 12)
+                    }
+                }
+                .padding(.horizontal, TaleedLayout.screenMargin)
+                .padding(.vertical, TaleedSpacing.s12)
+                .frame(minHeight: 72)
+            }
+        }
+        .modifier(SkeletonPulse())
+        .accessibilityElement()
+        .accessibilityLabel(DesignSystemStrings.string(.commonLoading, locale: locale))
+    }
+}
+
 /// Loading placeholder of a seller card header (§3.4, a member's profile): the avatar circle, two text
 /// bars, the stats strip and the button, then the start of the product grid.
 struct SkeletonSellerHeader: View {

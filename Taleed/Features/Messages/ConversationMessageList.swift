@@ -68,10 +68,10 @@ struct ConversationMessageList: View {
         case let .outgoing(message):
             VStack(alignment: .trailing, spacing: TaleedSpacing.s4) {
                 ChatBubbleRow(isMine: true) {
+                    // No time until the server has the message: "Envoi…" or "Non envoyé" says where it is.
                     ChatBubble(content: ChatBubbleContent(photo: message.photo.map(ChatBubblePhoto.local), text: message.draft.text,
-                                                          time: ChatText.time(message.createdAt, locale: l10n.language.formattingLocale)),
-                               isMine: true)
-                        .opacity(message.state == .sending ? 0.7 : 1)
+                                                          time: nil),
+                               isMine: true, delivery: message.state == .sending ? .sending : .failed)
                 }
                 OutgoingStatus(state: message.state) { Task { await model.retry(message.id) } }
             }

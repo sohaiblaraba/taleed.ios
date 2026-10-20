@@ -17,7 +17,9 @@ struct ConversationAppBar: View {
                                  size: .medium, action: onBack)
             Group {
                 if !isLoaded {
-                    Color.clear
+                    // No identity yet: an empty title of the bar's own height (a bare `Color.clear` would
+                    // take all the height it is offered and stretch the bar while loading).
+                    Color.clear.frame(height: TaleedSize.touchTargetMin)
                 } else if let onProfile {
                     Button(action: onProfile) { identity }
                         .buttonStyle(.plain)
@@ -171,16 +173,24 @@ struct ChatComposer: View {
             .accessibilityIdentifier("conversation.field")
     }
 
+    /// The attached photo: a 64 pt square tile (`radius.m`, `border/subtle`, the grouped surface behind a
+    /// cut-out photo) in line with the field, the × badge centred on its top corner.
     private func attachedPhoto(_ photo: ComposerPhoto) -> some View {
-        Image(uiImage: photo.preview)
-            .resizable()
-            .scaledToFill()
+        let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
+        return Color.clear
             .frame(width: 64, height: 64)
-            .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+            .overlay {
+                Image(uiImage: photo.preview)
+                    .resizable()
+                    .scaledToFill()
+            }
+            .background(TaleedColor.surfaceGrouped)
+            .clipShape(shape)
+            .overlay(shape.strokeBorder(TaleedColor.borderSubtle, lineWidth: 1))
             .overlay {
                 if photo.isUploading {
                     ZStack {
-                        TaleedColor.scrim.clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+                        TaleedColor.scrim.clipShape(shape)
                         ProgressView().tint(TaleedColor.textInverse)
                     }
                     .accessibilityLabel(l10n.string(.commonLoading))
@@ -191,13 +201,16 @@ struct ChatComposer: View {
                     TaleedIconView(.x, size: 12, color: TaleedColor.textInverse)
                         .frame(width: 22, height: 22)
                         .background(Circle().fill(TaleedColor.imageRemoveScrim))
+                        .overlay(Circle().strokeBorder(TaleedColor.surfacePrimary, lineWidth: 1.5))
                         .minimumHitArea()
                 }
                 .buttonStyle(.plain)
-                .offset(x: 6, y: -6)
+                // The badge's centre on the tile's corner (alignment guides follow the reading direction).
+                .alignmentGuide(.top) { $0[VerticalAlignment.center] }
+                .alignmentGuide(.trailing) { $0[HorizontalAlignment.center] }
                 .accessibilityLabel(l10n.string(.chatRemovePhoto))
             }
-            .padding(.top, 6)
+            .padding(.top, 11)
             .padding(.leading, TaleedSize.touchTargetMin + TaleedSpacing.s8)
     }
 }

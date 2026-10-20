@@ -352,6 +352,8 @@ struct SheetFooterButton: View {
     let isLoading: Bool
     let isEnabled: Bool
     var error: String?
+    /// Why the button is off, above it ("Choisissez un motif"); not shown with an error.
+    var hint: String?
     let action: () -> Void
 
     var body: some View {
@@ -359,6 +361,13 @@ struct SheetFooterButton: View {
             if let error {
                 InlineAlert(kind: .error, title: error)
                     .accessibilityIdentifier("sheet.error")
+            } else if let hint {
+                Text(hint)
+                    .taleedFont(TaleedFont.bodySmall)
+                    .foregroundStyle(TaleedColor.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("sheet.hint")
             }
             TaleedButton(title: title, kind: .primary, size: .large, isLoading: isLoading, isFullWidth: true, action: action)
                 .disabled(!isEnabled)

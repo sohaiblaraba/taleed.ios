@@ -98,7 +98,7 @@ struct MemberProfileView: View {
                                   confirmTitle: l10n.string(.appProfileBlockConfirm),
                                   onConfirm: { confirmsBlock = false; block() },
                                   onCancel: { confirmsBlock = false },
-                                  icon: .warningCircle)
+                                  icon: .prohibit)
         }
     }
 
@@ -162,17 +162,17 @@ struct MemberProfileView: View {
             })
         }
         var menu: [AppBarMenuItem] = []
-        if actions.showsBlockMenu {
-            if actions.showsBlockedNotice {
-                menu.append(AppBarMenuItem(title: l10n.string(.appProfileUnblock), icon: .user) { unblock() })
-            } else {
-                menu.append(AppBarMenuItem(title: l10n.string(.appProfileBlock), icon: .warningCircle, isDestructive: true) {
-                    start(.block)
-                })
-            }
+        if actions.showsBlockMenu, actions.showsBlockedNotice {
+            menu.append(AppBarMenuItem(title: l10n.string(.appProfileUnblock), icon: .user) { unblock() })
         }
         if actions.showsReport {
             menu.append(AppBarMenuItem(title: l10n.string(.appProfileReportMember), icon: .warning) { start(.report) })
+        }
+        // The destructive entry last, after the menu's divider (as in the conversation's menu).
+        if actions.showsBlockMenu, !actions.showsBlockedNotice {
+            menu.append(AppBarMenuItem(title: l10n.string(.appProfileBlock), icon: .prohibit, isDestructive: true) {
+                start(.block)
+            })
         }
         if !menu.isEmpty {
             items.append(AppBarAction(icon: .dotsThree, accessibilityLabel: l10n.string(.commonMore), menu: menu))

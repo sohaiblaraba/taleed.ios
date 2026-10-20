@@ -10,6 +10,8 @@ struct ReportSheetView: View {
     @State private var model: ReportViewModel
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var showsPicker = false
+    /// The content has scrolled under the title: a hairline under the header, as over the footer.
+    @State private var isScrolled = false
     let onFinish: (ReportViewModel.Outcome) -> Void
     @Environment(LanguageManager.self) private var l10n
     @Environment(CatalogStore.self) private var catalog
@@ -34,27 +36,46 @@ struct ReportSheetView: View {
     var body: some View {
         VStack(spacing: 0) {
             SheetHeader(title: l10n.string(.reportTitle), isClosable: !model.isSending) { dismiss() }
-            ScrollView {
-                VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
-                    Text(l10n.string(.reportSubtitle))
-                        .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textBody)
-                        .fixedSize(horizontal: false, vertical: true)
-                    reasons
-                    TaleedTextArea(label: l10n.string(.reportDetailsLabel), text: $model.details,
-                                   placeholder: l10n.string(.reportDetailsPlaceholder),
-                                   helper: "\(model.details.utf16.count) / \(ReportViewModel.maxDetailsLength)",
-                                   maxLength: ReportViewModel.maxDetailsLength)
-                        .accessibilityIdentifier("report.details")
-                    evidence
+                .overlay(alignment: .bottom) {
+                    if isScrolled { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
                 }
-                .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
-                .padding(.top, TaleedSpacing.s8)
-                .padding(.bottom, TaleedSpacing.s24)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
+                        Text(l10n.string(.reportSubtitle))
+                            .taleedFont(TaleedFont.bodySmall)
+                            .foregroundStyle(TaleedColor.textBody)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .onGeometryChange(for: Bool.self) { $0.frame(in: .scrollView).minY < TaleedSpacing.s8 - 1 } action: {
+                                isScrolled = $0
+                            }
+                        reasons
+                        TaleedTextArea(label: l10n.string(.reportDetailsLabel), text: $model.details,
+                                       placeholder: l10n.string(.reportDetailsPlaceholder),
+                                       helper: "\(model.details.utf16.count) / \(ReportViewModel.maxDetailsLength)",
+                                       maxLength: ReportViewModel.maxDetailsLength)
+                            // Greyed out and unfocused while the report is on its way, as the other controls.
+                            .disabled(model.isSending)
+                            .accessibilityIdentifier("report.details")
+                        evidence.id(Self.evidenceAnchor)
+                    }
+                    .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
+                    .padding(.top, TaleedSpacing.s8)
+                    .padding(.bottom, TaleedSpacing.s24)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                // A screenshot that failed: its reason scrolls into view above the footer.
+                .onChange(of: failureMessage) { _, message in
+                    guard message != nil else { return }
+                    withAnimation(.easeOut(duration: TaleedMotion.transitionMin)) {
+                        proxy.scrollTo(Self.evidenceAnchor, anchor: .bottom)
+                    }
+                }
             }
-            .scrollDismissesKeyboard(.interactively)
             SheetFooterButton(title: l10n.string(.reportSubmit), isLoading: model.isSending, isEnabled: model.canSubmit,
-                              error: model.error.map { l10n.message(for: $0) }) {
+                              error: model.error.map { l10n.message(for: $0) },
+                              hint: model.reason == nil && !model.isSending ? l10n.string(.reportReasonPlaceholder) : nil) {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 Task {
                     guard let outcome = await model.submit() else { return }
                     switch outcome {
@@ -160,12 +181,16 @@ struct ReportSheetView: View {
         }
     }
 
+    private static let evidenceAnchor = "report.evidence"
+
     /// The first failed screenshot's reason, then what to do: send it again, or remove it. Send waits
-    /// for it, so no screenshot is left out without a word.
+    /// for it, so no screenshot is left out without a word. Offline the reason is the short "Pas de
+    /// connexion." (its usual "…et réessayez." would say "retry" twice).
     private var failureMessage: String? {
         guard let failed = model.evidence.first(where: \.isFailed), let error = failed.error else { return nil }
         let action = l10n.string(failed.canRetry ? .appReportEvidenceRetryOrRemove : .appReportEvidenceRemove)
-        return l10n.message(for: error) + " " + action
+        let reason = error == .network ? l10n.string(.appErrorOfflineTitle) + "." : l10n.message(for: error)
+        return reason + " " + action
     }
 }
 

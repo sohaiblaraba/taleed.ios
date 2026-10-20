@@ -149,7 +149,7 @@ struct BundlePickCard: View {
                     }
                 }
             TaleedButton(title: l10n.string(isSelected ? .bundleRemove : .bundleAdd), kind: isSelected ? .tertiary : .outline,
-                         size: .medium, leadingIcon: isSelected ? .check : .plus, isFullWidth: true, action: toggle)
+                         size: .medium, leadingIcon: isSelected ? .x : .plus, isFullWidth: true, action: toggle)
                 .disabled(!isSelected && !canAdd)
                 .accessibilityLabel("\(l10n.string(isSelected ? .bundleRemove : .bundleAdd)), \(listing.title)")
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
