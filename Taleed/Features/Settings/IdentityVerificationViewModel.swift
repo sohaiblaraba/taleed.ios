@@ -68,6 +68,8 @@ final class IdentityVerificationViewModel {
         case submitted
         /// A picked photo the device cannot read: `uploadError`.
         case unreadablePhoto
+        /// A pull-to-refresh that failed: the status on screen may be out of date.
+        case refreshFailed(ApiError)
     }
 
     private(set) var phase: Phase = .loading
@@ -165,13 +167,19 @@ final class IdentityVerificationViewModel {
         await load()
     }
 
-    /// Back in the foreground or pulled to refresh: a failure keeps what is on screen.
+    /// Back in the foreground (`automatic`, quiet) or pulled to refresh: a failure keeps what is on screen,
+    /// and a pull says so (as Wallet), so "nothing changed" and "could not check" differ (screens.md §0.6).
     func refresh(automatic: Bool) async {
         guard status != nil, !isSubmitting else {
             if status == nil { await load() }
             return
         }
-        if let status = try? await api.verification(automatic: automatic) { apply(status) }
+        do {
+            apply(try await api.verification(automatic: automatic))
+        } catch {
+            guard !Task.isCancelled, !automatic else { return }
+            notice = .refreshFailed(error)
+        }
     }
 
     private func apply(_ status: IdentityStatus) {

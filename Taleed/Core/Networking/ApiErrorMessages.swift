@@ -7,7 +7,7 @@ import Foundation
 /// `issues`, open the order of `orderId`, show the offer bounds) and fall back to `messageKey`.
 extension ApiError {
     /// The message for this error. `.rateLimited` with a wait over a minute has its own wording: use
-    /// `message(in:)` or `LanguageManager.message(for:)`, which say how many minutes.
+    /// `message(in:)` or `LanguageManager.message(for:)`, which say how many minutes (hours over an hour).
     var messageKey: L10nKey {
         switch self {
         case .network: return .commonErrorNetwork
@@ -80,8 +80,18 @@ extension ApiError {
         return Int((Double(seconds) / 60).rounded(.up))
     }
 
+    /// Hours to show for a wait over an hour ("try again in 24 hours"): a daily limit (identity
+    /// verification, 5 a day) can ask for up to 86 400 s. Nil for an hour or less.
+    var rateLimitHours: Int? {
+        guard let seconds = retryAfter, seconds > 3600 else { return nil }
+        return Int((Double(seconds) / 3600).rounded(.up))
+    }
+
     /// The message in `language`.
     func message(in language: AppLanguage) -> String {
+        if let hours = rateLimitHours {
+            return DesignSystemStrings.format(.appErrorRateLimitedHours, locale: language.locale, hours)
+        }
         if let minutes = rateLimitMinutes {
             return DesignSystemStrings.format(.appErrorRateLimitedMinutes, locale: language.locale, minutes)
         }

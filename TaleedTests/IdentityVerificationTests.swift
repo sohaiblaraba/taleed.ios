@@ -312,6 +312,26 @@ struct IdentityVerificationViewModelTests {
         api.statusResults = [.failure(.network)]
         await model.refresh(automatic: true)
         #expect(model.status == .rejected(note: nil))
+        // The foreground reload stays quiet.
+        #expect(model.notice == nil)
+    }
+
+    /// A pull that fails says so, as Wallet (screens.md §0.6), and keeps the status on screen.
+    @Test func aFailedPullToRefreshShowsTheError() async {
+        let model = await model(status: .pending)
+        api.statusResults = [.failure(.network)]
+        await model.refresh(automatic: false)
+        #expect(api.loads.last == false)
+        #expect(model.status == .pending)
+        #expect(model.notice == .refreshFailed(.network))
+    }
+
+    @Test func theDailyLimitSaysHoursOverAnHour() {
+        let error = ApiError.rateLimited(retryAfter: 86_400)
+        #expect(error.rateLimitHours == 24)
+        #expect(error.message(in: .fr) == "Réessayez dans 24 heures.")
+        #expect(ApiError.rateLimited(retryAfter: 3600).rateLimitHours == nil)
+        #expect(ApiError.rateLimited(retryAfter: 3600).message(in: .fr) == "Réessayez dans 60 minutes.")
     }
 
     @Test func anUnreadablePhotoIsRefused() async {

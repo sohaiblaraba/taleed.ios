@@ -2,25 +2,25 @@
   "sourceLanguage": "fr",
   "strings": {
     "NSCameraUsageDescription": {
-      "comment": "Camera permission prompt (photo search; later listing and chat photos).",
+      "comment": "Camera permission prompt: listing photos, visual search, chat photos and the ID photo for identity verification.",
       "extractionState": "manual",
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Taleed utilise l’appareil photo pour photographier vos articles."
+            "value": "Taleed utilise l’appareil photo pour photographier vos articles (annonces, recherche visuelle), envoyer des photos dans vos messages et photographier votre pièce d’identité pour la vérification d’identité."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يستخدم تليد الكاميرا لتصوير أغراضك."
+            "value": "يستخدم تليد الكاميرا لتصوير أغراضك (الإعلانات والبحث البصري)، ولإرسال الصور في رسائلك، ولتصوير وثيقة هويتك من أجل توثيق الهوية."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Taleed uses the camera to take photos of your items."
+            "value": "Taleed uses the camera to take photos of your items (listings, visual search), send photos in your messages and photograph your ID document for identity verification."
           }
         }
       }

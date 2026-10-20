@@ -42,7 +42,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Taleed utilise l’appareil photo pour photographier vos articles.</string>
+	<string>Taleed utilise l’appareil photo pour photographier vos articles (annonces, recherche visuelle), envoyer des photos dans vos messages et photographier votre pièce d’identité pour la vérification d’identité.</string>
 #if TALEED_ALLOWS_LOCAL_NETWORKING
 	<key>NSAppTransportSecurity</key>
 	<dict>

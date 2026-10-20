@@ -139,6 +139,7 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appErrorPriceChanged = "app_error_price_changed"
     case appErrorRateLimited = "app_error_rate_limited"
     case appErrorRateLimitedMinutes = "app_error_rate_limited_minutes"  // plural
+    case appErrorRateLimitedHours = "app_error_rate_limited_hours"  // plural
     case appErrorShippingUnavailable = "app_error_shipping_unavailable"
     case appErrorUnsupportedMedia = "app_error_unsupported_media"
     case appErrorUsernameCooldown = "app_error_username_cooldown"

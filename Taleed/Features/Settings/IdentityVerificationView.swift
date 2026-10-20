@@ -28,7 +28,10 @@ struct IdentityVerificationView: View {
         let uploads = dependencies.uploads
         _model = State(initialValue: IdentityVerificationViewModel(api: dependencies.verification, account: dependencies.account,
                                                                    store: store) { data throws(ApiError) in
-            try await uploads.upload(data, purpose: .idDocument)
+            #if DEBUG
+            if VerificationDebugFailures.fakesUpload { return UploadedPhoto(key: "debug/id-document", url: nil, thumbURL: nil) }
+            #endif
+            return try await uploads.upload(data, purpose: .idDocument)
         })
     }
 
@@ -57,6 +60,7 @@ struct IdentityVerificationView: View {
             switch notice {
             case .submitted: toasts.show(l10n.string(.settingsVerificationSubmitted))
             case .unreadablePhoto: toasts.show(l10n.string(.settingsVerificationUploadError), kind: .error)
+            case let .refreshFailed(error): toasts.show(error: error)
             }
         }
         .taleedSheet(isPresented: $choosesSource) { sourceSheet }

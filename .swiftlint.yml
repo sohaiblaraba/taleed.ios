@@ -33,7 +33,7 @@ line_length:
   ignores_urls: true
 
 identifier_name:
-  excluded: [id, fr, ar, en, me, x, y]
+  excluded: [id, fr, ar, en, me, at, x, y]
 
 type_name:
   excluded: [L10nKey]

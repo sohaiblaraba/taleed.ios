@@ -50,6 +50,15 @@ struct ApiErrorMessageTests {
         #expect(ApiError.rateLimited(retryAfter: 120).message(in: .ar) == "أعد المحاولة بعد دقيقتين.")
     }
 
+    /// A daily limit (identity verification, 5 a day) can ask for up to 86 400 s: hours, not 1 440 minutes.
+    @Test func rateLimitSaysHoursOverAnHour() {
+        #expect(ApiError.rateLimited(retryAfter: 3601).rateLimitHours == 2)
+        #expect(ApiError.rateLimited(retryAfter: 86_400).message(in: .en) == "Try again in 24 hours.")
+        #expect(ApiError.rateLimited(retryAfter: 86_400).message(in: .fr) == "Réessayez dans 24 heures.")
+        #expect(ApiError.rateLimited(retryAfter: 7200).message(in: .ar) == "أعد المحاولة بعد ساعتين.")
+        #expect(ApiError.rateLimited(retryAfter: 5400).message(in: .en) == "Try again in 2 hours.")
+    }
+
     @Test func messagesFollowTheLanguage() {
         let error = ApiError.network
         #expect(error.message(in: .fr) == "Pas de connexion. Vérifiez votre réseau et réessayez.")

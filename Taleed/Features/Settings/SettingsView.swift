@@ -62,7 +62,7 @@ struct SettingsView: View {
                     router.push(.profileSettings)
                 }
                 .accessibilityIdentifier("settings.profile")
-                ListRow(label: l10n.string(.settingsUsernameTitle), leadingIcon: .sealCheck,
+                ListRow(label: l10n.string(.settingsUsernameTitle), leadingIcon: .at,
                         trailingText: profile.handle?.isolatedLeftToRight, showsChevron: true) {
                     router.push(.usernameSettings)
                 }

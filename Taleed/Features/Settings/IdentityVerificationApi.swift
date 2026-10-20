@@ -69,8 +69,11 @@ extension GeneratedTaleedApi: IdentityVerificationApi {
 
 #if DEBUG
 /// `-TaleedDebugVerification offline`: the screen's first `GET /me/verification` fails offline (then
-/// works). `upload`: the first ID upload fails offline. `limit`: the first send answers `429` with an
-/// hour to wait (5 a day). Several: `offline,upload`. For screenshots of the error states (screens.md §0.6).
+/// works). `refresh`: the second one fails offline (the first pull-to-refresh). `upload`: the first ID
+/// upload fails offline. `limit`: the first send answers `429` with an hour to wait; `limitday`: with a
+/// day (the 5-a-day limit at its longest), and the photo is not uploaded either, so nothing is written
+/// (usable on a read-only account). Several: `offline,upload`. For screenshots of the error states
+/// (screens.md §0.6).
 @MainActor
 enum VerificationDebugFailures {
     enum Point: String {
@@ -79,13 +82,28 @@ enum VerificationDebugFailures {
         case submit = "limit"
     }
 
-    private static var used: Set<Point> = []
+    private static var used: Set<String> = []
+    private static var loads = 0
+
+    /// `limitday`: a made-up key instead of the upload.
+    static var fakesUpload: Bool {
+        (UserDefaults.standard.string(forKey: "TaleedDebugVerification") ?? "").split(separator: ",").contains("limitday")
+    }
 
     static func fail(_ point: Point) throws(ApiError) {
-        let modes = (UserDefaults.standard.string(forKey: "TaleedDebugVerification") ?? "").split(separator: ",").map(String.init)
-        guard modes.contains(point.rawValue), !used.contains(point) else { return }
-        used.insert(point)
-        throw point == .submit ? .rateLimited(retryAfter: 3600) : .network
+        let modes = Set((UserDefaults.standard.string(forKey: "TaleedDebugVerification") ?? "").split(separator: ",").map(String.init))
+        if point == .load {
+            loads += 1
+            if loads == 2, modes.contains("refresh") { throw .network }
+        }
+        let mode = point == .submit && modes.contains("limitday") ? "limitday" : point.rawValue
+        guard modes.contains(mode), !used.contains(mode) else { return }
+        used.insert(mode)
+        switch mode {
+        case "limit": throw .rateLimited(retryAfter: 3600)
+        case "limitday": throw .rateLimited(retryAfter: 86_400)
+        default: throw .network
+        }
     }
 }
 #endif
