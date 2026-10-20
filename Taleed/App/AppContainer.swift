@@ -21,6 +21,9 @@ final class AppContainer {
     let orderChanges = OrderChangeCenter()
     /// The conversations the member reads, for the inbox's rows (G9).
     let conversationReads = ConversationReads()
+    /// Tells an open notifications screen that something new arrived (G15): a `/notifications` link,
+    /// and the pushes once the app receives them (G16).
+    let notificationsFeed = NotificationsFeed()
     /// Brands and sizes of the Explore filter sheet.
     let exploreReferences: ExploreReferenceStore
     let router = AppRouter()
@@ -78,6 +81,7 @@ final class AppContainer {
             try await api.openConversation(listingId: listingId, buyerId: buyerId)
         }
         router.websiteLinks = { [launch] in launch.config?.links ?? WebsiteLinks() }
+        router.onNotificationsOpened = { [notificationsFeed] in notificationsFeed.somethingArrived() }
         favorites.onFailure = { [toasts] error in toasts.show(error: error) }
         favorites.onRemoved = { [toasts, languageManager] _ in
             toasts.show(languageManager.string(.appNotFoundTitle), kind: .info)

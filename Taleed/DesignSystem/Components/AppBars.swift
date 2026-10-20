@@ -300,6 +300,9 @@ struct ListRow: View {
     let label: String
     var leadingIcon: TaleedIcon?
     var trailingText: String?
+    /// An unread count before the chevron (hidden at 0, "9+" above 9), with its VoiceOver text.
+    var badgeCount = 0
+    var badgeAccessibilityLabel: String?
     var showsChevron = false
     var showsDivider = true
     var labelColor: Color = TaleedColor.textPrimary
@@ -317,6 +320,9 @@ struct ListRow: View {
                 Text(trailingText)
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textSecondary)
+            }
+            if badgeCount > 0 {
+                CountBadge(count: badgeCount, accessibilityLabel: badgeAccessibilityLabel ?? "", maxCount: 9)
             }
             if isSelected { TaleedIconView(.check, size: 20, color: TaleedColor.brandPrimary) }
             if showsChevron { TaleedIconView(.caretRight, size: 18, color: TaleedColor.textSecondary) }

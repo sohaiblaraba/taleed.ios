@@ -671,4 +671,10 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case walletMinPayout = "wallet_min_payout"
     case referralsVoucherExpires = "referrals_voucher_expires"
     case appWalletAmountRange = "app_wallet_amount_range"
+
+    // Notifications (G15): website keys.
+    case notificationsTitle = "notifications_title"
+    case notificationsEmpty = "notifications_empty"
+    case navNotifications = "nav_notifications"
+    case appA11yUnread = "app_a11y_unread"
 }

@@ -11,6 +11,8 @@ struct ProfileView: View {
     /// (`GET /me` does not carry it).
     @State private var walletHeadline: Int?
 
+    private var unreadNotifications: Int { session.user?.unreadNotifications ?? 0 }
+
     var body: some View {
         ShellScreen {
             TaleedTopAppBar(title: l10n.string(.tabProfile))
@@ -52,6 +54,13 @@ struct ProfileView: View {
                                 router.push(.wallet)
                             }
                             .accessibilityIdentifier("profile.wallet")
+                            // The bell's count (`counts.unreadNotifications`).
+                            ListRow(label: l10n.string(.navNotifications), badgeCount: unreadNotifications,
+                                    badgeAccessibilityLabel: l10n.format(.appA11yUnreadNotifications, unreadNotifications),
+                                    showsChevron: true) {
+                                router.push(.notifications)
+                            }
+                            .accessibilityIdentifier("profile.notifications")
                         }
                         ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
                             router.push(.settings)

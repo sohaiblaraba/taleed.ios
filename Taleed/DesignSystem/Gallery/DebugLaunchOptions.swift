@@ -5,7 +5,7 @@ import Foundation
 ///
 ///     -TaleedDebugTab profile                  select a tab (home, explore, sell, messages, profile)
 ///     -TaleedDebugProfilePath settings,designSystem   (settings, designSystem, developerMenu, favorites,
-///                                              myListings, orders, wallet)
+///                                              myListings, orders, wallet, notifications)
 ///     -TaleedDebugOpenURL /listings/42             open a link through the router once the shell shows
 ///     -TaleedGallerySection buttons            scroll the design-system gallery to a section
 ///     -TaleedGalleryLargeText YES              turn on the gallery's "Text 200 %" switch
@@ -44,6 +44,9 @@ import Foundation
 ///     -TaleedDebugOrders offline               the orders list's first page fails offline (then works);
 ///                                              `empty` answers no orders
 ///     -TaleedDebugWallet offline               the wallet's first load fails offline (then works)
+///     -TaleedDebugNotifications offline        the notifications' first page fails offline (then works);
+///                                              `empty` answers no notifications; `hidden`: a first page
+///                                              without rows that has a next page (the real first page)
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor
@@ -95,6 +98,7 @@ private extension AppRoute {
         case "myListings": self = .myListings
         case "orders": self = .orders
         case "wallet": self = .wallet
+        case "notifications": self = .notifications
         default: return nil
         }
     }

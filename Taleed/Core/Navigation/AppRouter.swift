@@ -41,6 +41,9 @@ final class AppRouter {
     /// Called when a destination opens once the shell shows (a link, a push, a launch argument): the
     /// welcome screen steps aside for it.
     @ObservationIgnored var onDestinationOpened: (() -> Void)?
+    /// Called when a link or a push opens the notifications screen: one already open reloads and marks
+    /// read again (`NotificationsFeed`).
+    @ObservationIgnored var onNotificationsOpened: (() -> Void)?
 
     /// The action waiting for sign-in, run once the sheet closes signed in.
     @ObservationIgnored private var afterSignIn: (() -> Void)?
@@ -141,10 +144,11 @@ final class AppRouter {
             } else {
                 let (tab, stack) = Self.canonicalStack(for: route)
                 show(tab, stack: stack.map(\.reopened))
+                if route == .notifications { onNotificationsOpened?() }
             }
         case let .listingChat(listingId, memberId):
             if isSignedIn() {
-                resolveListingChat(listingId: listingId, memberId: memberId)
+                resolveListingChat(listingId: listingId, memberId: memberId) { [weak self] in self?.open(.screen($0)) }
             } else {
                 requireSignIn { [weak self] in self?.open(destination) }
             }
@@ -160,6 +164,34 @@ final class AppRouter {
                 pendingPaymentReturn = paymentReturn
                 open(.screen(.wallet))
             }
+        }
+    }
+
+    /// Opens a link that a screen shows (a notification row): a screen goes on top of the current tab,
+    /// so that back returns to the screen the member tapped it on; a screen already on top stays as it is.
+    /// A tab (Home, the inbox…), a payment return or sign-up opens as a link does.
+    func openFromScreen(_ destination: AppDestination) {
+        switch destination {
+        case let .screen(route):
+            guard path(selectedTab).last != route else { return }
+            if route.requiresSignIn {
+                pushSignedIn(route.reopened)
+            } else {
+                push(route.reopened)
+            }
+        case let .explore(query) where !query.isEmpty:
+            push(AppRoute.search(query).reopened)
+        case let .listingChat(listingId, memberId):
+            // On the tab it was tapped on, even when the member switched tabs while it resolved; once.
+            guard !isResolvingLink else { return }
+            let tab = selectedTab
+            requireSignIn { [weak self] in
+                self?.resolveListingChat(listingId: listingId, memberId: memberId) { route in
+                    self?.paths[tab, default: []].append(route)
+                }
+            }
+        case .home, .explore, .sell, .inbox, .profile, .signUp, .paymentReturn:
+            open(destination)
         }
     }
 
@@ -216,9 +248,10 @@ final class AppRouter {
         selectedTab = tab
     }
 
-    private func resolveListingChat(listingId: String, memberId: String?) {
+    /// `POST /conversations`, then `present` the conversation, or the listing when that fails.
+    private func resolveListingChat(listingId: String, memberId: String?, present: @escaping (AppRoute) -> Void) {
         guard let resolveConversation else {
-            open(.screen(.listing(id: listingId)))
+            present(.listing(id: listingId))
             return
         }
         isResolvingLink = true
@@ -228,10 +261,10 @@ final class AppRouter {
                 let conversationId = try await resolveConversation(listingId, memberId)
                 // The member writes first, like "Envoyer un message" (or the seller after a "new favorite"
                 // notification): the keyboard opens.
-                open(.screen(.conversation(id: conversationId, focusesComposer: true)))
+                present(.conversation(id: conversationId, focusesComposer: true))
             } catch {
                 // Not the seller (`403 forbidden`), one's own listing, a removed listing…: the listing itself.
-                open(.screen(.listing(id: listingId)))
+                present(.listing(id: listingId))
             }
         }
     }

@@ -13,8 +13,17 @@ import SwiftUI
 /// ```
 ///
 /// The content goes in a `ScrollView`; pass a lazy stack or grid so rows load as they appear.
+///
+/// A screen that does more after a first page (the notifications mark it read) passes its own `load`,
+/// `refresh` and `retry`; by default they are the list's.
 struct PagedListView<Item: Identifiable & Sendable, Content: View, Empty: View>: View where Item.ID: Sendable {
     let list: PagedList<Item>
+    /// The first load (`.task`). Default: `list.loadIfNeeded()`.
+    var load: (() async -> Void)?
+    /// Pull-to-refresh. Default: `list.refresh()`.
+    var refresh: (() async -> Void)?
+    /// The error state's Retry. Default: `list.reload()`.
+    var retry: (() async -> Void)?
     @ViewBuilder let content: ([Item]) -> Content
     @ViewBuilder let empty: () -> Empty
     @Environment(LanguageManager.self) private var l10n
@@ -33,14 +42,22 @@ struct PagedListView<Item: Identifiable & Sendable, Content: View, Empty: View>:
                         PaginationFooter(list: list)
                     }
                 }
-                .refreshable { await list.refresh() }
+                .refreshable {
+                    if let refresh { await refresh() } else { await list.refresh() }
+                }
             } else if let error = list.error {
-                ErrorStateView(error: error) { Task { await list.reload() } }
+                ErrorStateView(error: error) {
+                    Task {
+                        if let retry { await retry() } else { await list.reload() }
+                    }
+                }
             } else {
                 LoadingStateView()
             }
         }
-        .task { await list.loadIfNeeded() }
+        .task {
+            if let load { await load() } else { await list.loadIfNeeded() }
+        }
         .onChange(of: list.refreshError) { _, error in
             if let error { toasts.show(error: error) }
         }
