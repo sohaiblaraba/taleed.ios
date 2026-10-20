@@ -2,7 +2,7 @@ import PhotosUI
 import SwiftUI
 
 /// The dispute form (screens.md §2 G12 screen 4 and §7 G12; website `order-actions.tsx` dialog): the
-/// title "Signaler un problème" and the website's notice, the reasons of `GET /catalog` as radio rows,
+/// title "Signaler un problème" and that the funds will be frozen, the reasons of `GET /catalog` as radio rows,
 /// "Décrivez le problème" (10 to 2 000 characters), the evidence photos with their hint (required or
 /// optional for the reason), and "Ouvrir le litige".
 ///
@@ -27,7 +27,8 @@ struct DisputeFormSheet: View {
             SheetHeader(title: l10n.string(.disputesOpenTitle), isClosable: !model.isSending) { dismiss() }
             ScrollView {
                 VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
-                    Text(l10n.string(.ordersDisputeBanner))
+                    // Nothing is open yet: what will happen, not the open dispute's banner.
+                    Text(l10n.string(.appDisputeFormIntro))
                         .taleedFont(TaleedFont.bodySmall)
                         .foregroundStyle(TaleedColor.textBody)
                         .fixedSize(horizontal: false, vertical: true)
@@ -169,7 +170,8 @@ struct ReviewFormSheet: View {
             .accessibilityIdentifier("review.submit")
         }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
-        .presentationDetents([.large])
+        // Sized to the stars, the comment and the button; the comment can take the full height.
+        .presentationDetents([.medium, .large])
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)
         .presentationBackground(TaleedColor.surfacePrimary)
@@ -190,8 +192,8 @@ struct RatingPicker: View {
                     rating = star
                 } label: {
                     StarShape()
-                        .fill(star <= rating ? TaleedColor.warningIcon : Color.clear)
-                        .overlay(StarShape().stroke(star <= rating ? TaleedColor.warningIcon
+                        .fill(star <= rating ? TaleedColor.feedbackWarning : Color.clear)
+                        .overlay(StarShape().stroke(star <= rating ? TaleedColor.feedbackWarning
                             : TaleedColor.textSecondary.opacity(0.45), lineWidth: 1.5))
                         .frame(width: 32, height: 32)
                         .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)

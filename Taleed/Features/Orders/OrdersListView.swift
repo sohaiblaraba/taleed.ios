@@ -105,40 +105,39 @@ private struct OrdersTabContent: View {
 }
 
 /// A row: the photo (56 x 72, as the checkout item), the title with "×2" for a bundle, the server's
-/// status badge, "T-000104 · @amina · 4 oct. 2026", and the amount at the end.
+/// status badge, "T-000104 · @amina · 4 oct. 2026", and the amount at the end. From accessibility text
+/// sizes on, the row stacks: photo, title (2 lines), badge, amount, then the meta line, so no word breaks.
 struct OrderRowView: View {
     let order: OrderRow
     let onTap: () -> Void
     @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: TaleedSpacing.s12) {
-                RemoteImage(url: order.imageURL)
-                    .frame(width: TaleedSize.checkoutThumbWidth, height: TaleedSize.checkoutThumbHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.s, style: .continuous))
-                VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-                    HStack(spacing: TaleedSpacing.s8) {
-                        Text(verbatim: order.title.isolatedByContent)
-                            .taleedFont(TaleedFont.bodyLarge.with(weight: .semibold))
-                            .foregroundStyle(TaleedColor.textPrimary)
-                            .lineLimit(1)
-                        if order.itemCount > 1 {
-                            TaleedBadge(title: "×\(order.itemCount)", tone: .neutral)
-                                .environment(\.layoutDirection, .leftToRight)
-                                .fixedSize()
-                        }
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                        thumbnail
+                        title(lineLimit: 2)
+                        badge
+                        price
+                        metaText
                     }
-                    TaleedBadge(title: order.statusLabel, tone: order.status.badgeTone)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(meta)
-                        .taleedFont(TaleedFont.meta)
-                        .foregroundStyle(TaleedColor.textSecondary)
-                        .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    HStack(spacing: TaleedSpacing.s12) {
+                        thumbnail
+                        VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
+                            title(lineLimit: 1)
+                            badge
+                            metaText
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        price
+                            .layoutPriority(1)
+                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                PriceText(amount: order.amount, style: TaleedFont.buttonMedium)
-                    .layoutPriority(1)
             }
             .padding(TaleedSize.productListRowPadding)
             .background(TaleedColor.surfacePrimary,
@@ -149,6 +148,42 @@ struct OrderRowView: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("orders.row.\(order.number)")
+    }
+
+    private var thumbnail: some View {
+        RemoteImage(url: order.imageURL)
+            .frame(width: TaleedSize.checkoutThumbWidth, height: TaleedSize.checkoutThumbHeight)
+            .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.s, style: .continuous))
+    }
+
+    private func title(lineLimit: Int) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s8) {
+            Text(verbatim: order.title.isolatedByContent)
+                .taleedFont(TaleedFont.bodyLarge.with(weight: .semibold))
+                .foregroundStyle(TaleedColor.textPrimary)
+                .lineLimit(lineLimit)
+            if order.itemCount > 1 {
+                TaleedBadge(title: "×\(order.itemCount)", tone: .neutral)
+                    .environment(\.layoutDirection, .leftToRight)
+                    .fixedSize()
+            }
+        }
+    }
+
+    private var badge: some View {
+        TaleedBadge(title: order.statusLabel, tone: order.status.badgeTone)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var price: some View {
+        PriceText(amount: order.amount, style: TaleedFont.buttonMedium)
+    }
+
+    private var metaText: some View {
+        Text(meta)
+            .taleedFont(TaleedFont.meta)
+            .foregroundStyle(TaleedColor.textSecondary)
+            .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
     }
 
     /// "T-000104 · @amina · 4 oct. 2026"; a deleted member reads "Compte supprimé".

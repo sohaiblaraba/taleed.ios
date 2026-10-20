@@ -11826,13 +11826,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "E.G. WELCOME"
+            "value": "E.g. WELCOME"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "EX. WELCOME"
+            "value": "Ex. WELCOME"
           }
         }
       }
@@ -21103,6 +21103,144 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prix accepté : %@"
+          }
+        }
+      }
+    },
+    "app_order_message_seller": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مراسلة البائع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message seller"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer un message au vendeur"
+          }
+        }
+      }
+    },
+    "app_order_generating_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ إنشاء الوصل…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generating the label…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Génération du bordereau…"
+          }
+        }
+      }
+    },
+    "app_order_opening_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ فتح الوصل…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening the label…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouverture du bordereau…"
+          }
+        }
+      }
+    },
+    "app_order_ship_hint_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُنشأ الوصل ثم يُنزَّل. اطبعه والصقه جيدًا على الطرد، ثم أودعه في أقرب نقطة تجميع أو وكالة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The label is generated and downloaded. Print it, stick it flat on the parcel, then drop the parcel at the nearest collection point or agency."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le bordereau est généré puis téléchargé. Imprimez-le, collez-le bien à plat sur le colis, puis déposez le colis au point de collecte ou à l’agence la plus proche."
+          }
+        }
+      }
+    },
+    "app_order_ship_hint_sender": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتم تحديث التتبع تلقائيًا بعد ذلك. المُرسِل المذكور هو Taleed (الحساب التجاري لدى الناقل) — هذا طبيعي: رقم التتبع يربط الطرد بطلبك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tracking updates automatically afterwards. The sender shown is Taleed (carrier merchant account) — that's expected: the tracking number ties the parcel to your order."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le suivi se met ensuite à jour automatiquement. L’expéditeur mentionné est Taleed (compte marchand du transporteur) — c’est normal : le numéro de suivi lie le colis à votre commande."
+          }
+        }
+      }
+    },
+    "app_dispute_form_intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستُجمَّد الأموال طوال فترة الوساطة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funds will be frozen during mediation."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les fonds seront gelés le temps de la médiation."
           }
         }
       }

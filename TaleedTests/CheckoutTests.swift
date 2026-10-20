@@ -305,4 +305,27 @@ struct PaymentOutcomeTests {
         #expect(daysUntil(now.addingTimeInterval(60), from: now) == 1)
         #expect(daysUntil(nil, from: now) == nil)
     }
+
+    /// The saved address on one line never says the commune or the wilaya twice.
+    @Test func savedAddressTitleLeavesOutRepeatedPlaces() {
+        func address(_ line: String, commune: String, wilaya: String) -> SavedAddress {
+            SavedAddress(id: "a", recipientName: "Lina K", phone: "0661000000", wilaya: CatalogWilaya(id: 25, name: wilaya),
+                         communeId: 1, commune: commune, addressLine: line, isDefault: true)
+        }
+        #expect(CheckoutRules.addressTitle(address("7 rue des Martyrs, Constantine", commune: "Constantine", wilaya: "Constantine"))
+            == "7 rue des Martyrs, Constantine")
+        #expect(CheckoutRules.addressTitle(address("7 rue des Martyrs", commune: "Constantine", wilaya: "Constantine"))
+            == "7 rue des Martyrs, Constantine")
+        #expect(CheckoutRules.addressTitle(address("68 rue des Martyrs, Hydra", commune: "Hydra", wilaya: "Alger"))
+            == "68 rue des Martyrs, Hydra, Alger")
+        #expect(CheckoutRules.addressTitle(address("12 bd Zighout", commune: "El Khroub", wilaya: "Constantine"))
+            == "12 bd Zighout, El Khroub, Constantine")
+        #expect(CheckoutRules.addressTitle(address("5 rue Hasni, BEJAIA", commune: "Béjaïa", wilaya: "Béjaïa"))
+            == "5 rue Hasni, BEJAIA, Béjaïa")
+        #expect(CheckoutRules.addressTitle(address("5 rue Hasni, Bejaia", commune: "Bejaia", wilaya: "Béjaïa"))
+            == "5 rue Hasni, Bejaia")
+        // Only a whole name: "Ain Oulmene" does not end with the wilaya "Mene".
+        #expect(CheckoutRules.addressTitle(address("2 cité 300", commune: "Ain Oulmene", wilaya: "Mene"))
+            == "2 cité 300, Ain Oulmene, Mene")
+    }
 }

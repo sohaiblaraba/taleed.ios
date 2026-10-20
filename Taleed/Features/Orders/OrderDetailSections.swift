@@ -1,21 +1,41 @@
 import SwiftUI
 
-/// The status badge with the server's label, and the date of the order.
+/// The status badge with the server's label, and the date of the order: at the end of the row, or
+/// under the badge from accessibility text sizes on (the date never breaks).
 struct OrderStatusHeader: View {
     let order: OrderDetailInfo
     @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .center, spacing: TaleedSpacing.s8) {
-            TaleedBadge(title: order.statusLabel, tone: order.status.badgeTone)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityIdentifier("order.status")
-            Spacer(minLength: TaleedSpacing.s8)
-            Text(OrderText.date(order.createdAt, locale: l10n.language.formattingLocale))
-                .taleedFont(TaleedFont.caption)
-                .foregroundStyle(TaleedColor.textSecondary)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                    badge
+                    date
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack(alignment: .center, spacing: TaleedSpacing.s8) {
+                    badge
+                    Spacer(minLength: TaleedSpacing.s8)
+                    date
+                }
+            }
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private var badge: some View {
+        TaleedBadge(title: order.statusLabel, tone: order.status.badgeTone)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("order.status")
+    }
+
+    private var date: some View {
+        Text(OrderText.date(order.createdAt, locale: l10n.language.formattingLocale))
+            .taleedFont(TaleedFont.caption)
+            .foregroundStyle(TaleedColor.textSecondary)
     }
 }
 
@@ -53,9 +73,11 @@ struct OrderNoticesView: View {
         case let .dropOffBy(date):
             InlineAlert(kind: .warning, title: l10n.format(.ordersDropOffBy, OrderText.date(date, locale: locale)))
         case let .cashOnDelivery(cash):
-            InlineAlert(kind: .info, title: cash.deliveryFee > 0
+            // The pick-up notice's shape: a short title, the amounts under it.
+            let notice = OrderText.titled(cash.deliveryFee > 0
                 ? l10n.format(.ordersCodNotice, price(cash.total - cash.deliveryFee), price(cash.deliveryFee))
                 : l10n.format(.ordersCodNoticeIncluded, price(cash.total)))
+            InlineAlert(kind: .info, title: notice.title, message: notice.body)
         case let .pickupReady(place):
             InlineAlert(kind: .info, title: l10n.string(.ordersPickupReadyTitle),
                         message: l10n.format(order.side == .seller ? .ordersPickupReadySeller : .ordersPickupReadyBuyer,
@@ -110,39 +132,34 @@ struct OrderGoodsCard: View {
     let order: OrderDetailInfo
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
-            HStack(alignment: .top, spacing: TaleedSpacing.s12) {
-                Button { openListing(order.items.first?.listingId) } label: {
-                    RemoteImage(url: order.imageURL)
-                        .frame(width: TaleedSize.checkoutThumbWidth, height: TaleedSize.checkoutThumbHeight)
-                        .clipShape(RoundedRectangle(cornerRadius: TaleedSize.checkoutThumbRadius, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .disabled(order.isBundle)
-                .accessibilityHidden(true)
+            if dynamicTypeSize.isAccessibilitySize {
+                // Stacked: nothing shares a line with the title, the amount or the member.
                 VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-                    if order.isBundle {
-                        Text(l10n.format(.ordersBundleTitle, order.items.count))
-                            .taleedFont(TaleedFont.bodyLarge.with(weight: .semibold))
-                            .foregroundStyle(TaleedColor.textPrimary)
-                    } else {
-                        Button { openListing(order.items.first?.listingId) } label: {
-                            Text(verbatim: order.title.isolatedByContent)
-                                .taleedFont(TaleedFont.bodyLarge.with(weight: .semibold))
-                                .foregroundStyle(TaleedColor.textPrimary)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.leading)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("order.listing")
-                    }
+                    thumbnail
+                    title
+                    amount
                     counterpart
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                PriceText(amount: OrderRules.headlineAmount(for: order), style: TaleedFont.buttonMedium)
-                    .layoutPriority(1)
+            } else {
+                // The member's row spans the width under the title and the amount: a long handle is
+                // cut only when it does not fit there.
+                HStack(alignment: .top, spacing: TaleedSpacing.s12) {
+                    thumbnail
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                        HStack(alignment: .top, spacing: TaleedSpacing.s12) {
+                            title
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            amount
+                                .layoutPriority(1)
+                        }
+                        counterpart
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
             if order.isBundle {
                 Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)
@@ -173,7 +190,42 @@ struct OrderGoodsCard: View {
         .taleedCard()
     }
 
-    /// "Vendeur" and the avatar and handle (opens the profile), or "Compte supprimé".
+    private var thumbnail: some View {
+        Button { openListing(order.items.first?.listingId) } label: {
+            RemoteImage(url: order.imageURL)
+                .frame(width: TaleedSize.checkoutThumbWidth, height: TaleedSize.checkoutThumbHeight)
+                .clipShape(RoundedRectangle(cornerRadius: TaleedSize.checkoutThumbRadius, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(order.isBundle)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private var title: some View {
+        if order.isBundle {
+            Text(l10n.format(.ordersBundleTitle, order.items.count))
+                .taleedFont(TaleedFont.bodyLarge.with(weight: .semibold))
+                .foregroundStyle(TaleedColor.textPrimary)
+        } else {
+            Button { openListing(order.items.first?.listingId) } label: {
+                Text(verbatim: order.title.isolatedByContent)
+                    .taleedFont(TaleedFont.bodyLarge.with(weight: .semibold))
+                    .foregroundStyle(TaleedColor.textPrimary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("order.listing")
+        }
+    }
+
+    private var amount: some View {
+        PriceText(amount: OrderRules.headlineAmount(for: order), style: TaleedFont.buttonMedium)
+    }
+
+    /// "Vendeur" and the avatar and handle (opens the profile), or "Compte supprimé". From accessibility
+    /// text sizes on, the role sits above the avatar and handle.
     @ViewBuilder
     private var counterpart: some View {
         let role = l10n.string(order.side == .seller ? .ordersBuyer : .ordersSeller)
@@ -181,25 +233,22 @@ struct OrderGoodsCard: View {
             Button {
                 if let username = member.username { router.push(.member(username: username)) }
             } label: {
-                HStack(spacing: TaleedSpacing.s8) {
-                    TaleedAvatar(initials: TaleedAvatar.initials(from: member.username ?? member.displayName), size: 24,
-                                 imageURL: member.avatarURL)
-                    Text(role)
-                        .taleedFont(TaleedFont.caption)
-                        .foregroundStyle(TaleedColor.textSecondary)
-                    Text(verbatim: member.displayName.isolatedLeftToRight)
-                        .taleedFont(TaleedFont.bodyRegular)
-                        .foregroundStyle(TaleedColor.textPrimary)
-                        .lineLimit(1)
-                    if member.isOfficial {
-                        TaleedIconView(.sealCheck, size: 14, color: TaleedColor.brandPrimary)
-                            .accessibilityLabel(l10n.string(.profileOfficial))
-                    } else if member.isVerified {
-                        TaleedIconView(.shieldCheck, size: 14, color: TaleedColor.feedbackSuccess)
-                            .accessibilityLabel(l10n.string(.profileVerified))
+                Group {
+                    if dynamicTypeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
+                            roleText(role)
+                            memberLine(member)
+                        }
+                    } else {
+                        HStack(spacing: TaleedSpacing.s8) {
+                            avatar(member)
+                            roleText(role)
+                                .fixedSize()
+                            handle(member)
+                        }
                     }
                 }
-                .frame(minHeight: TaleedSize.touchTargetMin)
+                .frame(maxWidth: .infinity, minHeight: TaleedSize.touchTargetMin, alignment: .leading)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -209,14 +258,46 @@ struct OrderGoodsCard: View {
         } else {
             HStack(spacing: TaleedSpacing.s8) {
                 TaleedAvatar(initials: "", size: 24)
-                Text(role)
-                    .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                roleText(role)
                 Text(l10n.string(.ordersDeletedAccount))
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textSecondary)
             }
             .accessibilityElement(children: .combine)
+        }
+    }
+
+    private func roleText(_ role: String) -> some View {
+        Text(role)
+            .taleedFont(TaleedFont.caption)
+            .foregroundStyle(TaleedColor.textSecondary)
+    }
+
+    private func avatar(_ member: MemberRef) -> some View {
+        TaleedAvatar(initials: TaleedAvatar.initials(from: member.username ?? member.displayName), size: 24,
+                     imageURL: member.avatarURL)
+    }
+
+    private func memberLine(_ member: MemberRef) -> some View {
+        HStack(spacing: TaleedSpacing.s8) {
+            avatar(member)
+            handle(member)
+        }
+    }
+
+    /// The handle, then the official or verified mark.
+    @ViewBuilder
+    private func handle(_ member: MemberRef) -> some View {
+        Text(verbatim: member.displayName.isolatedLeftToRight)
+            .taleedFont(TaleedFont.bodyRegular)
+            .foregroundStyle(TaleedColor.textPrimary)
+            .lineLimit(1)
+        if member.isOfficial {
+            TaleedIconView(.sealCheck, size: 14, color: TaleedColor.brandPrimary)
+                .accessibilityLabel(l10n.string(.profileOfficial))
+        } else if member.isVerified {
+            TaleedIconView(.shieldCheck, size: 14, color: TaleedColor.feedbackSuccess)
+                .accessibilityLabel(l10n.string(.profileVerified))
         }
     }
 

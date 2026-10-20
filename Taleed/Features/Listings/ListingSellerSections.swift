@@ -61,7 +61,7 @@ struct ListingSellerSection: View {
     private var rating: some View {
         if let rating = seller.rating {
             HStack(spacing: TaleedSpacing.s4) {
-                TaleedIconView(.star, size: 14, color: TaleedColor.warningIcon)
+                TaleedIconView(.star, size: 14, color: TaleedColor.feedbackWarning)
                 Text(verbatim: "\(RatingText.average(rating.average)) · \(rating.count)".isolatedLeftToRight)
                     .taleedFont(TaleedFont.caption)
                     .foregroundStyle(TaleedColor.textBody)

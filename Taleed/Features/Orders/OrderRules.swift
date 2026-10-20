@@ -205,7 +205,8 @@ enum OrderText {
         formatter.locale = webLocale(AppLanguage(locale: locale))
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        return formatter.string(from: date)
+        // No break inside a date ("21 / oct. 2026"): it wraps as one unit in a line of text.
+        return formatter.string(from: date).replacingOccurrences(of: " ", with: Self.noBreakSpace)
     }
 
     static func dateTime(_ date: Date, locale: Locale) -> String {
@@ -213,10 +214,23 @@ enum OrderText {
         let formatter = DateFormatter()
         formatter.locale = webLocale(language)
         formatter.dateFormat = switch language {
-        case .fr, .en: "d MMM y, HH:mm"
+        // The date keeps together; the line may break after the comma, before the time.
+        case .fr, .en: "d\u{00A0}MMM\u{00A0}y, HH:mm"
         case .ar: "dd\u{200F}/MM\u{200F}/y\u{060C} h:mm a"
         }
         return formatter.string(from: date)
+    }
+
+    private static let noBreakSpace = "\u{00A0}"
+
+    /// The website's "Paiement à la livraison — le transporteur encaisse …" as a title and a body
+    /// ("Paiement à la livraison" / "Le transporteur encaisse …"); a text without " — " is all title.
+    static func titled(_ text: String) -> (title: String, body: String?) {
+        guard let range = text.range(of: " — ") else { return (text, nil) }
+        let title = String(text[..<range.lowerBound])
+        let body = String(text[range.upperBound...])
+        guard !title.isEmpty, let first = body.first else { return (text, nil) }
+        return (title, first.uppercased() + body.dropFirst())
     }
 
     /// The website's `Intl` locale for the language.

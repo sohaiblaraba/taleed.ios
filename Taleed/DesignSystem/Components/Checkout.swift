@@ -31,7 +31,8 @@ struct CheckoutItem: View {
 
 /// Delivery option card (design-system §4.4): icon, name and supporting text, radio, gap 12. Selected:
 /// `blue/50` fill and a brand border. Single choice; the whole card is the tap target. `fee`: the
-/// delivery price at the end of the name row, as the website shows both kinds side by side.
+/// delivery price at the end of the name row, as the website shows both kinds side by side; from
+/// accessibility text sizes on, on its own line under the name, so the name keeps the full width.
 struct DeliveryOption: View {
     let icon: TaleedIcon
     let title: String
@@ -39,24 +40,25 @@ struct DeliveryOption: View {
     let selected: Bool
     var fee: String?
     let onSelect: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: onSelect) {
             HStack(alignment: .top, spacing: TaleedSpacing.s12) {
                 TaleedIconView(icon, size: 24, color: selected ? TaleedColor.brandPrimary : TaleedColor.textSecondary)
                 VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-                    HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s8) {
-                        Text(title)
-                            .taleedFont(TaleedFont.buttonMedium)
-                            .foregroundStyle(TaleedColor.textPrimary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        if let fee {
-                            Text(fee)
-                                .taleedFont(TaleedFont.buttonMedium)
-                                .foregroundStyle(TaleedColor.textPrimary)
-                                .monospacedDigit()
-                                .multilineTextAlignment(.trailing)
-                                .layoutPriority(1)
+                    if dynamicTypeSize.isAccessibilitySize {
+                        titleText
+                        if let fee { feeText(fee) }
+                    } else {
+                        HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s8) {
+                            titleText
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            if let fee {
+                                feeText(fee)
+                                    .multilineTextAlignment(.trailing)
+                                    .layoutPriority(1)
+                            }
                         }
                     }
                     Text(description)
@@ -74,6 +76,19 @@ struct DeliveryOption: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private var titleText: some View {
+        Text(title)
+            .taleedFont(TaleedFont.buttonMedium)
+            .foregroundStyle(TaleedColor.textPrimary)
+    }
+
+    private func feeText(_ fee: String) -> some View {
+        Text(fee)
+            .taleedFont(TaleedFont.buttonMedium)
+            .foregroundStyle(TaleedColor.textPrimary)
+            .monospacedDigit()
     }
 }
 
@@ -175,6 +190,8 @@ struct PromoCodeField: View {
     @Binding var code: String
     var error: String?
     var isApplying = false
+    /// The label as a section eyebrow, as the other sections of a form made of eyebrowed groups (checkout).
+    var labelIsEyebrow = false
     let onApply: () -> Void
     @Environment(\.locale) private var locale
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -185,7 +202,12 @@ struct PromoCodeField: View {
         let fieldWidth = TaleedFont.bodyRegular.width(of: placeholder, sizeCategory: UIContentSizeCategory(dynamicTypeSize))
             + 2 * TaleedSize.inputPaddingX
         VStack(alignment: .leading, spacing: TaleedSize.inputLabelGap) {
-            FieldLabel(text: label, color: error == nil ? TaleedColor.textPrimary : TaleedColor.feedbackError)
+            if labelIsEyebrow {
+                Eyebrow(text: label)
+                    .accessibilityAddTraits(.isHeader)
+            } else {
+                FieldLabel(text: label, color: error == nil ? TaleedColor.textPrimary : TaleedColor.feedbackError)
+            }
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .center, spacing: TaleedSpacing.s8) {
                     field(placeholder: placeholder, label: label)

@@ -69,8 +69,9 @@ struct OrderTimelineCard: View {
                         ForEach(scans) { scan in
                             HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s12) {
                                 VStack(alignment: .leading, spacing: 2) {
+                                    // The carrier's words in the brand font (only the tracking number is monospaced).
                                     Text(verbatim: scan.status)
-                                        .font(.system(.caption, design: .monospaced).weight(.semibold))
+                                        .taleedFont(TaleedFont.caption.with(weight: .semibold))
                                         .foregroundStyle(TaleedColor.textBody)
                                     if let place = scan.place {
                                         Text(verbatim: place)

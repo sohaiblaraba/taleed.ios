@@ -151,7 +151,7 @@ struct OrderDetailView: View {
                 }
                 if let conversationId = order.conversationId {
                     // The other member by role: "Message buyer" on a sale.
-                    let label: L10nKey = order.side == .seller ? .appOrderMessageBuyer : .listingMessageSeller
+                    let label: L10nKey = order.side == .seller ? .appOrderMessageBuyer : .appOrderMessageSeller
                     TaleedButton(title: l10n.string(label), kind: .tertiary, size: .large, leadingIcon: .chatCircle,
                                  isFullWidth: true) {
                         router.push(.conversation(id: conversationId))
@@ -197,7 +197,8 @@ struct OrderDetailView: View {
             .disabled(isBusy)
             .accessibilityIdentifier("order.openDispute")
         case .cancel:
-            TaleedButton(title: l10n.string(.ordersCancelOrder), kind: .hyperlink, size: .medium,
+            // Destructive: the danger link, not the blue of harmless links.
+            TaleedButton(title: l10n.string(.ordersCancelOrder), kind: .hyperlinkDanger, size: .medium,
                          isLoading: model.busy == .cancelling) {
                 confirmation = .cancel
             }
@@ -259,7 +260,8 @@ struct OrderDetailView: View {
                                   onCancel: { confirmation = nil },
                                   icon: .checkCircle, tone: .positive)
         case .ship:
-            shipModal(title: .ordersGetShippingLabel, message: .ordersGetShippingLabelHint)
+            // What to do with the label, then who it names as the sender as a muted aside.
+            shipModal(title: .ordersGetShippingLabel, message: .appOrderShipHintBody, footnote: .appOrderShipHintSender)
         case .replaceTestLabel:
             shipModal(title: .ordersGetRealShippingLabel, message: .ordersGetRealShippingLabelHint)
         case .acceptClaim:
@@ -287,7 +289,7 @@ struct OrderDetailView: View {
     }
 
     /// "Bordereau d'expédition" or "Générer le vrai bordereau": what happens, then "Générer et télécharger".
-    private func shipModal(title: L10nKey, message: L10nKey) -> ConfirmationModalCard {
+    private func shipModal(title: L10nKey, message: L10nKey, footnote: L10nKey? = nil) -> ConfirmationModalCard {
         ConfirmationModalCard(title: l10n.string(title), message: l10n.string(message),
                               confirmTitle: l10n.string(.ordersGenerateAndDownload),
                               onConfirm: {
@@ -295,7 +297,7 @@ struct OrderDetailView: View {
                                   ship()
                               },
                               onCancel: { confirmation = nil },
-                              icon: .truck, tone: .positive)
+                              icon: .truck, tone: .positive, footnote: footnote.map(l10n.string))
     }
 
 }

@@ -94,7 +94,9 @@ extension CheckoutFormView {
     var promo: some View {
         if let code = model.form.appliedPromoCode {
             VStack(alignment: .leading, spacing: TaleedSize.inputLabelGap) {
-                FieldLabel(text: l10n.string(.promoCodeLabel))
+                // An eyebrow, as the form's other sections.
+                Eyebrow(text: l10n.string(.promoCodeLabel))
+                    .accessibilityAddTraits(.isHeader)
                 HStack(spacing: TaleedSpacing.s8) {
                     TaleedBadge(title: code, icon: .check)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -107,7 +109,7 @@ extension CheckoutFormView {
             }
             .accessibilityIdentifier("checkout.promoApplied")
         } else {
-            PromoCodeField(code: promoBinding, error: promoErrorText, isApplying: model.isApplyingPromo) {
+            PromoCodeField(code: promoBinding, error: promoErrorText, isApplying: model.isApplyingPromo, labelIsEyebrow: true) {
                 Task { await model.applyPromo() }
             }
             .disabled(model.isPlacing)
@@ -236,8 +238,9 @@ extension CheckoutFormView {
         case .savedAddress:
             SellChoiceSheet(
                 title: l10n.string(.appCheckoutSavedAddress),
-                options: model.savedAddresses.map { FilterOption(value: $0.id, title: "\($0.recipientName) · \(addressTitle($0))") }
-                    + [FilterOption(value: Self.newAddressValue, title: l10n.string(.appCheckoutNewAddress))],
+                options: model.savedAddresses.map {
+                    FilterOption(value: $0.id, title: "\($0.recipientName) · \(CheckoutRules.addressTitle($0))")
+                } + [FilterOption(value: Self.newAddressValue, title: l10n.string(.appCheckoutNewAddress))],
                 selection: model.selectedAddressId ?? Self.newAddressValue
             ) { value in
                 Task { await model.selectSavedAddress(value == Self.newAddressValue ? nil : value) }

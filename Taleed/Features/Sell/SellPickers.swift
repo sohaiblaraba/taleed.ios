@@ -58,7 +58,7 @@ struct SellChoiceSheet: View {
             SellSheetHeader(title: title) { dismiss() }
             VStack(spacing: 0) {
                 ForEach(options) { option in
-                    FilterOptionRow(option: option, isSelected: option.value == selection) {
+                    FilterOptionRow(option: option, isSelected: option.value == selection, inset: TaleedSize.bottomSheetPaddingX) {
                         if let value = option.value { onSelect(value) }
                         dismiss()
                     }
@@ -71,7 +71,8 @@ struct SellChoiceSheet: View {
     }
 }
 
-/// A long list (the 58 wilayas) in a full-height sheet with a search field that also matches codes.
+/// A long list (the 58 wilayas) in a full-height sheet with a search field that also matches codes. A
+/// short one (a wilaya with few communes) opens half height, without the search field.
 struct SellSearchableChoiceSheet: View {
     let title: String
     let options: [FilterOption]
@@ -81,21 +82,29 @@ struct SellSearchableChoiceSheet: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(\.dismiss) private var dismiss
 
+    /// Under this many options, the list needs no search and no full height.
+    static let searchThreshold = 8
+
+    private var isShort: Bool { options.count < Self.searchThreshold }
+
     var body: some View {
         VStack(spacing: 0) {
             SellSheetHeader(title: title) { dismiss() }
-            TaleedTextField(text: $searchText, placeholder: l10n.string(.commonSearch), leadingIcon: .magnifyingGlass)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .padding(.horizontal, TaleedLayout.screenMargin)
-                .padding(.bottom, TaleedSpacing.s12)
-                .accessibilityIdentifier("sell.search")
+            if !isShort {
+                TaleedTextField(text: $searchText, placeholder: l10n.string(.commonSearch), leadingIcon: .magnifyingGlass)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
+                    .padding(.bottom, TaleedSpacing.s12)
+                    .accessibilityIdentifier("sell.search")
+            }
             let shown = options.filter { $0.matches(searchText) }
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(shown) { option in
-                            FilterOptionRow(option: option, isSelected: option.value == selection) {
+                            FilterOptionRow(option: option, isSelected: option.value == selection,
+                                            inset: TaleedSize.bottomSheetPaddingX) {
                                 if let value = option.value { onSelect(value) }
                                 dismiss()
                             }
@@ -117,7 +126,7 @@ struct SellSearchableChoiceSheet: View {
             }
         }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
-        .presentationDetents([.large])
+        .presentationDetents(isShort ? [.medium, .large] : [.large])
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)
         .presentationBackground(TaleedColor.surfacePrimary)

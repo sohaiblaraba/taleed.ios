@@ -157,8 +157,8 @@ struct RatingStarsView: View {
             ForEach(1...5, id: \.self) { star in
                 // Filled up to the rating, outlined after it (the design system's icons have no filled star).
                 StarShape()
-                    .fill(star <= value ? TaleedColor.warningIcon : Color.clear)
-                    .overlay(StarShape().stroke(star <= value ? TaleedColor.warningIcon : TaleedColor.textSecondary.opacity(0.45),
+                    .fill(star <= value ? TaleedColor.feedbackWarning : Color.clear)
+                    .overlay(StarShape().stroke(star <= value ? TaleedColor.feedbackWarning : TaleedColor.textSecondary.opacity(0.45),
                                                 lineWidth: 1))
                     .frame(width: size, height: size)
             }

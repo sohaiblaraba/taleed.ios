@@ -13,6 +13,28 @@ enum CheckoutLimits {
 
 /// The checks of the website's checkout form (`checkout-form.tsx`) and the API (slice D, Placing the order).
 enum CheckoutRules {
+    /// A saved address on one line: the street, then the commune and the wilaya, each left out when the
+    /// line already says it ("7 rue des Martyrs, Constantine" with Constantine / Constantine, not
+    /// "…, Constantine, Constantine"; "68 rue des Martyrs, Hydra, Alger").
+    static func addressTitle(_ address: SavedAddress) -> String {
+        var parts = [address.addressLine.trimmingCharacters(in: .whitespacesAndNewlines)].filter { !$0.isEmpty }
+        // The commune is often part of the street already ("68 rue des Martyrs, Hydra").
+        if !address.addressLine.localizedCaseInsensitiveContains(address.commune) {
+            parts.append(address.commune)
+        }
+        let wilaya = address.wilaya.name
+        if parts.last.map({ !endsWith($0, wilaya) }) ?? true { parts.append(wilaya) }
+        return parts.filter { !$0.isEmpty }.joined(separator: ", ")
+    }
+
+    /// "…, Constantine" ends with "constantine", ignoring case and accents, as a whole word.
+    private static func endsWith(_ text: String, _ name: String) -> Bool {
+        let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .anchored, .backwards]
+        guard !name.isEmpty, let range = text.range(of: name, options: options) else { return false }
+        guard range.lowerBound > text.startIndex else { return true }
+        return !text[text.index(before: range.lowerBound)].isLetter
+    }
+
     /// A number the carrier can call: 0, then 8 or 9 digits; spaces, dots and dashes are ignored
     /// (the contract's `^[\s.-]*0(?:[\s.-]*\d){8,9}[\s.-]*$`, read without its `pattern`).
     static func isValidPhone(_ phone: String) -> Bool {

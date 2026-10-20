@@ -95,10 +95,10 @@ enum AppRoute: Hashable, Sendable {
 
     /// The shell hides its tab bar over this screen: Item Detail draws its own; a conversation keeps the
     /// bottom for its composer, which rises with the keyboard, as the dispute thread does; checkout has none
-    /// (Figma Buy Now).
+    /// (Figma Buy Now), nor the payment result that follows it.
     var hidesShellTabBar: Bool {
         switch self {
-        case .conversation, .checkout, .dispute: true
+        case .conversation, .checkout, .orderPayment, .dispute: true
         default: drawsOwnTabBar
         }
     }

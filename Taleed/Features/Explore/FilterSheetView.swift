@@ -358,6 +358,9 @@ struct FilterOptionsView: View {
 struct FilterOptionRow: View {
     let option: FilterOption
     let isSelected: Bool
+    /// The leading and trailing inset: the screen margin under an app bar, the sheet's padding under a
+    /// sheet heading (so the rows line up with its title).
+    var inset: CGFloat = TaleedLayout.screenMargin
     let action: () -> Void
 
     var body: some View {
@@ -371,13 +374,13 @@ struct FilterOptionRow: View {
                     if isSelected { TaleedIconView(.check, size: 20, color: TaleedColor.brandPrimary) }
                 }
                 .padding(.vertical, TaleedSpacing.s12)
-                .padding(.leading, option.isIndented ? TaleedLayout.screenMargin + TaleedSpacing.s24 : TaleedLayout.screenMargin)
-                .padding(.trailing, TaleedLayout.screenMargin)
+                .padding(.leading, option.isIndented ? inset + TaleedSpacing.s24 : inset)
+                .padding(.trailing, inset)
                 .frame(maxWidth: .infinity, minHeight: 56)
                 Rectangle()
                     .fill(TaleedColor.borderSubtle)
                     .frame(height: 1)
-                    .padding(.leading, TaleedLayout.screenMargin)
+                    .padding(.leading, inset)
                     .accessibilityHidden(true)
             }
             .contentShape(Rectangle())

@@ -10,7 +10,6 @@ import Observation
 final class OrderPaymentViewModel {
     enum Notice: Equatable {
         case error(ApiError)
-        case saved
     }
 
     /// "Enregistrer cette adresse".
@@ -138,7 +137,6 @@ final class OrderPaymentViewModel {
         do {
             _ = try await api.saveAddress(addressToSave)
             addressOffer = .saved
-            notice = .saved
         } catch {
             addressOffer = .offered
             notice = .error(error)

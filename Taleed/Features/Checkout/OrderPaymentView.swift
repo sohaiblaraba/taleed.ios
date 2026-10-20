@@ -34,7 +34,12 @@ struct OrderPaymentView: View {
         } content: {
             content
         }
+        // No tab bar here, as on checkout: the offline banner takes the bottom, toasts sit above it.
+        .safeAreaInset(edge: .bottom, spacing: 0) { OfflineBanner() }
         .task { await model.loadIfNeeded() }
+        .onAppear {
+            if let shellTab { toasts.setBottomBarHeight(0, tab: shellTab, route: route) }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active, !isInBrowser, model.order != nil { Task { await model.sync(automatic: true) } }
         }
@@ -46,9 +51,9 @@ struct OrderPaymentView: View {
         .onChange(of: model.notice) { _, notice in
             guard let notice else { return }
             model.notice = nil
+            // A saved address shows in place of its card, not again in a toast.
             switch notice {
             case let .error(error): toasts.show(error: error)
-            case .saved: toasts.show(l10n.string(.appCheckoutAddressSaved))
             }
         }
     }
@@ -62,6 +67,10 @@ struct OrderPaymentView: View {
                     if order.status == .pendingPayment, let deadline = order.payDeadlineAt, outcome != .awaitingPayment {
                         InlineAlert(kind: .warning,
                                     title: l10n.format(.ordersPayDeadline, Self.dateTime(deadline, language: l10n.language)))
+                    }
+                    // The result's main action right under it, above the order and its amounts.
+                    if order.canPay {
+                        payButton
                     }
                     orderCard(order)
                     OrderSummary(title: l10n.string(.checkoutSummary), lines: summaryLines(order),
@@ -112,7 +121,8 @@ struct OrderPaymentView: View {
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textPrimary)
                     .lineLimit(2)
-                TaleedBadge(title: order.statusLabel, tone: badgeTone(order.status))
+                // The orders' colours: one status, one colour on every screen.
+                TaleedBadge(title: order.statusLabel, tone: order.status.badgeTone)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -120,15 +130,6 @@ struct OrderPaymentView: View {
         .taleedCard()
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("payment.order")
-    }
-
-    private func badgeTone(_ status: OrderState) -> TaleedTone {
-        switch status {
-        case .pendingPayment: .warning
-        case .cancelled, .refunded, .disputed: .neutral
-        case .unknown: .neutral
-        case .paid, .prepared, .shipped, .delivered, .completed: .success
-        }
     }
 
     /// The order's amounts as the server keeps them (the website's order summary).
@@ -199,12 +200,6 @@ struct OrderPaymentView: View {
 
     private func actions(_ order: OrderPaymentInfo) -> some View {
         VStack(spacing: TaleedSpacing.s12) {
-            if order.canPay {
-                TaleedButton(title: isInBrowser ? l10n.string(.checkoutProcessing) : l10n.string(.ordersPayNow), kind: .secondary,
-                             size: .large, leadingIcon: .lockKey, isLoading: model.isPaying, isFullWidth: true, action: payAgain)
-                    .disabled(isInBrowser || model.isSyncing)
-                    .accessibilityIdentifier("payment.payNow")
-            }
             TaleedButton(title: l10n.string(.checkoutViewOrder), kind: order.canPay ? .outline : .secondary, size: .large,
                          isFullWidth: true) {
                 router.push(.order(id: order.id))
@@ -217,6 +212,14 @@ struct OrderPaymentView: View {
                 .accessibilityIdentifier("payment.backToListing")
             }
         }
+    }
+
+    /// "Payer maintenant", shown under the result while the order can still be paid.
+    private var payButton: some View {
+        TaleedButton(title: isInBrowser ? l10n.string(.checkoutProcessing) : l10n.string(.ordersPayNow), kind: .secondary,
+                     size: .large, leadingIcon: .lockKey, isLoading: model.isPaying, isFullWidth: true, action: payAgain)
+            .disabled(isInBrowser || model.isSyncing)
+            .accessibilityIdentifier("payment.payNow")
     }
 
     /// Back to the listing below when checkout came from it; otherwise opened on top.

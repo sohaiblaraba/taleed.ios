@@ -89,6 +89,19 @@ struct OrderRulesTests {
         #expect(OrderRules.headlineAmount(for: orderDetail(money: discounted)) == 2947)
     }
 
+    /// The cash-on-delivery notice as a short title and the amounts under it, in every language.
+    @Test func codNoticeSplitsIntoTitleAndBody() {
+        let french = OrderText.titled("Paiement à la livraison — le transporteur encaisse 2 255 DA auprès du destinataire.")
+        #expect(french.title == "Paiement à la livraison")
+        #expect(french.body == "Le transporteur encaisse 2 255 DA auprès du destinataire.")
+        let arabic = OrderText.titled("الدفع عند الاستلام — يحصّل الناقل 2.255 د.ج من المستلم.")
+        #expect(arabic.title == "الدفع عند الاستلام")
+        #expect(arabic.body == "يحصّل الناقل 2.255 د.ج من المستلم.")
+        let plain = OrderText.titled("Colis disponible")
+        #expect(plain.title == "Colis disponible")
+        #expect(plain.body == nil)
+    }
+
     @Test func datesUseLatinDigitsInArabic() {
         let date = Date(timeIntervalSince1970: 1_792_000_000)
         let text = OrderText.date(date, locale: AppLanguage.ar.formattingLocale)
@@ -102,11 +115,14 @@ struct OrderRulesTests {
         let french = OrderText.dateTime(date, locale: AppLanguage.fr.formattingLocale)
         let english = OrderText.dateTime(date, locale: AppLanguage.en.formattingLocale)
         let arabic = OrderText.dateTime(date, locale: AppLanguage.ar.formattingLocale)
-        #expect(french.wholeMatch(of: #/\d{1,2} [a-zéû.]+ 2026, \d{2}:\d{2}/#) != nil, "\(french)")
-        #expect(english.wholeMatch(of: #/\d{1,2} [A-Z][a-z]+ 2026, \d{2}:\d{2}/#) != nil, "\(english)")
+        #expect(french.wholeMatch(of: #/\d{1,2}\u{00A0}[a-zéû.]+\u{00A0}2026, \d{2}:\d{2}/#) != nil, "\(french)")
+        #expect(english.wholeMatch(of: #/\d{1,2}\u{00A0}[A-Z][a-z]+\u{00A0}2026, \d{2}:\d{2}/#) != nil, "\(english)")
         #expect(arabic.contains("\u{060C} "))
         #expect(!arabic.unicodeScalars.contains { (0x0660...0x0669).contains($0.value) })
-        #expect(OrderText.date(date, locale: AppLanguage.en.formattingLocale).wholeMatch(of: #/\d{1,2} [A-Z][a-z]+ 2026/#) != nil)
+        let englishDate = OrderText.date(date, locale: AppLanguage.en.formattingLocale)
+        #expect(englishDate.wholeMatch(of: #/\d{1,2}\u{00A0}[A-Z][a-z]+\u{00A0}2026/#) != nil)
+        // A date never breaks inside: no plain space in it.
+        #expect(!OrderText.date(date, locale: AppLanguage.fr.formattingLocale).contains(" "))
     }
 
     @Test func statusTones() {
@@ -123,6 +139,9 @@ struct OrderRulesTests {
         #expect(stack == [.orders, .dispute(id: "d1")])
         #expect(AppRoute.dispute(id: "d1").requiresSignIn)
         #expect(AppRoute.dispute(id: "d1").hidesShellTabBar)
+        // The payment result follows checkout without a tab bar.
+        #expect(AppRoute.orderPayment(OrderPaymentTarget(orderId: "o1")).hidesShellTabBar)
+        #expect(!AppRoute.order(id: "o1").hidesShellTabBar)
     }
 }
 

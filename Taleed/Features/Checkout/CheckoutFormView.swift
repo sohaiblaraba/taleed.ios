@@ -195,13 +195,7 @@ struct CheckoutFormView: View {
     // MARK: Field values
 
     private var selectedAddressTitle: String? {
-        model.savedAddresses.first { $0.id == model.selectedAddressId }.map(addressTitle)
-    }
-
-    func addressTitle(_ address: SavedAddress) -> String {
-        // The commune is often part of the street already ("68 rue des Martyrs, Hydra").
-        let commune = address.addressLine.localizedCaseInsensitiveContains(address.commune) ? "" : address.commune
-        return [address.addressLine, commune, address.wilaya.name].filter { !$0.isEmpty }.joined(separator: ", ")
+        model.savedAddresses.first { $0.id == model.selectedAddressId }.map(CheckoutRules.addressTitle)
     }
 
     private var wilayaTitle: String? {

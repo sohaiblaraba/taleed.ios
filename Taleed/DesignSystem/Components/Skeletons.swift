@@ -15,6 +15,13 @@ struct SkeletonBlock: View {
     }
 }
 
+extension View {
+    /// The skeletons' pulse (1.2 s, static with Reduce Motion): something is loading here.
+    func skeletonPulse() -> some View {
+        modifier(SkeletonPulse())
+    }
+}
+
 /// Pulses its content's opacity, unless Reduce Motion is on.
 private struct SkeletonPulse: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

@@ -20,6 +20,8 @@ struct DisputeThreadView: View {
     @Environment(AppToasts.self) private var toasts
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.shellTab) private var shellTab
+    private let route: AppRoute
 
     struct PhotoViewerState: Identifiable {
         let id = UUID()
@@ -28,6 +30,7 @@ struct DisputeThreadView: View {
     }
 
     init(disputeId: String, dependencies: OrdersDependencies) {
+        route = .dispute(id: disputeId)
         _model = State(initialValue: DisputeThreadViewModel(
             disputeId: disputeId, api: dependencies.orders,
             upload: { [uploads = dependencies.uploads] data throws(ApiError) in
@@ -111,6 +114,10 @@ struct DisputeThreadView: View {
                     }
                 }
                 footer(dispute)
+                    // Toasts show above the composer while this screen is on top.
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                        if let shellTab { toasts.setBottomBarHeight(height, tab: shellTab, route: route) }
+                    }
             }
         } else if let error = model.loadError {
             if error.isNotFound {
@@ -155,14 +162,23 @@ struct DisputeThreadView: View {
     /// The text field, the photo button (while fewer than 4) and "Envoyer".
     private var composer: some View {
         HStack(alignment: .bottom, spacing: TaleedSpacing.s8) {
-            TextField("", text: $model.draft,
-                      prompt: Text(l10n.string(.disputesReplyPlaceholder)).foregroundStyle(TaleedColor.textSecondary),
-                      axis: .vertical)
-                .lineLimit(1...5)
-                .taleedFont(TaleedFont.bodyRegular)
-                .foregroundStyle(TaleedColor.textPrimary)
-                .tint(TaleedColor.brandPrimary)
-                .focused($isComposerFocused)
+            // The placeholder wraps (a prompt would be cut to one line: "Écrivez votre réponse ou ajo…").
+            ZStack(alignment: .topLeading) {
+                Text(l10n.string(.disputesReplyPlaceholder))
+                    .taleedFont(TaleedFont.bodyRegular)
+                    .foregroundStyle(TaleedColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .opacity(model.draft.isEmpty ? 1 : 0)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                TextField("", text: $model.draft, axis: .vertical)
+                    .lineLimit(1...5)
+                    .taleedFont(TaleedFont.bodyRegular)
+                    .foregroundStyle(TaleedColor.textPrimary)
+                    .tint(TaleedColor.brandPrimary)
+                    .focused($isComposerFocused)
+            }
                 .padding(.horizontal, TaleedSpacing.s12)
                 .padding(.vertical, 10)
                 .frame(minHeight: TaleedSize.touchTargetMin)

@@ -88,7 +88,7 @@ struct SellerCard<Details: View, Actions: View>: View {
     private var reputationRow: some View {
         HStack(spacing: TaleedSpacing.s4) {
             if reputation.showsStar {
-                TaleedIconView(.star, size: 14, color: TaleedColor.warningIcon)
+                TaleedIconView(.star, size: 14, color: TaleedColor.feedbackWarning)
             }
             Text(verbatim: reputation.text)
                 .taleedFont(Self.reputationStyle)
