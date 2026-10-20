@@ -59,6 +59,8 @@ enum WalletRules {
 enum WalletText {
     private static let rightToLeftMark = "\u{200F}"
     private static let leftToRightMark = "\u{200E}"
+    /// " · " between the parts of a line, with no-break spaces: the dot never ends or starts a line.
+    static let separator = "\u{00A0}·\u{00A0}"
 
     /// "+5 000 DA" or "-2 000 DA" (the website's `+` before credits). In Arabic the sign stays before the
     /// digits, as the price formatter writes a negative amount.
@@ -78,16 +80,17 @@ enum WalletText {
             if voucher.status == .active, let expiresAt = voucher.expiresAt {
                 parts.append(expires(OrderText.date(expiresAt, locale: locale)))
             }
-            return parts.joined(separator: " · ")
+            return parts.joined(separator: separator)
         }
-        return [entry.note?.isolatedLeftToRight, date].compactMap { $0 }.joined(separator: " · ")
+        return [entry.note?.isolatedLeftToRight, date].compactMap { $0 }.joined(separator: separator)
     }
 
-    /// A payout's second line: "4 oct. 2026 · VIR-2026-0042".
+    /// A payout's second line: "CCP · 4 oct. 2026, 14:32 · VIR-2026-0042" (the time tells apart requests
+    /// of the same amount made the same day).
     static func payoutDetail(_ payout: PayoutRow, locale: Locale) -> String {
-        [OrderText.date(payout.requestedAt, locale: locale), payout.reference?.isolatedLeftToRight]
+        [payout.methodLabel, OrderText.dateTime(payout.requestedAt, locale: locale), payout.reference?.isolatedLeftToRight]
             .compactMap { $0 }
-            .joined(separator: " · ")
+            .joined(separator: separator)
     }
 }
 

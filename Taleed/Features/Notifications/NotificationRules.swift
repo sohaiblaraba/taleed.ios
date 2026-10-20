@@ -44,31 +44,31 @@ struct NotificationRow: Identifiable, Equatable, Sendable {
 /// The icon family of a notification type (screens.md §2 G15, slice E "Notifications"). An unknown
 /// type gets the generic bell.
 enum NotificationTheme: Equatable, Sendable {
-    case offers, orders, disputes, money, community, account, boosts, other
+    /// `accountIssue`: a refusal about the account (a verification rejected, a report dismissed), drawn
+    /// with a warning shield rather than the check of an approval.
+    case offers, orders, disputes, money, community, account, accountIssue, boosts, other
 
     init(type: String) {
         let type = type.uppercased()
-        switch type {
-        case "NEW_OFFER": self = .offers
-        case "TOPUP_PAID", "REFERRAL_REWARD", "VERIFICATION_VOUCHER": self = .money
-        case "NEW_FAVORITE", "NEW_FOLLOWER", "FOLLOWED_MEMBER_LISTED", "REVIEW_RECEIVED", "REFERRAL_SIGNUP": self = .community
-        case "VERIFICATION_APPROVED", "VERIFICATION_REJECTED", "REPORT_RESOLVED", "REPORT_DISMISSED": self = .account
-        default:
-            if type.hasPrefix("OFFER_") {
-                self = .offers
-            } else if type.hasPrefix("ORDER_") {
-                self = .orders
-            } else if type.hasPrefix("DISPUTE_") {
-                self = .disputes
-            } else if type.hasPrefix("PAYOUT_") {
-                self = .money
-            } else if type.hasPrefix("BOOST_") {
-                self = .boosts
-            } else {
-                self = .other
-            }
+        if let theme = Self.byType[type] {
+            self = theme
+        } else {
+            self = Self.byPrefix.first { type.hasPrefix($0.prefix) }?.theme ?? .other
         }
     }
+
+    private static let byType: [String: NotificationTheme] = [
+        "NEW_OFFER": .offers,
+        "TOPUP_PAID": .money, "REFERRAL_REWARD": .money, "VERIFICATION_VOUCHER": .money,
+        "NEW_FAVORITE": .community, "NEW_FOLLOWER": .community, "FOLLOWED_MEMBER_LISTED": .community,
+        "REVIEW_RECEIVED": .community, "REFERRAL_SIGNUP": .community,
+        "VERIFICATION_APPROVED": .account, "REPORT_RESOLVED": .account,
+        "VERIFICATION_REJECTED": .accountIssue, "REPORT_DISMISSED": .accountIssue,
+    ]
+
+    private static let byPrefix: [(prefix: String, theme: NotificationTheme)] = [
+        ("OFFER_", .offers), ("ORDER_", .orders), ("DISPUTE_", .disputes), ("PAYOUT_", .money), ("BOOST_", .boosts),
+    ]
 
     var icon: TaleedIcon {
         switch self {
@@ -78,6 +78,7 @@ enum NotificationTheme: Equatable, Sendable {
         case .money: .money
         case .community: .user
         case .account: .shieldCheck
+        case .accountIssue: .shieldWarning
         case .boosts: .sparkle
         case .other: .bell
         }

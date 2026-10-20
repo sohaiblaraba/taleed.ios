@@ -128,13 +128,13 @@ struct TaleedRadio: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: TaleedSize.radioLabelGap) {
-                if indicatorEdge == .leading { RadioIndicator(isSelected: isSelected) }
+            HStack(alignment: .top, spacing: TaleedSize.radioLabelGap) {
+                if indicatorEdge == .leading { indicator }
                 Text(title)
                     .taleedFont(textStyle)
                     .foregroundStyle(TaleedColor.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                if indicatorEdge == .trailing { RadioIndicator(isSelected: isSelected) }
+                if indicatorEdge == .trailing { indicator }
             }
             // At least 12 pt above and below the label at every size: a label on several lines never
             // touches the next row.
@@ -144,6 +144,16 @@ struct TaleedRadio: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// The circle centred on the label's first line (a label on two lines keeps it beside its start):
+    /// a hidden one-line label in the same style gives that line's height.
+    private var indicator: some View {
+        ZStack {
+            Text(verbatim: "X").taleedFont(textStyle).fixedSize().frame(width: 1).hidden()
+            RadioIndicator(isSelected: isSelected)
+        }
+        .accessibilityHidden(true)
     }
 }
 

@@ -17,15 +17,16 @@ struct NotificationsView: View {
                 // A new list for another member.
                 NotificationsListView(dependencies: dependencies, session: session).id(session.user?.id)
             } else {
-                SignInPromptView()
+                SignInPromptView(icon: .bell, title: l10n.string(.appNotificationsSignedOutTitle))
             }
         }
     }
 }
 
-/// The list's states: loading, the error with Retry (offline included), "Aucune notification.", the
-/// rows, pull-to-refresh and the pagination footer. Reloads quietly, and marks read again, on return to
-/// the foreground and when something new arrives (`NotificationsFeed`) while it is on screen.
+/// The list's states: loading (skeleton rows), the error with Retry (offline included), "Aucune
+/// notification." centred like the error, the rows, pull-to-refresh and the pagination footer. Reloads
+/// quietly, and marks read again, on return to the foreground and when something new arrives
+/// (`NotificationsFeed`) while it is on screen.
 struct NotificationsListView: View {
     @State private var model: NotificationsViewModel
     private let feed: NotificationsFeed
@@ -48,6 +49,10 @@ struct NotificationsListView: View {
                       load: { await model.loadIfNeeded() },
                       refresh: { await model.refresh() },
                       retry: { await model.retry() },
+                      centersEmpty: true,
+                      placeholder: AnyView(SkeletonIconRowList()),
+                      // An empty first page with more to come: the skeleton stays until rows come.
+                      keepsLoading: model.isLoadingPastEmptyPages && model.list.loadMoreError == nil,
                       content: { rowList($0) },
                       empty: { emptyContent })
         .accessibilityIdentifier("notifications.list")
@@ -71,9 +76,8 @@ struct NotificationsListView: View {
     private func rowList(_ rows: [NotificationRow]) -> some View {
         LazyVStack(spacing: 0) {
             ForEach(rows) { row in
-                NotificationRowView(row: row, open: row.destination.map { destination in
-                    { router.openFromScreen(destination) }
-                })
+                let open: (() -> Void)? = row.destination.map { destination in { router.openFromScreen(destination) } }
+                NotificationRowView(row: row, showsDivider: row.id != rows.last?.id, open: open)
             }
         }
         .accessibilityIdentifier("notifications.rows")
@@ -85,45 +89,41 @@ struct NotificationsListView: View {
         return router.selectedTab == shellTab && router.path(shellTab).last == .notifications
     }
 
-    /// An empty first page that still has more pages: the next ones load (rows the server could not
-    /// write are left out of a page, §7 G15); the empty state only once none is left.
+    /// An empty first page that still has more pages: the next ones load under the first load's skeleton
+    /// (rows the server could not write are left out of a page, §7 G15), Retry when one failed; the empty
+    /// state only once none is left.
     @ViewBuilder
     private var emptyContent: some View {
         if model.isLoadingPastEmptyPages {
-            if model.list.loadMoreError != nil {
-                VStack(spacing: TaleedSpacing.s8) {
-                    // Android's paging footer: one fixed line, whatever the error.
-                    Text(l10n.string(.appListLoadMoreFailed))
-                        .taleedFont(TaleedFont.bodyRegular)
-                        .foregroundStyle(TaleedColor.textBody)
-                        .multilineTextAlignment(.center)
-                    TaleedButton(title: l10n.string(.commonRetry), kind: .tertiary, size: .medium) {
-                        Task { await model.loadPastEmptyPages() }
-                    }
+            VStack(spacing: TaleedSpacing.s8) {
+                // Android's paging footer: one fixed line, whatever the error.
+                Text(l10n.string(.appListLoadMoreFailed))
+                    .taleedFont(TaleedFont.bodyRegular)
+                    .foregroundStyle(TaleedColor.textBody)
+                    .multilineTextAlignment(.center)
+                TaleedButton(title: l10n.string(.commonRetry), kind: .tertiary, size: .medium) {
+                    Task { await model.loadPastEmptyPages() }
                 }
-                .padding(TaleedSpacing.s16)
-            } else {
-                ProgressView()
-                    .controlSize(.large)
-                    .tint(TaleedColor.brandPrimary)
-                    .frame(maxWidth: .infinity, minHeight: 120)
-                    .accessibilityLabel(l10n.string(.commonLoading))
             }
+            .padding(TaleedSpacing.s16)
         } else {
-            EmptyState(title: l10n.string(.notificationsEmpty), icon: .bell)
-                .padding(.horizontal, TaleedLayout.screenMargin)
+            EmptyState(title: l10n.string(.notificationsEmpty), message: l10n.string(.appNotificationsEmptyBody), icon: .bell)
                 .accessibilityIdentifier("notifications.empty")
         }
     }
 }
 
 /// A notification: the 2 pt primary bar on the leading side when unread (the website's), the type's
-/// icon in a 40 pt circle, the server's sentence (medium and dark when unread, muted when read) and the
-/// relative time under it. A row with a link is a button as a whole; a row without one is plain.
+/// icon in a 40 pt circle (above the text at accessibility sizes, so the sentence keeps the width), the
+/// server's sentence (medium and dark when unread, muted when read) and the relative time under it. A
+/// row with a link is a button as a whole; a row without one is plain.
 struct NotificationRowView: View {
     let row: NotificationRow
+    /// False on the last row: no line under the list.
+    var showsDivider = true
     let open: (() -> Void)?
     @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var isUnread: Bool { !row.isRead }
 
@@ -137,9 +137,11 @@ struct NotificationRowView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1)
-                .padding(.leading, TaleedLayout.screenMargin + 40 + TaleedSpacing.s12)
-                .accessibilityHidden(true)
+            if showsDivider {
+                Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1)
+                    .padding(.leading, TaleedLayout.screenMargin + (stacksIcon ? 0 : 40 + TaleedSpacing.s12))
+                    .accessibilityHidden(true)
+            }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
@@ -147,8 +149,13 @@ struct NotificationRowView: View {
         .accessibilityIdentifier("notifications.row.\(row.id)")
     }
 
+    private var stacksIcon: Bool { dynamicTypeSize.isAccessibilitySize }
+
     private var content: some View {
-        HStack(alignment: .top, spacing: TaleedSpacing.s12) {
+        let layout = stacksIcon
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: TaleedSpacing.s8))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: TaleedSpacing.s12))
+        return layout {
             icon
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: row.text)
@@ -166,11 +173,13 @@ struct NotificationRowView: View {
         .padding(.vertical, TaleedSpacing.s12)
         .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
         .overlay(alignment: .leading) {
+            // A rounded marker a little in from the edge, so it reads as drawn on purpose.
             if isUnread {
-                Rectangle()
+                Capsule()
                     .fill(TaleedColor.brandPrimary)
                     .frame(width: 2)
                     .padding(.vertical, TaleedSpacing.s12)
+                    .padding(.leading, TaleedSpacing.s4)
             }
         }
         .contentShape(Rectangle())

@@ -1,9 +1,10 @@
 import SwiftUI
 
 /// "Demander un virement" (screens.md §7 G14 "Payout dialog"; the website's dialog, drawn as the
-/// design-system bottom sheet like the other forms): "Solde disponible: 3 095 DA", the amount prefilled
+/// design-system bottom sheet like the other forms): "Solde disponible : 3 095 DA", the amount prefilled
 /// with the whole balance, the method (CCP by default), the account details, and "Envoyer la demande",
-/// enabled once the three are valid. No confirmation step, as the website.
+/// enabled once the three are valid. No confirmation step, as the website. While the request is sent,
+/// the sheet stays up (no close, no swipe) and its fields are locked, as the top-up sheet.
 struct PayoutSheet: View {
     let summary: WalletSummary
     let methods: [CatalogOption]
@@ -15,6 +16,8 @@ struct PayoutSheet: View {
     @State private var amountRefused = false
     @State private var detailsRefused = false
     @State private var isSending = false
+    /// The range error waits until the member leaves the amount (typing "500" never flashes red at "5").
+    @FocusState private var isAmountFocused: Bool
     @Environment(LanguageManager.self) private var l10n
 
     init(summary: WalletSummary, methods: [CatalogOption],
@@ -29,16 +32,19 @@ struct PayoutSheet: View {
     }
 
     var body: some View {
-        TaleedBottomSheet(title: l10n.string(.walletRequestPayout), onClose: onClose) {
+        TaleedBottomSheet(title: l10n.string(.walletRequestPayout), onClose: onClose, isCloseHidden: isSending) {
             VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
-                // As the website's description: "Solde disponible: 3 095 DA".
-                Text(verbatim: "\(l10n.string(.walletBalance)): \(PriceFormatter.format(summary.balance, language: l10n.language))")
+                // As the website's description, in the language's punctuation: "Solde disponible : 3 095 DA".
+                Text(l10n.format(.appWalletBalanceLine, PriceFormatter.format(summary.balance, language: l10n.language)))
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textBody)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("payout.balance")
                 TaleedTextField(label: l10n.string(.walletPayoutAmount), text: $form.amountText, leadingIcon: .money,
-                                helper: amountHelper, error: amountError)
+                                helper: amountError == nil ? amountHelper : nil, error: amountError, focus: $isAmountFocused)
                     .keyboardType(.numberPad)
+                    .disabled(isSending)
                     .accessibilityIdentifier("payout.amount")
                     .onChange(of: form.amountText) { _, value in
                         let digits = OfferAmountInput.normalizedDigits(value)
@@ -55,6 +61,7 @@ struct PayoutSheet: View {
                             .accessibilityIdentifier("payout.method.\(method.value)")
                         }
                     }
+                    .disabled(isSending)
                     .accessibilityElement(children: .contain)
                     .accessibilityLabel(l10n.string(.walletPayoutMethod))
                 }
@@ -62,6 +69,10 @@ struct PayoutSheet: View {
                                placeholder: l10n.string(.walletAccountDetailsPlaceholder),
                                helper: detailsRefused ? nil : detailsHelper,
                                error: detailsRefused ? l10n.string(.appCheckoutFieldInvalid) : nil)
+                    // An account number or a RIB: no autocorrection, spell check or capitals rewriting it.
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .disabled(isSending)
                     .accessibilityIdentifier("payout.details")
                     .onChange(of: form.accountDetails) { _, value in
                         if value.count > PayoutFormInput.detailsMaxLength {
@@ -75,6 +86,7 @@ struct PayoutSheet: View {
                     .accessibilityIdentifier("payout.submit")
             }
         }
+        .interactiveDismissDisabled(isSending)
         // A refused amount reloads the header: the form follows the new balance.
         .onChange(of: summary.balance) { _, balance in form.balance = balance }
     }
@@ -86,9 +98,13 @@ struct PayoutSheet: View {
                            PriceFormatter.format(range.upperBound, language: l10n.language))
     }
 
-    /// "Montant invalide ou supérieur au solde disponible." once the amount is out of range or refused.
+    /// The error pattern of both wallet amounts: out of range, the range sentence turns red once the
+    /// member leaves the field; the API's refusal ("Montant invalide ou supérieur au solde disponible.")
+    /// shows at once.
     private var amountError: String? {
-        amountRefused || form.amount == .invalid ? l10n.string(.walletErrorAmount) : nil
+        if amountRefused { return l10n.string(.walletErrorAmount) }
+        guard form.amount == .invalid, !isAmountFocused else { return nil }
+        return amountHelper ?? l10n.string(.walletErrorAmount)
     }
 
     private var detailsHelper: String {
@@ -112,14 +128,17 @@ struct PayoutSheet: View {
 
 /// "Recharger le solde" (screens.md §7 G14 "Top-up dialog"): the website's text, the amount prefilled with
 /// 1 000 DA, the gateways as radio cards only when there is more than one, and "Procéder au paiement",
-/// which reads "Redirection vers le paiement…" while the top-up starts. The sheet cannot be closed while
-/// the top-up starts (no close button, no swipe), so its page always opens once it has started.
+/// which reads "Redirection vers le paiement…" while the top-up starts. The sheet cannot be closed or
+/// changed while the top-up starts (no close button, no swipe, the fields locked), so its page always
+/// opens once it has started, for the amount the member confirmed.
 struct TopUpSheet: View {
     let summary: WalletSummary
     let isStarting: Bool
     let start: (_ amount: Int, _ method: String) async -> Void
     let onClose: () -> Void
     @State private var form: TopUpFormInput
+    /// The range turns red only once the member leaves the amount, as the payout sheet.
+    @FocusState private var isAmountFocused: Bool
     @Environment(LanguageManager.self) private var l10n
 
     init(summary: WalletSummary, isStarting: Bool, start: @escaping (Int, String) async -> Void, onClose: @escaping () -> Void) {
@@ -136,11 +155,14 @@ struct TopUpSheet: View {
                 Text(l10n.string(.walletTopUpBody))
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textBody)
+                    // Measured at the sheet's width, as the field under it.
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
                 TaleedTextField(label: l10n.string(.walletTopUpAmount), text: $form.amountText, leadingIcon: .money,
-                                helper: form.amount == .invalid ? nil : rangeText,
-                                error: form.amount == .invalid ? rangeText : nil)
+                                helper: showsRangeError ? nil : rangeText,
+                                error: showsRangeError ? rangeText : nil, focus: $isAmountFocused)
                     .keyboardType(.numberPad)
+                    .disabled(isStarting)
                     .accessibilityIdentifier("topUp.amount")
                     .onChange(of: form.amountText) { _, value in
                         let digits = OfferAmountInput.normalizedDigits(value)
@@ -157,6 +179,7 @@ struct TopUpSheet: View {
                             .accessibilityIdentifier("topUp.method.\(method.value)")
                         }
                     }
+                    .disabled(isStarting)
                 }
                 TaleedButton(title: l10n.string(isStarting ? .checkoutProcessing : .walletTopUpSubmit), kind: .secondary,
                              size: .large, leadingIcon: .lockKey, isFullWidth: true,
@@ -168,6 +191,8 @@ struct TopUpSheet: View {
         }
         .interactiveDismissDisabled(isStarting)
     }
+
+    private var showsRangeError: Bool { form.amount == .invalid && !isAmountFocused }
 
     /// "Le montant doit être compris entre 100 DA et 1 000 000 DA."
     private var rangeText: String? {

@@ -58,6 +58,12 @@ final class ReferralsViewModel {
     /// "Vos filleuls (n)": the API's total, once known.
     var referralCount: Int? { referrals.hasLoaded ? referrals.total : nil }
 
+    /// "Vos filleuls" holds only its empty state (no member, no voucher, no voucher error): the sheet
+    /// fits it instead of taking the full height.
+    var isSheetCompact: Bool {
+        referrals.isEmpty && !showsVouchers && !(program?.canRefer == true && !vouchers.hasLoaded && vouchers.error != nil)
+    }
+
     // MARK: Loading
 
     func loadIfNeeded() async {

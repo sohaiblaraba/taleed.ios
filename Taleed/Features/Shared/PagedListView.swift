@@ -28,6 +28,9 @@ struct PagedListView<Item: Identifiable & Sendable, Content: View, Empty: View>:
     var centersEmpty = false
     /// The first load's placeholder (skeleton rows); the spinner with "Chargement…" by default.
     var placeholder: AnyView?
+    /// True keeps the first load's placeholder (or spinner) while the first page came back empty and
+    /// the next pages still load, so one loader shows in one place until rows or the empty state come.
+    var keepsLoading = false
     @ViewBuilder let content: ([Item]) -> Content
     @ViewBuilder let empty: () -> Empty
     @Environment(LanguageManager.self) private var l10n
@@ -35,7 +38,7 @@ struct PagedListView<Item: Identifiable & Sendable, Content: View, Empty: View>:
 
     var body: some View {
         Group {
-            if list.hasLoaded {
+            if list.hasLoaded, !(keepsLoading && list.items.isEmpty) {
                 ScrollView {
                     if list.items.isEmpty {
                         if centersEmpty {
@@ -56,7 +59,7 @@ struct PagedListView<Item: Identifiable & Sendable, Content: View, Empty: View>:
                 .refreshable {
                     if let refresh { await refresh() } else { await list.refresh() }
                 }
-            } else if let error = list.error {
+            } else if !list.hasLoaded, let error = list.error {
                 ErrorStateView(error: error) {
                     Task {
                         if let retry { await retry() } else { await list.reload() }

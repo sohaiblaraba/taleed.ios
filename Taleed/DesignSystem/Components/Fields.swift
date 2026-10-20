@@ -104,6 +104,8 @@ struct TaleedTextField: View {
     var counter: String?
 
     @FocusState private var ownFocus: Bool
+    /// The clear button's × grows with the text (up to 28 pt), so it stays findable at large sizes.
+    @ScaledMetric(relativeTo: .body) private var clearIconSize = TaleedSize.inputIconTrailing
     /// A secure field showing its text (the eye button).
     @State private var isRevealed = false
     @Environment(\.isEnabled) private var isEnabled
@@ -161,8 +163,8 @@ struct TaleedTextField: View {
                 .accessibilityHint(error ?? helper ?? "")
             if showsClearButton, !isSecure, !text.isEmpty, state != .disabled {
                 Button { text = "" } label: {
-                    TaleedIconView(.x, size: TaleedSize.inputIconTrailing, color: TaleedColor.textSecondary)
-                        .frame(width: 24, height: 24)
+                    TaleedIconView(.x, size: min(clearIconSize, 28), color: TaleedColor.textSecondary)
+                        .frame(width: max(24, min(clearIconSize, 28)), height: max(24, min(clearIconSize, 28)))
                         .minimumHitArea()
                 }
                 .buttonStyle(.plain)

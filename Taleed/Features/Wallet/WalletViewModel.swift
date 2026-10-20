@@ -209,20 +209,30 @@ final class WalletViewModel {
                 return
             }
             guard generation == topUpGeneration else { return }
-            banner = TopUpBanner(state)
             switch state {
             case .paid:
-                await reloadAfterCredit()
+                await topUpPaid(generation: generation)
                 return
             case .pending, .unknown:
+                banner = .pending
                 guard followUps > 0 else { return }
                 followUps -= 1
                 try? await Task.sleep(for: followUpDelay)
                 guard !Task.isCancelled, generation == topUpGeneration else { return }
             case .failed:
+                banner = .failed
                 return
             }
         }
+    }
+
+    /// "Paiement confirmé" once the headline and the history show the credit, on the history (its new
+    /// "Rechargement" line).
+    private func topUpPaid(generation: Int) async {
+        tab = .history
+        await reloadAfterCredit()
+        guard generation == topUpGeneration else { return }
+        banner = .paid
     }
 
     /// Syncs every top-up the first page lists as pending (slice F); a credit reloads the header and
@@ -236,8 +246,8 @@ final class WalletViewModel {
             }
         }
         guard credited else { return }
-        if banner == nil || banner == .pending { banner = .paid }
         await reloadAfterCredit()
+        if banner == nil || banner == .pending { banner = .paid }
     }
 
     // MARK: Payouts

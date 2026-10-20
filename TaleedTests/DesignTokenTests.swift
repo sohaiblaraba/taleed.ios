@@ -94,7 +94,7 @@ struct DesignTokenTests {
     }
 
     @Test func allIconsAndImagesAreInTheCatalog() {
-        #expect(TaleedIcon.allCases.count == 61)
+        #expect(TaleedIcon.allCases.count == 63)
         for icon in TaleedIcon.allCases {
             #expect(UIImage(named: icon.assetName) != nil, "\(icon.assetName)")
         }

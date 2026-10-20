@@ -164,6 +164,35 @@ struct SkeletonConversationList: View {
     }
 }
 
+/// Loading placeholder of a list of icon rows (the notifications): per row the 40 pt circle and two bars
+/// (the sentence, the time), at the rows' margins and height, at most six rows.
+struct SkeletonIconRowList: View {
+    var count = 6
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<min(count, TaleedMotion.skeletonMaxPlaceholders), id: \.self) { index in
+                HStack(alignment: .top, spacing: TaleedSpacing.s12) {
+                    SkeletonBlock(width: 40, height: 40)
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                        SkeletonBlock(height: 14)
+                            .padding(.trailing, index.isMultiple(of: 2) ? 0 : TaleedSpacing.s48)
+                        SkeletonBlock(width: 72, height: 11, color: TaleedColor.surfaceSubtle)
+                    }
+                    .padding(.top, TaleedSpacing.s4)
+                }
+                .padding(.horizontal, TaleedLayout.screenMargin)
+                .padding(.vertical, TaleedSpacing.s12)
+                .frame(minHeight: 64)
+            }
+        }
+        .modifier(SkeletonPulse())
+        .accessibilityElement()
+        .accessibilityLabel(DesignSystemStrings.string(.commonLoading, locale: locale))
+    }
+}
+
 /// Loading placeholder of a seller card header (§3.4, a member's profile): the avatar circle, two text
 /// bars, the stats strip and the button, then the start of the product grid.
 struct SkeletonSellerHeader: View {

@@ -82,3 +82,21 @@ struct MinimumHitShape: Shape {
         Path(rect.insetBy(dx: min(0, (rect.width - size) / 2), dy: min(0, (rect.height - size) / 2)))
     }
 }
+
+/// An icon centred on the first line of a label set in `textStyle`, for an `HStack(alignment: .top)`:
+/// beside a label that wraps over several lines it stays with the label's start, not its middle. A
+/// hidden one-line label in the same style gives that line's height.
+struct FirstLineIcon: View {
+    let icon: TaleedIcon
+    let size: CGFloat
+    var color: Color? = TaleedColor.textSecondary
+    let textStyle: TaleedTextStyle
+
+    var body: some View {
+        ZStack {
+            Text(verbatim: "X").taleedFont(textStyle).fixedSize().frame(width: 1).hidden()
+            TaleedIconView(icon, size: size, color: color)
+        }
+        .accessibilityHidden(true)
+    }
+}

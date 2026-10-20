@@ -16083,19 +16083,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أُرسل الطلب. المعالجة خلال 48 ساعة عمل."
+            "value": "أُرسل الطلب. المعالجة خلال 48 ساعة عمل."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Request sent. Processed within 48 business hours."
+            "value": "Request sent. Processed within 48 business hours."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Demande envoyée. Traitement sous 48 h ouvrées."
+            "value": "Demande envoyée. Traitement sous 48 h ouvrées."
           }
         }
       }
@@ -21241,6 +21241,144 @@
           "stringUnit": {
             "state": "translated",
             "value": "Les fonds seront gelés le temps de la médiation."
+          }
+        }
+      }
+    },
+    "app_wallet_balance_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرصيد المتاح: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available balance: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solde disponible : %@"
+          }
+        }
+      }
+    },
+    "app_notifications_empty_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستظهر هنا العروض والطلبات والرسائل المهمة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offers, orders and important messages will appear here."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les offres, commandes et messages importants apparaîtront ici."
+          }
+        }
+      }
+    },
+    "app_notifications_signed_out_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إشعاراتك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your notifications"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos notifications"
+          }
+        }
+      }
+    },
+    "app_wallet_signed_out_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محفظتك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your wallet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre portefeuille"
+          }
+        }
+      }
+    },
+    "app_referrals_signed_out_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ادعُ أصدقاءك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite your friends"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitez vos amis"
+          }
+        }
+      }
+    },
+    "app_referrals_share_preview_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انضمّ إليّ على Taleed"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join me on Taleed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejoignez-moi sur Taleed"
           }
         }
       }

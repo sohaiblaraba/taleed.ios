@@ -127,9 +127,12 @@ struct WalletViewModelTests {
         api.syncResults["t1"] = [.success(TopUpInfo(id: "t1", amount: 5000, status: .pending)),
                                  .success(TopUpInfo(id: "t1", amount: 5000, status: .paid))]
         api.defaultSummary = walletSummary(balance: 12500)
+        model.tab = .payouts
         await model.topUpPageClosed(id: "t1")
         #expect(model.banner == .paid)
         #expect(model.summary?.balance == 12500)
+        // The new "Rechargement" line shows: the history is selected.
+        #expect(model.tab == .history)
         #expect(api.syncCalls == ["t1", "t1"])
     }
 

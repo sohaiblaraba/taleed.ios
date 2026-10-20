@@ -11,10 +11,41 @@ struct ReferralsSheet: View {
     /// Opens a screen once the sheet is gone (a member's profile, the order a voucher paid for).
     let onOpen: (AppRoute) -> Void
     let onClose: () -> Void
+    /// The height the sheet needs while it holds only the empty state (`model.isSheetCompact`).
+    var onCompactHeight: (CGFloat) -> Void = { _ in }
     @State private var toasts = TaleedToastState()
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
+        Group {
+            if model.isSheetCompact {
+                compactBody
+            } else {
+                listBody
+            }
+        }
+        .taleedToastHost(toasts)
+        .onChange(of: model.referrals.refreshError) { _, error in
+            if let error { toasts.show(ToastItem(kind: .error, message: l10n.message(for: error))) }
+        }
+    }
+
+    /// No member yet and no voucher: the empty state alone, measured so the sheet fits it (it scrolls
+    /// when large text makes it taller than the screen).
+    private var compactBody: some View {
+        ScrollView {
+            TaleedBottomSheet(title: l10n.string(.referralsYourReferrals), onClose: onClose) {
+                emptyState
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onCompactHeight($0) }
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .refreshable { await model.refresh() }
+        .accessibilityIdentifier("referrals.sheet")
+    }
+
+    private var listBody: some View {
         TaleedBottomSheet(title: l10n.string(.referralsYourReferrals), onClose: onClose) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
@@ -29,10 +60,6 @@ struct ReferralsSheet: View {
             .accessibilityIdentifier("referrals.sheet")
         }
         .padding(.bottom, -TaleedSize.bottomSheetPaddingBottom)
-        .taleedToastHost(toasts)
-        .onChange(of: model.referrals.refreshError) { _, error in
-            if let error { toasts.show(ToastItem(kind: .error, message: l10n.message(for: error))) }
-        }
     }
 
     // MARK: Members invited
@@ -123,7 +150,8 @@ struct ReferralsSheet: View {
 
 // MARK: - Rows
 
-/// A member invited: avatar, name, "Inscrit le …", and the two reward badges with their deadline line.
+/// A member invited: avatar, name, "Inscrit le …", the two reward badges with their deadline line, and a
+/// chevron when the row opens the member's profile (as the voucher cards and the wallet lines).
 private struct ReferralRowView: View {
     let row: ReferralRow
     let copy: ReferralsCopy
@@ -153,6 +181,11 @@ private struct ReferralRowView: View {
                         .padding(.top, TaleedSpacing.s4)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    if row.member.username != nil {
+                        TaleedIconView(.caretRight, size: 16, color: TaleedColor.textSecondary)
+                            .frame(minHeight: TaleedSize.avatarMd)
+                            .accessibilityHidden(true)
+                    }
                 }
                 .padding(.vertical, TaleedSpacing.s12)
                 .contentShape(Rectangle())
@@ -166,14 +199,15 @@ private struct ReferralRowView: View {
     }
 }
 
-/// A reward: green with a check when done, brand while still possible ("Jusqu’au …"), grey when missed
-/// ("Délai dépassé"). Never colour alone: the text and the line under it say it.
+/// A reward: green when done (its text carries the ✓, so no second check icon), brand while still possible
+/// ("Jusqu’au …"), grey when missed ("Délai dépassé"). Never colour alone: the text and the line under it
+/// say it.
 private struct MilestoneBadge: View {
     let text: MilestoneText
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            TaleedBadge(title: text.title, tone: tone, icon: text.milestone == .done ? .check : nil)
+            TaleedBadge(title: text.title, tone: tone)
             if let caption = text.caption {
                 Text(caption)
                     .taleedFont(TaleedFont.bodySmall)

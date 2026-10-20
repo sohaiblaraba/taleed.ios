@@ -696,12 +696,16 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case walletMinPayout = "wallet_min_payout"
     case referralsVoucherExpires = "referrals_voucher_expires"
     case appWalletAmountRange = "app_wallet_amount_range"
+    case appWalletBalanceLine = "app_wallet_balance_line"
+    case appWalletSignedOutTitle = "app_wallet_signed_out_title"
 
     // Notifications (G15): website keys.
     case notificationsTitle = "notifications_title"
     case notificationsEmpty = "notifications_empty"
     case navNotifications = "nav_notifications"
     case appA11yUnread = "app_a11y_unread"
+    case appNotificationsEmptyBody = "app_notifications_empty_body"
+    case appNotificationsSignedOutTitle = "app_notifications_signed_out_title"
 
     // Settings (G16): website keys.
     case settingsProfile = "settings_profile"
@@ -861,6 +865,8 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appReferralsRuleInviterSale = "app_referrals_rule_inviter_sale"
     case appReferralsShare = "app_referrals_share"
     case appReferralsInviteLink = "app_referrals_invite_link"
+    case appReferralsSignedOutTitle = "app_referrals_signed_out_title"
+    case appReferralsSharePreviewTitle = "app_referrals_share_preview_title"
     case appAuthOptional = "app_auth_optional"
     case appAuthUsernameHint = "app_auth_username_hint"
     case appAuthUsernameStart = "app_auth_username_start"

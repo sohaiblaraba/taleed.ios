@@ -7,7 +7,7 @@ struct WalletHistorySection: View {
     @Environment(AppRouter.self) private var router
 
     var body: some View {
-        WalletListSection(list: list) { entry in
+        WalletListSection(list: list, emptyIcon: .money) { entry in
             WalletEntryRowView(entry: entry, onOpenOrder: entry.orderId.map { id in { router.push(.order(id: id)) } })
         }
     }
@@ -19,17 +19,18 @@ struct WalletPayoutsSection: View {
     @Environment(AppRouter.self) private var router
 
     var body: some View {
-        WalletListSection(list: list) { payout in
+        WalletListSection(list: list, emptyIcon: .money) { payout in
             PayoutRowView(payout: payout, onOpenProof: payout.proofURL.map { url in { router.openInBrowser(url) } })
         }
     }
 }
 
-/// A tab's list: a spinner while the first page loads, the error with Retry, "Aucune opération pour le
-/// moment." when empty, otherwise the rows with dividers, then the pagination footer as a sibling in the
-/// screen's lazy stack.
+/// A tab's list: a spinner while the first page loads, the error with Retry, the design-system empty
+/// state ("Aucune opération pour le moment." under the tab's icon, as the notifications') when empty,
+/// otherwise the rows with dividers, then the pagination footer as a sibling in the screen's lazy stack.
 private struct WalletListSection<Item: Identifiable & Sendable, Row: View>: View where Item.ID: Sendable {
     let list: PagedList<Item>
+    let emptyIcon: TaleedIcon
     @ViewBuilder let row: (Item) -> Row
     @Environment(LanguageManager.self) private var l10n
 
@@ -37,19 +38,8 @@ private struct WalletListSection<Item: Identifiable & Sendable, Row: View>: View
         VStack(spacing: TaleedSpacing.s12) {
             if list.hasLoaded {
                 if list.items.isEmpty {
-                    Text(l10n.string(.walletNoEntries))
-                        .taleedFont(TaleedFont.bodyRegular)
-                        .foregroundStyle(TaleedColor.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, TaleedSpacing.s16)
-                        .padding(.vertical, TaleedSpacing.s32)
-                        .background(TaleedColor.surfaceGrouped, in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
-                                .strokeBorder(TaleedColor.borderSubtle, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                        }
-                        .padding(.horizontal, TaleedLayout.screenMargin)
+                    EmptyState(title: l10n.string(.walletNoEntries), icon: emptyIcon)
+                        .padding(.top, TaleedSpacing.s8)
                         .accessibilityIdentifier("wallet.empty")
                 } else {
                     LazyVStack(spacing: 0) {
@@ -84,11 +74,14 @@ private struct WalletListSection<Item: Identifiable & Sendable, Row: View>: View
 }
 
 /// A history line: the type's icon, the server's label, "T-000104 · 4 oct. 2026" (vouchers: their status,
-/// the date and "Expire le …" while active), and the signed amount. A line about an order opens it.
+/// the date and "Expire le …" while active), and the signed amount. A line about an order opens it (a
+/// chevron); the others keep the chevron's place, so every amount ends on the same line. At accessibility
+/// sizes the line stacks (icon, label, detail, then the amount), so the label keeps the width.
 struct WalletEntryRowView: View {
     let entry: WalletEntryRow
     let onOpenOrder: (() -> Void)?
     @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         if let onOpenOrder {
@@ -104,35 +97,67 @@ struct WalletEntryRowView: View {
         }
     }
 
+    @ViewBuilder
     private func content(showsChevron: Bool) -> some View {
-        HStack(spacing: TaleedSpacing.s12) {
-            WalletRowIcon(icon: Self.icon(entry.kind))
-            VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-                Text(verbatim: entry.label)
-                    .taleedFont(TaleedFont.bodyRegular.with(weight: .semibold))
-                    .foregroundStyle(TaleedColor.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(verbatim: detail)
-                    .taleedFont(TaleedFont.bodySmall)
-                    .foregroundStyle(TaleedColor.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Text(verbatim: WalletText.signedAmount(entry.amount, language: l10n.language))
-                .taleedFont(TaleedFont.buttonMedium.with(weight: .extrabold))
-                .monospacedDigit()
-                .foregroundStyle(amountColor)
-                .lineLimit(1)
-                .layoutPriority(1)
-            if showsChevron {
-                TaleedIconView(.caretRight, size: 16, color: TaleedColor.textSecondary)
-                    .accessibilityHidden(true)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                    HStack {
+                        WalletRowIcon(icon: Self.icon(entry.kind))
+                        Spacer(minLength: 0)
+                        if showsChevron { chevron }
+                    }
+                    texts
+                    amount
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack(spacing: TaleedSpacing.s12) {
+                    WalletRowIcon(icon: Self.icon(entry.kind))
+                    texts
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    amount
+                        .lineLimit(1)
+                        .layoutPriority(1)
+                    if showsChevron {
+                        chevron
+                    } else {
+                        Color.clear.frame(width: Self.chevronSize, height: 1).accessibilityHidden(true)
+                    }
+                }
             }
         }
         .padding(.vertical, TaleedSpacing.s12)
         .padding(.horizontal, TaleedSpacing.s12)
         .frame(minHeight: TaleedSize.touchTargetMin)
         .contentShape(Rectangle())
+    }
+
+    private static let chevronSize: CGFloat = 16
+
+    private var chevron: some View {
+        TaleedIconView(.caretRight, size: Self.chevronSize, color: TaleedColor.textSecondary)
+            .accessibilityHidden(true)
+    }
+
+    private var texts: some View {
+        VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
+            Text(verbatim: entry.label)
+                .taleedFont(TaleedFont.bodyRegular.with(weight: .semibold))
+                .foregroundStyle(TaleedColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: detail)
+                .taleedFont(TaleedFont.bodySmall)
+                .foregroundStyle(TaleedColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var amount: some View {
+        Text(verbatim: WalletText.signedAmount(entry.amount, language: l10n.language))
+            .taleedFont(TaleedFont.buttonMedium.with(weight: .extrabold))
+            .monospacedDigit()
+            .foregroundStyle(amountColor)
     }
 
     private var detail: String {
@@ -165,8 +190,9 @@ struct WalletEntryRowView: View {
     }
 }
 
-/// A payout: "CCP · 1 000 DA", "4 oct. 2026 · VIR-2026-0042", "Voir le justificatif" when the team
-/// attached a receipt, and the server's status as a badge.
+/// A payout: the amount ("1 000 DA", the key figure, on its own line), "CCP · 4 oct. 2026, 14:32 ·
+/// VIR-2026-0042", "Voir le justificatif" when the team attached a receipt, and the server's status as a
+/// badge.
 struct PayoutRowView: View {
     let payout: PayoutRow
     let onOpenProof: (() -> Void)?
@@ -177,8 +203,9 @@ struct PayoutRowView: View {
             WalletRowIcon(icon: .money)
             VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
                 VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-                    Text(verbatim: "\(payout.methodLabel) · \(PriceFormatter.format(payout.amount, language: l10n.language))")
-                        .taleedFont(TaleedFont.bodyRegular.with(weight: .semibold))
+                    Text(verbatim: PriceFormatter.format(payout.amount, language: l10n.language))
+                        .taleedFont(TaleedFont.bodyRegular.with(weight: .bold))
+                        .monospacedDigit()
                         .foregroundStyle(TaleedColor.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                     Text(verbatim: WalletText.payoutDetail(payout, locale: l10n.language.formattingLocale))

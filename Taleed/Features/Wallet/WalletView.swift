@@ -2,14 +2,38 @@ import AuthenticationServices
 import SwiftUI
 
 /// The wallet (screens.md §2 G14 and §7 G14; website `wallet/page.tsx`; Figma does not draw it,
-/// decision D-12): back and "Portefeuille", the result of the last top-up, "Recharger" (only when a
-/// gateway takes top-ups) and "Demander un virement" (disabled under the minimum, with "Minimum : 100 DA"),
-/// the two tiles ("Solde disponible" with its voucher part, "En attente"), then the tabs "Historique" and
-/// "Virements (n)", which stay at the top while scrolling.
+/// decision D-12): back and "Portefeuille", the result of the last top-up, the two tiles ("Solde
+/// disponible" with its voucher part, "En attente") first, as the screen's main figure, then "Recharger"
+/// (only when a gateway takes top-ups) and "Demander un virement" (disabled under the minimum, with
+/// "Minimum : 100 DA" under it), then the tabs "Historique" and "Virements (n)", which stay at the top
+/// while scrolling. Signed out: the sign-in prompt.
 ///
-/// States: a skeleton while the header loads, the error with Retry (offline included), each tab's
-/// loading, error and empty states, pull-to-refresh, pagination, a quiet reload back from the background.
+/// States: a skeleton of the header and the tabs while the header loads, the error with Retry (offline
+/// included), each tab's loading, error and empty states, pull-to-refresh, pagination, a quiet reload
+/// back from the background.
 struct WalletView: View {
+    let api: WalletApi
+    /// Opens the payout form once the wallet has loaded (account deletion with money left, G16).
+    var opensPayout = false
+    @Environment(SessionManager.self) private var session
+    @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        if session.isSignedIn {
+            // A new screen for another member.
+            WalletScreen(api: api, opensPayout: opensPayout).id(session.user?.id)
+        } else {
+            ShellScreen {
+                TaleedTopAppBar(title: l10n.string(.walletTitle), onBack: { dismiss() })
+            } content: {
+                SignInPromptView(icon: .money, title: l10n.string(.appWalletSignedOutTitle))
+            }
+        }
+    }
+}
+
+private struct WalletScreen: View {
     @State private var model: WalletViewModel
     @State private var showsTopUp = false
     @State private var showsPayout = false
@@ -30,7 +54,7 @@ struct WalletView: View {
     private let opensPayout: Bool
     @State private var didOpenPayout = false
 
-    init(api: WalletApi, opensPayout: Bool = false) {
+    init(api: WalletApi, opensPayout: Bool) {
         _model = State(initialValue: WalletViewModel(api: api))
         self.opensPayout = opensPayout
     }
@@ -98,9 +122,9 @@ struct WalletView: View {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                     VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
                         if let banner = model.banner { TopUpBannerView(banner: banner, onDismiss: model.dismissBanner) }
+                        WalletTiles(summary: summary)
                         WalletActions(summary: summary, onTopUp: openTopUpSheet, onPayout: { showsPayout = true })
                             .disabled(isInBrowser)
-                        WalletTiles(summary: summary)
                     }
                     .padding(.horizontal, TaleedLayout.screenMargin)
                     .padding(.top, TaleedSpacing.s16)
@@ -129,12 +153,13 @@ struct WalletView: View {
         }
     }
 
-    /// "Historique" and "Virements (3)" (the API's total, the website counts at most 50).
+    /// "Historique" and "Virements (3)" (the API's total, the website counts at most 50); no "(0)", as
+    /// "Vos filleuls" on Referrals.
     private var tabs: some View {
         let payouts = l10n.string(.walletPayouts)
         let titles = [
             l10n.string(.walletHistory),
-            model.payoutCount.map { l10n.format(.appMyListingsTabCount, payouts, $0) } ?? payouts,
+            model.payoutCount.flatMap { $0 > 0 ? l10n.format(.appMyListingsTabCount, payouts, $0) : nil } ?? payouts,
         ]
         return TaleedTabs(titles: titles, selection: Binding(
             get: { model.tab.rawValue },
@@ -157,6 +182,8 @@ struct WalletView: View {
     // MARK: Top-up
 
     private func openTopUpSheet() {
+        // The last top-up's result is old news once another one starts.
+        model.dismissBanner()
         startedTopUp = nil
         isTopUpSheetGone = false
         showsTopUp = true
@@ -199,174 +226,5 @@ struct WalletView: View {
     private func takePaymentReturn() {
         guard let paymentReturn = router.consumePaymentReturn(kind: .topUp) else { return }
         Task { await model.paymentReturned(paymentReturn) }
-    }
-}
-
-// MARK: - Header
-
-/// "Recharger" (mint, the website's CTA) and "Demander un virement" (blue), side by side when they fit,
-/// stacked otherwise; "Minimum : 100 DA" under them while the balance is under the minimum.
-private struct WalletActions: View {
-    let summary: WalletSummary
-    let onTopUp: () -> Void
-    let onPayout: () -> Void
-    @Environment(LanguageManager.self) private var l10n
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: TaleedSpacing.s12) { buttons }
-                VStack(spacing: TaleedSpacing.s12) { buttons }
-            }
-            if !WalletRules.canRequestPayout(summary) {
-                FieldHelper(text: l10n.format(.walletMinPayout, PriceFormatter.format(summary.limits.minPayout, language: l10n.language)))
-                    .accessibilityHidden(false)
-                    .accessibilityIdentifier("wallet.minPayout")
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var buttons: some View {
-        if WalletRules.showsTopUp(summary) {
-            TaleedButton(title: l10n.string(.walletTopUp), kind: .secondary, size: .large, leadingIcon: .plusCircle,
-                         isFullWidth: true, action: onTopUp)
-                .accessibilityIdentifier("wallet.topUp")
-        }
-        TaleedButton(title: l10n.string(.walletRequestPayout), kind: .primary, size: .large, leadingIcon: .money,
-                     isFullWidth: true, action: onPayout)
-            .disabled(!WalletRules.canRequestPayout(summary))
-            .accessibilityHint(WalletRules.canRequestPayout(summary)
-                ? "" : l10n.format(.walletMinPayout, PriceFormatter.format(summary.limits.minPayout, language: l10n.language)))
-            .accessibilityIdentifier("wallet.requestPayout")
-    }
-}
-
-/// The two tiles of the website, in one bordered card: "Solde disponible" (balance plus vouchers, with
-/// the voucher part) and "En attente (commandes en cours)", muted, with its hint.
-private struct WalletTiles: View {
-    let summary: WalletSummary
-    @Environment(LanguageManager.self) private var l10n
-
-    static let headlineStyle = TaleedTextStyle(size: 28, weight: .extrabold, lineHeight: nil, letterSpacing: 0, relativeTo: .title)
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            tile(icon: .money, title: l10n.string(.walletBalance), amount: summary.headline, color: TaleedColor.textPrimary,
-                 note: WalletRules.showsVoucherPart(summary)
-                     ? (.ticket, l10n.format(.walletVoucherPart, PriceFormatter.format(summary.voucherBalance, language: l10n.language)))
-                     : nil)
-                .accessibilityIdentifier("wallet.balance")
-            Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)
-            tile(icon: .lockKey, title: l10n.string(.walletPendingEscrow), amount: summary.pendingEscrow,
-                 color: TaleedColor.textSecondary, note: (.info, l10n.string(.walletPendingHint)))
-                .accessibilityIdentifier("wallet.pending")
-        }
-        .taleedCard(radius: TaleedRadius.l)
-    }
-
-    private func tile(icon: TaleedIcon, title: String, amount: Int, color: Color, note: (TaleedIcon, String)?) -> some View {
-        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-            HStack(spacing: 6) {
-                TaleedIconView(icon, size: 14, color: TaleedColor.textSecondary)
-                    .accessibilityHidden(true)
-                Text(title.uppercased(with: l10n.language.locale))
-                    .taleedFont(TaleedFont.eyebrow)
-                    .foregroundStyle(TaleedColor.textSecondary)
-                    .accessibilityLabel(title)
-            }
-            PriceText(amount: amount, style: Self.headlineStyle, color: color)
-            if let note {
-                HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s4) {
-                    TaleedIconView(note.0, size: 12, color: TaleedColor.textSecondary)
-                        .accessibilityHidden(true)
-                    Text(note.1)
-                        .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-/// The top-up's result, as the website's banners; "Vérification du paiement…" while the sync runs.
-private struct TopUpBannerView: View {
-    let banner: TopUpBanner
-    let onDismiss: () -> Void
-    @Environment(LanguageManager.self) private var l10n
-
-    var body: some View {
-        Group {
-            switch banner {
-            case .checking:
-                HStack(spacing: TaleedSpacing.s12) {
-                    ProgressView().tint(TaleedColor.brandPrimary)
-                    Text(l10n.string(.appCheckoutVerifying))
-                        .taleedFont(TaleedFont.bodyLarge)
-                        .foregroundStyle(TaleedColor.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding(TaleedSize.alertPadding)
-                .background(TaleedColor.blue100, in: RoundedRectangle(cornerRadius: TaleedSize.alertRadius, style: .continuous))
-                .accessibilityElement(children: .combine)
-            case .paid:
-                InlineAlert(kind: .success, title: l10n.string(.walletToppedUp), actionTitle: l10n.string(.commonDismiss),
-                            action: onDismiss)
-            case .pending:
-                InlineAlert(kind: .info, title: l10n.string(.walletTopUpPending), actionTitle: l10n.string(.commonDismiss),
-                            action: onDismiss)
-            case .failed:
-                InlineAlert(kind: .error, title: l10n.string(.walletTopUpFailed), actionTitle: l10n.string(.commonDismiss),
-                            action: onDismiss)
-            }
-        }
-        .accessibilityIdentifier("wallet.banner")
-        .onAppear { announce() }
-        .onChange(of: banner) { _, _ in announce() }
-    }
-
-    private func announce() {
-        let text: String = switch banner {
-        case .checking: l10n.string(.appCheckoutVerifying)
-        case .paid: l10n.string(.walletToppedUp)
-        case .pending: l10n.string(.walletTopUpPending)
-        case .failed: l10n.string(.walletTopUpFailed)
-        }
-        AccessibilityNotification.Announcement(text).post()
-    }
-}
-
-/// The header's shape while it loads (six blocks at most, design-system §3.6).
-private struct WalletSkeleton: View {
-    @Environment(LanguageManager.self) private var l10n
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
-                HStack(spacing: TaleedSpacing.s12) {
-                    SkeletonBlock(height: 48, radius: TaleedRadius.m)
-                    SkeletonBlock(height: 48, radius: TaleedRadius.m)
-                }
-                VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
-                    SkeletonBlock(width: 120, height: 12)
-                    SkeletonBlock(width: 180, height: 30)
-                    SkeletonBlock(width: 140, height: 12)
-                    SkeletonBlock(width: 160, height: 30)
-                }
-                .padding(20)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .taleedCard(radius: TaleedRadius.l)
-            }
-            .padding(.horizontal, TaleedLayout.screenMargin)
-            .padding(.top, TaleedSpacing.s16)
-        }
-        .scrollDisabled(true)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(l10n.string(.commonLoading))
-        .accessibilityIdentifier("wallet.loading")
     }
 }

@@ -89,15 +89,16 @@ struct ReferralsCopy {
     // MARK: Terms
 
     /// "Le programme de parrainage est soumis à des conditions.", the tagged part a link to `termsURL`
-    /// (plain text when there is none).
-    static func termsNote(_ text: String, termsURL: URL?, linkColor: Color) -> AttributedString {
+    /// (plain text when there is none). `isLink` false only draws it as a link, for a line that opens the
+    /// terms as a whole.
+    static func termsNote(_ text: String, termsURL: URL?, linkColor: Color, isLink: Bool = true) -> AttributedString {
         guard let open = text.range(of: "<terms>"), let close = text.range(of: "</terms>", range: open.upperBound..<text.endIndex) else {
             return AttributedString(text)
         }
         var result = AttributedString(String(text[..<open.lowerBound]))
         var link = AttributedString(String(text[open.upperBound..<close.lowerBound]))
         if let termsURL {
-            link.link = termsURL
+            if isLink { link.link = termsURL }
             link.underlineStyle = .single
             link.foregroundColor = linkColor
         }

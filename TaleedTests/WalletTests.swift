@@ -73,7 +73,7 @@ struct WalletTextTests {
         let locale = Locale(identifier: "fr_FR")
         let date = OrderText.date(Date(timeIntervalSince1970: 1_760_000_000), locale: locale)
         let detail = WalletText.entryDetail(walletEntry("a", note: "T-000010"), locale: locale) { "Expire le \($0)" }
-        #expect(detail == "\("T-000010".isolatedLeftToRight) · \(date)")
+        #expect(detail == "\("T-000010".isolatedLeftToRight)\u{00A0}·\u{00A0}\(date)")
         #expect(WalletText.entryDetail(walletEntry("b", note: nil), locale: locale) { $0 } == date)
     }
 
@@ -84,19 +84,22 @@ struct WalletTextTests {
         let active = WalletVoucherInfo(status: .active, statusLabel: "Utilisable dès 1500 DA d’achat", expiresAt: expires)
         let voucherEntry = walletEntry("v", kind: .voucher, amount: 500, voucher: active)
         let detail = WalletText.entryDetail(voucherEntry, locale: locale) { "Expire le \($0)" }
-        #expect(detail == "Utilisable dès 1500 DA d’achat · \(OrderText.date(created, locale: locale)) · "
+        #expect(detail == "Utilisable dès 1500 DA d’achat\u{00A0}·\u{00A0}\(OrderText.date(created, locale: locale))\u{00A0}·\u{00A0}"
             + "Expire le \(OrderText.date(expires, locale: locale))")
         let expired = WalletVoucherInfo(status: .expired, statusLabel: "Expiré", expiresAt: expires)
         let expiredDetail = WalletText.entryDetail(walletEntry("w", kind: .voucher, amount: 500, voucher: expired), locale: locale) { $0 }
-        #expect(expiredDetail == "Expiré · \(OrderText.date(created, locale: locale))")
+        #expect(expiredDetail == "Expiré\u{00A0}·\u{00A0}\(OrderText.date(created, locale: locale))")
     }
 
-    @Test func payoutLinesShowTheDateAndReference() {
+    @Test func payoutLinesShowTheMethodTheTimeAndReference() {
         let locale = Locale(identifier: "fr_FR")
-        let date = OrderText.date(Date(timeIntervalSince1970: 1_760_000_000), locale: locale)
-        #expect(WalletText.payoutDetail(walletPayout("p"), locale: locale) == date)
+        let date = OrderText.dateTime(Date(timeIntervalSince1970: 1_760_000_000), locale: locale)
+        let method = walletPayout("p").methodLabel
+        #expect(WalletText.payoutDetail(walletPayout("p"), locale: locale) == "\(method)\u{00A0}·\u{00A0}\(date)")
         #expect(WalletText.payoutDetail(walletPayout("q", reference: "VIR-2026-0042"), locale: locale)
-            == "\(date) · \("VIR-2026-0042".isolatedLeftToRight)")
+            == "\(method)\u{00A0}·\u{00A0}\(date)\u{00A0}·\u{00A0}\("VIR-2026-0042".isolatedLeftToRight)")
+        // The separators never break: no plain space around the dots.
+        #expect(!WalletText.payoutDetail(walletPayout("p"), locale: locale).contains(" · "))
     }
 }
 

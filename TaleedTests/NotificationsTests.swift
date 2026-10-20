@@ -57,8 +57,8 @@ struct NotificationRulesTests {
             ("VERIFICATION_VOUCHER", .money),
             ("NEW_FAVORITE", .community), ("NEW_FOLLOWER", .community), ("FOLLOWED_MEMBER_LISTED", .community),
             ("REVIEW_RECEIVED", .community), ("REFERRAL_SIGNUP", .community),
-            ("VERIFICATION_APPROVED", .account), ("VERIFICATION_REJECTED", .account), ("REPORT_RESOLVED", .account),
-            ("REPORT_DISMISSED", .account),
+            ("VERIFICATION_APPROVED", .account), ("VERIFICATION_REJECTED", .accountIssue), ("REPORT_RESOLVED", .account),
+            ("REPORT_DISMISSED", .accountIssue),
             ("BOOST_ACTIVATED", .boosts), ("BOOST_ENDED", .boosts),
         ]
         for (type, theme) in expectations {
@@ -71,6 +71,12 @@ struct NotificationRulesTests {
         #expect(NotificationTheme(type: "") == .other)
         #expect(NotificationTheme.other.icon == .bell)
         #expect(NotificationTheme(type: "new_offer") == .offers)
+    }
+
+    @Test func aRefusalShowsAWarningShieldNotACheck() {
+        #expect(NotificationTheme(type: "VERIFICATION_APPROVED").icon == .shieldCheck)
+        #expect(NotificationTheme(type: "VERIFICATION_REJECTED").icon == .shieldWarning)
+        #expect(NotificationTheme(type: "REPORT_DISMISSED").icon == .shieldWarning)
     }
 
     @Test func aRowOpensItsLinkThroughTheRouter() {

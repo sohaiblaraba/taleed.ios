@@ -17,6 +17,8 @@ struct InlineAlert: View {
                                                       relativeTo: .caption2)
     /// The icon grows with the title (up to twice its size).
     @ScaledMetric(relativeTo: .body) private var iconSize = TaleedSize.alertIconSize
+    /// How far the action's 44 pt target (and the button's padding) reaches past the 32 pt link, each side.
+    private static let actionOverhang = (TaleedSize.touchTargetMin + 8 - TaleedSize.buttonHyperlinkHeightSmall) / 2
 
     var body: some View {
         HStack(alignment: .top, spacing: TaleedSize.alertGap) {
@@ -28,15 +30,26 @@ struct InlineAlert: View {
                     Text(title)
                         .taleedFont(TaleedFont.bodyLarge)
                         .foregroundStyle(TaleedColor.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
                     if let message {
                         Text(message)
                             .taleedFont(Self.messageStyle)
                             .foregroundStyle(kind == .info ? TaleedColor.navy700 : TaleedColor.textBody)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .accessibilityElement(children: .combine)
                 if let actionTitle, let action {
-                    TaleedButton(title: actionTitle, kind: .hyperlink, size: .small, action: action)
+                    // A 44 pt target laid out in the 32 pt link's height (the extra overlaps the gaps).
+                    Button(action: action) {
+                        Text(actionTitle)
+                            .taleedFont(TaleedButtonSize.small.textStyle)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(minHeight: TaleedSize.touchTargetMin)
+                    }
+                    .buttonStyle(TaleedButtonStyle(kind: .hyperlink, size: .small))
+                    .padding(.vertical, -Self.actionOverhang)
+                    .accessibilityLabel(actionTitle)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
