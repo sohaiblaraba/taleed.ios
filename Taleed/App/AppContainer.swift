@@ -122,9 +122,11 @@ final class AppContainer {
         session.onSessionStarted = { [push] in
             Task { await push.sessionDidStart() }
         }
-        languageManager.onChange = { [apiSession, catalog, push] language in
+        languageManager.onChange = { [apiSession, catalog, push, launch] language in
             apiSession.setLanguage(language)
             Task { await catalog.languageDidChange(to: language) }
+            // The website links of `GET /config` carry the language (API 1.5.11).
+            Task { await launch.languageDidChange() }
             // Pushes follow the new language (screens.md §0.8).
             Task { await push.languageDidChange() }
         }

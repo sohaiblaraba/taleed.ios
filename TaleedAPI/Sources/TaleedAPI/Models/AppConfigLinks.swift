@@ -7,7 +7,7 @@
 
 import Foundation
 
-/** Website pages the apps open in the in-app browser, in the response language. */
+/** Website pages the apps open in the in-app browser, in the response language: each carries its language prefix, &#x60;/fr&#x60; included, so a browser in another language keeps it. */
 public struct AppConfigLinks: Sendable, Codable, Hashable {
 
     public var website: String

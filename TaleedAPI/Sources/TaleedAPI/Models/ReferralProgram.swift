@@ -40,7 +40,7 @@ public struct ReferralProgram: Sendable, Codable, Hashable {
     public var annualCap: Int
     /** Days a voucher stays usable once granted. */
     public var voucherValidityDays: Int
-    /** The program's terms, on the website. */
+    /** The program's terms, on the website, in the response language: the URL carries its language prefix, `/fr` included, so a browser in another language keeps it. */
     public var termsUrl: String
 
     public init(canRefer: Bool, code: String?, inviteUrl: String?, voucherAmount: Int, listingGoal: Int, listingWindowDays: Int, saleVouchers: Int, saleWindowDays: Int, minItemPrice: Int, annualCap: Int, voucherValidityDays: Int, termsUrl: String) {

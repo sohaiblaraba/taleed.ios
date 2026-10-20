@@ -309,3 +309,33 @@ struct LaunchViewModelTests {
         #expect(!session.hasSuspendedSession)
     }
 }
+
+/// The language changed in Settings: `GET /config` again, for links in the new language (API 1.5.11).
+extension LaunchViewModelTests {
+    @Test func languageChangeReloadsTheConfigLinks() async {
+        let (launch, _) = makeLaunch(tokenStore: InMemoryTokenStore())
+        await launch.start()
+        var english = RemoteConfig.fixture()
+        english.links.terms = URL(string: "http://localhost:3000/en/terms")
+        api.configResult = .success(english)
+
+        await launch.languageDidChange()
+
+        #expect(launch.config?.links.terms == URL(string: "http://localhost:3000/en/terms"))
+        #expect(launch.route == .main)
+    }
+
+    @Test func languageChangeKeepsTheConfigWhenTheReloadFails() async {
+        var french = RemoteConfig.fixture()
+        french.links.terms = URL(string: "http://localhost:3000/fr/terms")
+        api.configResult = .success(french)
+        let (launch, _) = makeLaunch(tokenStore: InMemoryTokenStore())
+        await launch.start()
+        api.configResult = .failure(.network)
+
+        await launch.languageDidChange()
+
+        #expect(launch.config?.links.terms == URL(string: "http://localhost:3000/fr/terms"))
+        #expect(launch.route == .main)
+    }
+}

@@ -84,6 +84,14 @@ final class LaunchViewModel {
         }
     }
 
+    /// The app language changed (Settings, no restart): read `GET /config` again in the new language, so
+    /// its `links` (terms, privacy, buyer protection, guides, website) carry the new language prefix
+    /// (API 1.5.11). On failure the current config stays; the launch route does not change.
+    func languageDidChange() async {
+        guard config != nil, let fresh = try? await api.config() else { return }
+        config = fresh
+    }
+
     /// The app came back to the foreground: refresh the member (badges later).
     func didReturnToForeground() async {
         guard phase == .ready else { return }
