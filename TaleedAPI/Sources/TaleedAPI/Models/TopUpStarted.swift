@@ -11,7 +11,7 @@ import Foundation
 public struct TopUpStarted: Sendable, Codable, Hashable {
 
     public var topUp: TopUp
-    /** The gateway's payment page. Open it in an in-app browser tab (ASWebAuthenticationSession, Custom Tabs), never a web view. It hands back to the app through `taleed://payment-return`: then call `POST /wallet/top-ups/{id}/sync`. */
+    /** The gateway's payment page. Open it in an in-app browser tab (ASWebAuthenticationSession, Custom Tabs), never a web view. It hands back to the app through `taleed://payment-return`: then call `POST /wallet/top-ups/{id}/sync`. In development, the simulated payment page opens in the request's language (`Accept-Language`). */
     public var paymentUrl: String
 
     public init(topUp: TopUp, paymentUrl: String) {

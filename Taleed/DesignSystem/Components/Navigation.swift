@@ -132,6 +132,8 @@ struct TaleedBottomSheet<Content: View>: View {
     /// Defaults to the sheet title, 18/400. The sign-in sheet uses Title 2, as on Android.
     var titleStyle: TaleedTextStyle?
     var onClose: (() -> Void)?
+    /// Hides the close button while the sheet must stay up (an action under way); its place is kept.
+    var isCloseHidden = false
     @ViewBuilder let content: Content
     @Environment(\.locale) private var locale
 
@@ -155,6 +157,9 @@ struct TaleedBottomSheet<Content: View>: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(DesignSystemStrings.string(.commonClose, locale: locale))
+                    .opacity(isCloseHidden ? 0 : 1)
+                    .disabled(isCloseHidden)
+                    .accessibilityHidden(isCloseHidden)
                 }
             }
             content

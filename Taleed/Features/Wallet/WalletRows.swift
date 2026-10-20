@@ -26,7 +26,8 @@ struct WalletPayoutsSection: View {
 }
 
 /// A tab's list: a spinner while the first page loads, the error with Retry, "Aucune opération pour le
-/// moment." when empty, otherwise the rows with dividers and the pagination footer.
+/// moment." when empty, otherwise the rows with dividers, then the pagination footer as a sibling in the
+/// screen's lazy stack.
 private struct WalletListSection<Item: Identifiable & Sendable, Row: View>: View where Item.ID: Sendable {
     let list: PagedList<Item>
     @ViewBuilder let row: (Item) -> Row
@@ -62,7 +63,6 @@ private struct WalletListSection<Item: Identifiable & Sendable, Row: View>: View
                     .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
                     .taleedCard()
                     .padding(.horizontal, TaleedLayout.screenMargin)
-                    PaginationFooter(list: list)
                 }
             } else if let error = list.error {
                 SectionErrorView(error: error) { Task { await list.reload() } }
@@ -75,6 +75,11 @@ private struct WalletListSection<Item: Identifiable & Sendable, Row: View>: View
         }
         .padding(.vertical, TaleedSpacing.s16)
         .task { await list.loadIfNeeded() }
+        // A child of its own in the screen's lazy stack, not inside the block above: it appears, and asks
+        // for the next page, only once the member scrolls to the end of the rows.
+        if list.hasLoaded, !list.items.isEmpty {
+            PaginationFooter(list: list)
+        }
     }
 }
 

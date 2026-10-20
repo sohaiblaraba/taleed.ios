@@ -10,7 +10,7 @@ import Foundation
 /** A payment page for an order awaiting payment. */
 public struct OrderPayment: Sendable, Codable, Hashable {
 
-    /** The gateway's payment page. Open it in an in-app browser tab (ASWebAuthenticationSession, Custom Tabs), never a web view. It hands back to the app through `taleed://payment-return`: then call `POST /orders/{id}/payment/sync`. */
+    /** The gateway's payment page. Open it in an in-app browser tab (ASWebAuthenticationSession, Custom Tabs), never a web view. It hands back to the app through `taleed://payment-return`: then call `POST /orders/{id}/payment/sync`. In development, the simulated payment page opens in the request's language (`Accept-Language`). */
     public var paymentUrl: String
 
     public init(paymentUrl: String) {

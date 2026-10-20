@@ -19,7 +19,6 @@ struct MemberWardrobeSection: View {
                     EmptyState(title: emptyTitle, icon: .storefront)
                 } else {
                     ListingGrid(listings: items)
-                    PaginationFooter(list: list)
                 }
             } else if let error = list.error {
                 SectionErrorView(error: error) { Task { await list.reload() } }
@@ -31,6 +30,10 @@ struct MemberWardrobeSection: View {
         .padding(.vertical, TaleedSpacing.s16)
         // A new filter gives a new list: load its first page.
         .task(id: ObjectIdentifier(list)) { await list.loadIfNeeded() }
+        // A sibling in the screen's lazy stack: it loads the next page only once scrolled to.
+        if list.hasLoaded, !list.items.isEmpty {
+            PaginationFooter(list: list)
+        }
     }
 
     /// "Aucune annonce active.", or "Aucune annonce dans la catégorie « Sacs »." with a category.
@@ -73,7 +76,6 @@ struct MemberReviewsSection: View {
                         ForEach(list.items) { MemberReviewRow(review: $0) }
                     }
                     .padding(.horizontal, TaleedLayout.screenMargin)
-                    PaginationFooter(list: list)
                 }
             } else if let error = list.error {
                 SectionErrorView(error: error) { Task { await list.reload() } }
@@ -86,6 +88,10 @@ struct MemberReviewsSection: View {
         }
         .padding(.vertical, TaleedSpacing.s16)
         .task { await list.loadIfNeeded() }
+        // A sibling in the screen's lazy stack: it loads the next page only once scrolled to.
+        if list.hasLoaded, !list.items.isEmpty {
+            PaginationFooter(list: list)
+        }
     }
 }
 

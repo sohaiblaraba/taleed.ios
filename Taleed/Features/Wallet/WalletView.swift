@@ -13,8 +13,10 @@ struct WalletView: View {
     @State private var model: WalletViewModel
     @State private var showsTopUp = false
     @State private var showsPayout = false
-    /// The top-up the sheet started: its page opens once the sheet is gone.
+    /// The top-up the sheet started: its page opens once the sheet is gone, and only then.
     @State private var startedTopUp: StartedTopUp?
+    /// False from "Recharger" until the top-up sheet's dismissal has run (its closing animation included).
+    @State private var isTopUpSheetGone = true
     @State private var isInBrowser = false
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
@@ -54,7 +56,7 @@ struct WalletView: View {
         }
         .onChange(of: model.history.refreshError) { _, error in if let error { toasts.show(error: error) } }
         .onChange(of: model.payouts.refreshError) { _, error in if let error { toasts.show(error: error) } }
-        .taleedSheet(isPresented: $showsTopUp, onDismiss: openStartedTopUp) {
+        .taleedSheet(isPresented: $showsTopUp, onDismiss: topUpSheetDismissed) {
             if let summary = model.summary {
                 TopUpSheet(summary: summary, isStarting: model.isStartingTopUp, start: startTopUp, onClose: { showsTopUp = false })
                     .appLanguage(l10n.language)
@@ -86,7 +88,7 @@ struct WalletView: View {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                     VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
                         if let banner = model.banner { TopUpBannerView(banner: banner, onDismiss: model.dismissBanner) }
-                        WalletActions(summary: summary, onTopUp: { showsTopUp = true }, onPayout: { showsPayout = true })
+                        WalletActions(summary: summary, onTopUp: openTopUpSheet, onPayout: { showsPayout = true })
                             .disabled(isInBrowser)
                         WalletTiles(summary: summary)
                     }
@@ -144,16 +146,34 @@ struct WalletView: View {
 
     // MARK: Top-up
 
-    /// "Procéder au paiement": the top-up starts, the sheet closes, then the gateway's page opens.
-    private func startTopUp(amount: Int, method: String) async {
-        guard let started = await model.startTopUp(amount: amount, method: method) else { return }
-        startedTopUp = started
-        showsTopUp = false
+    private func openTopUpSheet() {
+        startedTopUp = nil
+        isTopUpSheetGone = false
+        showsTopUp = true
     }
 
-    private func openStartedTopUp() {
-        guard let started = startedTopUp, let url = started.paymentURL else { return }
+    /// "Procéder au paiement": the top-up starts, the sheet closes, then the gateway's page opens. The
+    /// sheet cannot be closed meanwhile; should it be gone anyway, the page opens at once.
+    private func startTopUp(amount: Int, method: String) async {
+        guard let started = await model.startTopUp(amount: amount, method: method) else { return }
+        if isTopUpSheetGone {
+            openPaymentPage(started)
+        } else {
+            startedTopUp = started
+            showsTopUp = false
+        }
+    }
+
+    /// The sheet is gone: the top-up it started (if any) opens; nothing is kept for a later dismissal.
+    private func topUpSheetDismissed() {
+        isTopUpSheetGone = true
+        guard let started = startedTopUp else { return }
         startedTopUp = nil
+        openPaymentPage(started)
+    }
+
+    private func openPaymentPage(_ started: StartedTopUp) {
+        guard let url = started.paymentURL, !isInBrowser else { return }
         isInBrowser = true
         Task {
             // Back through the return link, or the member closed the page: either way, ask the API.

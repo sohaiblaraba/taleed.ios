@@ -112,7 +112,8 @@ struct PayoutSheet: View {
 
 /// "Recharger le solde" (screens.md §7 G14 "Top-up dialog"): the website's text, the amount prefilled with
 /// 1 000 DA, the gateways as radio cards only when there is more than one, and "Procéder au paiement",
-/// which reads "Redirection vers le paiement…" while the top-up starts.
+/// which reads "Redirection vers le paiement…" while the top-up starts. The sheet cannot be closed while
+/// the top-up starts (no close button, no swipe), so its page always opens once it has started.
 struct TopUpSheet: View {
     let summary: WalletSummary
     let isStarting: Bool
@@ -130,7 +131,7 @@ struct TopUpSheet: View {
     }
 
     var body: some View {
-        TaleedBottomSheet(title: l10n.string(.walletTopUpTitle), onClose: onClose) {
+        TaleedBottomSheet(title: l10n.string(.walletTopUpTitle), onClose: onClose, isCloseHidden: isStarting) {
             VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
                 Text(l10n.string(.walletTopUpBody))
                     .taleedFont(TaleedFont.bodyRegular)
@@ -165,6 +166,7 @@ struct TopUpSheet: View {
                     .accessibilityIdentifier("topUp.submit")
             }
         }
+        .interactiveDismissDisabled(isStarting)
     }
 
     /// "Le montant doit être compris entre 100 DA et 1 000 000 DA."
