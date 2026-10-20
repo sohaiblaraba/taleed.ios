@@ -155,7 +155,7 @@ struct RoutePlaceholderView: View {
         ShellScreen {
             TaleedTopAppBar(title: "", onBack: { dismiss() })
         } content: {
-            MessageStateView(text: l10n.string(.appPlaceholderComingSoon)) {
+            MessageStateView(text: l10n.string(.appPlaceholderBody)) {
                 #if DEBUG
                 Text(verbatim: String(describing: route))
                     .taleedFont(TaleedFont.bodyRegular)

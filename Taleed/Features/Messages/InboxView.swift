@@ -146,7 +146,7 @@ struct InboxRow: View {
                         if isUnread {
                             // "9+" above 9 (§7 G9).
                             CountBadge(count: conversation.unreadCount,
-                                       accessibilityLabel: l10n.format(.appA11yUnreadMessages, conversation.unreadCount), maxCount: 9)
+                                       accessibilityLabel: l10n.format(.appBadgeUnreadMessages, conversation.unreadCount), maxCount: 9)
                         }
                     }
                 }
@@ -190,7 +190,7 @@ struct InboxRow: View {
         }
         if let text = conversation.lastMessage?.text { parts.append(text) }
         parts.append(RelativeTimeText.string(for: conversation.lastMessageAt, locale: l10n.language.formattingLocale))
-        if conversation.unreadCount > 0 { parts.append(l10n.format(.appA11yUnreadMessages, conversation.unreadCount)) }
+        if conversation.unreadCount > 0 { parts.append(l10n.format(.appBadgeUnreadMessages, conversation.unreadCount)) }
         return parts.joined(separator: ", ")
     }
 }

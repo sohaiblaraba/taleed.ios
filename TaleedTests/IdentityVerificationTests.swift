@@ -329,9 +329,9 @@ struct IdentityVerificationViewModelTests {
     @Test func theDailyLimitSaysHoursOverAnHour() {
         let error = ApiError.rateLimited(retryAfter: 86_400)
         #expect(error.rateLimitHours == 24)
-        #expect(error.message(in: .fr) == "Réessayez dans 24 heures.")
+        #expect(error.message(in: .fr) == "Trop de requêtes. Réessayez dans 24 heures.")
         #expect(ApiError.rateLimited(retryAfter: 3600).rateLimitHours == nil)
-        #expect(ApiError.rateLimited(retryAfter: 3600).message(in: .fr) == "Réessayez dans 60 minutes.")
+        #expect(ApiError.rateLimited(retryAfter: 3600).message(in: .fr) == "Trop de requêtes. Réessayez dans 60 minutes.")
     }
 
     @Test func anUnreadablePhotoIsRefused() async {

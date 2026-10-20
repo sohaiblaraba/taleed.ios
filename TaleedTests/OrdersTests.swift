@@ -96,6 +96,19 @@ struct OrderRulesTests {
         #expect(!text.unicodeScalars.contains { (0x0660...0x0669).contains($0.value) })
     }
 
+    /// The website's `formatDateTime`: a comma between the date and the time, not "à" / "at".
+    @Test func dateTimesAreTheWebsites() {
+        let date = Date(timeIntervalSince1970: 1_792_000_000)
+        let french = OrderText.dateTime(date, locale: AppLanguage.fr.formattingLocale)
+        let english = OrderText.dateTime(date, locale: AppLanguage.en.formattingLocale)
+        let arabic = OrderText.dateTime(date, locale: AppLanguage.ar.formattingLocale)
+        #expect(french.wholeMatch(of: #/\d{1,2} [a-zéû.]+ 2026, \d{2}:\d{2}/#) != nil, "\(french)")
+        #expect(english.wholeMatch(of: #/\d{1,2} [A-Z][a-z]+ 2026, \d{2}:\d{2}/#) != nil, "\(english)")
+        #expect(arabic.contains("\u{060C} "))
+        #expect(!arabic.unicodeScalars.contains { (0x0660...0x0669).contains($0.value) })
+        #expect(OrderText.date(date, locale: AppLanguage.en.formattingLocale).wholeMatch(of: #/\d{1,2} [A-Z][a-z]+ 2026/#) != nil)
+    }
+
     @Test func statusTones() {
         #expect(OrderState.pendingPayment.badgeTone == .warning)
         #expect(OrderState.disputed.badgeTone == .warning)

@@ -34,7 +34,13 @@ struct DesignSystemConsistencyTests {
         #expect(DesignSystemStrings.string(.trustTrustedSellers, locale: french) == "Vendeurs fiables")
         #expect(DesignSystemStrings.string(.commonErrorGeneric, locale: french) == "Une erreur est survenue. Réessayez.")
         #expect(DesignSystemStrings.string(.commonErrorGeneric, locale: arabic) == "حدث خطأ. أعد المحاولة.")
-        #expect(DesignSystemStrings.string(.notificationsPlaceholder, locale: english) == "Your notifications will appear here.")
+        #expect(DesignSystemStrings.string(.appErrorInvalidState, locale: french)
+            == "Cette action n’est plus possible. La page a été mise à jour.")
+        #expect(DesignSystemStrings.string(.homeHeroTitle, locale: french) == "Donnez une seconde vie à vos affaires.")
+        #expect(DesignSystemStrings.format(.checkoutSuccessBody, locale: english, 1)
+            == "Your money is safe. The seller now has 1 day to ship your order.")
+        #expect(DesignSystemStrings.format(.checkoutSuccessBody, locale: french, 3)
+            == "Votre argent est en sécurité. Le vendeur a maintenant 3 jours pour expédier votre commande.")
     }
 
     @Test func sizeAndLayoutTokensAreFlattened() {

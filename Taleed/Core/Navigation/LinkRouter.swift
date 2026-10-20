@@ -3,12 +3,34 @@ import Foundation
 /// Turns a website address, a push's `data.url`, a notification's `url` or the app's URL scheme into
 /// an `AppDestination` (screens.md §1.2, slice-d.md and slice-e.md "Opening links and pushes").
 ///
-/// The path decides, whatever the host (pushes carry the server's own address, `http://localhost:3000`
-/// locally). An optional `/ar`, `/en` (or `/fr`) prefix is stripped first. Anything the table does not
-/// list, admin pages included, leads Home.
+/// A web address on one of Taleed's hosts (`websiteHosts`), or a bare path, opens by its path: an
+/// optional `/ar`, `/en` (or `/fr`) prefix is stripped first, and anything the table does not list, admin
+/// pages included, leads Home. A web address on any other host opens in the in-app browser, as on
+/// Android (`AppLinkParser`).
 enum LinkRouter {
     /// The app's URL scheme in this build (`TaleedURLScheme` in Info.plist): `taleed` in production.
     static let appScheme = (Bundle.main.object(forInfoDictionaryKey: "TaleedURLScheme") as? String)?.lowercased() ?? "taleed"
+
+    /// The website hosts whose links the app opens itself: production and staging, and in Debug the
+    /// local backend (`localhost`, and the API's own host), whose pushes point at `http://localhost:3000/…`.
+    static let websiteHosts: Set<String> = {
+        var hosts: Set<String> = ["taleed.app", "staging.taleed.app"]
+        #if DEBUG
+        hosts.formUnion(["localhost", "127.0.0.1"])
+        if let base = Bundle.main.object(forInfoDictionaryKey: "TaleedAPIBaseURL") as? String,
+           let host = URL(string: base)?.host()?.lowercased() {
+            hosts.insert(host)
+        }
+        #endif
+        return hosts
+    }()
+
+    /// Whether `host` is one of `websiteHosts`, with or without `www.`.
+    static func isWebsiteHost(_ host: String?) -> Bool {
+        guard var host = host?.lowercased() else { return false }
+        if host.hasPrefix("www.") { host.removeFirst(4) }
+        return websiteHosts.contains(host)
+    }
 
     private static let languagePrefixes: Set<String> = ["ar", "en", "fr"]
 
@@ -16,7 +38,11 @@ enum LinkRouter {
         let scheme = url.scheme?.lowercased() ?? ""
         var segments: [String]
         switch scheme {
-        case "http", "https", "":
+        case "http", "https":
+            guard isWebsiteHost(url.host(percentEncoded: false)) else { return .web(url) }
+            segments = pathSegments(url.path(percentEncoded: false))
+        case "":
+            // A path such as `/listings/42`.
             segments = pathSegments(url.path(percentEncoded: false))
         case appScheme:
             // `taleed://payment-return?…`; `taleed://listings/42` reads like the path `/listings/42`.

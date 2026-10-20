@@ -54,7 +54,7 @@ struct WelcomeView: View {
         let minimumTop = safeArea.top + TaleedSpacing.s24
         return ScrollView {
             VStack(spacing: 0) {
-                Text(l10n.string(.appWelcomeHeadline))
+                Text(l10n.string(.appWelcomeTitle))
                     .taleedFont(TaleedFont.loginHeadline)
                     .foregroundStyle(TaleedColor.navy900)
                     .multilineTextAlignment(.center)

@@ -34,8 +34,7 @@ struct ErrorStateView: View {
             NotFoundStateView(onBack: onBack ?? router.map { router in { router.open(.home) } })
         } else {
             CenteredStateColumn {
-                TaleedIconView(error == .network ? .wifiHigh : .warningCircle, size: 32,
-                               color: error == .network ? TaleedColor.textSecondary : TaleedColor.feedbackError)
+                TaleedIconView(.warningCircle, size: 32, color: TaleedColor.feedbackError)
                     .accessibilityHidden(true)
                 Text(l10n.message(for: error))
                     .taleedFont(TaleedFont.bodyLarge)

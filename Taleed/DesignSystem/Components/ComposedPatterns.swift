@@ -213,7 +213,7 @@ struct StepProgress: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(DesignSystemStrings.format(.a11yStepProgress, locale: locale, current, total))
+        .accessibilityLabel(DesignSystemStrings.format(.appA11yStepProgress, locale: locale, current, total))
     }
 }
 

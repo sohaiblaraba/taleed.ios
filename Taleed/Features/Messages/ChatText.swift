@@ -123,6 +123,8 @@ enum ChatText {
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         formatter.doesRelativeDateFormatting = true
+        // A standalone label: "Aujourd’hui", not "aujourd’hui" (Android capitalises it too).
+        formatter.formattingContext = .beginningOfSentence
         return formatter.string(from: date)
     }
 }

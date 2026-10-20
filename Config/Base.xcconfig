@@ -15,6 +15,11 @@ APP_DISPLAY_NAME = Taleed
 // The base URL of the API. "/$()/" keeps "//" from starting a comment.
 TALEED_API_BASE_URL = https:/$()/taleed.app/api/v1
 
+// The website host whose links open the app (Associated Domains in Taleed.entitlements: applinks and
+// webcredentials, slice-d.md "App links"). A staging build sets staging.taleed.app. The host serves
+// /.well-known/apple-app-site-association with this app's team and bundle identifiers.
+TALEED_APP_LINK_HOST = taleed.app
+
 // The URL scheme payment pages return to (`taleed://payment-return`). The server's MOBILE_URL_SCHEME
 // must match: `taleed` in production and locally; a staging build would use its own.
 TALEED_URL_SCHEME = taleed

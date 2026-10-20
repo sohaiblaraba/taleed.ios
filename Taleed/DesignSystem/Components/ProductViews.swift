@@ -121,7 +121,8 @@ struct ProductCard: View {
                 if let rating = product.rating {
                     HStack(spacing: TaleedSpacing.s4) {
                         TaleedIconView(.star, size: 14, color: TaleedColor.feedbackWarning)
-                        Text(rating, format: .number.precision(.fractionLength(1)))
+                        // "4.8" as on the detail's seller card and the website (`toFixed(1)`).
+                        Text(verbatim: RatingText.average(rating))
                             .taleedFont(Self.ratingStyle)
                             .foregroundStyle(TaleedColor.textPrimary)
                             .monospacedDigit()
@@ -153,7 +154,7 @@ struct ProductCard: View {
             ProductCondition.label(code: $0, catalogLabel: product.conditionLabel,
                                    catalogShortLabel: product.conditionShortLabel, length: .full, language: language)
         }
-        let rating = product.rating.map { "★ " + $0.formatted(.number.precision(.fractionLength(1)).locale(locale)) }
+        let rating = product.rating.map { "★ " + RatingText.average($0) }
         return [product.title, PriceFormatter.format(product.price, language: language), product.statusLabel, condition,
                 product.boostedLabel, rating, product.location, product.sizeLabel]
             .compactMap { $0 }

@@ -90,9 +90,10 @@ struct NotificationsListView: View {
     @ViewBuilder
     private var emptyContent: some View {
         if model.isLoadingPastEmptyPages {
-            if let error = model.list.loadMoreError {
+            if model.list.loadMoreError != nil {
                 VStack(spacing: TaleedSpacing.s8) {
-                    Text(l10n.message(for: error))
+                    // Android's paging footer: one fixed line, whatever the error.
+                    Text(l10n.string(.appListLoadMoreFailed))
                         .taleedFont(TaleedFont.bodyRegular)
                         .foregroundStyle(TaleedColor.textBody)
                         .multilineTextAlignment(.center)

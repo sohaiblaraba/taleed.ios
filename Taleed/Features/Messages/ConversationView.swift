@@ -183,17 +183,25 @@ struct ConversationView: View {
     @ViewBuilder
     private var bottomBar: some View {
         if let conversation = model.conversation, model.loadError == nil {
-            if let notice = ChatText.readOnlyNotice(for: conversation) {
-                ConversationReadOnlyBar(notice: notice, isUnblocking: model.isChangingBlock) {
-                    Task { await model.setBlocked(false) }
+            VStack(spacing: 0) {
+                // The tab bar that carries the offline banner is hidden here (as on Android).
+                OfflineBanner()
+                if let notice = ChatText.readOnlyNotice(for: conversation) {
+                    ConversationReadOnlyBar(notice: notice, isUnblocking: model.isChangingBlock) {
+                        Task { await model.setBlocked(false) }
+                    }
+                } else {
+                    composer
                 }
-            } else {
-                @Bindable var model = model
-                ChatComposer(text: $model.text, photo: model.photo, canSend: model.canSend, focus: $composerFocused,
-                             offerTitle: model.offerEntry.map { l10n.string($0.titleKey) }, onOffer: { offerSheet = .make(for: model) },
-                             onSend: { Task { await model.send() } }, onAddPhoto: addPhoto, onRemovePhoto: model.removePhoto)
             }
         }
+    }
+
+    private var composer: some View {
+        @Bindable var model = model
+        return ChatComposer(text: $model.text, photo: model.photo, canSend: model.canSend, focus: $composerFocused,
+                            offerTitle: model.offerEntry.map { l10n.string($0.titleKey) }, onOffer: { offerSheet = .make(for: model) },
+                            onSend: { Task { await model.send() } }, onAddPhoto: addPhoto, onRemovePhoto: model.removePhoto)
     }
 
     // MARK: Menu
@@ -275,15 +283,9 @@ struct ConversationView: View {
 
     /// A link of an announcement or its button: Taleed's own pages through the router (like a push), other
     /// sites in the in-app browser.
+    /// Taleed's own addresses open in the app, any other web address in the in-app browser (`LinkRouter`).
     private func openLink(_ url: URL) {
-        let host = url.host()?.lowercased()
-        let websiteHost = router.websiteLinks().website?.host()?.lowercased()
-        let scheme = url.scheme?.lowercased()
-        if host == nil || host == websiteHost || host == "taleed.app" || host == "www.taleed.app" || scheme == LinkRouter.appScheme {
-            router.open(url: url)
-        } else {
-            router.openInBrowser(url)
-        }
+        router.open(url: url)
     }
 
     private func show(_ notice: ConversationViewModel.Notice) {

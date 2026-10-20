@@ -164,6 +164,8 @@ final class AppRouter {
                 pendingPaymentReturn = paymentReturn
                 open(.screen(.wallet))
             }
+        case let .web(url):
+            openInBrowser(url)
         }
     }
 
@@ -190,7 +192,7 @@ final class AppRouter {
                     self?.paths[tab, default: []].append(route)
                 }
             }
-        case .home, .explore, .sell, .inbox, .profile, .signUp, .paymentReturn:
+        case .home, .explore, .sell, .inbox, .profile, .signUp, .paymentReturn, .web:
             open(destination)
         }
     }

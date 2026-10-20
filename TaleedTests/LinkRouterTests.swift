@@ -110,10 +110,21 @@ struct LinkRouterTests {
         #expect(destination(link) == .home)
     }
 
-    @Test func anyHostRoutesOnThePath() {
-        // Pushes carry the server's own address: localhost locally, staging on staging.
+    @Test func taleedHostsRouteOnThePath() {
+        // Pushes carry the server's own address: localhost locally (Debug), staging on staging.
         #expect(destination("http://localhost:3000/orders/o1") == .screen(.order(id: "o1")))
         #expect(destination("https://staging.taleed.app/en/wallet") == .screen(.wallet))
+        #expect(destination("https://www.taleed.app/listings/l1") == .screen(.listing(id: "l1")))
+        #expect(destination("https://TALEED.app/orders") == .screen(.orders))
+    }
+
+    /// Another host opens in the in-app browser, never a screen by its path (Android's `AppDestination.Web`).
+    @Test func otherHostsOpenInTheBrowser() throws {
+        let external = try #require(URL(string: "https://example.com/listings/1"))
+        #expect(LinkRouter.destination(for: external) == .web(external))
+        let help = try #require(URL(string: "https://help.example.org/guide?x=1"))
+        #expect(LinkRouter.destination(for: help) == .web(help))
+        #expect(destination("https://taleed.app.example.com/orders") != .screen(.orders))
     }
 
     @Test func pathsWithoutHostRoute() {

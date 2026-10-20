@@ -25,10 +25,7 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case authErrorInvalidCredentials = "auth_error_invalid_credentials"
     case authErrorRateLimited = "auth_error_rate_limited"
     case homeCategories = "home_categories"
-    case searchPlaceholder = "search_placeholder"
     case sellPlaceholder = "sell_placeholder"
-    case messagesPlaceholder = "messages_placeholder"
-    case notificationsPlaceholder = "notifications_placeholder"
     case profileAvatar = "profile_avatar"
     case profileVerified = "profile_verified"
     case profileOfficial = "profile_official"
@@ -47,8 +44,8 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     // Condition labels (decision D-8): short labels for the 22 pt tag (website `short…` for fr/ar), full
     // labels for the 30 pt tag.
     case a11yOpensExplore = "a11y_opens_explore"
-    case a11yPhotoPosition = "a11y_photo_position"
-    case a11yStepProgress = "a11y_step_progress"
+    case appA11yPhotoPosition = "app_a11y_photo_position"
+    case appA11yStepProgress = "app_a11y_step_progress"
     case badgeNew = "badge_new"
     case badgeReserved = "badge_reserved"
     case checkoutItemLabel = "checkout_item_label"
@@ -141,11 +138,20 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appErrorRateLimitedMinutes = "app_error_rate_limited_minutes"  // plural
     case appErrorRateLimitedHours = "app_error_rate_limited_hours"  // plural
     case appErrorShippingUnavailable = "app_error_shipping_unavailable"
-    case appErrorUnsupportedMedia = "app_error_unsupported_media"
+    case appErrorUnsupportedMediaType = "app_error_unsupported_media_type"
     case appErrorUsernameCooldown = "app_error_username_cooldown"
+    case appErrorConversationReadOnly = "app_error_conversation_read_only"
+    case appErrorDisputeExists = "app_error_dispute_exists"
+    case appErrorAlreadyReviewed = "app_error_already_reviewed"
+    case appErrorFeatureDisabled = "app_error_feature_disabled"
+    case appErrorUnauthorized = "app_error_unauthorized"
+    case appErrorNotFound = "app_error_not_found"
+    case appOfflineBanner = "app_offline_banner"
+    case appListLoadMoreFailed = "app_list_load_more_failed"
+    case guidesHeading = "guides_heading"
     case appNotFoundTitle = "app_not_found_title"
     case appNotFoundBody = "app_not_found_body"
-    case appPlaceholderComingSoon = "app_placeholder_coming_soon"
+    case appPlaceholderBody = "app_placeholder_body"
 
     // Auth and launch (G1): website keys, then app-only keys.
     case authLoginTitle = "auth_login_title"
@@ -183,15 +189,15 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case navOrders = "nav_orders"
     case navWallet = "nav_wallet"
     case settingsDeleteCta = "settings_delete_cta"
-    case appWelcomeHeadline = "app_welcome_headline"
+    case appWelcomeTitle = "app_welcome_title"
     case appWelcomeLegal = "app_welcome_legal"
     case appWelcomeContinueEmail = "app_welcome_continue_email"
     case appWelcomeBrowse = "app_welcome_browse"
     case appAuthEmailInvalid = "app_auth_email_invalid"
     case appAuthNameLength = "app_auth_name_length"
     case appSuspendedStillAvailable = "app_suspended_still_available"
-    case appA11yUnreadMessages = "app_a11y_unread_messages"  // plural
-    case appA11yUnreadNotifications = "app_a11y_unread_notifications"  // plural
+    case appBadgeUnreadMessages = "app_badge_unread_messages"  // plural
+    case appBadgeUnreadNotifications = "app_badge_unread_notifications"  // plural
     case appA11yExpanded = "app_a11y_expanded"
     case appA11yCollapsed = "app_a11y_collapsed"
 
@@ -534,7 +540,7 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case checkoutCodHint = "checkout_cod_hint"
     case checkoutProcessing = "checkout_processing"
     case checkoutSuccessTitle = "checkout_success_title"
-    case checkoutSuccessBody = "checkout_success_body"
+    case checkoutSuccessBody = "checkout_success_body"  // plural
     case checkoutFailedTitle = "checkout_failed_title"
     case checkoutFailedBody = "checkout_failed_body"
     case checkoutBackToListing = "checkout_back_to_listing"
@@ -778,8 +784,6 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appSettingsBlockedTitle = "app_settings_blocked_title"
     case appSettingsBlockedEmpty = "app_settings_blocked_empty"
     case appSettingsBlockedSince = "app_settings_blocked_since"
-    case appSettingsLegal = "app_settings_legal"
-    case appSettingsGuides = "app_settings_guides"
     case appSettingsDeleteErasedTitle = "app_settings_delete_erased_title"
     case appSettingsDeleteErasedBody = "app_settings_delete_erased_body"
     case appSettingsDeleteKeptTitle = "app_settings_delete_kept_title"

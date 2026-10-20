@@ -243,11 +243,7 @@ struct OrderPaymentView: View {
     }
 
     static func dateTime(_ date: Date, language: AppLanguage) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = language.locale
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        OrderText.dateTime(date, locale: language.formattingLocale)
     }
 }
 

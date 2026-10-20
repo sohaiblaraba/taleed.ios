@@ -41,6 +41,8 @@ struct CheckoutView: View {
         } content: {
             content
         }
+        // Checkout has no tab bar to carry the offline banner (Android draws it as the bottom bar too).
+        .safeAreaInset(edge: .bottom, spacing: 0) { OfflineBanner() }
         .task { await model.loadIfNeeded() }
         .onAppear {
             // No tab bar here: toasts sit at the bottom.

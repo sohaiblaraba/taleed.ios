@@ -149,7 +149,8 @@ extension EnvironmentValues {
     }
 }
 
-/// The five tabs' bottom navigation (decision D-2), with the unread-messages badge. `isEmbedded`: inside
+/// The five tabs' bottom navigation (decision D-2), with the unread-messages badge and, offline, the
+/// offline banner above it. `isEmbedded`: inside
 /// a screen's own bottom bar (Item Detail's buttons, wireframes.md #4.17), which draws the fill.
 struct ShellTabBar: View {
     var isEmbedded = false
@@ -158,7 +159,11 @@ struct ShellTabBar: View {
     @Environment(SessionManager.self) private var session
 
     var body: some View {
-        TaleedBottomNavigation(items: navigationItems, selection: router.tabSelection, isEmbedded: isEmbedded)
+        VStack(spacing: 0) {
+            // Android's tab bar carries the offline banner the same way, also inside Item Detail's bar.
+            OfflineBanner()
+            TaleedBottomNavigation(items: navigationItems, selection: router.tabSelection, isEmbedded: isEmbedded)
+        }
     }
 
     private var navigationItems: [BottomNavItem<AppTab>] {
@@ -176,7 +181,7 @@ struct ShellTabBar: View {
     private var unreadMessages: Int { session.user?.unreadMessages ?? 0 }
 
     private var unreadMessagesLabel: String? {
-        unreadMessages > 0 ? l10n.format(.appA11yUnreadMessages, unreadMessages) : nil
+        unreadMessages > 0 ? l10n.format(.appBadgeUnreadMessages, unreadMessages) : nil
     }
 }
 
@@ -213,7 +218,7 @@ struct ShellBrandAppBar: View {
             onNotifications: session.isSignedIn ? { router.push(.notifications) } : nil,
             notificationsBadge: unreadNotifications,
             notificationsBadgeAccessibilityLabel: unreadNotifications > 0
-                ? l10n.format(.appA11yUnreadNotifications, unreadNotifications) : nil,
+                ? l10n.format(.appBadgeUnreadNotifications, unreadNotifications) : nil,
             avatarInitials: session.user.map { TaleedAvatar.initials(from: $0.displayName) },
             avatarURL: session.user?.avatarURL,
             onAvatar: { router.selectedTab = .profile }

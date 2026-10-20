@@ -72,9 +72,10 @@ struct PaginationFooter<Item: Identifiable & Sendable>: View where Item.ID: Send
 
     var body: some View {
         Group {
-            if let error = list.loadMoreError {
+            if list.loadMoreError != nil {
                 VStack(spacing: TaleedSpacing.s8) {
-                    Text(l10n.message(for: error))
+                    // Android's paging footer: one fixed line, whatever the error.
+                    Text(l10n.string(.appListLoadMoreFailed))
                         .taleedFont(TaleedFont.bodyRegular)
                         .foregroundStyle(TaleedColor.textBody)
                         .multilineTextAlignment(.center)

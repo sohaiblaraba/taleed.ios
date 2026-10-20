@@ -9,7 +9,7 @@ options:
   groupSortPosition: top
 
 # One entry per configuration. A Staging configuration is one more line here,
-# plus Config/Staging.xcconfig.
+# plus Config/Staging.xcconfig (with TALEED_APP_LINK_HOST = staging.taleed.app).
 configs:
   Debug: debug
   Release: release
@@ -40,6 +40,8 @@ targets:
     settings:
       base:
         INFOPLIST_FILE: Taleed/Support/Info.plist
+        # Associated Domains (applinks, webcredentials) for TALEED_APP_LINK_HOST (Config/Base.xcconfig).
+        CODE_SIGN_ENTITLEMENTS: Taleed/Support/Taleed.entitlements
         INFOPLIST_PREPROCESS: YES
         GENERATE_INFOPLIST_FILE: NO
         SWIFT_EMIT_LOC_STRINGS: NO

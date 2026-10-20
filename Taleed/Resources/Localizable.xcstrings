@@ -24,7 +24,7 @@
         }
       }
     },
-    "a11y_photo_position": {
+    "app_a11y_photo_position": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
@@ -47,7 +47,7 @@
         }
       }
     },
-    "a11y_step_progress": {
+    "app_a11y_step_progress": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
@@ -181,172 +181,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Partager"
-          }
-        }
-      }
-    },
-    "app_a11y_unread_messages": {
-      "extractionState": "manual",
-      "localizations": {
-        "fr": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d message non lu"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d messages non lus"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d unread message"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d unread messages"
-                }
-              }
-            }
-          }
-        },
-        "ar": {
-          "variations": {
-            "plural": {
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "لا رسائل غير مقروءة"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "رسالة واحدة غير مقروءة"
-                }
-              },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "رسالتان غير مقروءتين"
-                }
-              },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d رسائل غير مقروءة"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d رسالة غير مقروءة"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d رسالة غير مقروءة"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "app_a11y_unread_notifications": {
-      "extractionState": "manual",
-      "localizations": {
-        "fr": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d notification non lue"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d notifications non lues"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d unread notification"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d unread notifications"
-                }
-              }
-            }
-          }
-        },
-        "ar": {
-          "variations": {
-            "plural": {
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "لا إشعارات غير مقروءة"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إشعار واحد غير مقروء"
-                }
-              },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إشعاران غير مقروءين"
-                }
-              },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d إشعارات غير مقروءة"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d إشعارًا غير مقروء"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%d إشعار غير مقروء"
-                }
-              }
-            }
           }
         }
       }
@@ -1139,19 +973,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تحقّق من الحقول المشار إليها."
+            "value": "يرجى التحقق من الحقول المحددة."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Check the highlighted fields."
+            "value": "Please check the highlighted fields."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vérifiez les champs indiqués."
+            "value": "Vérifiez les champs signalés."
           }
         }
       }
@@ -1162,19 +996,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تغيّر الوضع في الأثناء. حدّث الصفحة لرؤية الخيارات الجديدة."
+            "value": "هذا الإجراء لم يعد ممكنًا. تم تحديث الصفحة."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This has changed in the meantime. Refresh to see what you can do now."
+            "value": "This action is no longer possible. The page has been updated."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La situation a changé entre-temps. Actualisez pour voir les nouvelles options."
+            "value": "Cette action n’est plus possible. La page a été mise à jour."
           }
         }
       }
@@ -1185,7 +1019,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "التسجيل في تليد بالدعوة فقط حاليًا. اطلب دعوة."
+            "value": "التسجيل في تليد بالدعوة حاليًا. اطلب دعوة."
           }
         },
         "en": {
@@ -1208,19 +1042,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا يمكن تعديل هذا الغرض حاليًا."
+            "value": "لا يمكن تعديل هذا الإعلان حاليًا."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This item can’t be changed right now."
+            "value": "This listing can’t be changed right now."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cet article ne peut pas être modifié pour le moment."
+            "value": "Cette annonce ne peut pas être modifiée pour le moment."
           }
         }
       }
@@ -1231,7 +1065,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لم يعد هذا العرض بانتظار رد."
+            "value": "هذا العرض لم يعد بانتظار رد."
           }
         },
         "en": {
@@ -1254,19 +1088,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هذا المبلغ غير مقبول لهذا العرض."
+            "value": "مبلغ العرض خارج الحدود المسموح بها."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This amount isn’t accepted for this offer."
+            "value": "The offer amount is outside the allowed range."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce montant n’est pas accepté pour cette offre."
+            "value": "Le montant de l’offre est en dehors des limites autorisées."
           }
         }
       }
@@ -1306,13 +1140,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Payment is unavailable right now. Please try again."
+            "value": "Payment isn’t available right now. Please try again."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le paiement est indisponible pour le moment. Réessayez."
+            "value": "Le paiement n’est pas disponible pour le moment. Réessayez."
           }
         }
       }
@@ -1323,19 +1157,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تغيّر المجموع. تحقّق من المبلغ الجديد."
+            "value": "تغيّر المبلغ الإجمالي. تحقق من المبلغ الجديد قبل المتابعة."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The total has changed. Check the new amount."
+            "value": "The total has changed. Check the new amount before continuing."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le total a changé. Vérifiez le nouveau montant."
+            "value": "Le total a changé. Vérifiez le nouveau montant avant de continuer."
           }
         }
       }
@@ -1346,19 +1180,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أعد المحاولة بعد لحظات."
+            "value": "طلبات كثيرة جدًا. حاول مجددًا بعد لحظات."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please try again in a moment."
+            "value": "Too many requests. Please try again in a moment."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Réessayez dans un instant."
+            "value": "Trop de requêtes. Réessayez dans un instant."
           }
         }
       }
@@ -1372,37 +1206,37 @@
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد %d ساعة."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد %d ساعة."
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد ساعة واحدة."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد ساعة واحدة."
                 }
               },
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد ساعتين."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد ساعتين."
                 }
               },
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد %d ساعات."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد %d ساعات."
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد %d ساعة."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد %d ساعة."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد %d ساعة."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد %d ساعة."
                 }
               }
             }
@@ -1414,13 +1248,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Try again in %d hour."
+                  "value": "Too many requests. Please try again in %d hour."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Try again in %d hours."
+                  "value": "Too many requests. Please try again in %d hours."
                 }
               }
             }
@@ -1432,13 +1266,19 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Réessayez dans %d heure."
+                  "value": "Trop de requêtes. Réessayez dans %d heure."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Trop de requêtes. Réessayez dans %d heures."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Réessayez dans %d heures."
+                  "value": "Trop de requêtes. Réessayez dans %d heures."
                 }
               }
             }
@@ -1455,37 +1295,37 @@
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد %d دقيقة."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد %d دقيقة."
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد دقيقة واحدة."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد دقيقة واحدة."
                 }
               },
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد دقيقتين."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد دقيقتين."
                 }
               },
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد %d دقائق."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد %d دقائق."
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد %d دقيقة."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد %d دقيقة."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "أعد المحاولة بعد %d دقيقة."
+                  "value": "طلبات كثيرة جدًا. حاول مجددًا بعد %d دقيقة."
                 }
               }
             }
@@ -1497,13 +1337,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Try again in %d minute."
+                  "value": "Too many requests. Please try again in %d minute."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Try again in %d minutes."
+                  "value": "Too many requests. Please try again in %d minutes."
                 }
               }
             }
@@ -1515,13 +1355,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Réessayez dans %d minute."
+                  "value": "Trop de requêtes. Réessayez dans %d minute."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Réessayez dans %d minutes."
+                  "value": "Trop de requêtes. Réessayez dans %d minutes."
                 }
               }
             }
@@ -1535,42 +1375,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعذّر حساب تكلفة التوصيل. حاول مجددًا."
+            "value": "تعذّر حساب تكلفة التوصيل حاليًا. حاول مجددًا."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The delivery cost could not be calculated. Please try again."
+            "value": "Delivery can’t be priced right now. Please try again."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les frais de livraison n’ont pas pu être calculés. Réessayez."
-          }
-        }
-      }
-    },
-    "app_error_unsupported_media": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هذا التنسيق غير مدعوم."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This format is not supported."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ce format n’est pas pris en charge."
+            "value": "Impossible de calculer la livraison pour le moment. Réessayez."
           }
         }
       }
@@ -2399,29 +2216,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Closed"
-          }
-        }
-      }
-    },
-    "app_placeholder_coming_soon": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هذه الشاشة قادمة قريبًا."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This screen is coming soon."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cet écran arrive bientôt."
           }
         }
       }
@@ -3342,29 +3136,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Continue with email"
-          }
-        }
-      }
-    },
-    "app_welcome_headline": {
-      "extractionState": "manual",
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre prochain trésor\nflotte tout près."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "كنزك القادم\nيطفو بالقرب منك."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your next treasure\nis floating nearby."
           }
         }
       }
@@ -6573,21 +6344,87 @@
       "extractionState": "manual",
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أموالك في أمان. لدى البائع الآن %d أيام لإرسال طلبك."
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أموالك في أمان. لدى البائع الآن %d يوم لإرسال طلبك."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أموالك في أمان. لدى البائع الآن يوم واحد لإرسال طلبك."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أموالك في أمان. لدى البائع الآن يومان لإرسال طلبك."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أموالك في أمان. لدى البائع الآن %d أيام لإرسال طلبك."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أموالك في أمان. لدى البائع الآن %d يومًا لإرسال طلبك."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أموالك في أمان. لدى البائع الآن %d يوم لإرسال طلبك."
+                }
+              }
+            }
           }
         },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your money is safe. The seller now has %d days to ship your order."
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Your money is safe. The seller now has %d day to ship your order."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Your money is safe. The seller now has %d days to ship your order."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre argent est en sécurité. Le vendeur a maintenant %d jours pour expédier votre commande."
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Votre argent est en sécurité. Le vendeur a maintenant %d jour pour expédier votre commande."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Votre argent est en sécurité. Le vendeur a maintenant %d jours pour expédier votre commande."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Votre argent est en sécurité. Le vendeur a maintenant %d jours pour expédier votre commande."
+                }
+              }
+            }
           }
         }
       }
@@ -8519,7 +8356,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une seconde vie pour vos affaires."
+            "value": "Donnez une seconde vie à vos affaires."
           }
         }
       }
@@ -10176,29 +10013,6 @@
         }
       }
     },
-    "messages_placeholder": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ستظهر رسائلك هنا."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your messages will appear here."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vos messages apparaîtront ici."
-          }
-        }
-      }
-    },
     "nav_all_items": {
       "extractionState": "manual",
       "localizations": {
@@ -10333,29 +10147,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wallet"
-          }
-        }
-      }
-    },
-    "notifications_placeholder": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ستظهر إشعاراتك هنا."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your notifications will appear here."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vos notifications apparaîtront ici."
           }
         }
       }
@@ -12315,29 +12106,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "search_placeholder": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "البحث قريبًا."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search is coming soon."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La recherche arrive bientôt."
           }
         }
       }
@@ -18839,29 +18607,6 @@
         }
       }
     },
-    "app_settings_legal": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "معلومات قانونية"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Legal"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Informations légales"
-          }
-        }
-      }
-    },
     "app_settings_open_system_settings": {
       "extractionState": "manual",
       "localizations": {
@@ -18881,29 +18626,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrir les réglages"
-          }
-        }
-      }
-    },
-    "app_settings_guides": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الأدلة"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guides"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guides"
           }
         }
       }
@@ -20441,6 +20163,460 @@
           "stringUnit": {
             "state": "translated",
             "value": "Votre lien d’invitation"
+          }
+        }
+      }
+    },
+    "app_error_conversation_read_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه المحادثة لم تعد تقبل الردود."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This conversation no longer takes replies."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette conversation n’accepte plus de réponses."
+          }
+        }
+      }
+    },
+    "app_error_dispute_exists": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوجد نزاع مفتوح بالفعل على هذا الطلب."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This order already has a dispute."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un litige est déjà ouvert sur cette commande."
+          }
+        }
+      }
+    },
+    "app_error_already_reviewed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لقد قيّمت هذا الطلب بالفعل."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have already reviewed this order."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez déjà évalué cette commande."
+          }
+        }
+      }
+    },
+    "app_error_feature_disabled": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه الميزة غير متاحة حاليًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This feature isn’t available right now."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette fonctionnalité n’est pas disponible pour le moment."
+          }
+        }
+      }
+    },
+    "app_error_unauthorized": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انتهت جلستك. يرجى تسجيل الدخول مجددًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your session has expired. Please sign in again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre session a expiré. Connectez-vous à nouveau."
+          }
+        }
+      }
+    },
+    "app_error_not_found": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا المحتوى لم يعد متاحًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is no longer available."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce contenu n’est plus disponible."
+          }
+        }
+      }
+    },
+    "app_offline_banner": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت غير متصل. قد تكون بعض المعلومات غير محدّثة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’re offline. Some information may be out of date."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous êtes hors ligne. Certaines informations peuvent ne pas être à jour."
+          }
+        }
+      }
+    },
+    "app_list_load_more_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تحميل المزيد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t load more."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger la suite."
+          }
+        }
+      }
+    },
+    "guides_heading": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدلة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guides"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guides"
+          }
+        }
+      }
+    },
+    "app_welcome_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كنزك القادم\nيطفو بالقرب منك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your next treasure\nis floating nearby."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre prochain trésor\nflotte tout près."
+          }
+        }
+      }
+    },
+    "app_badge_unread_messages": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا رسائل غير مقروءة"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "رسالة واحدة غير مقروءة"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "رسالتان غير مقروءتين"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d رسائل غير مقروءة"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d رسالة غير مقروءة"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d رسالة غير مقروءة"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d unread message"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d unread messages"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d message non lu"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d messages non lus"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d messages non lus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "app_badge_unread_notifications": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا إشعارات غير مقروءة"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "إشعار واحد غير مقروء"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "إشعاران غير مقروءين"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d إشعارات غير مقروءة"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d إشعارًا غير مقروء"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d إشعار غير مقروء"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d unread notification"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d unread notifications"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d notification non lue"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d notifications non lues"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%d notifications non lues"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "app_error_unsupported_media_type": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا التنسيق غير مدعوم."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This format is not supported."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce format n’est pas pris en charge."
+          }
+        }
+      }
+    },
+    "app_placeholder_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه الشاشة قادمة قريبًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This screen is coming soon."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet écran arrive bientôt."
           }
         }
       }

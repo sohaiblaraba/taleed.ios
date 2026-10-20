@@ -39,9 +39,9 @@ struct ConversationMessageList: View {
     /// The top of the list: the older page loads when it shows; "Réessayer" when it failed.
     @ViewBuilder
     private var olderFooter: some View {
-        if let error = model.olderError {
+        if model.olderError != nil {
             VStack(spacing: TaleedSpacing.s8) {
-                Text(l10n.message(for: error))
+                Text(l10n.string(.appListLoadMoreFailed))
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textBody)
                     .multilineTextAlignment(.center)

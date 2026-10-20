@@ -7,14 +7,18 @@ struct ApiErrorMessageTests {
     @Test(arguments: [
         (ApiError.network, L10nKey.commonErrorNetwork),
         (.server(status: 502), .commonErrorGeneric),
-        (.unauthorized, .authSignInRequired),
+        (.unauthorized, .appErrorUnauthorized),
         (.banned, .suspendedTitle),
         (.invalidCredentials, .authErrorInvalidCredentials),
         (.rateLimited(retryAfter: nil), .appErrorRateLimited),
         (.unknown(status: 409, code: "brand_new"), .authErrorGeneric),
         (.unknown(status: 403, code: nil), .authErrorGeneric),
         (.unknown(status: 520, code: nil), .commonErrorGeneric),
-        (.failed(ApiFailure(status: 404, code: .notFound)), .appNotFoundTitle),
+        (.failed(ApiFailure(status: 404, code: .notFound)), .appErrorNotFound),
+        (.failed(ApiFailure(status: 403, code: .conversationReadOnly)), .appErrorConversationReadOnly),
+        (.failed(ApiFailure(status: 409, code: .disputeExists)), .appErrorDisputeExists),
+        (.failed(ApiFailure(status: 409, code: .alreadyReviewed)), .appErrorAlreadyReviewed),
+        (.failed(ApiFailure(status: 503, code: .featureDisabled)), .appErrorFeatureDisabled),
         (.failed(ApiFailure(status: 403, code: .forbidden)), .appErrorForbidden),
         (.failed(ApiFailure(status: 403, code: .blocked)), .commonBlocked),
         (.failed(ApiFailure(status: 409, code: .emailTaken)), .authErrorEmailExists),
@@ -23,7 +27,7 @@ struct ApiErrorMessageTests {
         (.failed(ApiFailure(status: 409, code: .invalidState)), .appErrorInvalidState),
         (.failed(ApiFailure(status: 409, code: .walletNotEmpty)), .settingsDeleteBlockedWallet),
         (.failed(ApiFailure(status: 413, code: .fileTooLarge)), .appErrorFileTooLarge),
-        (.failed(ApiFailure(status: 415, code: .unsupportedMediaType)), .appErrorUnsupportedMedia),
+        (.failed(ApiFailure(status: 415, code: .unsupportedMediaType)), .appErrorUnsupportedMediaType),
         (.failed(ApiFailure(status: 502, code: .carrierError)), .ordersLabelCarrierError),
         (.failed(ApiFailure(status: 503, code: .paymentUnavailable)), .appErrorPaymentUnavailable),
     ])
@@ -43,20 +47,20 @@ struct ApiErrorMessageTests {
     }
 
     @Test func rateLimitSaysMinutesOverAMinute() {
-        #expect(ApiError.rateLimited(retryAfter: 60).message(in: .en) == "Please try again in a moment.")
+        #expect(ApiError.rateLimited(retryAfter: 60).message(in: .en) == "Too many requests. Please try again in a moment.")
         #expect(ApiError.rateLimited(retryAfter: 162).rateLimitMinutes == 3)
-        #expect(ApiError.rateLimited(retryAfter: 162).message(in: .en) == "Try again in 3 minutes.")
-        #expect(ApiError.rateLimited(retryAfter: 162).message(in: .fr) == "Réessayez dans 3 minutes.")
-        #expect(ApiError.rateLimited(retryAfter: 120).message(in: .ar) == "أعد المحاولة بعد دقيقتين.")
+        #expect(ApiError.rateLimited(retryAfter: 162).message(in: .en) == "Too many requests. Please try again in 3 minutes.")
+        #expect(ApiError.rateLimited(retryAfter: 162).message(in: .fr) == "Trop de requêtes. Réessayez dans 3 minutes.")
+        #expect(ApiError.rateLimited(retryAfter: 120).message(in: .ar) == "طلبات كثيرة جدًا. حاول مجددًا بعد دقيقتين.")
     }
 
     /// A daily limit (identity verification, 5 a day) can ask for up to 86 400 s: hours, not 1 440 minutes.
     @Test func rateLimitSaysHoursOverAnHour() {
         #expect(ApiError.rateLimited(retryAfter: 3601).rateLimitHours == 2)
-        #expect(ApiError.rateLimited(retryAfter: 86_400).message(in: .en) == "Try again in 24 hours.")
-        #expect(ApiError.rateLimited(retryAfter: 86_400).message(in: .fr) == "Réessayez dans 24 heures.")
-        #expect(ApiError.rateLimited(retryAfter: 7200).message(in: .ar) == "أعد المحاولة بعد ساعتين.")
-        #expect(ApiError.rateLimited(retryAfter: 5400).message(in: .en) == "Try again in 2 hours.")
+        #expect(ApiError.rateLimited(retryAfter: 86_400).message(in: .en) == "Too many requests. Please try again in 24 hours.")
+        #expect(ApiError.rateLimited(retryAfter: 86_400).message(in: .fr) == "Trop de requêtes. Réessayez dans 24 heures.")
+        #expect(ApiError.rateLimited(retryAfter: 7200).message(in: .ar) == "طلبات كثيرة جدًا. حاول مجددًا بعد ساعتين.")
+        #expect(ApiError.rateLimited(retryAfter: 5400).message(in: .en) == "Too many requests. Please try again in 2 hours.")
     }
 
     @Test func messagesFollowTheLanguage() {

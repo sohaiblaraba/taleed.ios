@@ -180,4 +180,6 @@ enum AppDestination: Hashable, Sendable {
     /// `/r/{code}`: sign-up with the referral code; Home when signed in.
     case signUp(referralCode: String)
     case paymentReturn(PaymentReturn)
+    /// A web address on another host than Taleed's: the in-app browser (Android's `AppDestination.Web`).
+    case web(URL)
 }

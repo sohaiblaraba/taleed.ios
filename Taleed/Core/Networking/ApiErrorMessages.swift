@@ -12,7 +12,7 @@ extension ApiError {
         switch self {
         case .network: return .commonErrorNetwork
         case .server: return .commonErrorGeneric
-        case .unauthorized: return .authSignInRequired
+        case .unauthorized: return .appErrorUnauthorized
         case .banned: return .suspendedTitle
         case .invalidCredentials: return .authErrorInvalidCredentials
         case .rateLimited: return .appErrorRateLimited
@@ -32,14 +32,14 @@ extension ApiError {
         case .wrongPassword: .settingsPasswordWrongError
         case .offerOutOfRange: .appErrorOfferOutOfRange
         case .promoInvalid: .checkoutPromoInvalid
-        case .unauthorized: .authSignInRequired
+        case .unauthorized: .appErrorUnauthorized
         case .invalidCredentials: .authErrorInvalidCredentials
         case .banned: .suspendedTitle
         case .forbidden: .appErrorForbidden
         case .inviteRequired: .appErrorInviteRequired
         case .blocked: .commonBlocked
-        case .conversationReadOnly: .chatBlockedReadOnly
-        case .notFound: .appNotFoundTitle
+        case .conversationReadOnly: .appErrorConversationReadOnly
+        case .notFound: .appErrorNotFound
         case .emailTaken: .authErrorEmailExists
         case .usernameTaken: .authErrorUsernameTaken
         case .usernameCooldown: .appErrorUsernameCooldown
@@ -51,9 +51,11 @@ extension ApiError {
         case .offerPending: .offersErrorActive
         case .offerClosed: .appErrorOfferClosed
         case .alreadyReported: .reportAlreadyReported
-        case .invalidState, .disputeExists, .alreadyReviewed: .appErrorInvalidState
+        case .invalidState: .appErrorInvalidState
         case .priceChanged: .appErrorPriceChanged
         case .paymentMethodUnavailable: .checkoutErrorMethodUnavailable
+        case .disputeExists: .appErrorDisputeExists
+        case .alreadyReviewed: .appErrorAlreadyReviewed
         case .insufficientBalance: .walletErrorAmount
         case .addressLimit: .appErrorAddressLimit
         case .ordersInProgress: .settingsDeleteBlockedActiveOrders
@@ -61,11 +63,11 @@ extension ApiError {
         case .payoutInProgress: .settingsDeleteBlockedPendingPayout
         case .walletNotEmpty: .settingsDeleteBlockedWallet
         case .fileTooLarge: .appErrorFileTooLarge
-        case .unsupportedMediaType: .appErrorUnsupportedMedia
+        case .unsupportedMediaType: .appErrorUnsupportedMediaType
         case .rateLimited: .appErrorRateLimited
         case ._internal: .commonErrorGeneric
         case .carrierError: .ordersLabelCarrierError
-        case .featureDisabled: .visualErrorDisabled
+        case .featureDisabled: .appErrorFeatureDisabled
         case .shippingUnavailable: .appErrorShippingUnavailable
         case .paymentUnavailable: .appErrorPaymentUnavailable
         // A code added after this build: by its status.

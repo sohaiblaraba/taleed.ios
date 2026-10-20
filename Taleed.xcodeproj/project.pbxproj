@@ -199,6 +199,7 @@
 		A7E89D8B9803A458C686D970 /* DisputeFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23827261F1DF2D460A5C8D3A /* DisputeFormSheet.swift */; };
 		A803036B691D9E8B36B1698B /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66A6465D6DB85AD6FC09F412 /* HomeViewModel.swift */; };
 		A853B0FCFC8D9ED5C2A405B6 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C9C17B567E633CBF91CF06F /* NotificationsView.swift */; };
+		A8AE6A38AD1C87B75055445A /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25F28ADD39A168943C20C71F /* NetworkMonitor.swift */; };
 		A95E6740515213EAD1C705A9 /* SettingsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53DFA44786268F172F598510 /* SettingsModels.swift */; };
 		A9951744C5DFF04068AD79E3 /* PagedList.swift in Sources */ = {isa = PBXBuildFile; fileRef = F135FCC508EB61F05A607927 /* PagedList.swift */; };
 		AB39EEBAE2609822F408C522 /* ListingPhotoViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96661D1170ED022892502BB3 /* ListingPhotoViewer.swift */; };
@@ -375,6 +376,7 @@
 		23827261F1DF2D460A5C8D3A /* DisputeFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisputeFormSheet.swift; sourceTree = "<group>"; };
 		2476C39A8F60061F381C8F8D /* EditListingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListingView.swift; sourceTree = "<group>"; };
 		24D527B78B45BC2DB5FC50A7 /* SellRefusalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SellRefusalTests.swift; sourceTree = "<group>"; };
+		25F28ADD39A168943C20C71F /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		262A02B6FD8C7D7C9028A844 /* MyListingsApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyListingsApi.swift; sourceTree = "<group>"; };
 		267B0B9B3F3555DCD8A128DD /* AuthApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthApi.swift; sourceTree = "<group>"; };
 		28C9A23FB68D3A0075D54001 /* OrderDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderDetailViewModel.swift; sourceTree = "<group>"; };
@@ -460,6 +462,7 @@
 		7291EDAB7CEFF57EB8948CD4 /* VisualSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualSearchTests.swift; sourceTree = "<group>"; };
 		73676E22EB860CE7EB646743 /* MessagesApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesApi.swift; sourceTree = "<group>"; };
 		736B215FF67A8738E045AE7B /* ListingDetailBody.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingDetailBody.swift; sourceTree = "<group>"; };
+		74AC9CFE354730D839F0C8E7 /* Taleed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Taleed.entitlements; sourceTree = "<group>"; };
 		761A37386FC875A5A27D7C9A /* Identity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Identity.swift; sourceTree = "<group>"; };
 		76235C21F6989FC70EB5FBB8 /* MemberProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberProfile.swift; sourceTree = "<group>"; };
 		777886244E0B36918AF1176F /* MainShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainShellView.swift; sourceTree = "<group>"; };
@@ -1139,6 +1142,7 @@
 				1341CF9075CBF2FABC0B816A /* ApiError.swift */,
 				9A5D5D12FD1715D47C7B3F68 /* ApiErrorMessages.swift */,
 				6696BF856AA4FE50DE24DF2F /* ApiSession.swift */,
+				25F28ADD39A168943C20C71F /* NetworkMonitor.swift */,
 				18150195D37735344E97891E /* TaleedApi.swift */,
 			);
 			path = Networking;
@@ -1352,6 +1356,7 @@
 			children = (
 				C44C003B216D3B6194591B7F /* Info.plist */,
 				D51E1929059C5013D0FC87AF /* PrivacyInfo.xcprivacy */,
+				74AC9CFE354730D839F0C8E7 /* Taleed.entitlements */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -1674,6 +1679,7 @@
 				F9B927421EF045B66CB8134E /* MyListingsView.swift in Sources */,
 				44E014EF876CC1A34C00D487 /* MyListingsViewModel.swift in Sources */,
 				B90A99F733F40B093E36BCFE /* Navigation.swift in Sources */,
+				A8AE6A38AD1C87B75055445A /* NetworkMonitor.swift in Sources */,
 				A0456B68ADF938FED6FA5721 /* NotificationRules.swift in Sources */,
 				8B3FD7FDE952CCF6FC843589 /* NotificationsApi.swift in Sources */,
 				A853B0FCFC8D9ED5C2A405B6 /* NotificationsView.swift in Sources */,
@@ -1867,6 +1873,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Taleed/Support/Taleed.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1958,6 +1965,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Taleed/Support/Taleed.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;

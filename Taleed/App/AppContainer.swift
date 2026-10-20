@@ -28,6 +28,8 @@ final class AppContainer {
     let exploreReferences: ExploreReferenceStore
     let router = AppRouter()
     let toasts: AppToasts
+    /// The device's network path, for the offline banner.
+    let network = NetworkMonitor()
     let uploads: PhotoUploadService
     let welcome: WelcomeGate
     /// The push permission and `POST /devices`, after the member's first message or offer.

@@ -190,22 +190,41 @@ enum OrderRules {
     }
 }
 
-/// Dates of the orders screens, as the website prints them (`formatDate`, `formatDateTime`): Arabic
-/// with Latin digits.
+/// Dates of the orders screens, as the website prints them (`formatDate`, `formatDateTime` in
+/// `src/lib/i18n-helpers.ts`: fr-FR, en-GB and ar-DZ, `dateStyle: "medium"` with `timeStyle: "short"`),
+/// Arabic with Latin digits. The same as Android's `WebDates`:
+/// - French: "20 oct. 2026", "20 oct. 2026, 09:39";
+/// - English: "20 Oct 2026", "20 Oct 2026, 09:39";
+/// - Arabic: "20‏/10‏/2026", "20‏/10‏/2026، 9:39 ص".
+///
+/// The date-time patterns are the browsers' (ICU's) for those locales, spelled out: iOS joins the date
+/// and the time with "à" / "at" where the browsers write a comma.
 enum OrderText {
     static func date(_ date: Date, locale: Locale) -> String {
         let formatter = DateFormatter()
-        formatter.locale = locale
+        formatter.locale = webLocale(AppLanguage(locale: locale))
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
     }
 
     static func dateTime(_ date: Date, locale: Locale) -> String {
+        let language = AppLanguage(locale: locale)
         let formatter = DateFormatter()
-        formatter.locale = locale
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
+        formatter.locale = webLocale(language)
+        formatter.dateFormat = switch language {
+        case .fr, .en: "d MMM y, HH:mm"
+        case .ar: "dd\u{200F}/MM\u{200F}/y\u{060C} h:mm a"
+        }
         return formatter.string(from: date)
+    }
+
+    /// The website's `Intl` locale for the language.
+    private static func webLocale(_ language: AppLanguage) -> Locale {
+        switch language {
+        case .fr: Locale(identifier: "fr_FR")
+        case .en: Locale(identifier: "en_GB")
+        case .ar: Locale(identifier: "ar_DZ@numbers=latn")
+        }
     }
 }

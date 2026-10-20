@@ -193,8 +193,7 @@ struct SectionErrorView: View {
 
     var body: some View {
         VStack(spacing: TaleedSpacing.s12) {
-            TaleedIconView(error == .network ? .wifiHigh : .warningCircle, size: 28,
-                           color: error == .network ? TaleedColor.textSecondary : TaleedColor.feedbackError)
+            TaleedIconView(.warningCircle, size: 28, color: TaleedColor.feedbackError)
                 .accessibilityHidden(true)
             Text(l10n.message(for: error))
                 .taleedFont(TaleedFont.bodyRegular)

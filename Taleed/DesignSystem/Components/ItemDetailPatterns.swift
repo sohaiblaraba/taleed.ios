@@ -193,7 +193,7 @@ struct PageCountPill: View {
             .background(Capsule().fill(TaleedColor.scrim))
             .environment(\.layoutDirection, .leftToRight)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(DesignSystemStrings.format(.a11yPhotoPosition, locale: locale, current, total))
+            .accessibilityLabel(DesignSystemStrings.format(.appA11yPhotoPosition, locale: locale, current, total))
     }
 }
 
@@ -216,7 +216,7 @@ struct PageDots: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(DesignSystemStrings.format(.a11yPhotoPosition, locale: locale, current + 1, count))
+        .accessibilityLabel(DesignSystemStrings.format(.appA11yPhotoPosition, locale: locale, current + 1, count))
     }
 }
 

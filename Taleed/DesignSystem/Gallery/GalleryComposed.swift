@@ -55,7 +55,7 @@ struct GalleryComposed: View {
                        note: "Progress segments, step intro, category field, photo tips card.") {
             VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
                 StepProgress(current: step)
-                StepIntro(step: DesignSystemStrings.format(.a11yStepProgress, locale: locale, step, 4),
+                StepIntro(step: DesignSystemStrings.format(.appA11yStepProgress, locale: locale, step, 4),
                           title: copy("Ajoutez vos photos", "أضف صورك", "Add your photos"),
                           message: copy("Les annonces avec 4 photos ou plus se vendent plus vite.",
                                         "الإعلانات التي تضم 4 صور أو أكثر تُباع أسرع.",

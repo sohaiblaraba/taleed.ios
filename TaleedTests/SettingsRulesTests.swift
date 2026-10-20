@@ -158,17 +158,3 @@ struct DeletionBlockerTests {
         #expect(DeletionBlocker(.unknown(status: 409, code: "new_code")) == .generic)
     }
 }
-
-struct SupportContactsTests {
-    private func contacts(_ whatsapp: String) -> SupportContacts {
-        SupportContacts(email: "contact@taleed.app", phone: "+213 540 69 32 36", whatsappURL: URL(string: whatsapp))
-    }
-
-    /// Help shows WhatsApp's number as text (screens.md §2 G16 item 11).
-    @Test func whatsappNumberComesFromTheLink() {
-        #expect(contacts("https://wa.me/213540693236").whatsappNumber == "+213540693236")
-        #expect(contacts("https://api.whatsapp.com/send?phone=213540693236").whatsappNumber == "+213540693236")
-        #expect(contacts("https://wa.me/").whatsappNumber == nil)
-        #expect(SupportContacts(email: "a@b.c", phone: "1", whatsappURL: nil).whatsappNumber == nil)
-    }
-}

@@ -35,46 +35,48 @@ struct ProfileView: View {
 
                     VStack(spacing: 0) {
                         // The member's public profile, as others see it (G5).
+                        // Android's hub order and icons (the website menu puts Orders and Wallet before
+                        // Favorites); the icons are the ones of the Settings rows' family.
                         if let username = session.user?.username {
-                            ListRow(label: l10n.string(.navMyProfile), showsChevron: true) {
+                            ListRow(label: l10n.string(.navMyProfile), leadingIcon: .user, showsChevron: true) {
                                 router.push(.member(username: username))
                             }
                             .accessibilityIdentifier("profile.myProfile")
-                            ListRow(label: l10n.string(.appProfileMyListings), showsChevron: true) {
+                            ListRow(label: l10n.string(.appProfileMyListings), leadingIcon: .storefront, showsChevron: true) {
                                 router.push(.myListings)
                             }
                             .accessibilityIdentifier("profile.myListings")
-                            ListRow(label: l10n.string(.navFavorites), showsChevron: true) {
-                                router.push(.favorites)
-                            }
-                            .accessibilityIdentifier("profile.favorites")
-                            ListRow(label: l10n.string(.navOrders), showsChevron: true) {
+                            ListRow(label: l10n.string(.navOrders), leadingIcon: .truck, showsChevron: true) {
                                 router.push(.orders)
                             }
                             .accessibilityIdentifier("profile.orders")
-                            ListRow(label: l10n.string(.navWallet),
+                            ListRow(label: l10n.string(.navWallet), leadingIcon: .money,
                                     trailingText: walletHeadline.map { PriceFormatter.format($0, language: l10n.language) },
                                     showsChevron: true) {
                                 router.push(.wallet)
                             }
                             .accessibilityIdentifier("profile.wallet")
                             // The bell's count (`counts.unreadNotifications`).
-                            ListRow(label: l10n.string(.navNotifications), badgeCount: unreadNotifications,
-                                    badgeAccessibilityLabel: l10n.format(.appA11yUnreadNotifications, unreadNotifications),
+                            ListRow(label: l10n.string(.navNotifications), leadingIcon: .bell, badgeCount: unreadNotifications,
+                                    badgeAccessibilityLabel: l10n.format(.appBadgeUnreadNotifications, unreadNotifications),
                                     showsChevron: true) {
                                 router.push(.notifications)
                             }
                             .accessibilityIdentifier("profile.notifications")
-                            ListRow(label: referralsLabel, showsChevron: true) {
+                            ListRow(label: l10n.string(.navFavorites), leadingIcon: .heart, showsChevron: true) {
+                                router.push(.favorites)
+                            }
+                            .accessibilityIdentifier("profile.favorites")
+                            ListRow(label: referralsLabel, leadingIcon: .gift, showsChevron: true) {
                                 router.push(.referrals)
                             }
                             .accessibilityIdentifier("profile.referrals")
                         }
-                        ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
+                        ListRow(label: l10n.string(.settingsTitle), leadingIcon: .slidersHorizontal, showsChevron: true) {
                             router.push(.settings)
                         }
                         .accessibilityIdentifier("profile.settings")
-                        ListRow(label: l10n.string(.footerHelp), showsChevron: true) {
+                        ListRow(label: l10n.string(.footerHelp), leadingIcon: .info, showsChevron: true) {
                             router.push(.help)
                         }
                         .accessibilityIdentifier("profile.help")

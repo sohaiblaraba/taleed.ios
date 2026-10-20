@@ -268,8 +268,7 @@ struct InlineErrorRetry: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
             HStack(alignment: .top, spacing: TaleedSpacing.s8) {
-                TaleedIconView(error == .network ? .wifiHigh : .warningCircle, size: 20,
-                               color: error == .network ? TaleedColor.textSecondary : TaleedColor.feedbackError)
+                TaleedIconView(.warningCircle, size: 20, color: TaleedColor.feedbackError)
                     .accessibilityHidden(true)
                 Text(l10n.message(for: error))
                     .taleedFont(TaleedFont.bodyRegular)

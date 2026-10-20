@@ -18,6 +18,7 @@ struct AppRootView: View {
             .environment(container.router)
             .environment(container.catalog)
             .environment(container.toasts)
+            .environment(container.network)
             .environment(container.favorites)
             .environment(container.listingChanges)
             .environment(container.orderChanges)
