@@ -33,6 +33,11 @@ struct Catalog: Codable, Equatable, Sendable {
         }
         return nil
     }
+
+    /// The top-level category of a subcategory; nil for a top-level or unknown slug.
+    func parentCategory(of slug: String) -> CatalogCategory? {
+        categories.first { category in category.children.contains { $0.slug == slug } }
+    }
 }
 
 /// A category. Top-level ones have subcategories; listings are filed under those.

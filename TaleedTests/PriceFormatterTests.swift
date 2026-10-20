@@ -38,4 +38,27 @@ struct PriceFormatterTests {
         #expect(PriceFormatter.format(4800, locale: Locale(identifier: "ar-DZ")) == PriceFormatter.format(4800, language: .ar))
         #expect(PriceFormatter.format(4800, locale: Locale(identifier: "de")) == PriceFormatter.format(4800, language: .fr))
     }
+
+    @Test func anArabicSentenceDoesNotRepeatTheCurrencysPeriod() {
+        let low = PriceFormatter.format(750, language: .ar)
+        let high = PriceFormatter.format(2500, language: .ar)
+        let range = withoutMarks(DesignSystemStrings.format(.offersErrorRange, locale: AppLanguage.ar.locale, low, high))
+        #expect(!range.contains(".."))
+        #expect(range.hasSuffix("2.500\u{00A0}د.ج."))
+        let hint = withoutMarks(DesignSystemStrings.format(.offersOfferHint, locale: AppLanguage.ar.locale, high))
+        #expect(hint.contains("د.ج. "))
+        #expect(!hint.contains(".."))
+        // French keeps its period after "DA".
+        let french = DesignSystemStrings.format(.offersOfferHint, locale: AppLanguage.fr.locale,
+                                                PriceFormatter.format(2500, language: .fr))
+        #expect(withoutMarks(french).contains("DA."))
+    }
+
+    private func withoutMarks(_ text: String) -> String {
+        var result = ""
+        result.unicodeScalars.append(contentsOf: text.unicodeScalars.filter {
+            !(0x200E...0x200F).contains($0.value) && !(0x2066...0x2069).contains($0.value)
+        })
+        return result
+    }
 }

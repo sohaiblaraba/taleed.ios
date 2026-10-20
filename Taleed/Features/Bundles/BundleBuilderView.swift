@@ -140,7 +140,7 @@ struct BundlePickCard: View {
 
     var body: some View {
         VStack(spacing: TaleedSpacing.s8) {
-            ListingCardView(listing: listing)
+            ListingCardView(listing: listing, showsSellerRating: false)
                 .overlay {
                     if isSelected {
                         RoundedRectangle(cornerRadius: TaleedSize.productCardRadius, style: .continuous)

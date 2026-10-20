@@ -7,6 +7,7 @@ import SwiftUI
 struct ListingGallerySection: View {
     let listing: ListingDetail
     let favorite: FavoriteState
+    var height = ListingDetailLayout.galleryMaxHeight
     let onFavorite: () -> Void
     let onOpenPhoto: (Int) -> Void
     @State private var current = 0
@@ -14,7 +15,7 @@ struct ListingGallerySection: View {
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
-        ItemPhotoGallery(photos: media, current: $current) {
+        ItemPhotoGallery(photos: media, height: height, current: $current) {
             VStack {
                 HStack(alignment: .top) {
                     if let condition = ListingCardContent.conditionTag(listing.condition, catalog: catalog.catalog) {
@@ -194,6 +195,8 @@ struct ListingDescriptionSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
             SectionTitle(text: l10n.string(.listingDescription))
+            // Member-written: laid out by its own script, as the profile's bio (api-guide.md: natural
+            // alignment), so a French description starts at the left in the Arabic app.
             Text(verbatim: text)
                 .taleedFont(TaleedFont.descriptionBody)
                 .foregroundStyle(TaleedColor.textSecondary)
@@ -201,6 +204,7 @@ struct ListingDescriptionSection: View {
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
+                .naturalDirection(of: text)
         }
         .padding(TaleedSpacing.s16)
     }
@@ -226,11 +230,12 @@ struct ListingNotice: View {
 
 /// The listing screen while it loads: the gallery, the price block and three rows.
 struct ListingDetailSkeleton: View {
+    var galleryHeight = ListingDetailLayout.galleryMaxHeight
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
-            SkeletonBlock(height: 340, radius: 0)
+            SkeletonBlock(height: galleryHeight, radius: 0)
             VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
                 SkeletonBlock(width: 120, height: 24)
                 SkeletonBlock(width: 220, height: 18)
@@ -242,5 +247,19 @@ struct ListingDetailSkeleton: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(l10n.string(.commonLoading))
+    }
+}
+
+/// The listing screen's layout rules.
+enum ListingDetailLayout {
+    /// The photos' height in Figma's Item Detail.
+    static let galleryMaxHeight: CGFloat = 340
+
+    /// 340 pt, but at most 60 % of the height between the app bar and the bottom bar (never under
+    /// 220 pt), so a short screen still shows the price, the title and the fee line under the photos.
+    /// Before the screen is measured: 340.
+    static func galleryHeight(viewport: CGFloat) -> CGFloat {
+        guard viewport > 0 else { return galleryMaxHeight }
+        return min(galleryMaxHeight, max(220, (viewport * 0.6).rounded()))
     }
 }

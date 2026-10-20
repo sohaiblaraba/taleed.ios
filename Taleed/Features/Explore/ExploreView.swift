@@ -140,12 +140,14 @@ private struct CategoryDisclosureRow: View {
     let action: () -> Void
     @Environment(\.layoutDirection) private var layoutDirection
     @Environment(LanguageManager.self) private var l10n
+    /// Grows with the text like the "Tout" row's icon (`ListRow`, up to 36 pt), so the labels line up.
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 20
 
     var body: some View {
         Button(action: action) {
             VStack(spacing: 0) {
                 HStack(spacing: TaleedSpacing.s12) {
-                    TaleedIconView(icon ?? .tShirt, size: 20, color: TaleedColor.blue800)
+                    TaleedIconView(icon ?? .tShirt, size: min(iconSize, 36), color: TaleedColor.blue800)
                         .opacity(icon == nil ? 0 : 1)
                     Text(title)
                         .taleedFont(TaleedFont.bodyLarge)

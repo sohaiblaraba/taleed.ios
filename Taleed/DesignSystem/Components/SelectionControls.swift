@@ -111,21 +111,26 @@ struct RadioIndicator: View {
     }
 }
 
-/// Radio row: circle then label, the whole row selects.
+/// Radio row: circle then label, the whole row selects. In a choice sheet the circle goes after the
+/// label (`.trailing`), as in the sort sheet (design-system §5.3).
 struct TaleedRadio: View {
+    enum IndicatorEdge: Sendable { case leading, trailing }
+
     let title: String
     let isSelected: Bool
     var textStyle: TaleedTextStyle = TaleedFont.bodyRegular
+    var indicatorEdge: IndicatorEdge = .leading
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: TaleedSize.radioLabelGap) {
-                RadioIndicator(isSelected: isSelected)
+                if indicatorEdge == .leading { RadioIndicator(isSelected: isSelected) }
                 Text(title)
                     .taleedFont(textStyle)
                     .foregroundStyle(TaleedColor.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                if indicatorEdge == .trailing { RadioIndicator(isSelected: isSelected) }
             }
             .frame(minHeight: TaleedSize.touchTargetMin)
             .contentShape(Rectangle())

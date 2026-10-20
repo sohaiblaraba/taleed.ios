@@ -109,6 +109,8 @@ extension LanguageManager {
 
     /// A string with `%d` / `%@` arguments (plurals included), in the app language.
     func format(_ key: L10nKey, _ arguments: CVarArg...) -> String {
-        String(format: string(key), locale: language.locale, arguments: arguments).inParagraphDirection(of: language)
+        String(format: string(key), locale: language.locale, arguments: arguments)
+            .droppingPeriodAfterArabicCurrency
+            .inParagraphDirection(of: language)
     }
 }

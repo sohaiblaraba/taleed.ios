@@ -22,6 +22,7 @@ struct ListingDetailBody: View {
     let actions: ListingDetailActions
     let model: ListingDetailViewModel
     let handlers: Handlers
+    var galleryHeight = ListingDetailLayout.galleryMaxHeight
     @Environment(FavoriteStore.self) private var favorites
 
     var body: some View {
@@ -31,7 +32,7 @@ struct ListingDetailBody: View {
 
     @ViewBuilder
     private var top: some View {
-        ListingGallerySection(listing: listing, favorite: favorites.state(for: listing.summary),
+        ListingGallerySection(listing: listing, favorite: favorites.state(for: listing.summary), height: galleryHeight,
                               onFavorite: handlers.favorite, onOpenPhoto: handlers.openPhoto)
         if let owner = actions.owner {
             ListingOwnerBar(actions: owner, isChangingVisibility: model.isRunning(.visibility),

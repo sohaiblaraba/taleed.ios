@@ -22,6 +22,7 @@ enum DesignSystemStrings {
     /// A string with `%d` / `%@` arguments, starting in the language's direction (`inParagraphDirection`).
     static func format(_ key: L10nKey, locale: Locale, _ arguments: CVarArg...) -> String {
         String(format: string(key, locale: locale), locale: locale, arguments: arguments)
+            .droppingPeriodAfterArabicCurrency
             .inParagraphDirection(of: AppLanguage(locale: locale))
     }
 }

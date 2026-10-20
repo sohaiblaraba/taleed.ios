@@ -18,6 +18,10 @@ struct AppBarAction: Identifiable {
 /// An entry of an app-bar overflow menu.
 struct AppBarMenuItem: Identifiable {
     let title: String
+    /// Drawn before the title, in its colour (a flag-like `warning` for Report, as the listing's
+    /// "Signaler" link).
+    var icon: TaleedIcon?
+    /// Only for an action that removes or cuts something off (Block, Delete): `feedback/error`.
     var isDestructive = false
     /// For UI tests and screenshot scripts.
     var accessibilityIdentifier: String?
@@ -135,6 +139,9 @@ struct TaleedTopAppBar: View {
                     .taleedFont(TaleedFont.appBarTitle)
                     .foregroundStyle(TaleedColor.textPrimary)
                     .lineLimit(1)
+                    // Capped like a native navigation title; the large content viewer shows it bigger.
+                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                    .accessibilityShowsLargeContentViewer()
                     .padding(.horizontal, sideWidth + TaleedSpacing.s12)
                     .accessibilityAddTraits(.isHeader)
                 HStack(spacing: 0) {

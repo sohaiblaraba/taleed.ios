@@ -98,7 +98,7 @@ struct DisputeFormSheet: View {
             // Server labels, in the catalog's order (screens.md §0.1).
             if !reasons.isEmpty {
                 ForEach(reasons, id: \.value) { option in
-                    TaleedRadio(title: option.label, isSelected: model.reason == option.value) {
+                    TaleedRadio(title: option.label, isSelected: model.reason == option.value, indicatorEdge: .trailing) {
                         model.reason = option.value
                     }
                     .disabled(model.isSending)

@@ -111,7 +111,7 @@ struct ReportSheetView: View {
                     let isSelected = model.reason == option.value
                     // Design-system §5.3: the selected choice 15/600, the others 15/400.
                     TaleedRadio(title: option.label, isSelected: isSelected,
-                                textStyle: TaleedSheetStyle.option(isSelected: isSelected)) {
+                                textStyle: TaleedSheetStyle.option(isSelected: isSelected), indicatorEdge: .trailing) {
                         model.reason = option.value
                     }
                     .disabled(model.isSending)

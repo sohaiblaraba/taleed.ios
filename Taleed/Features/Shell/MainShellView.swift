@@ -13,6 +13,9 @@ struct MainShellView: View {
     @Environment(FavoriteStore.self) private var favorites
     @Environment(\.scenePhase) private var scenePhase
     @State private var tabBarHeight: CGFloat = 0
+    /// The shell's bottom edge, and the lowest it has been (without the keyboard).
+    @State private var shellBottom: CGFloat = 0
+    @State private var restingBottom: CGFloat = 0
     /// Confirmation modals draw over the whole window, tab bar included (screens.md §0.9).
     @State private var confirmations = ConfirmationHost()
 
@@ -26,11 +29,22 @@ struct MainShellView: View {
             tab(.profile) { ProfileView() }
         }
         .environment(\.confirmationHost, confirmations)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            // A screen that draws the bar inside its own bottom bar (Item Detail) hides this one.
+        // The shell's bottom: higher while the keyboard of this window is up (not one in a sheet).
+        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).maxY } action: { bottom in
+            shellBottom = bottom
+            restingBottom = max(restingBottom, bottom)
+        }
+        .overlay(alignment: .bottom) {
+            // A screen that draws the bar inside its own bottom bar (Item Detail) hides this one. Like a
+            // native tab bar, it does not ride up on the keyboard: the keyboard covers it, and the screens
+            // stop reserving its height meanwhile.
             if !hidesTabBar {
                 ShellTabBar()
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tabBarHeight = $0 }
+                    .opacity(isKeyboardOverTabBar ? 0 : 1)
+                    .allowsHitTesting(!isKeyboardOverTabBar)
+                    .accessibilityHidden(isKeyboardOverTabBar)
+                    .animation(.easeOut(duration: TaleedMotion.transitionMin), value: isKeyboardOverTabBar)
             }
         }
         // Above the tab bar, or above the screen's own bottom bar when it draws the tab bar (Item Detail).
@@ -100,9 +114,15 @@ struct MainShellView: View {
     /// The bottom bar of the screen on top: its own when it draws the tab bar (measured per screen),
     /// otherwise the shell's tab bar.
     private var toastBottomInset: CGFloat {
-        guard let top = router.path(router.selectedTab).last, top.hidesShellTabBar else { return tabBarHeight }
+        guard let top = router.path(router.selectedTab).last, top.hidesShellTabBar else { return tabBarReserve }
         return toasts.bottomBarHeight(tab: router.selectedTab, route: top) ?? tabBarHeight
     }
+
+    /// The keyboard of the shell's window is up, where the tab bar would be.
+    private var isKeyboardOverTabBar: Bool { restingBottom - shellBottom > 0 }
+
+    /// The height the screens keep free for the tab bar: none while the keyboard covers the bar.
+    private var tabBarReserve: CGFloat { isKeyboardOverTabBar ? 0 : tabBarHeight }
 
     private var showsWelcome: Bool {
         welcome.isVisible && !session.isSignedIn
@@ -120,13 +140,13 @@ struct MainShellView: View {
             // reserves the tab bar's height itself, so that its last row scrolls above the bar.
             root()
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    Color.clear.frame(height: tabBarHeight).allowsHitTesting(false)
+                    Color.clear.frame(height: tabBarReserve).allowsHitTesting(false)
                 }
                 .navigationDestination(for: AppRoute.self) { route in
                     // Pushed screens likewise (not the screens that draw the bar in their own bottom bar).
                     RouteDestinationView(route: route)
                         .safeAreaInset(edge: .bottom, spacing: 0) {
-                            Color.clear.frame(height: route.hidesShellTabBar ? 0 : tabBarHeight).allowsHitTesting(false)
+                            Color.clear.frame(height: route.hidesShellTabBar ? 0 : tabBarReserve).allowsHitTesting(false)
                         }
                 }
         }

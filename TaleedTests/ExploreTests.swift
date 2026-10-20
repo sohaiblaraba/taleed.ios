@@ -174,7 +174,8 @@ struct ExploreLabelsTests {
         let context = ExploreLabels.Context(catalog: catalog, brands: [CatalogBrand(id: "b", slug: "h-m", name: "H&M")],
                                             language: .fr, text: text)
         let query = ExploreQuery(category: "women-shoes", brand: "h-m", wilaya: 16, condition: "VERY_GOOD", size: "M")
-        #expect(ExploreLabels.chip(.category, query: query, context: context) == "Chaussures")
+        #expect(ExploreLabels.chip(.category, query: query, context: context) == "Chaussures · Femmes")
+        #expect(ExploreLabels.chip(.category, query: ExploreQuery(category: "women"), context: context) == "Femmes")
         #expect(ExploreLabels.chip(.brand, query: query, context: context) == "H&M")
         #expect(ExploreLabels.chip(.wilaya, query: query, context: context) == "Alger")
         #expect(ExploreLabels.chip(.condition, query: query, context: context) == "Très bon état")
@@ -193,8 +194,10 @@ struct ExploreLabelsTests {
         let context = ExploreLabels.Context(catalog: nil, language: .fr, text: text)
         let low = PriceFormatter.format(1000, language: .fr)
         let high = PriceFormatter.format(5000, language: .fr)
-        #expect(ExploreLabels.chip(.price, query: ExploreQuery(minPrice: 1000), context: context) == "\(low) — Max")
-        #expect(ExploreLabels.chip(.price, query: ExploreQuery(maxPrice: 5000), context: context) == "Min — \(high)")
+        #expect(ExploreLabels.chip(.price, query: ExploreQuery(minPrice: 1000), context: context) == "≥ \(low)")
+        #expect(ExploreLabels.chip(.price, query: ExploreQuery(maxPrice: 5000), context: context) == "≤ \(high)")
+        #expect(ExploreLabels.chip(.price, query: ExploreQuery(minPrice: 1000, maxPrice: 5000), context: context)
+            == "\(low) — \(high)")
     }
 
     @Test func sortsComeFromTheCatalogWithoutUnknownValues() {

@@ -31,6 +31,8 @@ struct TaleedOverflowMenu<Label: View>: View {
             }
     }
 
+    private var hasIcons: Bool { items.contains { $0.icon != nil } }
+
     private var entries: some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
@@ -41,16 +43,25 @@ struct TaleedOverflowMenu<Label: View>: View {
                     chosen = item
                     isPresented = false
                 } label: {
-                    Text(item.title)
-                        .taleedFont(TaleedFont.bodyLarge)
-                        .foregroundStyle(item.isDestructive ? TaleedColor.feedbackError : TaleedColor.textPrimary)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, TaleedSpacing.s16)
-                        .padding(.vertical, TaleedSpacing.s12)
-                        .frame(minHeight: TaleedSize.touchTargetMin)
-                        .contentShape(Rectangle())
+                    let color = item.isDestructive ? TaleedColor.feedbackError : TaleedColor.textPrimary
+                    HStack(spacing: TaleedSpacing.s12) {
+                        // Entries without an icon keep its place, so the titles line up.
+                        if hasIcons {
+                            TaleedIconView(item.icon ?? .x, size: 20, color: color)
+                                .opacity(item.icon == nil ? 0 : 1)
+                                .accessibilityHidden(true)
+                        }
+                        Text(item.title)
+                            .taleedFont(TaleedFont.bodyLarge)
+                            .foregroundStyle(color)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.horizontal, TaleedSpacing.s16)
+                    .padding(.vertical, TaleedSpacing.s12)
+                    .frame(minHeight: TaleedSize.touchTargetMin)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier(item.accessibilityIdentifier ?? "")

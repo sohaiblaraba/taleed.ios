@@ -142,7 +142,7 @@ struct FilterDraft: Equatable, Sendable {
 /// from the server) with the website's own words before the catalog arrived.
 enum ExploreLabels {
     /// The chip of an active filter: the category's or brand's name, the condition's catalog label,
-    /// the size, the wilaya's name, or the price range as the website writes it ("1 000 DA — Max").
+    /// the size, the wilaya's name, or the price range ("1 000 DA — 5 000 DA", "≥ 1 000 DA").
     struct Context {
         var catalog: Catalog?
         var brands: [CatalogBrand] = []
@@ -160,17 +160,26 @@ enum ExploreLabels {
         case .size: return sent.size ?? ""
         case .wilaya: return wilayaName(sent.wilaya, catalog: catalog) ?? ""
         case .price:
-            let low = sent.minPrice.map { PriceFormatter.format($0, language: language) } ?? text(.filtersMinPrice)
-            let high = sent.maxPrice.map { PriceFormatter.format($0, language: language) } ?? text(.filtersMaxPrice)
-            return "\(low) — \(high)"
+            let low = sent.minPrice.map { PriceFormatter.format($0, language: language) }
+            let high = sent.maxPrice.map { PriceFormatter.format($0, language: language) }
+            switch (low, high) {
+            case let (low?, high?): return "\(low) — \(high)"
+            // One bound: "≥ 5 000 DA" or "≤ 5 000 DA", not a range up to a value called "Max".
+            case let (low?, nil): return "≥ \(low)"
+            case let (nil, high?): return "≤ \(high)"
+            case (nil, nil): return "\(text(.filtersMinPrice)) — \(text(.filtersMaxPrice))"
+            }
         }
     }
 
-    /// A category's name in the app language; the slug when the catalog does not list it (the API
+    /// A category's name in the app language, with its parent's for a subcategory ("Chaussures ·
+    /// Femmes", as the wardrobe's categories); the slug when the catalog does not list it (the API
     /// ignores an unknown slug, but the member asked for it).
     static func categoryName(_ slug: String?, catalog: Catalog?) -> String? {
         guard let slug else { return nil }
-        return catalog?.category(slug: slug)?.name ?? slug
+        guard let category = catalog?.category(slug: slug) else { return slug }
+        guard let parent = catalog?.parentCategory(of: slug) else { return category.name }
+        return "\(category.name) · \(parent.name)"
     }
 
     static func brandName(_ slug: String?, brands: [CatalogBrand]) -> String? {

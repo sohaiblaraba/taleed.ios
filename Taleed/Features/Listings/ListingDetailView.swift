@@ -33,6 +33,8 @@ struct ListingDetailView: View {
     /// The offer sheet's price and bounds while it shows.
     @State private var offer: OfferDraft?
     @State private var confirmsDelete = false
+    /// The height between the app bar and the bottom bar, for the gallery's height.
+    @State private var viewportHeight: CGFloat = 0
     let dependencies: ListingDependencies
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
@@ -77,6 +79,7 @@ struct ListingDetailView: View {
             TaleedTopAppBar(title: l10n.string(.appListingTitle), onBack: { dismiss() }, actions: barActions)
         } content: {
             content
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewportHeight = $0 }
                 // Sized to its content, above the keyboard (the design-system sheet).
                 .taleedSheet(isPresented: offerPresented) {
                     if let offer {
@@ -135,7 +138,8 @@ struct ListingDetailView: View {
         if let listing = model.listing, let actions = model.actions(isSignedIn: session.isSignedIn) {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    ListingDetailBody(listing: listing, actions: actions, model: model, handlers: handlers)
+                    ListingDetailBody(listing: listing, actions: actions, model: model, handlers: handlers,
+                                      galleryHeight: galleryHeight)
                 }
                 .padding(.bottom, TaleedSpacing.s24)
             }
@@ -148,8 +152,14 @@ struct ListingDetailView: View {
                 ErrorStateView(error: error, retry: { Task { await model.retry() } }, onBack: { dismiss() })
             }
         } else {
-            ScrollView { ListingDetailSkeleton() }.scrollDisabled(true)
+            ScrollView { ListingDetailSkeleton(galleryHeight: galleryHeight) }.scrollDisabled(true)
         }
+    }
+
+    /// The photos' 340 pt, or less on a short screen (iPhone SE), so the price, the title and the fee
+    /// line show above the bottom bar.
+    private var galleryHeight: CGFloat {
+        ListingDetailLayout.galleryHeight(viewport: viewportHeight)
     }
 
     private var barActions: [AppBarAction] {
@@ -162,7 +172,7 @@ struct ListingDetailView: View {
         }
         if !listing.isOwner {
             actions.append(AppBarAction(icon: .dotsThree, accessibilityLabel: l10n.string(.commonMore), menu: [
-                AppBarMenuItem(title: l10n.string(.reportAction), isDestructive: true) { start(.report) },
+                AppBarMenuItem(title: l10n.string(.reportAction), icon: .warning) { start(.report) },
             ]))
         }
         return actions

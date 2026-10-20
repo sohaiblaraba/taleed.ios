@@ -53,7 +53,9 @@ struct MemberProfileView: View {
 
     var body: some View {
         ShellScreen {
-            TaleedTopAppBar(title: model.profile?.displayName.isolatedLeftToRight ?? "", onBack: { dismiss() },
+            // The handle from the link until the profile arrives (`displayName` is "@username").
+            TaleedTopAppBar(title: (model.profile?.displayName ?? "@\(model.username)").isolatedLeftToRight,
+                            onBack: { dismiss() },
                             actions: barActions)
         } content: {
             content
@@ -129,7 +131,11 @@ struct MemberProfileView: View {
                 ErrorStateView(error: error, retry: { Task { await model.retry() } }, onBack: { dismiss() })
             }
         } else {
-            LoadingStateView()
+            // A skeleton of the header, as the listing screen loads (design-system §3.6).
+            ScrollView {
+                SkeletonSellerHeader().padding(TaleedLayout.screenMargin)
+            }
+            .scrollDisabled(true)
         }
     }
 
@@ -158,13 +164,15 @@ struct MemberProfileView: View {
         var menu: [AppBarMenuItem] = []
         if actions.showsBlockMenu {
             if actions.showsBlockedNotice {
-                menu.append(AppBarMenuItem(title: l10n.string(.appProfileUnblock)) { unblock() })
+                menu.append(AppBarMenuItem(title: l10n.string(.appProfileUnblock), icon: .user) { unblock() })
             } else {
-                menu.append(AppBarMenuItem(title: l10n.string(.appProfileBlock), isDestructive: true) { start(.block) })
+                menu.append(AppBarMenuItem(title: l10n.string(.appProfileBlock), icon: .warningCircle, isDestructive: true) {
+                    start(.block)
+                })
             }
         }
         if actions.showsReport {
-            menu.append(AppBarMenuItem(title: l10n.string(.appProfileReportMember), isDestructive: true) { start(.report) })
+            menu.append(AppBarMenuItem(title: l10n.string(.appProfileReportMember), icon: .warning) { start(.report) })
         }
         if !menu.isEmpty {
             items.append(AppBarAction(icon: .dotsThree, accessibilityLabel: l10n.string(.commonMore), menu: menu))

@@ -215,19 +215,21 @@ struct ConversationView: View {
         let actions = model.menuActions
         var items: [AppBarMenuItem] = []
         if actions.viewListing, let listing = model.conversation?.listing {
-            items.append(AppBarMenuItem(title: l10n.string(.chatViewListing)) { router.push(.listing(id: listing.id)) })
+            items.append(AppBarMenuItem(title: l10n.string(.chatViewListing), icon: .storefront) { router.push(.listing(id: listing.id)) })
         }
         if actions.viewProfile, let profileAction {
-            items.append(AppBarMenuItem(title: l10n.string(.listingViewProfile), action: profileAction))
+            items.append(AppBarMenuItem(title: l10n.string(.listingViewProfile), icon: .user, action: profileAction))
         }
         if actions.unblock {
-            items.append(AppBarMenuItem(title: l10n.string(.appProfileUnblock)) { Task { await model.setBlocked(false) } })
+            items.append(AppBarMenuItem(title: l10n.string(.appProfileUnblock), icon: .user) { Task { await model.setBlocked(false) } })
         }
         if actions.block {
-            items.append(AppBarMenuItem(title: l10n.string(.appProfileBlock), isDestructive: true) { confirmsBlock = true })
+            items.append(AppBarMenuItem(title: l10n.string(.appProfileBlock), icon: .warningCircle, isDestructive: true) {
+                confirmsBlock = true
+            })
         }
         if actions.report {
-            items.append(AppBarMenuItem(title: l10n.string(.reportAction), isDestructive: true) { presented = .report })
+            items.append(AppBarMenuItem(title: l10n.string(.reportAction), icon: .warning) { presented = .report })
         }
         return items
     }

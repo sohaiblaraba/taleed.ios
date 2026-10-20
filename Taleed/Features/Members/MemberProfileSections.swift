@@ -18,7 +18,7 @@ struct MemberWardrobeSection: View {
                 if items.isEmpty {
                     EmptyState(title: emptyTitle, icon: .storefront)
                 } else {
-                    ListingGrid(listings: items)
+                    ListingGrid(listings: items, showsSellerRating: false)
                 }
             } else if let error = list.error {
                 SectionErrorView(error: error) { Task { await list.reload() } }

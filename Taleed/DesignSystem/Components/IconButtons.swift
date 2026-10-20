@@ -103,8 +103,8 @@ struct FavoriteCircleButton: View {
     }
 }
 
-/// The bare heart of the dense search-results row (design-system §3.3): heart 18 `#778198`, filled
-/// red when saved. 32 pt box, 44 pt hit area.
+/// The bare heart of the dense search-results row (design-system §3.3): heart 18 `#778198`; filled in
+/// the saved mint of the cards and the listing (`brand/accent`, decision D-7) when saved. 44 pt box.
 struct FavoriteHeartToggle: View {
     let isFavorite: Bool
     let onToggle: () -> Void
@@ -113,10 +113,9 @@ struct FavoriteHeartToggle: View {
     var body: some View {
         Button(action: onToggle) {
             TaleedIconView(isFavorite ? .heartFill : .heart, size: 18,
-                           color: isFavorite ? TaleedColor.feedbackError : TaleedColor.textSecondary)
-                .frame(width: 32, height: 32)
+                           color: isFavorite ? TaleedColor.brandAccent : TaleedColor.textSecondary)
+                .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
                 .contentShape(Rectangle())
-                .minimumHitArea()
         }
         .buttonStyle(.plain)
         .favoriteSemantics(isFavorite: isFavorite, count: nil, locale: locale)

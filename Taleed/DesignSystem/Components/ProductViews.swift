@@ -112,11 +112,13 @@ struct ProductCard: View {
 
     private var info: some View {
         VStack(alignment: .leading, spacing: TaleedSize.productCardInfoGap) {
-            HStack(spacing: TaleedSpacing.s4) {
+            HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s4) {
+                // Two lines, as the website's and Figma's product cards; every card keeps both, so the
+                // cards of a grid row line up.
                 Text(verbatim: product.title)
                     .taleedFont(TaleedFont.cardTitle)
                     .foregroundStyle(TaleedColor.textPrimary)
-                    .lineLimit(1)
+                    .lineLimit(2, reservesSpace: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if let rating = product.rating {
                     HStack(spacing: TaleedSpacing.s4) {
@@ -195,16 +197,34 @@ struct ProductListRow: View {
     private static let densePriceStyle = TaleedTextStyle(size: 15, weight: .extrabold, lineHeight: nil, letterSpacing: 0,
                                                          relativeTo: .subheadline)
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         let dense = style == .dense
         Button(action: onTap) {
-            HStack(alignment: dense ? .top : .center, spacing: dense ? TaleedSpacing.s12 : TaleedSpacing.s16) {
-                ProductMediaView(media: product.media)
-                    .frame(width: dense ? 92 : TaleedSize.productListRowMedia, height: dense ? 100 : TaleedSize.productListRowMedia)
-                    .clipShape(RoundedRectangle(cornerRadius: dense ? TaleedRadius.s : TaleedRadius.m, style: .continuous))
-                details
-                    .padding(.trailing, dense ? 28 : 0)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            Group {
+                if isStacked {
+                    // From accessibility sizes on, the photo goes on top, so the text keeps the row's width.
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
+                        ProductMediaView(media: product.media)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 180)
+                            .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.s, style: .continuous))
+                        details
+                            .padding(.trailing, TaleedSize.touchTargetMin)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                } else {
+                    HStack(alignment: dense ? .top : .center, spacing: dense ? TaleedSpacing.s12 : TaleedSpacing.s16) {
+                        ProductMediaView(media: product.media)
+                            .frame(width: dense ? 92 : TaleedSize.productListRowMedia,
+                                   height: dense ? 100 : TaleedSize.productListRowMedia)
+                            .clipShape(RoundedRectangle(cornerRadius: dense ? TaleedRadius.s : TaleedRadius.m, style: .continuous))
+                        details
+                            .padding(.trailing, dense ? 28 : 0)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
             }
             .padding(dense ? TaleedSpacing.s8 : TaleedSize.productListRowPadding)
             .background(TaleedColor.surfacePrimary,
@@ -213,10 +233,14 @@ struct ProductListRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .overlay(alignment: dense ? .topTrailing : .trailing) {
-            favorite.padding(dense ? TaleedSpacing.s8 : TaleedSize.productListRowPadding)
+        .overlay(alignment: isStacked ? .bottomTrailing : dense ? .topTrailing : .trailing) {
+            // The dense heart's 44 pt box keeps the glyph where its 32 pt box had it.
+            favorite.padding(dense ? TaleedSpacing.s4 / 2 : TaleedSize.productListRowPadding)
         }
     }
+
+    /// The dense row from accessibility sizes on: photo on top, the heart at the end of the details.
+    private var isStacked: Bool { style == .dense && dynamicTypeSize.isAccessibilitySize }
 
     @ViewBuilder
     private var favorite: some View {

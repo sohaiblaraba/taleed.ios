@@ -375,3 +375,12 @@ struct ListingDetailViewModelTests {
         #expect(other.actions(isSignedIn: true)?.buy == .payNow(offerId: "o1", amount: 2000))
     }
 }
+
+struct ListingDetailLayoutTests {
+    @Test func theGalleryShrinksOnlyOnShortScreens() {
+        #expect(ListingDetailLayout.galleryHeight(viewport: 0) == 340)
+        #expect(ListingDetailLayout.galleryHeight(viewport: 620) == 340)
+        #expect(ListingDetailLayout.galleryHeight(viewport: 450) == 270)
+        #expect(ListingDetailLayout.galleryHeight(viewport: 300) == 220)
+    }
+}

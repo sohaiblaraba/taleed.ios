@@ -50,6 +50,30 @@ extension String {
         return hasIsolate ? .isolatesOnly : .none
     }
 
+    /// An Arabic price ends with the currency's own period ("2.500 د.ج."), so a sentence that puts its
+    /// period right after one would read "د.ج..": the sentence's period is dropped (direction marks and
+    /// the end of an isolate in between are kept).
+    var droppingPeriodAfterArabicCurrency: String {
+        let currency = Array("د.ج.".unicodeScalars)
+        let transparent: Set<UInt32> = [0x200E, 0x200F, 0x2069]
+        var scalars = Array(unicodeScalars)
+        guard scalars.count > currency.count else { return self }
+        var index = 0
+        while index + currency.count <= scalars.count {
+            guard scalars[index..<index + currency.count].elementsEqual(currency) else {
+                index += 1
+                continue
+            }
+            var next = index + currency.count
+            while next < scalars.count, transparent.contains(scalars[next].value) { next += 1 }
+            if next < scalars.count, scalars[next] == "." { scalars.remove(at: next) }
+            index += currency.count
+        }
+        var result = ""
+        result.unicodeScalars.append(contentsOf: scalars)
+        return result
+    }
+
     /// The direction of the first letter that has one: right to left for Arabic (and Hebrew, Syriac,
     /// Thaana…) script, left to right for the others; nil without any letter (digits, emoji).
     var naturalLayoutDirection: LayoutDirection? {

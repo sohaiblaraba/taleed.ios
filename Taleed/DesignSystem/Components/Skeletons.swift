@@ -128,6 +128,31 @@ struct SkeletonProductList: View {
     }
 }
 
+/// Loading placeholder of a seller card header (§3.4, a member's profile): the avatar circle, two text
+/// bars, the stats strip and the button, then the start of the product grid.
+struct SkeletonSellerHeader: View {
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
+            HStack(alignment: .top, spacing: 14) {
+                SkeletonBlock(width: SellerCard<EmptyView, EmptyView>.avatarSize, height: SellerCard<EmptyView, EmptyView>.avatarSize)
+                VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                    SkeletonBlock(width: 140, height: 18)
+                    SkeletonBlock(width: 100, height: 12, color: TaleedColor.surfaceSubtle)
+                }
+                .padding(.top, TaleedSpacing.s4)
+            }
+            SkeletonBlock(height: 56, radius: TaleedRadius.m)
+            SkeletonBlock(height: 44, radius: TaleedRadius.s)
+            SkeletonBlock(height: 160, color: TaleedColor.surfaceSubtle, radius: TaleedRadius.m)
+        }
+        .modifier(SkeletonPulse())
+        .accessibilityElement()
+        .accessibilityLabel(DesignSystemStrings.string(.commonLoading, locale: locale))
+    }
+}
+
 /// The specimen's row of three skeleton cards.
 struct SkeletonCardRow: View {
     @Environment(\.locale) private var locale

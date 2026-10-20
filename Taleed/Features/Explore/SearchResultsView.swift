@@ -104,6 +104,15 @@ struct SearchResultsView: View {
             .padding(.horizontal, TaleedLayout.screenMargin)
             .padding(.vertical, 2)
         }
+        // Chips that run past the edge fade out there, so the row reads as one that scrolls.
+        .mask {
+            HStack(spacing: 0) {
+                Rectangle()
+                LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: TaleedLayout.screenMargin + TaleedSpacing.s8)
+                    .flipsForRightToLeftLayoutDirection(true)
+            }
+        }
     }
 
     /// "Filtres", or "Filtres · 2" with active filters (the Figma pattern's chip).
@@ -138,11 +147,18 @@ struct SearchResultsView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: TaleedSpacing.s12) {
-                        summary
-                            .id(Self.topID)
-                            .onAppear { Task { await viewModel.topAppeared() } }
-                            .onDisappear { viewModel.topDisappeared() }
                         let listings = listingChanges.cards(list.items.filter { !favorites.removedIds.contains($0.id) })
+                        // No count and sort over the empty state, which already says there is nothing.
+                        Group {
+                            if listings.isEmpty {
+                                Color.clear.frame(height: 0)
+                            } else {
+                                summary
+                            }
+                        }
+                        .id(Self.topID)
+                        .onAppear { Task { await viewModel.topAppeared() } }
+                        .onDisappear { viewModel.topDisappeared() }
                         if listings.isEmpty {
                             emptyState.padding(.top, TaleedSpacing.s24)
                         } else {
@@ -197,12 +213,14 @@ struct SearchResultsView: View {
         return l10n.format(.filtersSearchFor, text) + ", " + count
     }
 
-    /// Figma's empty state: with filters, "Clear filters"; for keywords alone, the website's sentence.
+    /// Figma's empty state: with filters, "Clear filters". The website's sentence, or Figma's "another
+    /// city" one when a wilaya filter is on.
     private var emptyState: some View {
-        let hasFilters = !viewModel.query.activeFilters.isEmpty
+        let filters = viewModel.query.activeFilters
+        let hasFilters = !filters.isEmpty
         return EmptyState(
             title: l10n.string(.appExploreEmptyTitle),
-            message: l10n.string(hasFilters ? .appExploreEmptyBody : .filtersNoResults),
+            message: l10n.string(filters.contains(.wilaya) ? .appExploreEmptyBody : .filtersNoResults),
             actionTitle: hasFilters ? l10n.string(.appExploreClearFilters) : nil,
             action: hasFilters ? { withAnimation { viewModel.clearFilters() } } : nil
         )

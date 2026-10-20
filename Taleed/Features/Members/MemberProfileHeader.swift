@@ -20,6 +20,8 @@ struct MemberProfileHeader: View {
     let isBlockRunning: Bool
     let handlers: Handlers
     @Environment(LanguageManager.self) private var l10n
+    /// The small glyphs beside caption text (meta row, verified information) grow with it, up to 28 pt.
+    @ScaledMetric(relativeTo: .caption) private var glyphSize: CGFloat = 14
 
     var body: some View {
         SellerCard(name: profile.displayName, reputation: reputation,
@@ -96,9 +98,13 @@ struct MemberProfileHeader: View {
         metaItem(icon: .clock, text: l10n.format(.memberMemberSince, since))
     }
 
+    private var glyph: CGFloat { min(glyphSize, 28) }
+
     private func metaItem(icon: TaleedIcon, text: String) -> some View {
-        HStack(spacing: TaleedSpacing.s4) {
-            TaleedIconView(icon, size: 14, color: TaleedColor.textSecondary)
+        // On the first line of a wrapped text, not between its lines.
+        HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s4) {
+            TaleedIconView(icon, size: glyph, color: TaleedColor.textSecondary)
+                .alignmentGuide(.firstTextBaseline) { $0[.bottom] - $0.height * 0.15 }
                 .accessibilityHidden(true)
             Text(text)
                 .taleedFont(TaleedFont.caption)
@@ -151,12 +157,12 @@ private extension MemberProfileHeader {
     private func check(_ label: L10nKey, icon: TaleedIcon, isDone: Bool) -> some View {
         HStack(spacing: TaleedSpacing.s4) {
             if isDone {
-                TaleedIconView(.check, size: 14, color: TaleedColor.feedbackSuccess)
+                TaleedIconView(.check, size: glyph, color: TaleedColor.feedbackSuccess)
             } else {
-                Capsule().fill(TaleedColor.textSecondary).frame(width: 8, height: 1.5)
-                    .frame(width: 14, height: 14)
+                Capsule().fill(TaleedColor.textSecondary).frame(width: glyph * 0.57, height: max(1.5, glyph / 9))
+                    .frame(width: glyph, height: glyph)
             }
-            TaleedIconView(icon, size: 14, color: isDone ? TaleedColor.textPrimary : TaleedColor.textSecondary)
+            TaleedIconView(icon, size: glyph, color: isDone ? TaleedColor.textPrimary : TaleedColor.textSecondary)
             Text(l10n.string(label))
                 .taleedFont(isDone ? TaleedFont.caption.with(weight: .semibold) : TaleedFont.caption)
                 .foregroundStyle(isDone ? TaleedColor.textPrimary : TaleedColor.textSecondary)

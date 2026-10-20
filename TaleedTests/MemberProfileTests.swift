@@ -125,6 +125,14 @@ struct MemberProfileTests {
         #expect("123 👍".naturalLayoutDirection == nil)
     }
 
+    @Test func memberSinceNamesTheMonthInEveryLanguage() {
+        let date = Date(timeIntervalSince1970: 1_792_404_000) // 19 Oct 2026
+        #expect(MemberProfileText.memberSince(date, locale: AppLanguage.fr.formattingLocale).contains("oct."))
+        let arabic = MemberProfileText.memberSince(date, locale: AppLanguage.ar.formattingLocale)
+        #expect(!arabic.contains("/"))
+        #expect(arabic.contains("أكتوبر 2026"))
+    }
+
     // MARK: Wardrobe filter
 
     @Test func sharedNamesShowTheirParent() {

@@ -7,6 +7,9 @@ struct ListingCardView: View {
     let listing: ListingSummary
     /// The heart's tap on a screen that handles it itself (Favorites); the shared toggle otherwise.
     var onFavorite: ((ListingSummary) -> Void)?
+    /// False where every card is the same seller's (a wardrobe, "Articles du membre"): the rating would
+    /// repeat on each.
+    var showsSellerRating = true
     @Environment(CatalogStore.self) private var catalog
     @Environment(FavoriteStore.self) private var favorites
     @Environment(AppRouter.self) private var router
@@ -17,7 +20,7 @@ struct ListingCardView: View {
         ProductCard(
             product: ListingCardContent.product(
                 for: listing, favorite: favorites.state(for: listing), catalog: catalog.catalog,
-                text: { l10n.string($0) }
+                showsSellerRating: showsSellerRating, text: { l10n.string($0) }
             ),
             onTap: { router.push(.listing(id: listing.id)) },
             onFavorite: favorite
@@ -38,7 +41,7 @@ struct ListingCardView: View {
 /// What a listing card shows, from the API's card, the heart's state and the catalog.
 enum ListingCardContent {
     static func product(for listing: ListingSummary, favorite: FavoriteState, catalog: Catalog?,
-                        text: (L10nKey) -> String) -> ProductSummary {
+                        showsSellerRating: Bool = true, text: (L10nKey) -> String) -> ProductSummary {
         let condition = conditionTag(listing.condition, catalog: catalog)
         return ProductSummary(
             id: listing.id,
@@ -50,7 +53,7 @@ enum ListingCardContent {
             conditionShortLabel: condition?.shortLabel,
             location: listing.shipsFrom?.name,
             sizeLabel: listing.size,
-            rating: listing.sellerRating?.average,
+            rating: showsSellerRating ? listing.sellerRating?.average : nil,
             isFavorite: favorite.isFavorited,
             // The count shows only above 0, as on the website.
             favoriteCount: favorite.count >= 1 ? favorite.count : nil,
@@ -94,12 +97,14 @@ struct ListingGrid: View {
     let listings: [ListingSummary]
     /// See `ListingCardView.onFavorite`.
     var onFavorite: ((ListingSummary) -> Void)?
+    /// See `ListingCardView.showsSellerRating`.
+    var showsSellerRating = true
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         LazyVGrid(columns: ProductGridColumns.columns(for: dynamicTypeSize, alignment: .top),
                   spacing: TaleedLayout.productGridGap) {
-            ForEach(listings) { ListingCardView(listing: $0, onFavorite: onFavorite) }
+            ForEach(listings) { ListingCardView(listing: $0, onFavorite: onFavorite, showsSellerRating: showsSellerRating) }
         }
         .padding(.horizontal, TaleedLayout.screenMargin)
     }
