@@ -33,7 +33,7 @@ struct ReportSheetView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
+            SheetHeader(title: l10n.string(.reportTitle), isClosable: !model.isSending) { dismiss() }
             ScrollView {
                 VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
                     Text(l10n.string(.reportSubtitle))
@@ -43,7 +43,9 @@ struct ReportSheetView: View {
                     reasons
                     TaleedTextArea(label: l10n.string(.reportDetailsLabel), text: $model.details,
                                    placeholder: l10n.string(.reportDetailsPlaceholder),
-                                   helper: "\(model.details.utf16.count) / \(ReportViewModel.maxDetailsLength)")
+                                   helper: "\(model.details.utf16.count) / \(ReportViewModel.maxDetailsLength)",
+                                   maxLength: ReportViewModel.maxDetailsLength)
+                        .accessibilityIdentifier("report.details")
                     evidence
                 }
                 .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
@@ -51,7 +53,20 @@ struct ReportSheetView: View {
                 .padding(.bottom, TaleedSpacing.s24)
             }
             .scrollDismissesKeyboard(.interactively)
-            footer
+            SheetFooterButton(title: l10n.string(.reportSubmit), isLoading: model.isSending, isEnabled: model.canSubmit,
+                              error: model.error.map { l10n.message(for: $0) }) {
+                Task {
+                    guard let outcome = await model.submit() else { return }
+                    switch outcome {
+                    case .sent, .gone:
+                        onFinish(outcome)
+                        dismiss()
+                    case .failed:
+                        break
+                    }
+                }
+            }
+            .accessibilityIdentifier("report.submit")
         }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
         .presentationDetents([.large])
@@ -63,50 +78,28 @@ struct ReportSheetView: View {
             if catalog.catalog?.reportReasons.isEmpty ?? true { await catalog.refresh() }
         }
         .photosPicker(isPresented: $showsPicker, selection: $pickerItems,
-                      maxSelectionCount: max(1, ReportViewModel.maxEvidence - model.evidence.count), matching: .images)
+                      maxSelectionCount: max(1, model.remainingEvidence), matching: .images)
         .onChange(of: pickerItems) { _, items in
             guard !items.isEmpty else { return }
             pickerItems = []
+            // A tile per photo at once, in its loading state: Send stays off until each is attached or failed.
+            let picked = Array(zip(items, model.reserveEvidence(items.count)))
             Task {
-                for item in items.prefix(ReportViewModel.maxEvidence - model.evidence.count) {
+                for (item, id) in picked where model.containsEvidence(id) {
                     if let data = try? await item.loadTransferable(type: Data.self) {
-                        await model.addEvidence(data)
+                        await model.upload(id, data: data)
                     } else {
-                        model.addUnreadableEvidence()
+                        model.markUnreadable(id)
                     }
                 }
             }
         }
+        .onChange(of: failureMessage) { _, message in
+            if let message { AccessibilityNotification.Announcement(message).post() }
+        }
     }
 
     // MARK: Parts
-
-    private var header: some View {
-        VStack(spacing: TaleedSize.bottomSheetGap) {
-            Capsule()
-                .fill(TaleedColor.sheetHandle)
-                .frame(width: TaleedSize.bottomSheetHandleWidth, height: TaleedSize.bottomSheetHandleHeight)
-                .accessibilityHidden(true)
-            HStack {
-                Text(l10n.string(.reportTitle))
-                    .taleedFont(TaleedTextStyle(size: 18, weight: .regular, lineHeight: nil, letterSpacing: 0, relativeTo: .body))
-                    .foregroundStyle(TaleedColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Button { dismiss() } label: {
-                    TaleedIconView(.x, size: 20, color: TaleedColor.textSecondary)
-                        .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(l10n.string(.commonClose))
-                .disabled(model.isSending)
-            }
-        }
-        .padding(.top, TaleedSize.bottomSheetPaddingTop)
-        .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
-        .padding(.bottom, TaleedSpacing.s8)
-    }
 
     @ViewBuilder
     private var reasons: some View {
@@ -115,9 +108,13 @@ struct ReportSheetView: View {
             // Server labels, in the catalog's display order (screens.md §0.1).
             if let options = catalog.catalog?.reportReasons, !options.isEmpty {
                 ForEach(options, id: \.value) { option in
-                    TaleedRadio(title: option.label, isSelected: model.reason == option.value) {
+                    let isSelected = model.reason == option.value
+                    // Design-system §5.3: the selected choice 15/600, the others 15/400.
+                    TaleedRadio(title: option.label, isSelected: isSelected,
+                                textStyle: TaleedSheetStyle.option(isSelected: isSelected)) {
                         model.reason = option.value
                     }
+                    .disabled(model.isSending)
                     .accessibilityIdentifier("report.reason.\(option.value)")
                 }
             } else if catalog.isRefreshing || catalog.error == nil {
@@ -139,9 +136,9 @@ struct ReportSheetView: View {
             FieldLabel(text: l10n.string(.reportEvidenceLabel))
             HStack(spacing: TaleedSpacing.s8) {
                 ForEach(Array(model.evidence.enumerated()), id: \.element.id) { index, item in
-                    EvidenceThumbnail(item: item, removeLabel: l10n.format(.photoUploaderRemove, index + 1)) {
-                        model.removeEvidence(item.id)
-                    }
+                    EvidenceThumbnail(item: item, number: index + 1, isDisabled: model.isSending,
+                                      onRetry: { Task { await model.retryEvidence(item.id) } },
+                                      onRemove: { model.removeEvidence(item.id) })
                 }
                 if model.canAddEvidence {
                     Button { showsPicker = true } label: {
@@ -156,56 +153,32 @@ struct ReportSheetView: View {
                     .accessibilityIdentifier("report.addPhoto")
                 }
             }
-            if let failed = model.evidence.first(where: { $0.error != nil })?.error {
-                FieldHelper(text: l10n.message(for: failed), color: TaleedColor.feedbackError)
+            if let failureMessage {
+                FieldHelper(text: failureMessage, color: TaleedColor.feedbackError)
+                    .accessibilityIdentifier("report.evidenceError")
             }
         }
     }
 
-    /// The send failure sits above the button, where it is seen without scrolling.
-    private var footer: some View {
-        VStack(spacing: TaleedSpacing.s12) {
-            if let error = model.error {
-                InlineAlert(kind: .error, title: l10n.message(for: error))
-                    .accessibilityIdentifier("report.error")
-            }
-            sendButton
-        }
-        .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
-        .padding(.top, TaleedSpacing.s12)
-        .padding(.bottom, TaleedSpacing.s16)
-        .background(TaleedColor.surfacePrimary)
-        .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
-        .onChange(of: model.error) { _, error in
-            if let error { AccessibilityNotification.Announcement(l10n.message(for: error)).post() }
-        }
-    }
-
-    private var sendButton: some View {
-        TaleedButton(title: l10n.string(.reportSubmit), kind: .primary, size: .large, isLoading: model.isSending,
-                     isFullWidth: true) {
-            Task {
-                guard let outcome = await model.submit() else { return }
-                switch outcome {
-                case .sent, .gone:
-                    onFinish(outcome)
-                    dismiss()
-                case .failed:
-                    break
-                }
-            }
-        }
-        .disabled(!model.canSubmit)
-        .accessibilityIdentifier("report.submit")
+    /// The first failed screenshot's reason, then what to do: send it again, or remove it. Send waits
+    /// for it, so no screenshot is left out without a word.
+    private var failureMessage: String? {
+        guard let failed = model.evidence.first(where: \.isFailed), let error = failed.error else { return nil }
+        let action = l10n.string(failed.canRetry ? .appReportEvidenceRetryOrRemove : .appReportEvidenceRemove)
+        return l10n.message(for: error) + " " + action
     }
 }
 
-/// A screenshot of the report: its preview, a spinner while it uploads, a warning when it failed,
-/// and the × that removes it.
+/// A screenshot of the report: its preview, a spinner while the library hands it over and it uploads,
+/// and once it failed either "retry" (the whole tile, when sending it again may work) or the warning,
+/// with the × that removes it. VoiceOver reads "Screenshot 2, uploading" and the like.
 private struct EvidenceThumbnail: View {
     let item: ReportViewModel.Evidence
-    let removeLabel: String
+    let number: Int
+    let isDisabled: Bool
+    let onRetry: () -> Void
     let onRemove: () -> Void
+    @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
         ZStack {
@@ -217,13 +190,26 @@ private struct EvidenceThumbnail: View {
             if item.isUploading {
                 TaleedColor.textPrimary.opacity(0.35)
                 ProgressView().tint(TaleedColor.textInverse)
-            } else if item.error != nil {
+            } else if item.isFailed {
                 TaleedColor.errorSoft.opacity(0.85)
-                TaleedIconView(.warningCircle, size: 20, color: TaleedColor.feedbackError)
+                if !item.canRetry {
+                    TaleedIconView(.warningCircle, size: 20, color: TaleedColor.feedbackError)
+                }
             }
         }
         .frame(width: 64, height: 64)
         .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.s, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: TaleedRadius.s, style: .continuous)
+                .strokeBorder(item.isFailed ? TaleedColor.feedbackError : TaleedColor.borderSubtle, lineWidth: 1)
+        }
+        .accessibilityElement()
+        .accessibilityLabel(stateLabel)
+        .accessibilityAddTraits(.isImage)
+        .accessibilityIdentifier("report.evidence.\(number)")
+        .overlay {
+            if item.canRetry { retryButton }
+        }
         .overlay(alignment: .topTrailing) {
             Button(action: onRemove) {
                 TaleedIconView(.x, size: 12, color: TaleedColor.textPrimary)
@@ -234,8 +220,39 @@ private struct EvidenceThumbnail: View {
             }
             .buttonStyle(.plain)
             .padding(2)
-            .accessibilityLabel(removeLabel)
+            .disabled(isDisabled)
+            .accessibilityLabel(l10n.format(.appReportRemoveScreenshot, number))
         }
-        .accessibilityElement(children: .contain)
+    }
+
+    /// "Capture 2, envoi en cours" / "…, jointe" / "…, échec : <reason>".
+    private var stateLabel: String {
+        let name = l10n.format(.appReportScreenshot, number)
+        if item.isUploading { return name + ", " + l10n.string(.appReportScreenshotUploading) }
+        if let error = item.error {
+            return name + ", " + l10n.format(.appReportScreenshotFailed, l10n.message(for: error))
+        }
+        return name + ", " + l10n.string(.appReportScreenshotAttached)
+    }
+
+    /// The whole tile sends the screenshot again (64 pt, over the 44 pt minimum).
+    private var retryButton: some View {
+        Button(action: onRetry) {
+            VStack(spacing: 2) {
+                TaleedIconView(.warningCircle, size: 20, color: TaleedColor.feedbackError)
+                Text(l10n.string(.commonRetry))
+                    .taleedFont(TaleedFont.caption)
+                    .foregroundStyle(TaleedColor.feedbackError)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+            .padding(.horizontal, TaleedSpacing.s4)
+            .frame(width: 64, height: 64)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .accessibilityLabel(l10n.string(.commonRetry) + ", " + l10n.format(.appReportScreenshot, number))
+        .accessibilityIdentifier("report.evidence.\(number).retry")
     }
 }

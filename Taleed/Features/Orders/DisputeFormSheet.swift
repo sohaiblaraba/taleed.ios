@@ -330,55 +330,44 @@ private struct EvidenceThumbnailView: View {
     }
 }
 
-/// The header of a form sheet: the handle, the title and the close button (as the report sheet).
+/// The header of a full-height form sheet (dispute, review, report, shipping label): the design-system
+/// sheet heading, padded as `TaleedBottomSheet` over a scrolling body.
 struct SheetHeader: View {
     let title: String
     var isClosable = true
     let onClose: () -> Void
-    @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
-        VStack(spacing: TaleedSize.bottomSheetGap) {
-            Capsule()
-                .fill(TaleedColor.sheetHandle)
-                .frame(width: TaleedSize.bottomSheetHandleWidth, height: TaleedSize.bottomSheetHandleHeight)
-                .accessibilityHidden(true)
-            HStack {
-                Text(title)
-                    .taleedFont(TaleedTextStyle(size: 18, weight: .regular, lineHeight: nil, letterSpacing: 0, relativeTo: .body))
-                    .foregroundStyle(TaleedColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Button(action: onClose) {
-                    TaleedIconView(.x, size: 20, color: TaleedColor.textSecondary)
-                        .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(l10n.string(.commonClose))
-                .disabled(!isClosable)
-            }
-        }
-        .padding(.top, TaleedSize.bottomSheetPaddingTop)
-        .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
-        .padding(.bottom, TaleedSpacing.s8)
+        TaleedSheetHeading(title: title, onClose: onClose, isCloseDisabled: !isClosable)
+            .padding(.top, TaleedSize.bottomSheetPaddingTop)
+            .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
+            .padding(.bottom, TaleedSpacing.s8)
     }
 }
 
-/// The full-width primary button at the bottom of a form sheet, over a divider.
+/// The full-width primary button at the bottom of a form sheet, over a divider. `error` (a failed send)
+/// sits above the button, where it is seen without scrolling, and VoiceOver announces it.
 struct SheetFooterButton: View {
     let title: String
     let isLoading: Bool
     let isEnabled: Bool
+    var error: String?
     let action: () -> Void
 
     var body: some View {
-        TaleedButton(title: title, kind: .primary, size: .large, isLoading: isLoading, isFullWidth: true, action: action)
-            .disabled(!isEnabled)
-            .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
-            .padding(.top, TaleedSpacing.s12)
-            .padding(.bottom, TaleedSpacing.s16)
-            .background(TaleedColor.surfacePrimary)
-            .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
+        VStack(spacing: TaleedSpacing.s12) {
+            if let error {
+                InlineAlert(kind: .error, title: error)
+                    .accessibilityIdentifier("sheet.error")
+            }
+            TaleedButton(title: title, kind: .primary, size: .large, isLoading: isLoading, isFullWidth: true, action: action)
+                .disabled(!isEnabled)
+        }
+        .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
+        .padding(.top, TaleedSpacing.s12)
+        .padding(.bottom, TaleedSpacing.s16)
+        .background(TaleedColor.surfacePrimary)
+        .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
+        .announcesFieldError(error)
     }
 }

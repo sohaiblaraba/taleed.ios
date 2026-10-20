@@ -8,14 +8,21 @@ import UIKit
 @MainActor
 @Observable
 final class ReportViewModel {
-    /// A screenshot of the report: uploading, uploaded (with its key) or failed.
+    /// A screenshot of the report, from the moment it is picked: waiting for the photo library,
+    /// uploading, uploaded (with its key) or failed.
     struct Evidence: Identifiable, Equatable {
         let id = UUID()
         var preview: UIImage?
         var key: String?
         var error: ApiError?
+        /// The picked data, kept while sending it again may work (`canRetrySamePhoto`).
+        var data: Data?
 
+        /// Picked, not yet uploaded or failed (the library is still handing it over, or it uploads).
         var isUploading: Bool { key == nil && error == nil }
+        var isFailed: Bool { error != nil }
+        /// Failed in a way sending the same photo again may fix (no connection, 5xx, 429).
+        var canRetry: Bool { data != nil && (error?.canRetrySamePhoto ?? false) }
     }
 
     /// What `submit` did.
@@ -34,13 +41,8 @@ final class ReportViewModel {
 
     let target: ReportTarget
     var reason: String?
-    var details: String = "" {
-        didSet {
-            if details.utf16.count > Self.maxDetailsLength {
-                details = details.prefix(utf16Units: Self.maxDetailsLength)
-            }
-        }
-    }
+    /// Capped by the field itself (`TaleedTextArea.maxLength`), so what is shown is what is sent.
+    var details: String = ""
     private(set) var evidence: [Evidence] = []
     private(set) var isSending = false
     /// The last failure, shown above the button.
@@ -57,32 +59,83 @@ final class ReportViewModel {
 
     var canAddEvidence: Bool { evidence.count < Self.maxEvidence && !isSending }
 
+    /// How many more screenshots can be picked.
+    var remainingEvidence: Int { max(0, Self.maxEvidence - evidence.count) }
+
     var isUploading: Bool { evidence.contains(where: \.isUploading) }
 
-    /// A reason is required; uploads must have finished (a failed one is left out, as on the website).
-    var canSubmit: Bool { reason != nil && !isSending && !isUploading }
+    /// A screenshot that could not be attached: Send waits until it is sent again or removed, so none
+    /// is left out without a word.
+    var hasFailedEvidence: Bool { evidence.contains(where: \.isFailed) }
 
-    /// Uploads a picked screenshot. Returns once the upload ended.
-    func addEvidence(_ data: Data) async {
-        guard canAddEvidence else { return }
-        let item = Evidence(preview: Self.preview(from: data))
-        evidence.append(item)
+    var isDetailsTooLong: Bool { details.utf16.count > Self.maxDetailsLength }
+
+    /// A reason is required; every picked screenshot must be attached (none uploading, none failed),
+    /// and the details within the limit.
+    var canSubmit: Bool { reason != nil && !isSending && !isUploading && !hasFailedEvidence && !isDetailsTooLong }
+
+    /// Adds `count` tiles in their loading state as soon as photos are picked, before the library hands
+    /// them over (an iCloud original takes seconds): Send stays off from the first moment. Returns their
+    /// ids, to fill with `upload(_:data:)` or `markUnreadable(_:)`.
+    func reserveEvidence(_ count: Int) -> [UUID] {
+        guard !isSending else { return [] }
+        let items = (0..<min(count, remainingEvidence)).map { _ in Evidence() }
+        evidence.append(contentsOf: items)
+        return items.map(\.id)
+    }
+
+    /// Whether the tile is still there (the member may remove it while the library loads it).
+    func containsEvidence(_ id: UUID) -> Bool { evidence.contains { $0.id == id } }
+
+    /// Uploads the picked data of a reserved tile. Returns once the upload ended.
+    func upload(_ id: UUID, data: Data) async {
+        guard containsEvidence(id) else { return }
+        let preview = Self.preview(from: data)
+        update(id) {
+            $0.preview = preview
+            $0.data = data
+            $0.error = nil
+        }
         do {
             let uploaded = try await upload(data)
-            update(item.id) { $0.key = uploaded.key }
+            update(id) {
+                $0.key = uploaded.key
+                $0.data = nil
+            }
         } catch {
-            update(item.id) { $0.error = error }
+            update(id) {
+                $0.error = error
+                if !error.canRetrySamePhoto { $0.data = nil }
+            }
         }
     }
 
-    /// A picked photo the library could not hand over (an iCloud photo offline, an unreadable file):
-    /// a failed tile the member can remove, with the reason under the screenshots.
+    /// Sends a failed screenshot again (no connection, server failure, rate limit).
+    func retryEvidence(_ id: UUID) async {
+        guard !isSending, let item = evidence.first(where: { $0.id == id }), item.canRetry, let data = item.data else { return }
+        await upload(id, data: data)
+    }
+
+    /// A reserved tile whose photo the library could not hand over (an iCloud photo offline, an
+    /// unreadable file): a failed tile the member removes, with the reason under the screenshots.
+    func markUnreadable(_ id: UUID) {
+        update(id) { $0.error = .failed(ApiFailure(status: 415, code: .unsupportedMediaType)) }
+    }
+
+    /// Picks and uploads one screenshot (a reserved tile, then its upload). Returns once the upload ended.
+    func addEvidence(_ data: Data) async {
+        guard canAddEvidence, let id = reserveEvidence(1).first else { return }
+        await upload(id, data: data)
+    }
+
+    /// A picked photo the library could not hand over, as a failed tile.
     func addUnreadableEvidence() {
-        guard canAddEvidence else { return }
-        evidence.append(Evidence(preview: nil, error: .failed(ApiFailure(status: 415, code: .unsupportedMediaType))))
+        guard canAddEvidence, let id = reserveEvidence(1).first else { return }
+        markUnreadable(id)
     }
 
     func removeEvidence(_ id: UUID) {
+        guard !isSending else { return }
         evidence.removeAll { $0.id == id }
     }
 

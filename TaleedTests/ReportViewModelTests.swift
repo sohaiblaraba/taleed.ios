@@ -47,23 +47,79 @@ struct ReportViewModelTests {
         #expect(model.error == .network)
     }
 
-    @Test func detailsStopAt2000CharactersAndScreenshotsAt3() async {
+    /// The field stops at 2 000 characters (`TaleedTextArea.maxLength`), so the model holds what the
+    /// field shows; longer details (never from the field) are not sent.
+    @Test func detailsOver2000AreNotSentAndScreenshotsStopAt3() async {
         let model = model()
-        model.details = String(repeating: "a", count: 2100)
-        #expect(model.details.count == 2000)
+        model.reason = "SCAM"
+        model.details = String(repeating: "a", count: 2001)
+        #expect(model.isDetailsTooLong)
+        #expect(!model.canSubmit)
+        #expect(await model.submit() == nil)
+        model.details = String(repeating: "a", count: 2000)
+        #expect(model.canSubmit)
         for _ in 0..<4 { await model.addEvidence(Data()) }
         #expect(model.evidence.count == 3)
         #expect(!model.canAddEvidence)
     }
 
-    @Test func aFailedUploadIsLeftOut() async {
+    /// A failed screenshot is never left out without a word: Send waits until it is removed (413: the
+    /// same photo cannot be sent again, so no retry).
+    @Test func aFailedUploadBlocksSendUntilRemoved() async {
         let model = model(upload: .failure(apiError(413, "file_too_large")))
         model.reason = "SPAM"
         await model.addEvidence(Data())
         #expect(model.evidence.first?.error != nil)
+        #expect(model.evidence.first?.canRetry == false)
+        #expect(model.evidence.first?.data == nil)
+        #expect(model.hasFailedEvidence)
+        #expect(!model.canSubmit)
+        #expect(await model.submit() == nil)
+        model.removeEvidence(model.evidence[0].id)
         #expect(model.canSubmit)
         #expect(await model.submit() == .sent)
         #expect(api.reports.first?.evidenceKeys == [])
+    }
+
+    /// Offline, a 5xx or a 429: the tile keeps the photo and sends it again.
+    @Test func aScreenshotThatFailedOfflineCanBeSentAgain() async {
+        var answers: [Result<UploadedPhoto, Taleed.ApiError>] = [.failure(.network), .success(Self.uploaded)]
+        let model = ReportViewModel(target: .listing(id: "l1"), api: api, upload: { _ throws(Taleed.ApiError) in
+            try answers.removeFirst().get()
+        })
+        model.reason = "SCAM"
+        await model.addEvidence(Data([1, 2, 3]))
+        #expect(model.evidence.first?.canRetry == true)
+        #expect(!model.canSubmit)
+        await model.retryEvidence(model.evidence[0].id)
+        #expect(model.evidence.first?.key == "reports/k1")
+        #expect(model.evidence.first?.data == nil)
+        #expect(model.canSubmit)
+        #expect(await model.submit() == .sent)
+        #expect(api.reports.first?.evidenceKeys == ["reports/k1"])
+    }
+
+    /// A picked photo gets its tile at once, before the library hands it over: Send stays off.
+    @Test func aPickedPhotoBlocksSendBeforeItsDataArrives() async {
+        let model = model()
+        model.reason = "SCAM"
+        let ids = model.reserveEvidence(5)
+        #expect(ids.count == 3)
+        #expect(model.evidence.count == 3)
+        #expect(model.isUploading)
+        #expect(!model.canSubmit)
+        #expect(!model.canAddEvidence)
+        await model.upload(ids[0], data: Data())
+        model.markUnreadable(ids[1])
+        model.removeEvidence(ids[2])
+        // Removed while the library loaded it: the late data is ignored.
+        await model.upload(ids[2], data: Data())
+        #expect(model.evidence.count == 2)
+        #expect(!model.canSubmit)
+        model.removeEvidence(ids[1])
+        #expect(model.canSubmit)
+        #expect(await model.submit() == .sent)
+        #expect(api.reports.first?.evidenceKeys == ["reports/k1"])
     }
 
     /// A reason this build cannot encode is never sent as another category (`OTHER`).
@@ -77,7 +133,7 @@ struct ReportViewModelTests {
         }
     }
 
-    @Test func anUnreadablePhotoIsAFailedTileThatCountsAndIsLeftOut() async {
+    @Test func anUnreadablePhotoIsAFailedTileThatCountsUntilRemoved() async {
         let model = model()
         model.reason = "OTHER"
         model.addUnreadableEvidence()
@@ -89,10 +145,12 @@ struct ReportViewModelTests {
         #expect(!model.canAddEvidence)
         model.addUnreadableEvidence()
         #expect(model.evidence.count == 3)
-        #expect(await model.submit() == .sent)
-        #expect(api.reports.first?.evidenceKeys == ["reports/k1", "reports/k1"])
+        #expect(model.evidence.first?.canRetry == false)
+        #expect(!model.canSubmit)
         model.removeEvidence(model.evidence[0].id)
         #expect(model.canAddEvidence)
+        #expect(await model.submit() == .sent)
+        #expect(api.reports.first?.evidenceKeys == ["reports/k1", "reports/k1"])
     }
 
     /// `403 forbidden` (self), `429` and a lost connection stay in the sheet with their message,
@@ -119,12 +177,14 @@ struct ReportViewModelTests {
         #expect(api.reports.first?.details == nil)
     }
 
-    /// The 2 000 characters are counted in UTF-16 units, as the API counts them.
-    @Test func theDetailsLimitCountsUTF16Units() {
-        let model = model()
-        model.details = String(repeating: "😀", count: 1001)
-        #expect(model.details.utf16.count <= 2000)
-        #expect(model.details.utf16.count == 2000)
+    /// The field cuts at 2 000 UTF-16 units, as the API counts them, keeping the start of a paste.
+    @Test func theDetailsFieldCapCountsUTF16Units() {
+        let max = ReportViewModel.maxDetailsLength
+        #expect(TaleedTextArea.capped(String(repeating: "😀", count: 1001), maxLength: max)?.utf16.count == 2000)
+        let pasted = String(repeating: "x", count: 1995) + "ABCDEFGHIJ"
+        #expect(TaleedTextArea.capped(pasted, maxLength: max) == String(repeating: "x", count: 1995) + "ABCDE")
+        #expect(TaleedTextArea.capped(String(repeating: "x", count: 2000), maxLength: max) == nil)
+        #expect(TaleedTextArea.capped(pasted, maxLength: nil) == nil)
     }
 
     @Test func nothingIsSentWhileAScreenshotUploads() async {

@@ -233,6 +233,9 @@ struct TaleedTextArea: View {
     var placeholder: String = ""
     var helper: String?
     var error: String?
+    /// The most UTF-16 units the field takes (as the API counts), like the website's `maxLength`: typing
+    /// or pasting past it keeps the start, and the field shows exactly what it holds.
+    var maxLength: Int?
     var forcedState: TaleedFieldState?
 
     @FocusState private var isFocused: Bool
@@ -263,12 +266,23 @@ struct TaleedTextArea: View {
                 .onTapGesture { isFocused = true }
                 .accessibilityLabel(label ?? placeholder)
                 .accessibilityHint(error ?? helper ?? "")
+                // Capped after the edit, in its own update: a value rewritten inside the binding's setter
+                // is not drawn back into the editor, which would keep showing the cut text.
+                .onChange(of: text) { _, newValue in
+                    if let capped = Self.capped(newValue, maxLength: maxLength) { text = capped }
+                }
             if let message = error ?? helper {
                 FieldHelper(text: message, color: state.helperColor)
             }
         }
         .opacity(state == .disabled ? TaleedOpacity.disabledField : 1)
         .announcesFieldError(error)
+    }
+
+    /// The text cut to `maxLength` UTF-16 units, or nil when it fits (or there is no limit).
+    static func capped(_ text: String, maxLength: Int?) -> String? {
+        guard let maxLength, text.utf16.count > maxLength else { return nil }
+        return text.prefix(utf16Units: maxLength)
     }
 }
 

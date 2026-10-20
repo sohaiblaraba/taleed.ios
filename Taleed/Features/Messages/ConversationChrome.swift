@@ -28,17 +28,11 @@ struct ConversationAppBar: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             if !menu.isEmpty {
-                Menu {
-                    ForEach(menu) { item in
-                        Button(item.title, role: item.isDestructive ? .destructive : nil, action: item.action)
-                    }
-                } label: {
+                TaleedOverflowMenu(items: menu, accessibilityLabel: l10n.string(.commonMore)) {
                     TaleedIconView(.dotsThree, size: 20, color: TaleedColor.blue600)
                         .frame(width: 40, height: 40)
                         .minimumHitArea()
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(l10n.string(.commonMore))
                 .accessibilityIdentifier("conversation.menu")
             }
         }

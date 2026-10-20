@@ -120,21 +120,28 @@ private struct BottomNavButton<ID: Hashable>: View {
     }
 }
 
-private enum SheetStyles {
+/// The sheet text styles of design-system §5.3.
+enum TaleedSheetStyle {
+    /// The sheet title, 18/400.
     static let title = TaleedTextStyle(size: 18, weight: .regular, lineHeight: nil, letterSpacing: 0, relativeTo: .body)
+    /// A choice, 15/400; the selected one 15/600 (`option(isSelected:)`).
     static let option = TaleedTextStyle(size: 15, weight: .regular, lineHeight: nil, letterSpacing: 0, relativeTo: .subheadline)
+
+    static func option(isSelected: Bool) -> TaleedTextStyle {
+        isSelected ? option.with(weight: .semibold) : option
+    }
 }
 
-/// Bottom sheet chrome (design-system §5.3): the 40 x 4 handle, a heading row with the start-aligned
-/// title and close, then the content (gap 18, padding 10 / 22 / 22). Present it with `.taleedSheet`.
-struct TaleedBottomSheet<Content: View>: View {
+/// The top of every bottom sheet (design-system §5.3): the 40 x 4 handle, then the start-aligned title
+/// and the close button (gap 18). `TaleedBottomSheet` and the form sheets' `SheetHeader` draw it.
+struct TaleedSheetHeading: View {
     let title: String
-    /// Defaults to the sheet title, 18/400. The sign-in sheet uses Title 2, as on Android.
-    var titleStyle: TaleedTextStyle?
+    var titleStyle: TaleedTextStyle = TaleedSheetStyle.title
     var onClose: (() -> Void)?
-    /// Hides the close button while the sheet must stay up (an action under way); its place is kept.
+    /// Hides the close button, keeping its place.
     var isCloseHidden = false
-    @ViewBuilder let content: Content
+    /// Greys the close button out while the sheet must stay up (a request under way).
+    var isCloseDisabled = false
     @Environment(\.locale) private var locale
 
     var body: some View {
@@ -145,7 +152,7 @@ struct TaleedBottomSheet<Content: View>: View {
                 .accessibilityHidden(true)
             HStack {
                 Text(title)
-                    .taleedFont(titleStyle ?? SheetStyles.title)
+                    .taleedFont(titleStyle)
                     .foregroundStyle(TaleedColor.textPrimary)
                     .accessibilityAddTraits(.isHeader)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -158,10 +165,29 @@ struct TaleedBottomSheet<Content: View>: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel(DesignSystemStrings.string(.commonClose, locale: locale))
                     .opacity(isCloseHidden ? 0 : 1)
-                    .disabled(isCloseHidden)
+                    .disabled(isCloseHidden || isCloseDisabled)
                     .accessibilityHidden(isCloseHidden)
                 }
             }
+        }
+    }
+}
+
+/// Bottom sheet chrome (design-system §5.3): the 40 x 4 handle, a heading row with the start-aligned
+/// title and close, then the content (gap 18, padding 10 / 22 / 22). Present it with `.taleedSheet`.
+struct TaleedBottomSheet<Content: View>: View {
+    let title: String
+    /// Defaults to the sheet title, 18/400. The sign-in sheet uses Title 2, as on Android.
+    var titleStyle: TaleedTextStyle?
+    var onClose: (() -> Void)?
+    /// Hides the close button while the sheet must stay up (an action under way); its place is kept.
+    var isCloseHidden = false
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(spacing: TaleedSize.bottomSheetGap) {
+            TaleedSheetHeading(title: title, titleStyle: titleStyle ?? TaleedSheetStyle.title, onClose: onClose,
+                               isCloseHidden: isCloseHidden)
             content
         }
         .padding(.top, TaleedSize.bottomSheetPaddingTop)
@@ -196,7 +222,7 @@ struct SortSheetContent<ID: Hashable>: View {
                     Button { selection = option.id } label: {
                         HStack {
                             Text(option.title)
-                                .taleedFont(isSelected ? SheetStyles.option.with(weight: .semibold) : SheetStyles.option)
+                                .taleedFont(TaleedSheetStyle.option(isSelected: isSelected))
                                 .foregroundStyle(TaleedColor.textPrimary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             RadioIndicator(isSelected: isSelected)

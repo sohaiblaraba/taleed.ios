@@ -21,6 +21,7 @@
 		0F50AB41A909DBD1818CB3D0 /* WalletSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3185108F604E1BC6C36000 /* WalletSheets.swift */; };
 		0FFD0245A6A025B9C21A6327 /* OffersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF96B54399480A1E97D7751 /* OffersTests.swift */; };
 		101B5F3D03C439E0A31D8874 /* ProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6B26C24834902A860FD5FEF /* ProfileSettingsView.swift */; };
+		1241B192521742A0B5AF9278 /* OverflowMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15D446597B47F0CB7E27CB4B /* OverflowMenu.swift */; };
 		131395B48DED568BF34C8077 /* Fakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F780B862E9F213ED7BBCC87 /* Fakes.swift */; };
 		1511ED2CE12960D10369335B /* EditListingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2476C39A8F60061F381C8F8D /* EditListingView.swift */; };
 		155A952B193EB57580D39874 /* BundlesApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CC43C8D10AB124B263E7BAC /* BundlesApi.swift */; };
@@ -351,6 +352,7 @@
 		14C29CAC65EF0589A4396B28 /* MyListingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyListingsView.swift; sourceTree = "<group>"; };
 		157BD40A5674F7F6FF257A8F /* OfferRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfferRules.swift; sourceTree = "<group>"; };
 		15957F7F8690ABC34C9AF94A /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		15D446597B47F0CB7E27CB4B /* OverflowMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverflowMenu.swift; sourceTree = "<group>"; };
 		16717AB2C0261A9B49767CC9 /* FavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesView.swift; sourceTree = "<group>"; };
 		16B1006F22428B8C5D5B419A /* PushRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushRegistration.swift; sourceTree = "<group>"; };
 		16BC560761774DA30236D500 /* LegalText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalText.swift; sourceTree = "<group>"; };
@@ -1169,6 +1171,7 @@
 				761A37386FC875A5A27D7C9A /* Identity.swift */,
 				AC35AA38239714831B5D9E4D /* ItemDetailPatterns.swift */,
 				5E21C7F15EAFCCD44D94E892 /* Navigation.swift */,
+				15D446597B47F0CB7E27CB4B /* OverflowMenu.swift */,
 				08F0E55413D858FF6A88CF56 /* PhotoUploader.swift */,
 				AF5EFCF718AF5BFFE40AB37A /* Price.swift */,
 				49BC1DCD0A44F1CD527E9B29 /* ProductViews.swift */,
@@ -1690,6 +1693,7 @@
 				9812BC6CC467B104179E371B /* OrdersApi.swift in Sources */,
 				E486DFD7C6D3034320AE72CA /* OrdersListView.swift in Sources */,
 				9072CBF442CBE2F943F6734D /* OrdersListViewModel.swift in Sources */,
+				1241B192521742A0B5AF9278 /* OverflowMenu.swift in Sources */,
 				A9951744C5DFF04068AD79E3 /* PagedList.swift in Sources */,
 				88748962E9CEDAA6195DD461 /* PagedListView.swift in Sources */,
 				A4F77329A0132A0F986AA8AB /* PhotoUpload.swift in Sources */,

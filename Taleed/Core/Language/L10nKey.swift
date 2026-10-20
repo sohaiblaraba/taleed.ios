@@ -309,6 +309,13 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appA11yShare = "app_a11y_share"
     case appA11yOpenPhoto = "app_a11y_open_photo"
     case appReportAddPhoto = "app_report_add_photo"
+    case appReportScreenshot = "app_report_screenshot"
+    case appReportRemoveScreenshot = "app_report_remove_screenshot"
+    case appReportScreenshotUploading = "app_report_screenshot_uploading"
+    case appReportScreenshotAttached = "app_report_screenshot_attached"
+    case appReportScreenshotFailed = "app_report_screenshot_failed"
+    case appReportEvidenceRetryOrRemove = "app_report_evidence_retry_or_remove"
+    case appReportEvidenceRemove = "app_report_evidence_remove"
 
     // Member profile (G5): website keys, then app-only keys.
     case memberListings = "member_listings"
