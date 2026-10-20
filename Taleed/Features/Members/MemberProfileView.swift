@@ -204,7 +204,7 @@ struct MemberProfileView: View {
         MemberProfileHeader.Handlers(
             follow: { start(.follow) },
             unblock: unblock,
-            editProfile: { router.push(.settings) },
+            editProfile: { router.push(.profileSettings) },
             myListings: { router.pushSignedIn(.myListings) },
             shopBundle: { start(.shopBundle) }
         )

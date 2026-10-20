@@ -26,8 +26,13 @@ struct WalletView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
-    init(api: WalletApi) {
+    /// Opens the payout form once the wallet has loaded (account deletion with money left, G16).
+    private let opensPayout: Bool
+    @State private var didOpenPayout = false
+
+    init(api: WalletApi, opensPayout: Bool = false) {
         _model = State(initialValue: WalletViewModel(api: api))
+        self.opensPayout = opensPayout
     }
 
     var body: some View {
@@ -37,6 +42,11 @@ struct WalletView: View {
             content
         }
         .task { await model.loadIfNeeded() }
+        .onChange(of: model.summary != nil, initial: true) { _, loaded in
+            guard loaded, opensPayout, !didOpenPayout else { return }
+            didOpenPayout = true
+            showsPayout = true
+        }
         .onAppear { takePaymentReturn() }
         .onChange(of: router.pendingPaymentReturn) { _, _ in takePaymentReturn() }
         .onChange(of: scenePhase) { _, phase in

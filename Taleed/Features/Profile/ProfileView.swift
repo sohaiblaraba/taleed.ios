@@ -65,6 +65,11 @@ struct ProfileView: View {
                         ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
                             router.push(.settings)
                         }
+                        .accessibilityIdentifier("profile.settings")
+                        ListRow(label: l10n.string(.footerHelp), showsChevron: true) {
+                            router.push(.help)
+                        }
+                        .accessibilityIdentifier("profile.help")
                     }
 
                     if session.isSignedIn {

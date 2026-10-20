@@ -20,6 +20,10 @@ struct RouteDestinationView: View {
     @Environment(\.checkoutDependencies) private var checkout
     @Environment(\.ordersDependencies) private var orders
     @Environment(\.walletApi) private var walletApi
+    @Environment(\.settingsDependencies) private var settings
+    @Environment(AccountStore.self) private var account
+    @Environment(AppToasts.self) private var toasts
+    @Environment(LanguageManager.self) private var l10n
     @Environment(ExploreReferenceStore.self) private var references
     @Environment(CatalogStore.self) private var catalog
     @Environment(ListingChangeCenter.self) private var listingChanges
@@ -101,9 +105,32 @@ struct RouteDestinationView: View {
             if let orders { DisputeThreadView(disputeId: id, dependencies: orders).id(id) } else { RoutePlaceholderView(route: route) }
         case .wallet:
             if let walletApi { WalletView(api: walletApi) } else { RoutePlaceholderView(route: route) }
+        case .walletPayout:
+            if let walletApi { WalletView(api: walletApi, opensPayout: true) } else { RoutePlaceholderView(route: route) }
         case .notifications: NotificationsView()
         case .settings: SettingsView()
-        case .deleteAccount: RoutePlaceholderView(route: route)
+        case .profileSettings:
+            if let settings { ProfileSettingsView(dependencies: settings, store: account) } else { RoutePlaceholderView(route: route) }
+        case .usernameSettings:
+            if let settings { UsernameSettingsView(api: settings.account, store: account) } else { RoutePlaceholderView(route: route) }
+        case .emailSettings:
+            if let settings { EmailSettingsView(api: settings.account, store: account) } else { RoutePlaceholderView(route: route) }
+        case .passwordSettings:
+            if let settings { PasswordSettingsView(api: settings.account) } else { RoutePlaceholderView(route: route) }
+        case .addresses:
+            if let settings { AddressesView(api: settings.addresses) } else { RoutePlaceholderView(route: route) }
+        case .blockedMembers:
+            if let settings { BlockedMembersView(api: settings.blocks) } else { RoutePlaceholderView(route: route) }
+        case .help: HelpView()
+        case .deleteAccount:
+            if let settings {
+                DeleteAccountView(api: settings.account) { [toasts, l10n, session] in
+                    toasts.show(l10n.string(.settingsDeleteSuccess))
+                    session.accountDeleted()
+                }
+            } else {
+                RoutePlaceholderView(route: route)
+            }
         case .referrals: RoutePlaceholderView(route: route)
         #if DEBUG
         case .designSystem: DesignSystemGalleryView()

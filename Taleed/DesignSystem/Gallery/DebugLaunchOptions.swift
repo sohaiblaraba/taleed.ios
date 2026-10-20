@@ -89,18 +89,17 @@ enum DebugLaunchOptions {
 }
 
 private extension AppRoute {
+    static let debugNames: [String: AppRoute] = [
+        "settings": .settings, "designSystem": .designSystem, "developerMenu": .developerMenu, "favorites": .favorites,
+        "myListings": .myListings, "orders": .orders, "wallet": .wallet, "notifications": .notifications,
+        "profileSettings": .profileSettings, "usernameSettings": .usernameSettings, "emailSettings": .emailSettings,
+        "passwordSettings": .passwordSettings, "addresses": .addresses, "blockedMembers": .blockedMembers, "help": .help,
+        "deleteAccount": .deleteAccount,
+    ]
+
     init?(debugName: String) {
-        switch debugName {
-        case "settings": self = .settings
-        case "designSystem": self = .designSystem
-        case "developerMenu": self = .developerMenu
-        case "favorites": self = .favorites
-        case "myListings": self = .myListings
-        case "orders": self = .orders
-        case "wallet": self = .wallet
-        case "notifications": self = .notifications
-        default: return nil
-        }
+        guard let route = Self.debugNames[debugName] else { return nil }
+        self = route
     }
 }
 #endif

@@ -23,6 +23,8 @@ struct AppRootView: View {
             .environment(container.orderChanges)
             .environment(container.welcome)
             .environment(container.launch)
+            .environment(container.account)
+            .environment(container.push)
             .environment(container.exploreReferences)
             .environment(\.exploreDependencies, ExploreDependencies(listings: container.api, explore: container.api))
             .environment(\.listingDependencies,
@@ -42,6 +44,9 @@ struct AppRootView: View {
                          CheckoutDependencies(checkout: container.api, listings: container.api, bundles: container.api))
             .environment(\.ordersDependencies, OrdersDependencies(orders: container.api, uploads: container.uploads))
             .environment(\.walletApi, container.api)
+            .environment(\.settingsDependencies,
+                         SettingsDependencies(account: container.api, addresses: container.api, blocks: container.api,
+                                              uploads: container.uploads))
             .environment(\.notificationsDependencies,
                          NotificationsDependencies(api: container.api, feed: container.notificationsFeed))
             .environment(\.memberDependencies,

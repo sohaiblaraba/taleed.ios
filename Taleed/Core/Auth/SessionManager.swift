@@ -35,6 +35,8 @@ final class SessionManager {
     /// Called just before the state becomes `.suspended`, in the same update: the suspended screen draws
     /// on the Profile stack, so a screen pushed there must leave it first (screens.md §0.6).
     @ObservationIgnored var onSuspended: (() -> Void)?
+    /// Called after the member deleted their account: the signed-out Home, without the welcome screen.
+    @ObservationIgnored var onAccountDeleted: (() -> Void)?
 
     @ObservationIgnored private let api: TaleedApi
     @ObservationIgnored private let apiSession: ApiSession
@@ -92,6 +94,20 @@ final class SessionManager {
         user.unreadNotifications = max(0, notifications)
         if case let .signedIn(current) = state, current == user { return }
         state = .signedIn(user)
+    }
+
+    /// The member as an action answered it (`PATCH /me`, `POST /me/username`): the new avatar, handle and
+    /// wilaya show everywhere at once.
+    func updateUser(_ user: User) {
+        guard case let .signedIn(current) = state, current.id == user.id, current != user else { return }
+        state = .signedIn(user)
+    }
+
+    /// `POST /me/delete` answered `204`: the server ended every session, so nothing is called; the token
+    /// and the member's data leave the device, and the signed-out Home shows (slice E, Deleting the account).
+    func accountDeleted() {
+        clearSession()
+        onAccountDeleted?()
     }
 
     func signIn(email: String, password: String) async throws(ApiError) {

@@ -32,6 +32,8 @@ final class AppContainer {
     let welcome: WelcomeGate
     /// The push permission and `POST /devices`, after the member's first message or offer.
     let push: PushRegistration
+    /// The member's account for the settings screens (G16).
+    let account: AccountStore
 
     init(environment: AppEnvironment = .current(), tokenStore: TokenStore = KeychainTokenStore()) {
         ImageLoading.configure()
@@ -52,6 +54,7 @@ final class AppContainer {
         push = PushRegistration(api: api, permission: SystemNotificationPermission(), tokenSource: nil,
                                 isEnabled: { [launch] in launch.config?.features.push == true },
                                 language: { [languageManager] in languageManager.language })
+        account = AccountStore(api: api, session: session)
 
         // A suspended member who was signed in keeps the screens that still answer (orders, wallet,
         // account deletion), so links to them do not ask to sign in.
@@ -63,15 +66,17 @@ final class AppContainer {
             transaction.disablesAnimations = true
             withTransaction(transaction) { welcome.skipForLink() }
         }
-        session.onSignedOut = { [welcome, router, push] in
+        session.onSignedOut = { [welcome, router, push, account] in
             push.sessionDidEnd()
+            account.reset()
             welcome.showAfterSignOut()
             router.sessionDidEnd()
             router.selectedTab = .home
         }
         // From the suspended screen the shell was not on screen to see the session end: leave the
         // screens that need an account here too.
-        session.onSessionExpired = { [router] in
+        session.onSessionExpired = { [router, account] in
+            account.reset()
             router.sessionDidEnd()
             router.presentSignIn()
         }
@@ -91,9 +96,23 @@ final class AppContainer {
         DebugLaunchOptions.apply(to: router)
         #endif
 
-        languageManager.onChange = { [apiSession, catalog] language in
+        connectSettings()
+    }
+
+    /// The settings (G16): a deleted account, and the language switch.
+    private func connectSettings() {
+        // Deleted: the signed-out Home, without the welcome screen (screens.md §2 G16).
+        session.onAccountDeleted = { [router, push, account] in
+            push.sessionDidEnd()
+            account.reset()
+            router.sessionDidEnd()
+            router.selectedTab = .home
+        }
+        languageManager.onChange = { [apiSession, catalog, push] language in
             apiSession.setLanguage(language)
             Task { await catalog.languageDidChange(to: language) }
+            // Pushes follow the new language (screens.md §0.8).
+            Task { await push.languageDidChange() }
         }
     }
 }

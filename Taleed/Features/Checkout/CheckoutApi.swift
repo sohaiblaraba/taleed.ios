@@ -220,7 +220,7 @@ private extension CheckoutLine {
     }
 }
 
-private extension SavedAddress {
+extension SavedAddress {
     init(_ address: Address) {
         self.init(id: address.id, recipientName: address.recipientName, phone: address.phone,
                   wilaya: CatalogWilaya(id: address.wilaya.id, name: address.wilaya.name), communeId: address.communeId,

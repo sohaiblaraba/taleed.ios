@@ -211,8 +211,10 @@ final class AppRouter {
                 (.home, [.listing(id: target.listingId), route])
             }
         case .order, .orderPayment, .dispute: (.profile, [.orders, route])
-        case .favorites, .orders, .wallet, .notifications, .settings, .referrals, .myListings: (.profile, [route])
-        case .deleteAccount: (.profile, [.settings, route])
+        case .favorites, .orders, .wallet, .walletPayout, .notifications, .settings, .referrals, .myListings: (.profile, [route])
+        case .deleteAccount, .profileSettings, .usernameSettings, .emailSettings, .passwordSettings, .addresses, .blockedMembers,
+             .help:
+            (.profile, [.settings, route])
         #if DEBUG
         case .designSystem, .developerMenu: (.profile, [.settings, route])
         #endif

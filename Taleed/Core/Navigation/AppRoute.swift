@@ -43,8 +43,21 @@ enum AppRoute: Hashable, Sendable {
     /// The thread of an order's dispute (G12): from the order screen, or once a dispute is opened.
     case dispute(id: String)
     case wallet
+    /// The wallet with its payout form open: deleting an account that still holds money (G16).
+    case walletPayout
     case notifications
     case settings
+    // The settings screens (G16).
+    /// The profile and billing details, saved together.
+    case profileSettings
+    case usernameSettings
+    case emailSettings
+    case passwordSettings
+    /// Saved delivery addresses.
+    case addresses
+    case blockedMembers
+    /// Help and legal: the support contacts and the website's pages.
+    case help
     /// Delete the account (G16). Also offered on the suspended screen.
     case deleteAccount
     case referrals
@@ -60,9 +73,10 @@ enum AppRoute: Hashable, Sendable {
     var requiresSignIn: Bool {
         switch self {
         case .conversation, .bundle, .checkout, .orderPayment, .favorites, .orders, .order, .dispute, .wallet, .notifications, .referrals,
-             .deleteAccount, .editListing, .bundleBuilder, .myListings:
+             .deleteAccount, .editListing, .bundleBuilder, .myListings, .walletPayout, .profileSettings, .usernameSettings,
+             .emailSettings, .passwordSettings, .addresses, .blockedMembers:
             true
-        case .listing, .member, .search, .visualSearch, .settings:
+        case .listing, .member, .search, .visualSearch, .settings, .help:
             false
         #if DEBUG
         case .designSystem, .developerMenu:
