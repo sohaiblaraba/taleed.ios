@@ -460,8 +460,24 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
 
     // MARK: Ordering
 
-    /// "Payer 3 420 DA", "Commander — … à la livraison" or "Confirmer la commande".
-    func placeOrder() async -> OrderOutcome {
+    /// The listings checkout is for: the listing, or the bundle's items still for sale.
+    var goodsListingIds: [String] {
+        var ids = [target.listingId]
+        for line in pricing?.goods.items ?? preview?.items ?? [] where !ids.contains(line.listingId) {
+            ids.append(line.listingId)
+        }
+        return ids
+    }
+
+    /// Tells the screens below that the goods changed on the server (reserved by an order, sold, held by
+    /// the member's own order): the listing screen still in the stack reloads (screens.md §0.6, §7 G11).
+    func noteGoodsChanged(_ changes: ListingChangeCenter?) {
+        for listingId in goodsListingIds { changes?.post(.stale, listingId: listingId) }
+    }
+
+    /// "Payer 3 420 DA", "Commander — … à la livraison" or "Confirmer la commande". An order that went
+    /// through reserves the goods: `changes` tells the screens below.
+    func placeOrder(changes: ListingChangeCenter? = nil) async -> OrderOutcome {
         guard canPlaceOrder, let pricing, let request = form.request(for: target) else { return .stay }
         let order = orderRequest(request, pricing: pricing)
         pendingOrder = order
@@ -471,6 +487,7 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
             let placed = try await api.placeOrder(order)
             pendingOrder = nil
             hasPlacedOrder = true
+            noteGoodsChanged(changes)
             let address = form.unsavedAddress(among: savedAddresses)
             if let url = placed.paymentURL, placed.order.status == .pendingPayment {
                 return .payOnline(url: url, orderId: placed.order.id, address: address)

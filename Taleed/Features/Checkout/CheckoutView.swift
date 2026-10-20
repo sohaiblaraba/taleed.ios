@@ -19,6 +19,7 @@ struct CheckoutView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
     @Environment(AppToasts.self) private var toasts
+    @Environment(ListingChangeCenter.self) private var listingChanges
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.shellTab) private var shellTab
@@ -51,9 +52,17 @@ struct CheckoutView: View {
             if phase == .active, !isInBrowser { Task { await model.refresh() } }
         }
         .onChange(of: model.phase) { _, phase in
-            // The member's own order awaiting payment holds the goods: it opens instead (slice F).
-            if case let .heldByOrder(orderId) = phase {
+            switch phase {
+            case let .heldByOrder(orderId):
+                // The member's own order awaiting payment holds the goods: it opens instead (slice F), and
+                // the listing below shows it once back.
+                model.noteGoodsChanged(listingChanges)
                 router.replace(route, with: .orderPayment(OrderPaymentTarget(orderId: orderId)))
+            case .unavailable:
+                // Sold or reserved since the listing below loaded.
+                model.noteGoodsChanged(listingChanges)
+            default:
+                break
             }
         }
         .onChange(of: model.notice) { _, notice in
@@ -99,7 +108,7 @@ struct CheckoutView: View {
 
     private func pay() {
         Task {
-            switch await model.placeOrder() {
+            switch await model.placeOrder(changes: listingChanges) {
             case let .payOnline(url, orderId, address):
                 isInBrowser = true
                 // Back through the return link, or the member closed the page (an error): the payment

@@ -16,6 +16,7 @@ struct OrderPaymentView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
     @Environment(AppToasts.self) private var toasts
+    @Environment(ListingChangeCenter.self) private var listingChanges
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.shellTab) private var shellTab
@@ -36,6 +37,11 @@ struct OrderPaymentView: View {
         .task { await model.loadIfNeeded() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active, !isInBrowser, model.order != nil { Task { await model.sync(automatic: true) } }
+        }
+        .onChange(of: model.order?.status) { old, new in
+            // Paid, or cancelled (the goods back on sale): the listing below shows it once back.
+            guard let old, let new, old != new, let order = model.order else { return }
+            for item in order.items { listingChanges.post(.stale, listingId: item.listingId) }
         }
         .onChange(of: model.notice) { _, notice in
             guard let notice else { return }

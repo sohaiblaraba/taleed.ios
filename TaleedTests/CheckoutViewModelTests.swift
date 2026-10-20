@@ -200,6 +200,22 @@ struct CheckoutViewModelTests {
         #expect(await model.placeOrder() == .placed(orderId: "o1", address: nil))
     }
 
+    @Test func anOrderPlacedTellsTheListingBelowToReload() async {
+        api.addresses = [SavedAddress(id: "a1", recipientName: "Lina K", phone: "0661000000", wilaya: CatalogWilaya(id: 16, name: "Alger"),
+                                      communeId: 16001, commune: "Alger", addressLine: "Rue 1", isDefault: true)]
+        api.orders = [.failure(.network)]
+        let changes = ListingChangeCenter()
+        let model = model()
+        await model.loadIfNeeded()
+        // No order went through: the listing stays as it is.
+        _ = await model.placeOrder(changes: changes)
+        #expect(changes.seq == 0)
+        _ = await model.placeOrder(changes: changes)
+        #expect(changes.changes(after: 0)?.map(\.listingId) == model.goodsListingIds)
+        #expect(changes.changes(after: 0)?.allSatisfy { $0.kind == .stale } == true)
+        #expect(model.goodsListingIds.first == "l1")
+    }
+
     @Test func aCommuneTheCarrierNoLongerServesIsPickedAgain() async {
         api.addresses = [SavedAddress(id: "a1", recipientName: "Lina K", phone: "0661000000", wilaya: CatalogWilaya(id: 16, name: "Alger"),
                                       communeId: 16001, commune: "Alger", addressLine: "Rue 1", isDefault: true)]
