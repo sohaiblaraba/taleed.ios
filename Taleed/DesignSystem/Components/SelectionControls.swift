@@ -3,6 +3,9 @@ import SwiftUI
 /// Switch row (design-system §2.12): label then a 44 x 26 track. The whole row is the tap target.
 /// Use as `Toggle(isOn:) { Text(...) }.toggleStyle(.taleed)`.
 struct TaleedToggleStyle: ToggleStyle {
+    /// The label's style: Button/Small by default; a settings list uses the list rows' Body/Large
+    /// (`.taleedRow`), so the switch reads as one of its rows.
+    var labelStyle = TaleedFont.buttonSmall
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
@@ -13,7 +16,7 @@ struct TaleedToggleStyle: ToggleStyle {
         } label: {
             HStack(spacing: TaleedSpacing.s12) {
                 configuration.label
-                    .taleedFont(TaleedFont.buttonSmall)
+                    .taleedFont(labelStyle)
                     .foregroundStyle(TaleedColor.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 SwitchTrack(isOn: configuration.isOn)
@@ -86,6 +89,9 @@ private struct CheckboxBox: View {
 
 extension ToggleStyle where Self == TaleedToggleStyle {
     static var taleed: TaleedToggleStyle { TaleedToggleStyle() }
+
+    /// The switch with the list rows' Body/Large label (the settings screen).
+    static var taleedRow: TaleedToggleStyle { TaleedToggleStyle(labelStyle: TaleedFont.bodyLarge) }
 }
 
 extension ToggleStyle where Self == TaleedCheckboxStyle {

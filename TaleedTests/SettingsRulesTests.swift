@@ -158,3 +158,25 @@ struct DeletionBlockerTests {
         #expect(DeletionBlocker(.unknown(status: 409, code: "new_code")) == .generic)
     }
 }
+
+struct SupportPhoneTests {
+    @Test func anAlgerianNumberReadsInGroups() {
+        #expect(SupportPhone.grouped("+213540693236") == "+213 540 69 32 36")
+        #expect(SupportPhone.grouped("0540693236") == "0540 69 32 36")
+    }
+
+    @Test func anythingElseStaysAsSent() {
+        #expect(SupportPhone.grouped("+33 1 23 45 67 89") == "+33 1 23 45 67 89")
+        #expect(SupportPhone.grouped("+213 540 69 32 36") == "+213 540 69 32 36")
+    }
+}
+
+struct MonthNameDateTests {
+    @Test func arabicNamesTheMonth() {
+        let date = Date(timeIntervalSince1970: 1_795_132_800) // 2026-11-20
+        let arabic = OrderText.dateWithMonthName(date, locale: AppLanguage.ar.formattingLocale)
+        #expect(!arabic.contains("/"))
+        #expect(arabic.contains("2026"))
+        #expect(OrderText.dateWithMonthName(date, locale: AppLanguage.fr.formattingLocale) == "20\u{00A0}nov.\u{00A0}2026")
+    }
+}

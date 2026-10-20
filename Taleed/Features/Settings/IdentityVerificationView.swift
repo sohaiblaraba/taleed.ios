@@ -23,6 +23,10 @@ struct IdentityVerificationView: View {
     @Environment(SessionManager.self) private var session
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
+    /// The description's badge icon grows with its text.
+    @ScaledMetric(relativeTo: .caption) private var headerIconSize: CGFloat = 20
+    /// The description's font size (Body/Small), to centre the icon on its first line.
+    @ScaledMetric(relativeTo: .caption) private var headerTextSize: CGFloat = 12
 
     init(dependencies: SettingsDependencies, store: AccountStore) {
         let uploads = dependencies.uploads
@@ -89,9 +93,24 @@ struct IdentityVerificationView: View {
     // MARK: Content
 
     private func content(_ status: IdentityStatus) -> some View {
+        ScrollViewReader { proxy in
+            scrollContent(status)
+                // A failed send: the reason comes into view (it shows above the button, which may be
+                // at the bottom of the screen), as the profile form does for its field errors.
+                .onChange(of: model.submitError) { _, failure in
+                    guard failure != nil else { return }
+                    withAnimation { proxy.scrollTo(Self.errorAnchor, anchor: .center) }
+                }
+        }
+    }
+
+    private static let errorAnchor = "verification.error"
+
+    private func scrollContent(_ status: IdentityStatus) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
-                header
+                // The call to action is for a member who can still ask: verified, the banner says it all.
+                if status != .verified { header }
                 switch status {
                 case .verified:
                     InlineAlert(kind: .success, title: l10n.string(.settingsVerificationVerified))
@@ -118,8 +137,10 @@ struct IdentityVerificationView: View {
 
     /// The website card's description, after its badge icon.
     private var header: some View {
-        HStack(alignment: .top, spacing: TaleedSpacing.s8) {
-            TaleedIconView(.sealCheck, size: 20, color: TaleedColor.brandPrimary)
+        HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s8) {
+            // On the first line, at the text's size.
+            TaleedIconView(.sealCheck, size: min(headerIconSize, 40), color: TaleedColor.brandPrimary)
+                .alignmentGuide(.firstTextBaseline) { dimensions in dimensions[VerticalAlignment.center] + headerTextSize * 0.35 }
                 .accessibilityHidden(true)
             Text(l10n.string(.settingsVerificationDescription))
                 .taleedFont(TaleedFont.bodySmall)
@@ -173,6 +194,7 @@ struct IdentityVerificationView: View {
                 .fixedSize(horizontal: false, vertical: true)
             if let failure = model.submitError {
                 failureAlert(failure)
+                    .id(Self.errorAnchor)
             }
             TaleedButton(title: l10n.string(isResubmit ? .settingsVerificationResubmit : .settingsVerificationSubmit),
                          kind: .secondary, size: .large, isLoading: model.isSubmitting, isFullWidth: true) {
@@ -239,11 +261,10 @@ struct IdentityVerificationView: View {
             default: return (l10n.string(.settingsVerificationUploadError), error == .network ? l10n.message(for: error) : nil)
             }
         case .submit:
-            // The website's sentence, with the wait for the limit (5 a day) or the lost connection.
-            let detail: String? = switch error {
-            case .rateLimited, .network: l10n.message(for: error)
-            default: nil
-            }
+            // The limit (5 a day): only the wait, since trying again now cannot work (Send is disabled).
+            if case .rateLimited = error { return (l10n.message(for: error), nil) }
+            // The website's sentence, with the lost connection.
+            let detail: String? = error == .network ? l10n.message(for: error) : nil
             return (l10n.string(.settingsVerificationSubmitError), detail)
         }
     }

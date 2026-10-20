@@ -228,6 +228,7 @@
 		B4ADCCFFDE0409F85AE90114 /* FavoritesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0C7B36BE060DDC29E20EDE /* FavoritesTests.swift */; };
 		B55D84AB7F1B87305CD2069D /* FieldFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B8A11A6C7442246D8B4FB /* FieldFooter.swift */; };
 		B58C39037792E59D70250BEE /* UsernameRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05B8440C9B49F3B2C234802 /* UsernameRuleTests.swift */; };
+		B5FA93B513C8814FC1AA8678 /* ListRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9FB2866C9642329F3BCB506 /* ListRow.swift */; };
 		B6A429572190C053E7FD58C6 /* OffersApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8009F0D1ED8ABF52AD487380 /* OffersApi.swift */; };
 		B72BCE66B5E844E794A159EE /* TaleedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33392415F8DAE11A1675C5BC /* TaleedButton.swift */; };
 		B90A99F733F40B093E36BCFE /* Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E21C7F15EAFCCD44D94E892 /* Navigation.swift */; };
@@ -618,6 +619,7 @@
 		E6FCE691A3815AF9F50A2F08 /* SignInViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInViewModel.swift; sourceTree = "<group>"; };
 		E82E6473EFF90422BCCA8B03 /* SettingsFakes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFakes.swift; sourceTree = "<group>"; };
 		E9B572F46ABD634DE7BB46DF /* AccountFormsViewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountFormsViewModels.swift; sourceTree = "<group>"; };
+		E9FB2866C9642329F3BCB506 /* ListRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListRow.swift; sourceTree = "<group>"; };
 		EA7AD1493C11A858A6470AF8 /* BundleReviewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleReviewViewModel.swift; sourceTree = "<group>"; };
 		EB2FD5D0CBB340FBE91D2CD1 /* WalletApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletApi.swift; sourceTree = "<group>"; };
 		EBC1DA4F4473D6D4E2923BF4 /* ReportSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportSheetView.swift; sourceTree = "<group>"; };
@@ -1193,6 +1195,7 @@
 				AFB9CBD56016A166B04C24C4 /* IconButtons.swift */,
 				761A37386FC875A5A27D7C9A /* Identity.swift */,
 				AC35AA38239714831B5D9E4D /* ItemDetailPatterns.swift */,
+				E9FB2866C9642329F3BCB506 /* ListRow.swift */,
 				5E21C7F15EAFCCD44D94E892 /* Navigation.swift */,
 				15D446597B47F0CB7E27CB4B /* OverflowMenu.swift */,
 				08F0E55413D858FF6A88CF56 /* PhotoUploader.swift */,
@@ -1673,6 +1676,7 @@
 				F8F65A7FE33CA916E069B9FB /* LaunchViewModel.swift in Sources */,
 				6A5E28F868406F88FA0B3F37 /* LegalText.swift in Sources */,
 				A3FE9290730BBC9F08D4D4C3 /* LinkRouter.swift in Sources */,
+				B5FA93B513C8814FC1AA8678 /* ListRow.swift in Sources */,
 				D58E87AC46400BBD7E8EB164 /* Listing.swift in Sources */,
 				7202F5F2300F4541DC6CEADB /* ListingCardView.swift in Sources */,
 				E9E8230FEB04040650FFA773 /* ListingChanges.swift in Sources */,

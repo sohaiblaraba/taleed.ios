@@ -94,7 +94,7 @@ struct DesignTokenTests {
     }
 
     @Test func allIconsAndImagesAreInTheCatalog() {
-        #expect(TaleedIcon.allCases.count == 63)
+        #expect(TaleedIcon.allCases.count == 67)
         for icon in TaleedIcon.allCases {
             #expect(UIImage(named: icon.assetName) != nil, "\(icon.assetName)")
         }
@@ -105,7 +105,7 @@ struct DesignTokenTests {
 
     @Test func onlyDirectionalIconsMirror() {
         #expect(TaleedIcon.allCases.filter(\.isDirectional) ==
-            [.arrowLeft, .arrowLeftLight, .arrowRight, .caretLeft, .caretLeftLight, .caretRight])
+            [.arrowLeft, .arrowLeftLight, .arrowRight, .arrowUpRight, .caretLeft, .caretLeftLight, .caretRight])
     }
 
     @Test func everyStringKeyIsTranslated() {

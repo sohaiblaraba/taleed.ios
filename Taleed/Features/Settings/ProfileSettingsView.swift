@@ -17,6 +17,7 @@ struct ProfileSettingsView: View {
     @Environment(CatalogStore.self) private var catalog
     @Environment(SessionManager.self) private var session
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     init(dependencies: SettingsDependencies, store: AccountStore) {
         let uploads = dependencies.uploads
@@ -109,64 +110,100 @@ struct ProfileSettingsView: View {
                 .accessibilityIdentifier("profile.save")
             }
             .padding(.horizontal, TaleedLayout.screenMargin)
-            .padding(.vertical, TaleedSpacing.s16)
+            .padding(.bottom, TaleedSpacing.s16)
         }
+        // The top 16 as a safe-area margin rather than content padding: the same layout at rest, and a
+        // field scrolled to for its error stops 16 under the app bar instead of touching its border.
+        .safeAreaPadding(.top, TaleedSpacing.s16)
         .scrollDismissesKeyboard(.interactively)
     }
 
-    /// Photo 64, "Photo de profil", "Modifier" and "Supprimer la photo".
+    /// Photo 64, "Photo de profil", "Modifier" and "Supprimer la photo"; at the accessibility sizes the
+    /// photo, the label and the buttons stack, so no word breaks.
+    @ViewBuilder
     private var photoRow: some View {
-        HStack(spacing: TaleedSpacing.s16) {
-            TaleedAvatar(initials: TaleedAvatar.initials(from: model.profile?.displayName ?? ""), size: TaleedSize.avatarXxxl,
-                         imageURL: model.avatarURL)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-                FieldLabel(text: l10n.string(.settingsAvatar))
-                HStack(spacing: TaleedSpacing.s8) {
-                    TaleedButton(title: l10n.string(model.isUploading ? .commonLoading : .commonEdit), kind: .outline,
-                                 size: .small) {
-                        showsLibrary = true
-                    }
-                    .disabled(model.isUploading || model.isSaving)
-                    .accessibilityLabel("\(l10n.string(.settingsAvatar)), \(l10n.string(.commonEdit))")
-                    .accessibilityIdentifier("profile.photo")
-                    if model.hasPhoto {
-                        TaleedButton(title: l10n.string(.appSettingsAvatarRemove), kind: .hyperlink, size: .small) {
-                            model.removePhoto()
-                        }
-                        .disabled(model.isUploading || model.isSaving)
-                        .accessibilityIdentifier("profile.removePhoto")
-                    }
+        let avatar = TaleedAvatar(initials: TaleedAvatar.initials(from: model.profile?.displayName ?? ""),
+                                  size: TaleedSize.avatarXxxl, imageURL: model.avatarURL)
+            .accessibilityHidden(true)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
+                    avatar
+                    photoControls(stacked: true)
                 }
-                if let error = message(model.error(.avatar)) {
-                    FieldHelper(text: error, color: TaleedColor.feedbackError)
+            } else {
+                HStack(spacing: TaleedSpacing.s16) {
+                    avatar
+                    photoControls(stacked: false)
                 }
             }
         }
         .padding(.bottom, TaleedSpacing.s8)
     }
 
+    private func photoControls(stacked: Bool) -> some View {
+        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+            FieldLabel(text: l10n.string(.settingsAvatar))
+            if stacked {
+                VStack(alignment: .leading, spacing: TaleedSpacing.s8) { photoButtons }
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: TaleedSpacing.s8) { photoButtons }
+                    VStack(alignment: .leading, spacing: TaleedSpacing.s8) { photoButtons }
+                }
+            }
+            if let error = message(model.error(.avatar)) {
+                FieldHelper(text: error, color: TaleedColor.feedbackError)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var photoButtons: some View {
+        TaleedButton(title: l10n.string(model.isUploading ? .commonLoading : .commonEdit), kind: .outline,
+                     size: .small) {
+            showsLibrary = true
+        }
+        .disabled(model.isUploading || model.isSaving)
+        .accessibilityLabel("\(l10n.string(.settingsAvatar)), \(l10n.string(.commonEdit))")
+        .accessibilityIdentifier("profile.photo")
+        if model.hasPhoto {
+            TaleedButton(title: l10n.string(.appSettingsAvatarRemove), kind: .hyperlink, size: .small) {
+                model.removePhoto()
+            }
+            .disabled(model.isUploading || model.isSaving)
+            .accessibilityIdentifier("profile.removePhoto")
+        }
+    }
+
+    /// The form's 16 between the two names; the hint 8 under the last one.
     private var nameFields: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-            TaleedTextField(label: l10n.string(.authFirstName),
-                            text: text(\.firstName, .firstName, max: AccountLimits.namePartMax),
-                            error: model.nameLocked ? nil : message(model.error(.firstName)), showsClearButton: false)
-                .textContentType(.givenName)
-                .disabled(model.nameLocked)
-                .accessibilityIdentifier("profile.firstName")
-                .id(ProfileField.firstName)
-            TaleedTextField(label: l10n.string(.authLastName),
-                            text: text(\.lastName, .lastName, max: AccountLimits.namePartMax),
-                            error: model.nameLocked ? nil : message(model.error(.lastName)), showsClearButton: false)
-                .textContentType(.familyName)
-                .disabled(model.nameLocked)
-                .accessibilityIdentifier("profile.lastName")
-                .id(ProfileField.lastName)
+            VStack(alignment: .leading, spacing: TaleedSpacing.s16) { nameFieldPair }
             let nameError = model.error(.firstName) == .nameLocked
             FieldHelper(text: l10n.string(model.nameLocked || nameError ? .settingsNameLockedHint : .settingsNameHint),
                         color: nameError ? TaleedColor.feedbackError : TaleedColor.textSecondary)
                 .accessibilityHidden(false)
         }
+    }
+
+    @ViewBuilder
+    private var nameFieldPair: some View {
+        TaleedTextField(label: l10n.string(.authFirstName),
+                        text: text(\.firstName, .firstName, max: AccountLimits.namePartMax),
+                        error: model.nameLocked ? nil : message(model.error(.firstName)), showsClearButton: false)
+            .textContentType(.givenName)
+            .disabled(model.nameLocked)
+            .accessibilityIdentifier("profile.firstName")
+            .id(ProfileField.firstName)
+        TaleedTextField(label: l10n.string(.authLastName),
+                        text: text(\.lastName, .lastName, max: AccountLimits.namePartMax),
+                        error: model.nameLocked ? nil : message(model.error(.lastName)), showsClearButton: false)
+            .textContentType(.familyName)
+            .disabled(model.nameLocked)
+            .accessibilityIdentifier("profile.lastName")
+            .id(ProfileField.lastName)
     }
 
     private var billingFields: some View {
@@ -177,9 +214,10 @@ struct ProfileSettingsView: View {
                     .accessibilityHidden(false)
             }
             .padding(.top, TaleedSpacing.s16)
-            TaleedTextField(label: optionalLabel(.settingsBillingName),
+            // Empty, the invoice uses the legal name: said in the helper, not as a look-alike placeholder.
+            TaleedTextField(label: optionalLabel(.appSettingsBillingNameLabel),
                             text: text(\.billingName, .billingName, max: AccountLimits.billingNameMax),
-                            placeholder: model.form.legalName, error: message(model.error(.billingName)))
+                            helper: billingNameHelper, error: message(model.error(.billingName)))
                 .textContentType(.name)
                 .accessibilityIdentifier("profile.billingName")
                 .id(ProfileField.billingName)
@@ -211,9 +249,11 @@ struct ProfileSettingsView: View {
                 .id(ProfileField.billingWilaya)
         }
     }
+}
 
-    // MARK: Helpers
+// MARK: - Helpers
 
+extension ProfileSettingsView {
     /// A binding to a text field of the form, kept within its limit; editing clears the field's refusal.
     private func text(_ path: WritableKeyPath<ProfileForm, String>, _ field: ProfileField, max: Int) -> Binding<String> {
         Binding(
@@ -223,6 +263,13 @@ struct ProfileSettingsView: View {
                 model.edited(field)
             }
         )
+    }
+
+    /// "Par défaut : Lina Khelifi" while the billing name is empty.
+    private var billingNameHelper: String? {
+        let legalName = model.form.legalName.trimmingCharacters(in: .whitespaces)
+        guard model.form.billingName.isEmpty, !legalName.isEmpty else { return nil }
+        return l10n.format(.appSettingsBillingNameDefault, legalName.isolatedByContent)
     }
 
     /// "Téléphone (optionnel)".
@@ -248,10 +295,10 @@ struct ProfileSettingsView: View {
         }
     }
 
-    /// The wilayas with "—" first, which removes it.
+    /// The wilayas with "Aucune" first, which removes it (the field then reads "—").
     @ViewBuilder
     private func wilayaSheet(_ picker: ProfilePicker) -> some View {
-        let options = [FilterOption(value: "0", title: "—")] + (catalog.catalog?.wilayas ?? []).map {
+        let options = [FilterOption(value: "0", title: l10n.string(.appSettingsWilayaNone))] + (catalog.catalog?.wilayas ?? []).map {
             FilterOption(value: String($0.id), title: "\($0.id) — \($0.name)", searchText: String($0.id))
         }
         let current = picker == .wilaya ? model.form.wilayaId : model.form.billingWilayaId

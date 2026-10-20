@@ -2,8 +2,9 @@ import SwiftUI
 
 /// One photo of a document (the ID of identity verification), built from the photo uploader's parts
 /// (design-system §4.1): the label, then a 16:9 tile. Empty, the uploader's dashed `mint/50` zone with
-/// `cloud-arrow-up` 28 `mint/500` and the hint in `typography.caption` `mint/600`; picked, the photo
-/// (aspect-fill, `border/subtle`, `radius.m`) with the uploader's remove button at the top end.
+/// `cloud-arrow-up` 28 `mint/500` and the hint in `typography.caption` `mint/600`; picked, the whole
+/// photo (aspect-fit, letterboxed on `surface/grouped`, so the member sees the document's edges are in
+/// frame; `border/subtle`, `radius.m`) with the uploader's remove button at the top end (44 pt target).
 struct DocumentPhotoSlot: View {
     let label: String
     let hint: String
@@ -61,7 +62,8 @@ struct DocumentPhotoSlot: View {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
         return Color.clear
             .aspectRatio(16 / 9, contentMode: .fit)
-            .overlay { image.resizable().scaledToFill() }
+            .background(TaleedColor.surfaceGrouped)
+            .overlay { image.resizable().scaledToFit() }
             .clipShape(shape)
             .overlay(shape.strokeBorder(TaleedColor.borderSubtle, lineWidth: 1))
             .accessibilityElement()
@@ -72,12 +74,13 @@ struct DocumentPhotoSlot: View {
                     TaleedIconView(.x, size: TaleedSize.photoUploaderRemoveIcon, color: TaleedColor.textInverse)
                         .frame(width: TaleedSize.photoUploaderRemoveButton, height: TaleedSize.photoUploaderRemoveButton)
                         .background(Circle().fill(TaleedColor.textPrimary))
-                        .minimumHitArea()
+                        // The whole 44 pt square is the button, inside the tile.
+                        .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(!isEnabled)
                 .accessibilityLabel(removeLabel)
-                .padding(TaleedSize.photoUploaderRemoveInset)
             }
     }
 }

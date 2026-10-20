@@ -165,19 +165,34 @@ struct TaleedBadge: View {
     var icon: TaleedIcon?
     var size: Size = .regular
     var isOnTint = false
+    /// The icon grows with the label (up to twice its size), so it does not shrink beside large text.
+    @ScaledMetric(relativeTo: .caption) private var iconScale: CGFloat = 1
 
     var body: some View {
         let compact = size == .compact
+        let iconSize: CGFloat = compact ? 12 : 14
         Pill(fill: tone.fill, border: isOnTint && tone == .brand ? TaleedColor.brandSoftBorder : nil,
              height: compact ? TaleedSize.conditionTagHeight : TaleedSize.chipHeight,
              paddingX: compact ? TaleedSize.conditionTagPaddingX : TaleedSize.chipPaddingX) {
             HStack(spacing: TaleedSpacing.s4) {
-                if let icon { TaleedIconView(icon, size: compact ? 12 : 14, color: tone.foreground) }
-                Text(title).taleedFont(TaleedFont.tagLabel)
+                if let icon { TaleedIconView(icon, size: iconSize * min(iconScale, 2), color: tone.foreground) }
+                // One line at its own width: a badge never wraps into a tall circle with a broken word.
+                Text(title)
+                    .taleedFont(TaleedFont.tagLabel)
+                    .lineLimit(1)
+                    .fixedSize()
             }
             .foregroundStyle(tone.foreground)
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+extension TaleedBadge {
+    /// The one "Verified" look (design-system "Verified · available"): success tone with the shield,
+    /// for the member's badge, the verified email and the settings' verification row.
+    static func verified(_ title: String, size: Size = .regular) -> TaleedBadge {
+        TaleedBadge(title: title, tone: .success, icon: .shieldCheck, size: size)
     }
 }
 

@@ -114,8 +114,15 @@ final class IdentityVerificationViewModel {
 
     var profile: AccountProfile? { store.profile }
 
-    /// Disabled until there is a photo, and while sending (the website's rule).
-    var canSubmit: Bool { photo != nil && !isSubmitting && status?.acceptsRequest == true }
+    /// Disabled until there is a photo, and while sending (the website's rule); also while the last send
+    /// hit the daily limit (`429`), whose wait shows above the button, until the member picks another photo.
+    var canSubmit: Bool { photo != nil && !isSubmitting && status?.acceptsRequest == true && !isRateLimited }
+
+    /// The last send answered `429 rate_limited`.
+    var isRateLimited: Bool {
+        if case let .submit(error) = submitError, case .rateLimited = error { return true }
+        return false
+    }
 
     /// The error under a name field: the API's refusal first, then the device's check once the member tried.
     func nameError(_ field: VerificationNameField) -> ProfileFieldError? {

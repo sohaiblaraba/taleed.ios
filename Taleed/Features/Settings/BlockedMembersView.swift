@@ -64,7 +64,10 @@ struct BlockedMembersView: View {
                     }
                 }
             } empty: {
-                EmptyState(title: l10n.string(.appSettingsBlockedEmpty), icon: .shieldCheck)
+                // What blocking does, as the addresses' empty state explains them; `prohibit` as the
+                // settings row (the shield is the trust pages').
+                EmptyState(title: l10n.string(.appSettingsBlockedEmpty), message: l10n.string(.appSettingsBlockedEmptyBody),
+                           icon: .prohibit)
                     .accessibilityIdentifier("blocked.empty")
             }
         }

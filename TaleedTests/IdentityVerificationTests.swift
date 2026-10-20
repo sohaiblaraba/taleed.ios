@@ -274,6 +274,9 @@ struct IdentityVerificationViewModelTests {
         #expect(model.submitError == .submit(.rateLimited(retryAfter: 3600)))
         #expect(model.status == .rejected(note: "Photo floue"))
         #expect(model.submitError?.error.rateLimitMinutes == 60)
+        // Sending again now cannot work: disabled while the wait shows.
+        #expect(model.isRateLimited)
+        #expect(!model.canSubmit)
     }
 
     @Test func pendingAndVerifiedShowNoForm() async {

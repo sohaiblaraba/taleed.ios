@@ -95,6 +95,12 @@ struct DeleteAccountView: View {
 
     @ViewBuilder
     private var explanation: some View {
+        // The same title style as step 2, so the two steps read as one flow.
+        Text(l10n.string(.appSettingsDeleteIntroTitle))
+            .taleedFont(TaleedFont.title2)
+            .foregroundStyle(TaleedColor.textPrimary)
+            .accessibilityAddTraits(.isHeader)
+            .fixedSize(horizontal: false, vertical: true)
         Text(l10n.string(.settingsDeleteHint))
             .taleedFont(TaleedFont.bodyRegular)
             .foregroundStyle(TaleedColor.textBody)
@@ -142,8 +148,10 @@ struct DeleteAccountView: View {
             blockerView(blocker)
         }
         VStack(spacing: TaleedSpacing.s8) {
-            TaleedButton(title: l10n.string(.settingsDeleteConfirmCta), kind: .danger, size: .large, isLoading: model.isDeleting,
-                         isFullWidth: true) {
+            // While something only another screen can solve stops the deletion, trying again cannot
+            // succeed: the red button steps back to a red link, and the way out is the button above.
+            TaleedButton(title: l10n.string(.settingsDeleteConfirmCta), kind: isBlockedElsewhere ? .hyperlinkDanger : .danger,
+                         size: .large, isLoading: model.isDeleting, isFullWidth: true) {
                 Task { await model.delete() }
             }
             .disabled(!model.canDelete)
@@ -157,12 +165,18 @@ struct DeleteAccountView: View {
         .padding(.top, TaleedSpacing.s8)
     }
 
+    /// A blocker the member solves on another screen (orders, wallet, payout, support), not by retrying.
+    private var isBlockedElsewhere: Bool { model.blocker?.remedy != nil }
+
     @ViewBuilder
     private func blockerView(_ blocker: DeletionBlocker) -> some View {
-        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-            InlineAlert(kind: .error, title: message(blocker), actionTitle: remedyTitle(blocker.remedy),
-                        action: remedyAction(blocker.remedy))
+        VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
+            InlineAlert(kind: .error, title: message(blocker))
                 .accessibilityIdentifier("delete.blocker")
+            if let title = remedyTitle(blocker.remedy), let action = remedyAction(blocker.remedy) {
+                TaleedButton(title: title, kind: .outline, size: .medium, action: action)
+                    .accessibilityIdentifier("delete.remedy")
+            }
             if blocker.remedy == .support, let support = launch.config?.support {
                 SupportContactRows(support: support)
                     .taleedCard()
@@ -187,8 +201,8 @@ struct DeleteAccountView: View {
 
     private func remedyTitle(_ remedy: DeletionBlocker.Remedy?) -> String? {
         switch remedy {
-        case .orders?: l10n.string(.navOrders)
-        case .wallet?: l10n.string(.navWallet)
+        case .orders?: l10n.string(.appSettingsDeleteViewOrders)
+        case .wallet?: l10n.string(.appSettingsDeleteViewWallet)
         case .payout?: l10n.string(.walletRequestPayout)
         case .support?, nil: nil
         }

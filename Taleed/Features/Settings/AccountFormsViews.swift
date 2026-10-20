@@ -70,16 +70,23 @@ struct UsernameSettingsView: View {
                 InlineAlert(kind: .info, title: cooldownText(date))
                     .accessibilityIdentifier("username.cooldown")
             } else {
-                TaleedTextField(label: l10n.string(.settingsNewUsernameLabel),
-                                text: Binding(get: { model.typed },
-                                              set: { model.typed = AuthValidation.limited($0, to: AccountLimits.usernameMax) }),
-                                helper: l10n.string(.settingsUsernameRuleHint), error: fieldError)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .textContentType(.username)
-                    .submitLabel(.done)
-                    .onSubmit { Task { await model.submit() } }
-                    .accessibilityIdentifier("username.field")
+                // The "@" cue before the name; the rule stays under another error, so nothing jumps.
+                VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
+                    TaleedTextField(label: l10n.string(.settingsNewUsernameLabel),
+                                    text: Binding(get: { model.typed },
+                                                  set: { model.typed = AuthValidation.limited($0, to: AccountLimits.usernameMax) }),
+                                    leadingIcon: .at, helper: l10n.string(.settingsUsernameRuleHint), error: fieldError)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .textContentType(.username)
+                        .submitLabel(.done)
+                        .onSubmit { Task { await model.submit() } }
+                        .accessibilityIdentifier("username.field")
+                    if fieldError != nil, model.fieldError != .rule {
+                        FieldHelper(text: l10n.string(.settingsUsernameRuleHint), color: TaleedColor.textSecondary)
+                            .accessibilityHidden(false)
+                    }
+                }
                 TaleedButton(title: l10n.string(.settingsUsernameChangeCta), kind: .secondary, size: .large,
                              isLoading: model.isSending, isFullWidth: true) {
                     Task { await model.submit() }
@@ -108,9 +115,10 @@ struct UsernameSettingsView: View {
         }
     }
 
-    /// "Vous pourrez changer de nom d'utilisateur à partir du 19 nov. 2026."
+    /// "Vous pourrez changer de nom d'utilisateur à partir du 19 nov. 2026." (the month by name in
+    /// Arabic too).
     private func cooldownText(_ date: Date) -> String {
-        l10n.format(.settingsUsernameCooldown, OrderText.date(date, locale: l10n.language.formattingLocale))
+        l10n.format(.settingsUsernameCooldown, OrderText.dateWithMonthName(date, locale: l10n.language.formattingLocale))
     }
 }
 
@@ -135,7 +143,7 @@ struct EmailSettingsView: View {
                     .foregroundStyle(TaleedColor.textPrimary)
                     .accessibilityIdentifier("email.current")
                 if profile.emailVerified {
-                    TaleedBadge(title: l10n.string(.settingsEmailVerifiedBadge), tone: .brand, icon: .sealCheck)
+                    TaleedBadge.verified(l10n.string(.settingsEmailVerifiedBadge))
                 } else {
                     TaleedBadge(title: l10n.string(.settingsEmailNotVerifiedBadge), tone: .error, icon: .warningCircle)
                 }
@@ -146,7 +154,7 @@ struct EmailSettingsView: View {
             TaleedTextField(label: l10n.string(.settingsNewEmailLabel),
                             text: Binding(get: { model.typed },
                                           set: { model.typed = AuthValidation.limited($0, to: AccountLimits.emailMax) }),
-                            error: fieldError)
+                            placeholder: l10n.string(.appSettingsEmailPlaceholder), leadingIcon: .envelope, error: fieldError)
                 .keyboardType(.emailAddress)
                 .textContentType(.emailAddress)
                 .textInputAutocapitalization(.never)
@@ -231,11 +239,13 @@ struct PasswordSettingsView: View {
         }
     }
 
+    /// The new password shows the minimum length from the start (an error replaces it).
     private func field(_ field: PasswordField, label: L10nKey, text: WritableKeyPath<PasswordForm, String>,
                        content: UITextContentType) -> some View {
         TaleedTextField(label: l10n.string(label),
                         text: Binding(get: { model.form[keyPath: text] },
                                       set: { model.form[keyPath: text] = AuthValidation.limited($0, to: AccountLimits.passwordMax + 1) }),
+                        helper: field == .new ? l10n.format(.appSettingsPasswordMinHint, AccountLimits.passwordMin) : nil,
                         error: message(model.error(field)), isSecure: true)
             .textContentType(content)
             .accessibilityIdentifier("password.\(field)")

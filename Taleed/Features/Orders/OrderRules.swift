@@ -209,6 +209,15 @@ enum OrderText {
         return formatter.string(from: date).replacingOccurrences(of: " ", with: Self.noBreakSpace)
     }
 
+    /// The medium date with the month by name in every language ("20 nov. 2026", "20 نوفمبر 2026"):
+    /// Arabic's medium style is numeric.
+    static func dateWithMonthName(_ date: Date, locale: Locale) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = webLocale(AppLanguage(locale: locale))
+        formatter.setLocalizedDateFormatFromTemplate("dMMMy")
+        return formatter.string(from: date).replacingOccurrences(of: " ", with: Self.noBreakSpace)
+    }
+
     static func dateTime(_ date: Date, locale: Locale) -> String {
         let language = AppLanguage(locale: locale)
         let formatter = DateFormatter()

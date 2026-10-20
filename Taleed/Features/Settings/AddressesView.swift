@@ -68,15 +68,17 @@ struct AddressesView: View {
             VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
                 if addresses.isEmpty {
                     EmptyState(title: l10n.string(.appSettingsAddressesEmpty), message: l10n.string(.appSettingsAddressesHint),
-                               actionTitle: l10n.string(.appSettingsAddressAdd), action: { formTarget = .new },
                                icon: .mapPin)
                         .frame(maxWidth: .infinity)
                         .padding(.top, TaleedSpacing.s32)
                         .accessibilityIdentifier("addresses.empty")
+                    // The list's own "Ajouter une adresse", so the action looks the same in both states.
+                    addButton
                 } else {
                     Text(l10n.string(.appSettingsAddressesHint))
                         .taleedFont(TaleedFont.bodySmall)
                         .foregroundStyle(TaleedColor.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .fixedSize(horizontal: false, vertical: true)
                     ForEach(addresses) { address in
                         AddressCard(address: address, isBusy: model.busyIds.contains(address.id),
@@ -85,12 +87,7 @@ struct AddressesView: View {
                                     onDelete: { pendingDelete = address })
                     }
                     VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-                        TaleedButton(title: l10n.string(.appSettingsAddressAdd), kind: .tertiary, size: .large, leadingIcon: .plus,
-                                     isFullWidth: true) {
-                            formTarget = .new
-                        }
-                        .disabled(!model.canAdd)
-                        .accessibilityIdentifier("addresses.add")
+                        addButton
                         if !model.canAdd {
                             FieldHelper(text: l10n.string(.appErrorAddressLimit), color: TaleedColor.textSecondary)
                                 .accessibilityHidden(false)
@@ -102,6 +99,15 @@ struct AddressesView: View {
             .padding(.vertical, TaleedSpacing.s16)
         }
         .refreshable { await model.reload() }
+    }
+
+    private var addButton: some View {
+        TaleedButton(title: l10n.string(.appSettingsAddressAdd), kind: .tertiary, size: .large, leadingIcon: .plus,
+                     isFullWidth: true) {
+            formTarget = .new
+        }
+        .disabled(!model.canAdd)
+        .accessibilityIdentifier("addresses.add")
     }
 
     private func confirmDelete() {
@@ -137,17 +143,19 @@ private struct AddressCard: View {
     let onMakeDefault: () -> Void
     let onDelete: () -> Void
     @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
             VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-                HStack(spacing: TaleedSpacing.s8) {
-                    Text(address.recipientName)
-                        .taleedFont(TaleedFont.sectionTitle)
-                        .foregroundStyle(TaleedColor.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    if address.isDefault {
-                        TaleedBadge(title: l10n.string(.appSettingsAddressDefault), tone: .success, icon: .checkCircle)
+                // At the accessibility sizes the badge takes its own line above the name.
+                if dynamicTypeSize.isAccessibilitySize {
+                    defaultBadge
+                    recipient
+                } else {
+                    HStack(spacing: TaleedSpacing.s8) {
+                        recipient
+                        defaultBadge
                     }
                 }
                 Text(verbatim: address.phone.isolatedLeftToRight)
@@ -176,6 +184,20 @@ private struct AddressCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .taleedCard()
         .accessibilityIdentifier("addresses.card.\(address.id)")
+    }
+
+    private var recipient: some View {
+        Text(address.recipientName)
+            .taleedFont(TaleedFont.sectionTitle)
+            .foregroundStyle(TaleedColor.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var defaultBadge: some View {
+        if address.isDefault {
+            TaleedBadge(title: l10n.string(.appSettingsAddressDefault), tone: .success, icon: .checkCircle)
+        }
     }
 
     @ViewBuilder

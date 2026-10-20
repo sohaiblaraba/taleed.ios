@@ -10,6 +10,9 @@ struct ProfileView: View {
     /// The website menu's figure next to "Portefeuille": `balance + voucherBalance` of `GET /wallet`
     /// (`GET /me` does not carry it).
     @State private var walletHeadline: Int?
+    /// The first wallet answer (or its failure) came back: until then the row holds a placeholder
+    /// where the figure goes, so it does not pop in after the first paint.
+    @State private var walletLoaded = false
     @Environment(\.referralsApi) private var referralsApi
     /// What each side of a referral can earn (`program` of `GET /me/referrals`), for the website menu's
     /// "Gagnez 1 500 DA en parrainant"; "Parrainage" until it is known (screens.md §7 G18).
@@ -26,8 +29,17 @@ struct ProfileView: View {
                     if let user = session.user {
                         MemberHeader(user: user)
                     } else {
-                        TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large, isFullWidth: true) {
-                            router.presentSignIn()
+                        // Signed out: the sign-in sheet's subtitle says what the button is for.
+                        VStack(spacing: TaleedSpacing.s16) {
+                            Text(l10n.string(.authLoginSubtitle))
+                                .taleedFont(TaleedFont.bodyRegular)
+                                .foregroundStyle(TaleedColor.textBody)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
+                                .fixedSize(horizontal: false, vertical: true)
+                            TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large, isFullWidth: true) {
+                                router.presentSignIn()
+                            }
                         }
                         .padding(.horizontal, TaleedLayout.screenMargin)
                         .padding(.top, TaleedSpacing.s24)
@@ -52,7 +64,7 @@ struct ProfileView: View {
                             .accessibilityIdentifier("profile.orders")
                             ListRow(label: l10n.string(.navWallet), leadingIcon: .money,
                                     trailingText: walletHeadline.map { PriceFormatter.format($0, language: l10n.language) },
-                                    showsChevron: true) {
+                                    isTrailingLoading: walletHeadline == nil && !walletLoaded, showsChevron: true) {
                                 router.push(.wallet)
                             }
                             .accessibilityIdentifier("profile.wallet")
@@ -70,6 +82,8 @@ struct ProfileView: View {
                             ListRow(label: referralsLabel, leadingIcon: .gift, showsChevron: true) {
                                 router.push(.referrals)
                             }
+                            // "Parrainage" fades into "Gagnez 1 500 DA en parrainant" rather than swapping.
+                            .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: referralTotal)
                             .accessibilityIdentifier("profile.referrals")
                         }
                         ListRow(label: l10n.string(.settingsTitle), leadingIcon: .slidersHorizontal, showsChevron: true) {
@@ -116,9 +130,11 @@ struct ProfileView: View {
     private func loadWalletHeadline() async {
         guard session.isSignedIn, let walletApi else {
             walletHeadline = nil
+            walletLoaded = false
             return
         }
         if let summary = try? await walletApi.wallet(automatic: true) { walletHeadline = summary.headline }
+        walletLoaded = true
     }
 }
 
@@ -148,7 +164,7 @@ private struct MemberHeader: View {
             if user.isOfficial {
                 TaleedBadge(title: l10n.string(.profileOfficial), tone: .brand, icon: .sealCheck)
             } else if user.isVerified {
-                TaleedBadge(title: l10n.string(.profileVerified), tone: .success, icon: .shieldCheck)
+                TaleedBadge.verified(l10n.string(.profileVerified))
             }
         }
         .frame(maxWidth: .infinity)

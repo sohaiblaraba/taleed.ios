@@ -77,9 +77,11 @@ struct SettingsView: View {
                     router.push(.passwordSettings)
                 }
                 .accessibilityIdentifier("settings.password")
-                // The website's verification card, as its own screen (G17). "Vérifié" once verified.
+                // The website's verification card, as its own screen (G17). The "Vérifié" badge once
+                // verified (the profile hub's and the email screen's treatment).
                 ListRow(label: l10n.string(.settingsVerificationTitle), leadingIcon: .sealCheck,
-                        trailingText: profile.isVerified ? l10n.string(.profileVerified) : nil, showsChevron: true) {
+                        trailingBadge: profile.isVerified ? .verified(l10n.string(.profileVerified), size: .compact) : nil,
+                        showsChevron: true) {
                     router.push(.identityVerification)
                 }
                 .accessibilityIdentifier("settings.verification")
@@ -87,7 +89,7 @@ struct SettingsView: View {
                     router.push(.addresses)
                 }
                 .accessibilityIdentifier("settings.addresses")
-                ListRow(label: l10n.string(.appSettingsBlockedTitle), leadingIcon: .shieldCheck, showsChevron: true) {
+                ListRow(label: l10n.string(.appSettingsBlockedTitle), leadingIcon: .prohibit, showsChevron: true) {
                     router.push(.blockedMembers)
                 }
                 .accessibilityIdentifier("settings.blocked")
@@ -98,7 +100,7 @@ struct SettingsView: View {
                 .padding(.horizontal, TaleedLayout.screenMargin)
                 .padding(.bottom, TaleedSpacing.s8)
         } else {
-            SettingsSkeletonRows(count: 6)
+            SettingsSkeletonRows(count: 7)
         }
     }
 
@@ -111,7 +113,7 @@ struct SettingsView: View {
             Toggle(isOn: Binding(get: { account.newsletterPending ?? profile.newsletter }, set: { setNewsletter($0) })) {
                 Text(l10n.string(.settingsNewsletterToggle))
             }
-            .toggleStyle(.taleed)
+            .toggleStyle(.taleedRow)
             .disabled(account.newsletterPending != nil)
             .accessibilityIdentifier("settings.newsletter")
             FieldHelper(text: l10n.string(.settingsNewsletterDescription), color: TaleedColor.textSecondary)
@@ -154,7 +156,7 @@ struct SettingsView: View {
                 Toggle(isOn: Binding(get: { pushPending ?? push.isSwitchedOn }, set: { setPush($0) })) {
                     Text(l10n.string(.pwaPushTitle))
                 }
-                .toggleStyle(.taleed)
+                .toggleStyle(.taleedRow)
                 .disabled(pushPending != nil)
                 .accessibilityIdentifier("settings.push")
                 FieldHelper(text: l10n.string(.pwaPushBody), color: TaleedColor.textSecondary)
@@ -193,7 +195,7 @@ struct SettingsView: View {
             }
             .accessibilityIdentifier("settings.help")
             // "1.0.0 (1)" has no direction of its own: it stays left to right in Arabic too.
-            ListRow(label: l10n.string(.settingsVersion),
+            ListRow(label: l10n.string(.settingsVersion), leadingIcon: .tag,
                     trailingText: "\(environment.appVersion) (\(environment.buildNumber))".isolatedLeftToRight)
             #if DEBUG
             ListRow(label: "Design system", leadingIcon: .sparkle, showsChevron: true) {
@@ -241,19 +243,35 @@ struct SettingsEyebrow: View {
     }
 }
 
-/// Placeholder rows while the account loads.
+/// Placeholder rows while the account loads, drawn as the rows they stand for (the 20 pt icon and the
+/// label at the list rows' margins and height), so nothing moves when the rows arrive.
 struct SettingsSkeletonRows: View {
     let count: Int
     @Environment(LanguageManager.self) private var l10n
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 20
+
+    private static let widths: [CGFloat] = [72, 150, 120, 120, 170, 160, 140]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
-            ForEach(0..<count, id: \.self) { _ in
-                SkeletonBlock(width: 180, height: 16)
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(0..<count, id: \.self) { index in
+                VStack(spacing: 0) {
+                    HStack(spacing: TaleedSpacing.s12) {
+                        SkeletonBlock(width: min(iconSize, 36), height: min(iconSize, 36))
+                        SkeletonBlock(width: Self.widths[index % Self.widths.count], height: 16)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.vertical, TaleedSpacing.s12)
+                    .padding(.horizontal, TaleedLayout.screenMargin)
+                    .frame(maxWidth: .infinity, minHeight: 56)
+                    Rectangle()
+                        .fill(TaleedColor.borderSubtle)
+                        .frame(height: 1)
+                        .padding(.leading, TaleedLayout.screenMargin)
+                }
             }
         }
-        .padding(.horizontal, TaleedLayout.screenMargin)
-        .padding(.vertical, TaleedSpacing.s16)
+        .skeletonPulse()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(l10n.string(.commonLoading))
     }
@@ -276,7 +294,8 @@ struct InlineErrorRetry: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            TaleedButton(title: l10n.string(.commonRetry), kind: .tertiary, size: .medium, action: retry)
+            // ErrorStateView's Retry (Outline Medium), so every error state retries the same way.
+            TaleedButton(title: l10n.string(.commonRetry), kind: .outline, size: .medium, action: retry)
         }
         .padding(TaleedSpacing.s16)
         .frame(maxWidth: .infinity, alignment: .leading)
