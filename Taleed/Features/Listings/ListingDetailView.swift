@@ -192,10 +192,8 @@ struct ListingDetailView: View {
     private func sheet(_ item: Presented) -> some View {
         switch item {
         case .report:
-            ReportSheetView(model: ReportViewModel(target: .listing(id: model.listingId), api: dependencies.reports,
-                                                   upload: { [uploads = dependencies.uploads] data throws(ApiError) in
-                                                       try await uploads.upload(data, purpose: .reportEvidence)
-                                                   })) { outcome in
+            ReportSheetView(target: .listing(id: model.listingId),
+                            reports: dependencies.reports, uploads: dependencies.uploads) { outcome in
                 switch outcome {
                 case .sent: toasts.show(l10n.string(.reportSent))
                 case .gone: Task { await model.reload() }

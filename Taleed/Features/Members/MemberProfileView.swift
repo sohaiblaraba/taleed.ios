@@ -177,10 +177,8 @@ struct MemberProfileView: View {
         switch item {
         case .report:
             if let profile = model.profile {
-                ReportSheetView(model: ReportViewModel(target: .member(id: profile.id), api: dependencies.reports,
-                                                       upload: { [uploads = dependencies.uploads] data throws(ApiError) in
-                                                           try await uploads.upload(data, purpose: .reportEvidence)
-                                                       })) { outcome in
+                ReportSheetView(target: .member(id: profile.id),
+                                reports: dependencies.reports, uploads: dependencies.uploads) { outcome in
                     switch outcome {
                     case .sent: toasts.show(l10n.string(.reportSent))
                     case .gone: Task { await model.reload() }

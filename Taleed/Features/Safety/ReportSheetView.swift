@@ -9,6 +9,7 @@ import SwiftUI
 struct ReportSheetView: View {
     @State private var model: ReportViewModel
     @State private var pickerItems: [PhotosPickerItem] = []
+    @State private var showsPicker = false
     let onFinish: (ReportViewModel.Outcome) -> Void
     @Environment(LanguageManager.self) private var l10n
     @Environment(CatalogStore.self) private var catalog
@@ -17,6 +18,17 @@ struct ReportSheetView: View {
     init(model: ReportViewModel, onFinish: @escaping (ReportViewModel.Outcome) -> Void) {
         _model = State(initialValue: model)
         self.onFinish = onFinish
+    }
+
+    /// The sheet for `target`, its screenshots uploaded as `report_evidence`.
+    init(target: ReportTarget, reports: any ReportsApi, uploads: PhotoUploadService,
+         onFinish: @escaping (ReportViewModel.Outcome) -> Void) {
+        self.init(model: ReportViewModel(target: target, api: reports, upload: { data throws(ApiError) in
+            #if DEBUG
+            try ReportDebugFailures.fail(.upload)
+            #endif
+            return try await uploads.upload(data, purpose: .reportEvidence)
+        }), onFinish: onFinish)
     }
 
     var body: some View {
@@ -33,9 +45,6 @@ struct ReportSheetView: View {
                                    placeholder: l10n.string(.reportDetailsPlaceholder),
                                    helper: "\(model.details.utf16.count) / \(ReportViewModel.maxDetailsLength)")
                     evidence
-                    if let error = model.error {
-                        InlineAlert(kind: .error, title: l10n.message(for: error))
-                    }
                 }
                 .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
                 .padding(.top, TaleedSpacing.s8)
@@ -53,13 +62,18 @@ struct ReportSheetView: View {
         .task {
             if catalog.catalog?.reportReasons.isEmpty ?? true { await catalog.refresh() }
         }
+        .photosPicker(isPresented: $showsPicker, selection: $pickerItems,
+                      maxSelectionCount: max(1, ReportViewModel.maxEvidence - model.evidence.count), matching: .images)
         .onChange(of: pickerItems) { _, items in
             guard !items.isEmpty else { return }
             pickerItems = []
             Task {
                 for item in items.prefix(ReportViewModel.maxEvidence - model.evidence.count) {
-                    guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
-                    await model.addEvidence(data)
+                    if let data = try? await item.loadTransferable(type: Data.self) {
+                        await model.addEvidence(data)
+                    } else {
+                        model.addUnreadableEvidence()
+                    }
                 }
             }
         }
@@ -130,15 +144,14 @@ struct ReportSheetView: View {
                     }
                 }
                 if model.canAddEvidence {
-                    PhotosPicker(selection: $pickerItems,
-                                 maxSelectionCount: ReportViewModel.maxEvidence - model.evidence.count,
-                                 matching: .images) {
+                    Button { showsPicker = true } label: {
                         TaleedIconView(.plus, size: 20, color: TaleedColor.textSecondary)
                             .frame(width: 64, height: 64)
                             .overlay(RoundedRectangle(cornerRadius: TaleedRadius.s, style: .continuous)
                                 .strokeBorder(TaleedColor.borderSubtle, style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
                             .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                     .accessibilityLabel(l10n.string(.appReportAddPhoto))
                     .accessibilityIdentifier("report.addPhoto")
                 }
@@ -149,7 +162,26 @@ struct ReportSheetView: View {
         }
     }
 
+    /// The send failure sits above the button, where it is seen without scrolling.
     private var footer: some View {
+        VStack(spacing: TaleedSpacing.s12) {
+            if let error = model.error {
+                InlineAlert(kind: .error, title: l10n.message(for: error))
+                    .accessibilityIdentifier("report.error")
+            }
+            sendButton
+        }
+        .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
+        .padding(.top, TaleedSpacing.s12)
+        .padding(.bottom, TaleedSpacing.s16)
+        .background(TaleedColor.surfacePrimary)
+        .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
+        .onChange(of: model.error) { _, error in
+            if let error { AccessibilityNotification.Announcement(l10n.message(for: error)).post() }
+        }
+    }
+
+    private var sendButton: some View {
         TaleedButton(title: l10n.string(.reportSubmit), kind: .primary, size: .large, isLoading: model.isSending,
                      isFullWidth: true) {
             Task {
@@ -165,11 +197,6 @@ struct ReportSheetView: View {
         }
         .disabled(!model.canSubmit)
         .accessibilityIdentifier("report.submit")
-        .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
-        .padding(.top, TaleedSpacing.s12)
-        .padding(.bottom, TaleedSpacing.s16)
-        .background(TaleedColor.surfacePrimary)
-        .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
     }
 }
 

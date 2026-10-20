@@ -58,6 +58,9 @@ import Foundation
 ///                                              works); `upload`: the first ID upload fails offline;
 ///                                              `limit`: the first send answers 429 (an hour to wait)
 ///     -TaleedDebugReferrals offline            the referral screen's first load fails offline (then works)
+///     -TaleedDebugReport offline               the first report fails offline before it is sent (then
+///                                              works); `limit`: it answers 429 (an hour to wait);
+///                                              `upload`: the first screenshot upload fails offline
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor

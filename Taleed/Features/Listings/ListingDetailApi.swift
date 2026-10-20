@@ -25,22 +25,7 @@ protocol ListingDetailApi: ListingOwnerApi {
     func makeOffer(listingId: String, amount: Int) async throws(ApiError) -> String
 }
 
-/// What a report is about: exactly one target (slice C, Reporting).
-enum ReportTarget: Equatable, Sendable {
-    case listing(id: String)
-    /// The member's `id`, not the username.
-    case member(id: String)
-    case conversation(id: String)
-}
-
-/// `POST /reports` (slice C, Reporting), shared by the listing, the profile and the conversation.
-@MainActor
-protocol ReportsApi: AnyObject {
-    /// `reason`: a `value` of the catalog's `reportReasons`. `evidenceKeys`: up to 3 `report_evidence` uploads.
-    func report(_ target: ReportTarget, reason: String, details: String?, evidenceKeys: [String]) async throws(ApiError)
-}
-
-extension GeneratedTaleedApi: ListingDetailApi, ReportsApi {
+extension GeneratedTaleedApi: ListingDetailApi {
     func listing(id: String, countView: Bool, automatic: Bool) async throws(ApiError) -> ListingDetail {
         let asOf = ContinuousClock.now
         // The parameter is left out for a counted view (its default), as the website loads the page.
@@ -82,18 +67,6 @@ extension GeneratedTaleedApi: ListingDetailApi, ReportsApi {
 
     func deleteListing(id: String) async throws(ApiError) {
         try await caller.call(.write) { try await SellingAPI.deleteListing(id: id, apiConfiguration: $0) }
-    }
-
-    func report(_ target: ReportTarget, reason: String, details: String?, evidenceKeys: [String]) async throws(ApiError) {
-        // The catalog value the member picked, never another category. The sheet only lists reasons
-        // this build can send (`Catalog`), so this fails only on a programming error.
-        guard let reportReason = ReportReason(rawValue: reason), reportReason != .unknownDefaultOpenApi else {
-            let issue = ApiFieldIssue(path: "body.reason", message: "reason unknown to this build")
-            throw .failed(ApiFailure(status: 400, code: .invalidRequest, issues: [issue]))
-        }
-        let request = ReportCreate(target, reason: reportReason, details: details, evidenceKeys: evidenceKeys)
-        // A repeat after a lost answer says `already_reported`, which the sheet treats as sent.
-        try await caller.call(.write) { try await SafetyAPI.createReport(reportCreate: request, apiConfiguration: $0) }
     }
 }
 
@@ -157,24 +130,6 @@ private extension ListingSellerInfo {
             rating: seller.rating.flatMap { $0.count >= 1 ? MemberRating(average: $0.average, count: $0.count) : nil },
             lastSeenAt: seller.lastSeenAt,
             isOnline: seller.isOnline
-        )
-    }
-}
-
-private extension ReportCreate {
-    init(_ target: ReportTarget, reason: ReportReason, details: String?, evidenceKeys: [String]) {
-        var listingId: String?
-        var memberId: String?
-        var conversationId: String?
-        switch target {
-        case let .listing(id): listingId = id
-        case let .member(id): memberId = id
-        case let .conversation(id): conversationId = id
-        }
-        self.init(
-            listingId: listingId, memberId: memberId, conversationId: conversationId,
-            reason: reason,
-            details: details, evidenceKeys: evidenceKeys.isEmpty ? nil : evidenceKeys
         )
     }
 }

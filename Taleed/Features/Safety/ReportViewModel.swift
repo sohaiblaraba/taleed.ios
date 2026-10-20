@@ -75,6 +75,13 @@ final class ReportViewModel {
         }
     }
 
+    /// A picked photo the library could not hand over (an iCloud photo offline, an unreadable file):
+    /// a failed tile the member can remove, with the reason under the screenshots.
+    func addUnreadableEvidence() {
+        guard canAddEvidence else { return }
+        evidence.append(Evidence(preview: nil, error: .failed(ApiFailure(status: 415, code: .unsupportedMediaType))))
+    }
+
     func removeEvidence(_ id: UUID) {
         evidence.removeAll { $0.id == id }
     }

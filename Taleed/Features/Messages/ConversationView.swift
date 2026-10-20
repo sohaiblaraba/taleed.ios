@@ -235,10 +235,8 @@ struct ConversationView: View {
     }
 
     private var reportSheet: some View {
-        ReportSheetView(model: ReportViewModel(target: .conversation(id: model.conversationId), api: dependencies.reports,
-                                               upload: { [uploads = dependencies.uploads] data throws(ApiError) in
-                                                   try await uploads.upload(data, purpose: .reportEvidence)
-                                               })) { outcome in
+        ReportSheetView(target: .conversation(id: model.conversationId),
+                        reports: dependencies.reports, uploads: dependencies.uploads) { outcome in
             switch outcome {
             case .sent: toasts.show(l10n.string(.reportSent))
             case .gone: Task { await model.reloadConversation(automatic: false) }

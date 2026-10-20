@@ -174,7 +174,7 @@ private extension RemoteConfig {
     }
 }
 
-private extension Catalog {
+extension Catalog {
     init(_ catalog: TaleedAPI.Catalog) {
         self.init(
             categories: catalog.categories.map { node in
