@@ -54,6 +54,9 @@ import Foundation
 ///                                              `offline,newsletter`: both
 ///     -TaleedDebugDelete unauthorized          deleting the account answers `401` without calling the
 ///                                              API (the retry after a lost answer): the signed-out Home
+///     -TaleedDebugVerification offline         identity verification's first load fails offline (then
+///                                              works); `upload`: the first ID upload fails offline;
+///                                              `limit`: the first send answers 429 (an hour to wait)
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor
@@ -101,7 +104,7 @@ private extension AppRoute {
         "myListings": .myListings, "orders": .orders, "wallet": .wallet, "notifications": .notifications,
         "profileSettings": .profileSettings, "usernameSettings": .usernameSettings, "emailSettings": .emailSettings,
         "passwordSettings": .passwordSettings, "addresses": .addresses, "blockedMembers": .blockedMembers, "help": .help,
-        "deleteAccount": .deleteAccount,
+        "deleteAccount": .deleteAccount, "identityVerification": .identityVerification,
     ]
 
     init?(debugName: String) {

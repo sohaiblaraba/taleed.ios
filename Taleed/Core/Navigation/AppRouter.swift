@@ -213,7 +213,7 @@ final class AppRouter {
         case .order, .orderPayment, .dispute: (.profile, [.orders, route])
         case .favorites, .orders, .wallet, .walletPayout, .notifications, .settings, .referrals, .myListings: (.profile, [route])
         case .deleteAccount, .profileSettings, .usernameSettings, .emailSettings, .passwordSettings, .addresses, .blockedMembers,
-             .help:
+             .identityVerification, .help:
             (.profile, [.settings, route])
         #if DEBUG
         case .designSystem, .developerMenu: (.profile, [.settings, route])

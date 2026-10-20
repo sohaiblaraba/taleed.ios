@@ -56,6 +56,8 @@ enum AppRoute: Hashable, Sendable {
     /// Saved delivery addresses.
     case addresses
     case blockedMembers
+    /// Identity verification (G17): from Settings, the Referrals gate and the two decision notifications.
+    case identityVerification
     /// Help and legal: the support contacts and the website's pages.
     case help
     /// Delete the account (G16). Also offered on the suspended screen.
@@ -74,7 +76,7 @@ enum AppRoute: Hashable, Sendable {
         switch self {
         case .conversation, .bundle, .checkout, .orderPayment, .favorites, .orders, .order, .dispute, .wallet, .notifications, .referrals,
              .deleteAccount, .editListing, .bundleBuilder, .myListings, .walletPayout, .profileSettings, .usernameSettings,
-             .emailSettings, .passwordSettings, .addresses, .blockedMembers:
+             .emailSettings, .passwordSettings, .addresses, .blockedMembers, .identityVerification:
             true
         case .listing, .member, .search, .visualSearch, .settings, .help:
             false

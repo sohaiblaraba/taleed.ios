@@ -26,6 +26,20 @@ struct GallerySellingAndCheckout: View {
                 }
             }
         }
+        GallerySection(id: "document", number: "4.1", title: "Document photo",
+                       note: "One 16:9 slot from the uploader's parts (identity verification): empty, then picked.") {
+            VStack(spacing: TaleedSpacing.s24) {
+                ForEach([false, true], id: \.self) { picked in
+                    DocumentPhotoSlot(label: copy("Pièce d’identité", "وثيقة الهوية", "ID document"),
+                                      hint: copy("Carte d’identité ou passeport, recto lisible",
+                                                 "بطاقة التعريف أو جواز السفر، وجه أمامي واضح",
+                                                 "ID card or passport, readable front side"),
+                                      image: picked ? Image(taleed: .loginDrapedFabric) : nil,
+                                      removeLabel: copy("Retirer la photo", "إزالة الصورة", "Remove photo"),
+                                      onPick: {}, onRemove: {})
+                }
+            }
+        }
         GallerySection(id: "checkout", number: "4.3–4.4", title: "Checkout item, delivery option") {
             VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
                 CheckoutItem(title: "Pantalon en toile garçon", price: 800, media: .local(Image(taleed: .loginDrapedFabric)))

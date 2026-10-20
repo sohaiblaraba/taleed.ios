@@ -122,8 +122,8 @@ struct PhotoUploader: View {
     private func string(_ key: L10nKey) -> String { DesignSystemStrings.string(key, locale: locale) }
 }
 
-/// `mint/50` fill with a dashed `mint/400` border (4 on, 4 off).
-private struct DashedMintBox: ViewModifier {
+/// `mint/50` fill with a dashed `mint/400` border (4 on, 4 off): the uploader's empty zone and add tile.
+struct DashedMintBox: ViewModifier {
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
         content

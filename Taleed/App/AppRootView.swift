@@ -46,7 +46,7 @@ struct AppRootView: View {
             .environment(\.walletApi, container.api)
             .environment(\.settingsDependencies,
                          SettingsDependencies(account: container.api, addresses: container.api, blocks: container.api,
-                                              uploads: container.uploads))
+                                              verification: container.api, uploads: container.uploads))
             .environment(\.notificationsDependencies,
                          NotificationsDependencies(api: container.api, feed: container.notificationsFeed))
             .environment(\.memberDependencies,

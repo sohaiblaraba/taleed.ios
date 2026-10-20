@@ -3,8 +3,8 @@ import SwiftUI
 /// Settings (screens.md §2 G16 and §7 G16; website `settings/page.tsx`; Figma does not draw it,
 /// decision D-12): flat rows under eyebrows, as the Profile hub.
 ///
-/// Signed in, in the website's order: the account (profile and billing, username, email, password), the
-/// newsletter switch, then the app-only sections: the language, the push switch (only with
+/// Signed in, in the website's order: the account (profile and billing, username, email, password,
+/// identity verification), the newsletter switch, then the app-only sections: the language, the push switch (only with
 /// `features.push`), saved addresses, blocked members, help and the version, "Se déconnecter" and, at
 /// the bottom, "Supprimer mon compte". Signed out: the language, help and the version.
 ///
@@ -77,6 +77,12 @@ struct SettingsView: View {
                     router.push(.passwordSettings)
                 }
                 .accessibilityIdentifier("settings.password")
+                // The website's verification card, as its own screen (G17). "Vérifié" once verified.
+                ListRow(label: l10n.string(.settingsVerificationTitle), leadingIcon: .sealCheck,
+                        trailingText: profile.isVerified ? l10n.string(.profileVerified) : nil, showsChevron: true) {
+                    router.push(.identityVerification)
+                }
+                .accessibilityIdentifier("settings.verification")
                 ListRow(label: l10n.string(.appSettingsAddressesTitle), leadingIcon: .mapPin, showsChevron: true) {
                     router.push(.addresses)
                 }

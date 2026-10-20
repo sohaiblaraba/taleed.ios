@@ -225,6 +225,8 @@ struct SettingsDependencies {
     let account: any AccountApi
     let addresses: any AddressesApi
     let blocks: any BlocksApi
+    /// Identity verification (G17).
+    let verification: any IdentityVerificationApi
     let uploads: PhotoUploadService
 }
 

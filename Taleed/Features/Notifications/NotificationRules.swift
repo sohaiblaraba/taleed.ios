@@ -20,10 +20,14 @@ struct NotificationRow: Identifiable, Equatable, Sendable {
     /// for a staff role offer (`ROLE_OFFERED`, `/role-offers`: staff roles are web-only, decision 8).
     /// Such a row is drawn plain, like the website's rows without a link.
     var destination: AppDestination? {
+        // The decisions link to `/settings`; the app opens the verification section itself (§7 G17).
+        if Self.verificationDecisions.contains(type.uppercased()) { return .screen(.identityVerification) }
         guard let url, !isRoleOffer(url) else { return nil }
         let destination = LinkRouter.destination(for: url)
         return destination == .screen(.notifications) ? nil : destination
     }
+
+    private static let verificationDecisions: Set<String> = ["VERIFICATION_APPROVED", "VERIFICATION_REJECTED"]
 
     /// A `ROLE_OFFERED` row, or any row whose link is the website's `/role-offers` page (with or
     /// without a language prefix).

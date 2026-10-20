@@ -121,6 +121,8 @@ struct RouteDestinationView: View {
             if let settings { AddressesView(api: settings.addresses) } else { RoutePlaceholderView(route: route) }
         case .blockedMembers:
             if let settings { BlockedMembersView(api: settings.blocks) } else { RoutePlaceholderView(route: route) }
+        case .identityVerification:
+            if let settings { IdentityVerificationView(dependencies: settings, store: account) } else { RoutePlaceholderView(route: route) }
         case .help: HelpView()
         case .deleteAccount:
             if let settings {
