@@ -7,13 +7,13 @@
 
 import Foundation
 
-/** The items of a bundle an offer prices or a question is about. */
+/** The items of a bundle an offer prices or a question is about, as they were when it was posted. &#x60;GET /bundles/{id}&#x60; gives the bundle as it is now. */
 public struct BundleLot: Sendable, Codable, Hashable {
 
     public static let itemsTotalRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     /** The bundle. Its buyer can open it with `GET /bundles/{id}`. */
     public var id: String
-    /** In the buyer's order; the first one is the listing the conversation is about. */
+    /** In the buyer's order; the first one is the listing the conversation is about. The items as they were when the offer was made or the question asked: they stay the same when the buyer changes the bundle later (offers and questions posted before 1.5.10 show the bundle's current items). */
     public var items: [BundleLine]
     /** Sum of the items' prices. Integer DZD. */
     public var itemsTotal: Int

@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.9",
+    "version": "1.5.10",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -6483,7 +6483,7 @@
           "Bundles"
         ],
         "summary": "Ask the seller about a bundle",
-        "description": "Opens the conversation about the bundle's first item and posts the bundle's card in it (a `BUNDLE` message), so the seller sees every item. Asking again reopens the conversation without posting the card twice. Show the conversation: the member writes their question there.\n\nRequires a bearer token.\n\nRate limit: 60 per hour per member, on top of the general limit.",
+        "description": "Opens the conversation about the bundle's first item and posts the bundle's card in it (a `BUNDLE` message), so the seller sees every item. The card keeps the items the bundle held then. Asking again reopens the conversation without posting the card twice, unless the buyer changed the bundle since: a new card then shows the new items. Show the conversation: the member writes their question there.\n\nRequires a bearer token.\n\nRate limit: 60 per hour per member, on top of the general limit.",
         "parameters": [
           {
             "name": "id",
@@ -11854,7 +11854,7 @@
             "items": {
               "$ref": "#/components/schemas/BundleLine"
             },
-            "description": "In the buyer's order; the first one is the listing the conversation is about."
+            "description": "In the buyer's order; the first one is the listing the conversation is about. The items as they were when the offer was made or the question asked: they stay the same when the buyer changes the bundle later (offers and questions posted before 1.5.10 show the bundle's current items)."
           },
           "itemsTotal": {
             "type": "integer",
@@ -11867,7 +11867,7 @@
           "items",
           "itemsTotal"
         ],
-        "description": "The items of a bundle an offer prices or a question is about."
+        "description": "The items of a bundle an offer prices or a question is about, as they were when it was posted. `GET /bundles/{id}` gives the bundle as it is now."
       },
       "BundleReview": {
         "type": "object",
@@ -14391,7 +14391,7 @@
           },
           "bundle": {
             "nullable": true,
-            "description": "`BUNDLE`: the bundle the buyer asked about.",
+            "description": "`BUNDLE`: the bundle the buyer asked about, with the items it held then. Asking again after changing the bundle posts a new card.",
             "allOf": [
               {
                 "$ref": "#/components/schemas/BundleLot"
@@ -14730,7 +14730,7 @@
           },
           "bundle": {
             "nullable": true,
-            "description": "Set when the offer prices a whole bundle.",
+            "description": "Set when the offer prices a whole bundle: the items it priced.",
             "allOf": [
               {
                 "$ref": "#/components/schemas/BundleLot"

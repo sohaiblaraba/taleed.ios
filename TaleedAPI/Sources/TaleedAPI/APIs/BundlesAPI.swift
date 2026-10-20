@@ -23,7 +23,7 @@ open class BundlesAPI {
     /**
      Ask the seller about a bundle
      - POST /bundles/{id}/ask
-     - Opens the conversation about the bundle's first item and posts the bundle's card in it (a `BUNDLE` message), so the seller sees every item. Asking again reopens the conversation without posting the card twice. Show the conversation: the member writes their question there.  Requires a bearer token.  Rate limit: 60 per hour per member, on top of the general limit.
+     - Opens the conversation about the bundle's first item and posts the bundle's card in it (a `BUNDLE` message), so the seller sees every item. The card keeps the items the bundle held then. Asking again reopens the conversation without posting the card twice, unless the buyer changed the bundle since: a new card then shows the new items. Show the conversation: the member writes their question there.  Requires a bearer token.  Rate limit: 60 per hour per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth

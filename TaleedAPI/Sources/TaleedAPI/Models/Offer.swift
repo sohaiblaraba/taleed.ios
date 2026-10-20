@@ -27,7 +27,7 @@ public struct Offer: Sendable, Codable, Hashable {
     public var sentBy: ConversationRole
     /** The listing. For a bundle offer, the bundle's first item. */
     public var listingId: String
-    /** Set when the offer prices a whole bundle. */
+    /** Set when the offer prices a whole bundle: the items it priced. */
     public var bundle: BundleLot?
     /** The signed-in member can accept it: it waits for their answer, the conversation takes replies, and the goods are still for sale. */
     public var canAccept: Bool

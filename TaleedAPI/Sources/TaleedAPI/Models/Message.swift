@@ -30,7 +30,7 @@ public struct Message: Sendable, Codable, Hashable {
     public var offer: Offer?
     /** `OFFER_UPDATE`: what happened to the offer. */
     public var offerEvent: OfferStatus?
-    /** `BUNDLE`: the bundle the buyer asked about. */
+    /** `BUNDLE`: the bundle the buyer asked about, with the items it held then. Asking again after changing the bundle posts a new card. */
     public var bundle: BundleLot?
     /** `ORDER_UPDATE`: the order and its milestone. */
     public var order: MessageOrder?
