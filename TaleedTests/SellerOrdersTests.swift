@@ -29,7 +29,7 @@ struct SellerOrderRulesTests {
     }
 
     @Test func theSellerSeesWhatTheyReceive() {
-        let money = OrderMoney(itemPrice: 2500, protectionFee: 175, shippingFee: 600, discount: 300, total: 2975,
+        let money = OrderMoney(itemPrice: 2500, protectionFee: 175, shippingFee: 600, promoDiscount: 300, voucherDiscount: 0, total: 2975,
                                walletApplied: 1000, amountDue: 1975, sellerEarns: 2500)
         let amounts = OrderRules.amounts(for: orderDetail(side: .seller, money: money))
         #expect(amounts.total == .sellerEarns)

@@ -134,8 +134,14 @@ struct OrderPaymentView: View {
             OrderSummaryLine(id: "fee", label: l10n.string(.ordersProtectionFee), amount: amounts.protectionFee),
             OrderSummaryLine(id: "shipping", label: l10n.string(.ordersShippingFee), amount: amounts.shippingFee),
         ]
-        if amounts.discount > 0 {
-            lines.append(OrderSummaryLine(id: "discount", label: l10n.string(.ordersDiscount), amount: -amounts.discount, isDiscount: true))
+        // One row per part of the discount (website): the promo code, then the referral voucher.
+        if amounts.promoDiscount > 0 {
+            lines.append(OrderSummaryLine(id: "discount", label: l10n.string(.ordersDiscount), amount: -amounts.promoDiscount,
+                                          isDiscount: true))
+        }
+        if amounts.voucherDiscount > 0 {
+            lines.append(OrderSummaryLine(id: "voucher", label: l10n.string(.checkoutVoucher), amount: -amounts.voucherDiscount,
+                                          isDiscount: true))
         }
         if amounts.walletApplied > 0 {
             lines.append(OrderSummaryLine(id: "total", label: l10n.string(.ordersTotal), amount: amounts.total))

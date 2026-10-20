@@ -35,7 +35,8 @@ func fixtureOrder(status: OrderState = .paid, cash: CashCollection? = nil, total
     OrderPaymentInfo(
         id: "o1", number: "T-000104", status: status, statusLabel: "Payée", title: "Veste", imageURL: nil,
         items: [CheckoutLine(listingId: "l1", title: "Veste", price: 3000, imageURL: nil)],
-        amounts: OrderAmountsInfo(itemPrice: 3000, protectionFee: 200, shippingFee: 600, discount: 0, total: total,
+        amounts: OrderAmountsInfo(itemPrice: 3000, protectionFee: 200, shippingFee: 600, promoDiscount: 0, voucherDiscount: 0,
+                                  total: total,
                                   walletApplied: walletApplied, amountDue: total - walletApplied),
         cashOnDelivery: cash, payDeadlineAt: nil, shipDeadlineAt: nil, canPay: canPay
     )

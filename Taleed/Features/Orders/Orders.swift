@@ -68,7 +68,10 @@ struct OrderMoney: Equatable, Sendable {
     let itemPrice: Int
     let protectionFee: Int
     let shippingFee: Int
-    let discount: Int
+    /// The promo code's part of the discount (`promoDiscount`).
+    let promoDiscount: Int
+    /// The referral voucher's part of the discount (`voucherDiscount`).
+    let voucherDiscount: Int
     let total: Int
     let walletApplied: Int
     let amountDue: Int

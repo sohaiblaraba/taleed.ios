@@ -136,7 +136,7 @@ struct BundleReviewView: View {
         }
         if let accepted = bundle.acceptedOffer {
             InlineAlert(kind: .success,
-                        title: l10n.format(.offersAcceptedBanner, PriceFormatter.format(accepted.amount, language: l10n.language)))
+                        title: l10n.format(.appListingAcceptedOffer, PriceFormatter.format(accepted.amount, language: l10n.language)))
         }
         if !bundle.availableItems.isEmpty {
             OrderSummary(title: l10n.string(.bundleSummary), lines: summaryLines(bundle), totalLabel: l10n.string(.bundleTotalToPay),

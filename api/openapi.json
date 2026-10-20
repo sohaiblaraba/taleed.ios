@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.11",
+    "version": "1.5.14",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -9989,7 +9989,7 @@
           "Wallet"
         ],
         "summary": "Request a payout",
-        "description": "Sets the amount aside from the balance at once, for a transfer the Taleed team makes by hand. More than the balance is `insufficient_balance`. The member is told when it is paid.\n\nRequires a bearer token.\n\nRate limit: 20 per hour per member, on top of the general limit.",
+        "description": "Sets the amount aside from the balance at once, for a transfer the Taleed team makes by hand. More than the balance is `insufficient_balance`. The member is told when it is paid. A suspended member can request one too, to withdraw the balance before deleting the account (`wallet_not_empty` on `POST /me/delete`); the team checks it as any other.\n\nRequires a bearer token.\n\nRate limit: 20 per hour per member, on top of the general limit.",
         "requestBody": {
           "required": true,
           "content": {
@@ -10028,19 +10028,6 @@
             "description": "Error codes: `unauthorized`.",
             "x-error-codes": [
               "unauthorized"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error codes: `banned`.",
-            "x-error-codes": [
-              "banned"
             ],
             "content": {
               "application/json": {
@@ -14943,7 +14930,17 @@
           "discount": {
             "type": "integer",
             "minimum": 0,
-            "description": "Promo code and referral voucher, both paid by Taleed: the seller's earnings stay whole. Integer DZD."
+            "description": "Promo code and referral voucher, both paid by Taleed: the seller's earnings stay whole. `promoDiscount` + `voucherDiscount`. Integer DZD."
+          },
+          "promoDiscount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The promo code's part of `discount`. Label it as the promo code; show the row only when above 0. Integer DZD."
+          },
+          "voucherDiscount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The referral voucher's part of `discount`. Label it as the referral voucher, as checkout does; show the row only when above 0. Integer DZD."
           },
           "total": {
             "type": "integer",
@@ -14971,6 +14968,8 @@
           "protectionFee",
           "shippingFee",
           "discount",
+          "promoDiscount",
+          "voucherDiscount",
           "total",
           "walletApplied",
           "amountDue",

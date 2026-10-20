@@ -132,6 +132,8 @@ enum OrderRules {
         case shippingFee
         /// "Réduction (code promo)", as a negative amount.
         case discount
+        /// "Bon de parrainage", as a negative amount.
+        case voucher
         /// "Total", as a line when the wallet paid part of it.
         case total
         /// "Payé avec le portefeuille", as a negative amount.
@@ -167,7 +169,9 @@ enum OrderRules {
             (.protectionFee, money.protectionFee),
             (.shippingFee, money.shippingFee),
         ]
-        if money.discount > 0 { lines.append((.discount, -money.discount)) }
+        // One row per part of the discount (website): the promo code, then the referral voucher.
+        if money.promoDiscount > 0 { lines.append((.discount, -money.promoDiscount)) }
+        if money.voucherDiscount > 0 { lines.append((.voucher, -money.voucherDiscount)) }
         if order.side == .seller {
             lines.append((.total, money.total))
             return Amounts(lines: lines, total: .sellerEarns, totalAmount: money.sellerEarns)

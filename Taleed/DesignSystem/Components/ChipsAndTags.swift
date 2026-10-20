@@ -189,6 +189,10 @@ struct CountBadge: View {
             .taleedFont(TaleedFont.countBadge)
             .foregroundStyle(TaleedColor.textInverse)
             .monospacedDigit()
+            .lineLimit(1)
+            // Its own width, whatever the parent offers: an overlay on the 20 pt tab icon would
+            // otherwise cut "9+" down to "…" (G1).
+            .fixedSize()
             .padding(.horizontal, size == .regular ? 6 : 4)
             .frame(minWidth: diameter, minHeight: diameter)
             .background(Capsule().fill(TaleedColor.feedbackError))

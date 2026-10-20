@@ -187,7 +187,8 @@ extension OrderDetailInfo {
                 OrderLine(listingId: $0.listingId, title: $0.title, price: $0.price, imageURL: URL(apiString: $0.imageUrl))
             },
             amounts: OrderMoney(itemPrice: amounts.itemPrice, protectionFee: amounts.protectionFee, shippingFee: amounts.shippingFee,
-                                discount: amounts.discount, total: amounts.total, walletApplied: amounts.walletApplied,
+                                promoDiscount: amounts.promoDiscount, voucherDiscount: amounts.voucherDiscount,
+                                total: amounts.total, walletApplied: amounts.walletApplied,
                                 amountDue: amounts.amountDue, sellerEarns: amounts.sellerEarns),
             cashOnDelivery: order.cashOnDelivery.map { CashCollection(total: $0.total, deliveryFee: $0.deliveryFee) },
             delivery: OrderDeliveryInfo(order.delivery),

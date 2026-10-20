@@ -61,13 +61,25 @@ struct OrderRulesTests {
         #expect(plain.total == .total)
         #expect(plain.totalAmount == 2550)
 
-        let discounted = OrderMoney(itemPrice: 2500, protectionFee: 175, shippingFee: 600, discount: 328, total: 2947,
+        let discounted = OrderMoney(itemPrice: 2500, protectionFee: 175, shippingFee: 600, promoDiscount: 328,
+                                    voucherDiscount: 0, total: 2947,
                                     walletApplied: 1405, amountDue: 1542, sellerEarns: 2500)
         let wallet = OrderRules.amounts(for: orderDetail(items: 2, money: discounted))
         #expect(wallet.lines.map(\.0) == [.itemPrice(bundleCount: 2), .protectionFee, .shippingFee, .discount, .total, .walletPaid])
         #expect(wallet.lines.map(\.1) == [2500, 175, 600, -328, 2947, -1405])
         #expect(wallet.total == .remainderDue)
         #expect(wallet.totalAmount == 1542)
+
+        // A referral voucher is its own row, never the promo code's (G11/G12).
+        let split = OrderMoney(itemPrice: 2500, protectionFee: 175, shippingFee: 600, promoDiscount: 250, voucherDiscount: 500,
+                               total: 2525, walletApplied: 0, amountDue: 2525, sellerEarns: 2500)
+        let both = OrderRules.amounts(for: orderDetail(money: split))
+        #expect(both.lines.map(\.0) == [.itemPrice(bundleCount: nil), .protectionFee, .shippingFee, .discount, .voucher])
+        #expect(both.lines.map(\.1) == [2500, 175, 600, -250, -500])
+        let voucherOnly = OrderMoney(itemPrice: 2500, protectionFee: 175, shippingFee: 600, promoDiscount: 0, voucherDiscount: 500,
+                                     total: 2775, walletApplied: 0, amountDue: 2775, sellerEarns: 2500)
+        #expect(OrderRules.amounts(for: orderDetail(money: voucherOnly)).lines.map(\.0)
+            == [.itemPrice(bundleCount: nil), .protectionFee, .shippingFee, .voucher])
 
         let seller = OrderRules.amounts(for: orderDetail(side: .seller, money: discounted))
         #expect(seller.total == .sellerEarns)

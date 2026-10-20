@@ -193,7 +193,7 @@ open class WalletAPI {
     /**
      Request a payout
      - POST /wallet/payouts
-     - Sets the amount aside from the balance at once, for a transfer the Taleed team makes by hand. More than the balance is `insufficient_balance`. The member is told when it is paid.  Requires a bearer token.  Rate limit: 20 per hour per member, on top of the general limit.
+     - Sets the amount aside from the balance at once, for a transfer the Taleed team makes by hand. More than the balance is `insufficient_balance`. The member is told when it is paid. A suspended member can request one too, to withdraw the balance before deleting the account (`wallet_not_empty` on `POST /me/delete`); the team checks it as any other.  Requires a bearer token.  Rate limit: 20 per hour per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth

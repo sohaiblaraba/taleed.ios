@@ -69,7 +69,7 @@ struct CheckoutFormView: View {
             }
             if let offer = pricing.goods.offer, offer.amount != pricing.goods.listedPrice {
                 InlineAlert(kind: .success,
-                            title: l10n.format(.offersAcceptedBanner, PriceFormatter.format(offer.amount, language: l10n.language)))
+                            title: l10n.format(.appListingAcceptedOffer, PriceFormatter.format(offer.amount, language: l10n.language)))
             }
         } else if let preview = model.preview {
             if preview.isBundle {

@@ -346,6 +346,7 @@ private extension OrderDetailView {
             case .protectionFee: l10n.string(.ordersProtectionFee)
             case .shippingFee: l10n.string(.ordersShippingFee)
             case .discount: l10n.string(.ordersDiscount)
+            case .voucher: l10n.string(.checkoutVoucher)
             case .total: l10n.string(.ordersTotal)
             case .walletPaid: l10n.string(.ordersWalletPaid)
             }

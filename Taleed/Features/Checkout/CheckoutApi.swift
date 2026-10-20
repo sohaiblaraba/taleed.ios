@@ -240,7 +240,8 @@ extension OrderPaymentInfo {
             items: order.items.map(CheckoutLine.init),
             amounts: OrderAmountsInfo(
                 itemPrice: order.amounts.itemPrice, protectionFee: order.amounts.protectionFee,
-                shippingFee: order.amounts.shippingFee, discount: order.amounts.discount, total: order.amounts.total,
+                shippingFee: order.amounts.shippingFee, promoDiscount: order.amounts.promoDiscount,
+                voucherDiscount: order.amounts.voucherDiscount, total: order.amounts.total,
                 walletApplied: order.amounts.walletApplied, amountDue: order.amounts.amountDue
             ),
             cashOnDelivery: order.cashOnDelivery.map { CashCollection(total: $0.total, deliveryFee: $0.deliveryFee) },

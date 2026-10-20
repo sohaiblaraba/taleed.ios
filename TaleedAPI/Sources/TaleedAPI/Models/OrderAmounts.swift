@@ -14,6 +14,8 @@ public struct OrderAmounts: Sendable, Codable, Hashable {
     public static let protectionFeeRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let shippingFeeRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let discountRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
+    public static let promoDiscountRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
+    public static let voucherDiscountRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let totalRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let walletAppliedRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let amountDueRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
@@ -24,8 +26,12 @@ public struct OrderAmounts: Sendable, Codable, Hashable {
     public var protectionFee: Int
     /** Delivery. Integer DZD. */
     public var shippingFee: Int
-    /** Promo code and referral voucher, both paid by Taleed: the seller's earnings stay whole. Integer DZD. */
+    /** Promo code and referral voucher, both paid by Taleed: the seller's earnings stay whole. `promoDiscount` + `voucherDiscount`. Integer DZD. */
     public var discount: Int
+    /** The promo code's part of `discount`. Label it as the promo code; show the row only when above 0. Integer DZD. */
+    public var promoDiscount: Int
+    /** The referral voucher's part of `discount`. Label it as the referral voucher, as checkout does; show the row only when above 0. Integer DZD. */
+    public var voucherDiscount: Int
     /** What the buyer pays: `itemPrice` + `protectionFee` + `shippingFee` − `discount`. Integer DZD. */
     public var total: Int
     /** Part of `total` the buyer paid from their wallet. Integer DZD. */
@@ -35,11 +41,13 @@ public struct OrderAmounts: Sendable, Codable, Hashable {
     /** What the seller receives once the order is completed: `itemPrice`. Integer DZD. */
     public var sellerEarns: Int
 
-    public init(itemPrice: Int, protectionFee: Int, shippingFee: Int, discount: Int, total: Int, walletApplied: Int, amountDue: Int, sellerEarns: Int) {
+    public init(itemPrice: Int, protectionFee: Int, shippingFee: Int, discount: Int, promoDiscount: Int, voucherDiscount: Int, total: Int, walletApplied: Int, amountDue: Int, sellerEarns: Int) {
         self.itemPrice = itemPrice
         self.protectionFee = protectionFee
         self.shippingFee = shippingFee
         self.discount = discount
+        self.promoDiscount = promoDiscount
+        self.voucherDiscount = voucherDiscount
         self.total = total
         self.walletApplied = walletApplied
         self.amountDue = amountDue
@@ -51,6 +59,8 @@ public struct OrderAmounts: Sendable, Codable, Hashable {
         case protectionFee
         case shippingFee
         case discount
+        case promoDiscount
+        case voucherDiscount
         case total
         case walletApplied
         case amountDue
@@ -65,6 +75,8 @@ public struct OrderAmounts: Sendable, Codable, Hashable {
         try container.encode(protectionFee, forKey: .protectionFee)
         try container.encode(shippingFee, forKey: .shippingFee)
         try container.encode(discount, forKey: .discount)
+        try container.encode(promoDiscount, forKey: .promoDiscount)
+        try container.encode(voucherDiscount, forKey: .voucherDiscount)
         try container.encode(total, forKey: .total)
         try container.encode(walletApplied, forKey: .walletApplied)
         try container.encode(amountDue, forKey: .amountDue)

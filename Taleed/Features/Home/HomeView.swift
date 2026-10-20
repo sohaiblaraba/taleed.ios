@@ -50,6 +50,9 @@ struct HomeView: View {
                     .padding(.bottom, TaleedSpacing.s24)
                 }
                 .refreshable { await viewModel.refresh() }
+                // Another member or language: the new feed starts at its first row. A deep offset
+                // kept from the old, longer list would leave the viewport below the new content.
+                .onChange(of: feedContext) { proxy.scrollTo(Self.topID, anchor: .top) }
             }
         }
         .task(id: feedContext) { await viewModel.show(for: feedContext) }

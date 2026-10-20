@@ -463,7 +463,6 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case offersCancelOffer = "offers_cancel_offer"
     case offersYouOffered = "offers_you_offered"
     case offersTheyOffered = "offers_they_offered"
-    case offersAcceptedBanner = "offers_accepted_banner"
     case chatProposePrice = "chat_propose_price"
     case bundleSelectItems = "bundle_select_items"
     case bundleAdd = "bundle_add"

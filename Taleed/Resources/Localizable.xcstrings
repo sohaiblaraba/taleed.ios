@@ -10383,29 +10383,6 @@
         }
       }
     },
-    "offers_accepted_banner": {
-      "extractionState": "manual",
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Offre acceptée ! L’acheteur peut maintenant payer %@."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم قبول العرض! يمكن للمشتري الآن دفع %@."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Offer accepted! The buyer can now pay %@."
-          }
-        }
-      }
-    },
     "offers_bundle_offer": {
       "extractionState": "manual",
       "localizations": {
