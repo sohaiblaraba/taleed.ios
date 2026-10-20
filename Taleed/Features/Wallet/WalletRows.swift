@@ -149,7 +149,7 @@ struct WalletEntryRowView: View {
         }
     }
 
-    /// The icon of a line's type (the design system has no wallet or ticket glyph: the nearest ones).
+    /// The icon of a line's type (the design system has no wallet glyph: the nearest ones; vouchers the ticket, as on Referrals).
     static func icon(_ kind: WalletEntryKind) -> TaleedIcon {
         switch kind {
         case .saleRelease: .storefront
@@ -159,7 +159,7 @@ struct WalletEntryRowView: View {
         case .topUp: .plusCircle
         case .purchase: .tShirt
         case .purchaseRefund: .arrowLeft
-        case .voucher: .sparkle
+        case .voucher: .ticket
         case .unknown: .money
         }
     }

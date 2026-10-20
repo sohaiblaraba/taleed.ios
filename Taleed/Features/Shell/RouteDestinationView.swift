@@ -20,6 +20,7 @@ struct RouteDestinationView: View {
     @Environment(\.checkoutDependencies) private var checkout
     @Environment(\.ordersDependencies) private var orders
     @Environment(\.walletApi) private var walletApi
+    @Environment(\.referralsApi) private var referralsApi
     @Environment(\.settingsDependencies) private var settings
     @Environment(AccountStore.self) private var account
     @Environment(AppToasts.self) private var toasts
@@ -133,7 +134,8 @@ struct RouteDestinationView: View {
             } else {
                 RoutePlaceholderView(route: route)
             }
-        case .referrals: RoutePlaceholderView(route: route)
+        case .referrals:
+            if let referralsApi { ReferralsView(api: referralsApi) } else { RoutePlaceholderView(route: route) }
         #if DEBUG
         case .designSystem: DesignSystemGalleryView()
         case .developerMenu: DeveloperMenuView()

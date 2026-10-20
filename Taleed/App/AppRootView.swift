@@ -44,6 +44,7 @@ struct AppRootView: View {
                          CheckoutDependencies(checkout: container.api, listings: container.api, bundles: container.api))
             .environment(\.ordersDependencies, OrdersDependencies(orders: container.api, uploads: container.uploads))
             .environment(\.walletApi, container.api)
+            .environment(\.referralsApi, container.api)
             .environment(\.settingsDependencies,
                          SettingsDependencies(account: container.api, addresses: container.api, blocks: container.api,
                                               verification: container.api, uploads: container.uploads))

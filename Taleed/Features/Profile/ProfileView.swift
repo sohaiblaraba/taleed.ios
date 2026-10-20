@@ -10,6 +10,10 @@ struct ProfileView: View {
     /// The website menu's figure next to "Portefeuille": `balance + voucherBalance` of `GET /wallet`
     /// (`GET /me` does not carry it).
     @State private var walletHeadline: Int?
+    @Environment(\.referralsApi) private var referralsApi
+    /// What each side of a referral can earn (`program` of `GET /me/referrals`), for the website menu's
+    /// "Gagnez 1 500 DA en parrainant"; "Parrainage" until it is known (screens.md §7 G18).
+    @State private var referralTotal: Int?
 
     private var unreadNotifications: Int { session.user?.unreadNotifications ?? 0 }
 
@@ -61,6 +65,10 @@ struct ProfileView: View {
                                 router.push(.notifications)
                             }
                             .accessibilityIdentifier("profile.notifications")
+                            ListRow(label: referralsLabel, showsChevron: true) {
+                                router.push(.referrals)
+                            }
+                            .accessibilityIdentifier("profile.referrals")
                         }
                         ListRow(label: l10n.string(.settingsTitle), showsChevron: true) {
                             router.push(.settings)
@@ -84,7 +92,22 @@ struct ProfileView: View {
         }
         // Again each time the hub shows (back from the wallet, a checkout, an order) and after sign-in.
         .task(id: session.user?.id) { await loadWalletHeadline() }
+        .task(id: session.user?.id) { await loadReferralTotal() }
         .onAppear { Task { await loadWalletHeadline() } }
+    }
+
+    private var referralsLabel: String {
+        guard let referralTotal, referralTotal > 0 else { return l10n.string(.referralsTitle) }
+        return l10n.format(.appReferralsEyebrow, PriceFormatter.format(referralTotal, language: l10n.language))
+    }
+
+    /// Quiet, once per member: without an answer the row reads "Parrainage".
+    private func loadReferralTotal() async {
+        guard session.isSignedIn, let referralsApi else {
+            referralTotal = nil
+            return
+        }
+        if let page = try? await referralsApi.referrals(cursor: nil, automatic: true) { referralTotal = page.program.totalPerSide }
     }
 
     /// Quiet: without an answer the row shows no figure.

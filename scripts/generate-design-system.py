@@ -61,6 +61,11 @@ IMAGES = [
     ("Login", "float-green-dress", "login/float-green-dress.png", False, "1x"),
     ("Login", "float-draped-fabric", "login/float-draped-fabric.png", False, "1x"),
     ("Login", "float-sunglasses", "login/float-sunglasses@3x.png", False, "3x"),
+    # The website's referral artwork (`public/referral_*.webp`), for the Referrals screen (G18).
+    ("Referrals", "referral-hero", "referrals/referral-hero.jpg", False, "1x"),
+    ("Referrals", "referral-step1", "referrals/referral-step1.png", False, "1x"),
+    ("Referrals", "referral-step2", "referrals/referral-step2.png", False, "1x"),
+    ("Referrals", "referral-step3", "referrals/referral-step3.png", False, "1x"),
 ]
 
 # iOS Dynamic Type sizes at the default content size, to pick the text style that each token scales with.

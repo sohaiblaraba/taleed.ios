@@ -799,4 +799,44 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appVerificationNameTitle = "app_verification_name_title"
     case appVerificationNameHint = "app_verification_name_hint"
     case appVerificationRemovePhoto = "app_verification_remove_photo"
+
+    // Referrals (G18): website keys (`referrals_voucher_expires` is above, with the wallet).
+    case referralsTitle = "referrals_title"
+    case referralsTermsNote = "referrals_terms_note"
+    case referralsCopyCta = "referrals_copy_cta"
+    case referralsCopied = "referrals_copied"
+    case referralsGateTitle = "referrals_gate_title"
+    case referralsGateBody = "referrals_gate_body"
+    case referralsGateCta = "referrals_gate_cta"
+    case referralsYourReferrals = "referrals_your_referrals"
+    case referralsReferralsEmpty = "referrals_referrals_empty"
+    case referralsJoinedOn = "referrals_joined_on"
+    case referralsMilestoneListings = "referrals_milestone_listings"
+    case referralsYourVouchers = "referrals_your_vouchers"
+    case referralsHowTitle = "referrals_how_title"
+    case referralsStep1Title = "referrals_step1_title"
+    case referralsStep1Body = "referrals_step1_body"
+    case referralsStep2Title = "referrals_step2_title"
+    case referralsStep3Title = "referrals_step3_title"
+    // Referrals (G18): app-only keys. The website hard-codes the amounts, counts and days; these take them
+    // from `program` (screens.md §7 G18).
+    case appReferralsEyebrow = "app_referrals_eyebrow"
+    case appReferralsHeroTitle = "app_referrals_hero_title"
+    case appReferralsHeroBody = "app_referrals_hero_body"
+    case appReferralsStep2Body = "app_referrals_step2_body"
+    case appReferralsStep3Body = "app_referrals_step3_body"
+    case appReferralsMilestoneListingsDone = "app_referrals_milestone_listings_done"
+    case appReferralsMilestoneSale = "app_referrals_milestone_sale"
+    case appReferralsMilestoneSaleDone = "app_referrals_milestone_sale_done"
+    case appReferralsItems = "app_referrals_items"  // plural
+    case appReferralsDays = "app_referrals_days"  // plural
+    case appReferralsVouchers = "app_referrals_vouchers"  // plural
+    case appReferralsDeadlineUntil = "app_referrals_deadline_until"
+    case appReferralsDeadlineMissed = "app_referrals_deadline_missed"
+    case appReferralsRulesTitle = "app_referrals_rules_title"
+    case appReferralsRuleValidity = "app_referrals_rule_validity"
+    case appReferralsRuleCap = "app_referrals_rule_cap"
+    case appReferralsRuleInviterSale = "app_referrals_rule_inviter_sale"
+    case appReferralsShare = "app_referrals_share"
+    case appReferralsInviteLink = "app_referrals_invite_link"
 }

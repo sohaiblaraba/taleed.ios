@@ -254,7 +254,7 @@ private struct WalletTiles: View {
         VStack(alignment: .leading, spacing: 0) {
             tile(icon: .money, title: l10n.string(.walletBalance), amount: summary.headline, color: TaleedColor.textPrimary,
                  note: WalletRules.showsVoucherPart(summary)
-                     ? (.sparkle, l10n.format(.walletVoucherPart, PriceFormatter.format(summary.voucherBalance, language: l10n.language)))
+                     ? (.ticket, l10n.format(.walletVoucherPart, PriceFormatter.format(summary.voucherBalance, language: l10n.language)))
                      : nil)
                 .accessibilityIdentifier("wallet.balance")
             Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)

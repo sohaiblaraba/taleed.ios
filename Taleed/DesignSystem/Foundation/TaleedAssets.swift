@@ -75,6 +75,12 @@ enum TaleedImage: String, CaseIterable, Sendable {
     case loginGreenDress = "Login/float-green-dress"
     case loginDrapedFabric = "Login/float-draped-fabric"
     case loginSunglasses = "Login/float-sunglasses"
+    /// The website's referral artwork (`public/referral_*.webp`): the hero (1310 x 1200, opaque) and the
+    /// three steps (about 500 x 500, transparent). Shown whole, never cropped.
+    case referralHero = "Referrals/referral-hero"
+    case referralStep1 = "Referrals/referral-step1"
+    case referralStep2 = "Referrals/referral-step2"
+    case referralStep3 = "Referrals/referral-step3"
 
     var assetName: String { rawValue }
 }

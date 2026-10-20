@@ -5,7 +5,7 @@ import Foundation
 ///
 ///     -TaleedDebugTab profile                  select a tab (home, explore, sell, messages, profile)
 ///     -TaleedDebugProfilePath settings,designSystem   (settings, designSystem, developerMenu, favorites,
-///                                              myListings, orders, wallet, notifications)
+///                                              myListings, orders, wallet, notifications, referrals…)
 ///     -TaleedDebugOpenURL /listings/42             open a link through the router once the shell shows
 ///     -TaleedGallerySection buttons            scroll the design-system gallery to a section
 ///     -TaleedGalleryLargeText YES              turn on the gallery's "Text 200 %" switch
@@ -57,6 +57,7 @@ import Foundation
 ///     -TaleedDebugVerification offline         identity verification's first load fails offline (then
 ///                                              works); `upload`: the first ID upload fails offline;
 ///                                              `limit`: the first send answers 429 (an hour to wait)
+///     -TaleedDebugReferrals offline            the referral screen's first load fails offline (then works)
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor
@@ -104,7 +105,7 @@ private extension AppRoute {
         "myListings": .myListings, "orders": .orders, "wallet": .wallet, "notifications": .notifications,
         "profileSettings": .profileSettings, "usernameSettings": .usernameSettings, "emailSettings": .emailSettings,
         "passwordSettings": .passwordSettings, "addresses": .addresses, "blockedMembers": .blockedMembers, "help": .help,
-        "deleteAccount": .deleteAccount, "identityVerification": .identityVerification,
+        "deleteAccount": .deleteAccount, "identityVerification": .identityVerification, "referrals": .referrals,
     ]
 
     init?(debugName: String) {
