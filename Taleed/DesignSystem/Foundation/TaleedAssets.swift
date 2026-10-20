@@ -10,6 +10,23 @@ extension Image {
     init(taleed image: TaleedImage) {
         self.init(image.assetName, bundle: .main)
     }
+
+    /// A design-system icon drawn at `size` points, for system menus (which show an image at its own
+    /// size and tint it as their entries). `color` keeps that colour instead (a destructive entry's).
+    init(taleedMenuIcon icon: TaleedIcon, size: CGFloat = 20, color: Color? = nil) {
+        guard let source = UIImage(named: icon.assetName, in: .main, with: nil) else {
+            self.init(taleed: icon)
+            return
+        }
+        let resized = UIGraphicsImageRenderer(size: CGSize(width: size, height: size)).image { _ in
+            source.draw(in: CGRect(x: 0, y: 0, width: size, height: size))
+        }
+        if let color {
+            self.init(uiImage: resized.withTintColor(UIColor(color), renderingMode: .alwaysOriginal))
+        } else {
+            self.init(uiImage: resized.withRenderingMode(.alwaysTemplate))
+        }
+    }
 }
 
 /// Draws an icon at its design size and colour. Directional icons mirror in right-to-left layouts.

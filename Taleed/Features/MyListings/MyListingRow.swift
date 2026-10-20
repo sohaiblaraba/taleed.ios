@@ -19,6 +19,7 @@ struct MyListingRow: View {
     let handlers: Handlers
     @Environment(CatalogStore.self) private var catalog
     @Environment(LanguageManager.self) private var l10n
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private static let nameStyle = TaleedTextStyle(size: 15, weight: .regular, lineHeight: nil, letterSpacing: 0,
                                                    relativeTo: .subheadline)
@@ -29,7 +30,11 @@ struct MyListingRow: View {
         let product = ListingCardContent.product(for: listing, favorite: FavoriteState(isFavorited: false, count: 0),
                                                  catalog: catalog.catalog, text: { l10n.string($0) })
         Button { handlers.open(listing) } label: {
-            HStack(spacing: TaleedSize.productListRowGap) {
+            // Accessibility text sizes: the photo above the details, so the text keeps the row's width.
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: TaleedSpacing.s12))
+                : AnyLayout(HStackLayout(spacing: TaleedSize.productListRowGap))
+            layout {
                 ProductMediaView(media: product.media)
                     .frame(width: TaleedSize.productListRowMedia, height: TaleedSize.productListRowMedia)
                     .overlay(alignment: .bottom) {
@@ -37,7 +42,8 @@ struct MyListingRow: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: TaleedSize.productListRowMediaRadius, style: .continuous))
                 details(product)
-                    .padding(.trailing, hasActions ? TaleedSize.productListRowFavorite + TaleedSpacing.s8 : 0)
+                    .padding(.trailing, hasActions && !dynamicTypeSize.isAccessibilitySize
+                        ? TaleedSize.productListRowFavorite + TaleedSpacing.s8 : 0)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(TaleedSize.productListRowPadding)
@@ -97,6 +103,8 @@ struct MyListingRow: View {
                     .minimumHitArea()
             }
             .buttonStyle(.plain)
+            // The entries' icons in the text colour (the app's tint would draw them blue).
+            .tint(TaleedColor.textPrimary)
             .accessibilityLabel(l10n.string(.commonMore))
             .accessibilityIdentifier("myListings.menu.\(listing.id)")
         }
@@ -104,16 +112,25 @@ struct MyListingRow: View {
 
     @ViewBuilder
     private var menuItems: some View {
+        // Leading icons as in iOS menus: the design system's eye and trash, a pencil (SF Symbol, the set has none).
         if actions.canEdit {
-            Button(l10n.string(.listingEditListing)) { handlers.edit(listing) }
+            Button { handlers.edit(listing) } label: {
+                Label(l10n.string(.listingEditListing), systemImage: "pencil")
+            }
         }
         if let visibility = actions.visibility {
-            Button(l10n.string(visibility == .hide ? .listingHide : .listingUnhide)) {
-                handlers.visibility(listing, visibility)
+            Button { handlers.visibility(listing, visibility) } label: {
+                Label { Text(l10n.string(visibility == .hide ? .listingHide : .listingUnhide)) } icon: {
+                    Image(taleedMenuIcon: .eye)
+                }
             }
         }
         if actions.canDelete {
-            Button(l10n.string(.listingDeleteListing), role: .destructive) { handlers.delete(listing) }
+            Button(role: .destructive) { handlers.delete(listing) } label: {
+                Label { Text(l10n.string(.listingDeleteListing)) } icon: {
+                    Image(taleedMenuIcon: .trash, color: TaleedColor.feedbackError)
+                }
+            }
         }
     }
 

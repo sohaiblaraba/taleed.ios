@@ -30,7 +30,8 @@ struct MyListingsView: View {
             TaleedTopAppBar(title: l10n.string(.appProfileMyListings), onBack: { dismiss() })
         } content: {
             VStack(spacing: 0) {
-                TaleedTabs(titles: MyListingsTab.allCases.map(tabTitle), selection: tabSelection)
+                TaleedTabs(titles: MyListingsTab.allCases.map(tabTitle), selection: tabSelection,
+                           horizontalInset: TaleedLayout.screenMargin)
                     .accessibilityIdentifier("myListings.tabs")
                 MyListingsTabContent(model: model, tab: model.selectedTab, handlers: handlers)
                     // A fresh scroll position per tab.

@@ -96,6 +96,12 @@ struct TaleedTextField: View {
     var focus: FocusState<Bool>.Binding?
     /// Draws the focused state without focus, for the design-system gallery.
     var forcedState: TaleedFieldState?
+    /// Lines the text may wrap over (one paragraph: Return ends editing); nil keeps one scrolling line.
+    var lineLimit: ClosedRange<Int>?
+    /// The most UTF-16 units the field takes (as the API counts), as `TaleedTextArea`.
+    var maxLength: Int?
+    /// "n / max" on the trailing side of the helper line.
+    var counter: String?
 
     @FocusState private var ownFocus: Bool
     /// A secure field showing its text (the eye button).
@@ -118,12 +124,23 @@ struct TaleedTextField: View {
                 FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textBody)
             }
             input
-            if showsMessage, let message = error ?? helper {
-                FieldHelper(text: message, color: state.helperColor)
-            }
+            FieldFooter(message: showsMessage ? error ?? helper : nil, color: state.helperColor, counter: counter)
         }
         .opacity(state == .disabled ? TaleedOpacity.disabledField : 1)
         .announcesFieldError(error)
+        // Capped after the edit; a wrapping field ends editing on Return.
+        .onChange(of: text) { _, newValue in
+            var cleaned = newValue
+            if lineLimit != nil, cleaned.contains(where: \.isNewline) {
+                cleaned = String(cleaned.filter { !$0.isNewline })
+                if let focus { focus.wrappedValue = false } else { ownFocus = false }
+            }
+            cleaned = TaleedTextArea.capped(cleaned, maxLength: maxLength) ?? cleaned
+            guard cleaned != newValue else { return }
+            // In the next update: set in this one, a value equal to the one before the edit is not
+            // drawn back into the field, which would keep showing the extra text.
+            Task { @MainActor in text = cleaned }
+        }
     }
 
     private var input: some View {
@@ -168,6 +185,9 @@ struct TaleedTextField: View {
         let prompt = Text(placeholder).foregroundStyle(TaleedColor.textSecondary)
         if isSecure, !isRevealed {
             SecureField("", text: $text, prompt: prompt)
+        } else if let lineLimit {
+            TextField("", text: $text, prompt: prompt, axis: .vertical)
+                .lineLimit(lineLimit)
         } else {
             TextField("", text: $text, prompt: prompt)
         }
@@ -284,6 +304,8 @@ struct TaleedTextArea: View {
     /// The most UTF-16 units the field takes (as the API counts), like the website's `maxLength`: typing
     /// or pasting past it keeps the start, and the field shows exactly what it holds.
     var maxLength: Int?
+    /// "n / max" on the trailing side of the helper line.
+    var counter: String?
     var forcedState: TaleedFieldState?
 
     @FocusState private var isFocused: Bool
@@ -319,9 +341,7 @@ struct TaleedTextArea: View {
                 .onChange(of: text) { _, newValue in
                     if let capped = Self.capped(newValue, maxLength: maxLength) { text = capped }
                 }
-            if let message = error ?? helper {
-                FieldHelper(text: message, color: state.helperColor)
-            }
+            FieldFooter(message: error ?? helper, color: state.helperColor, counter: counter)
         }
         .opacity(state == .disabled ? TaleedOpacity.disabledField : 1)
         .announcesFieldError(error)

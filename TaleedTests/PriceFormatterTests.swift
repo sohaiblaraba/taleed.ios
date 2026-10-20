@@ -34,6 +34,12 @@ struct PriceFormatterTests {
         #expect(PriceFormatter.format(-1500, language: .ar).contains("-1.500"))
     }
 
+    @Test func numbersAreGroupedWithoutTheCurrency() {
+        #expect(PriceFormatter.number(2000, language: .fr) == "2\(narrowSpace)000")
+        #expect(PriceFormatter.number(2000, language: .ar) == "2.000")
+        #expect(PriceFormatter.number(80, language: .ar) == "80")
+    }
+
     @Test func localeSelectsTheLanguage() {
         #expect(PriceFormatter.format(4800, locale: Locale(identifier: "ar-DZ")) == PriceFormatter.format(4800, language: .ar))
         #expect(PriceFormatter.format(4800, locale: Locale(identifier: "de")) == PriceFormatter.format(4800, language: .fr))

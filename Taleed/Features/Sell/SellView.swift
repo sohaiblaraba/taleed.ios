@@ -1,67 +1,6 @@
 import SwiftUI
 import UIKit
 
-/// The Sell tab (screens.md §1.1, §2 G7): the brand app bar and the page heading of Figma "Sell an
-/// Item", then the form. Signed out: the sign-in prompt (§0.5). A new form for each member who signs in.
-struct SellView: View {
-    @Environment(LanguageManager.self) private var l10n
-    @Environment(SessionManager.self) private var session
-    @Environment(\.sellDependencies) private var dependencies
-    @Environment(CatalogStore.self) private var catalog
-    @Environment(ExploreReferenceStore.self) private var references
-    @Environment(AppRouter.self) private var router
-    @Environment(AppToasts.self) private var toasts
-    @Environment(ListingChangeCenter.self) private var listingChanges
-    @State private var model: SellViewModel?
-
-    var body: some View {
-        ShellScreen {
-            ShellBrandAppBar()
-        } content: {
-            if session.isSignedIn, let model {
-                SellFormView(model: model) { await publish(model) }
-            } else {
-                VStack(spacing: 0) {
-                    PageHeading(eyebrow: l10n.string(.tabSell), title: l10n.string(.sellTitle))
-                    if session.isSignedIn {
-                        LoadingStateView()
-                    } else {
-                        SignInPromptView()
-                    }
-                }
-            }
-        }
-        // No drafts (§7 G7): another member (or none) starts from an empty form.
-        .task(id: session.user?.id) {
-            guard let dependencies, session.user != nil else {
-                model = nil
-                return
-            }
-            let uploads = dependencies.uploads
-            let catalog = catalog
-            let references = references
-            model = SellViewModel(api: dependencies.api,
-                                  upload: { data async throws(ApiError) in try await uploads.upload(data, purpose: .listingPhoto) },
-                                  wilayaId: session.user?.wilayaId,
-                                  refreshLists: { lists in
-                                      // "Choose again" offers what the API knows now.
-                                      if lists.contains(.catalog) { await catalog.refresh() }
-                                      if lists.contains(.brands) { await references.refreshBrands() }
-                                  })
-        }
-        .onChange(of: session.user?.wilayaId) { _, wilayaId in model?.memberWilayaDidLoad(wilayaId) }
-    }
-
-    private func publish(_ model: SellViewModel) async {
-        guard let listingId = await model.publish() else { return }
-        toasts.show(l10n.string(.sellPublished))
-        // My listings shows it in its Active tab.
-        listingChanges.post(.created, listingId: listingId)
-        model.reset(wilayaId: session.user?.wilayaId)
-        router.push(.listing(id: listingId))
-    }
-}
-
 /// The form of Figma "Sell an Item" (wireframes.md #2): photos, title, description, category and
 /// subcategory, brand, size, condition, price, shipping wilaya, "Publier l'annonce". The edit form
 /// (G8) is the same without the page heading, its button "Enregistrer les modifications".
@@ -84,6 +23,7 @@ struct SellFormView: View {
         self.onSubmit = onSubmit
     }
     private static let topID = "sell.top"
+    private static let submitID = "sell.submit"
     @State private var picker: SellPicker?
     @FocusState private var titleFocused: Bool
     @FocusState private var sizeFocused: Bool
@@ -110,6 +50,8 @@ struct SellFormView: View {
                     } else {
                         LoadingStateView().frame(minHeight: 320)
                     }
+                    // The end of the form, under the button's bottom margin (kept clear of the tab bar).
+                    Color.clear.frame(height: 0).id(Self.submitID)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -118,6 +60,24 @@ struct SellFormView: View {
                 guard let field = model.firstErrorField else { return }
                 dismissKeyboard()
                 withAnimation(.easeInOut(duration: TaleedMotion.transitionMax)) { proxy.scrollTo(field, anchor: .top) }
+            }
+            // A failed publish or save with no field to fix: the alert and the button, to retry.
+            .onChange(of: model.publishError) { _, error in
+                guard error != nil, model.firstErrorField == nil else { return }
+                withAnimation(.easeInOut(duration: TaleedMotion.transitionMax)) {
+                    proxy.scrollTo(Self.submitID, anchor: .bottom)
+                }
+            }
+        }
+        // The number pad has no Return key: "OK" puts the keyboard away (and shows the button again).
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                if priceFocused || sizeFocused {
+                    Spacer()
+                    Button(l10n.string(.appKeyboardDone)) { dismissKeyboard() }
+                        .fontWeight(.semibold)
+                        .accessibilityIdentifier("sell.keyboardDone")
+                }
             }
         }
         .task {
@@ -153,11 +113,15 @@ struct SellFormView: View {
     }
 
     private var titleField: some View {
+        // Wraps over up to 3 lines, so a long title can be read back; Return still ends editing.
         TaleedTextField(label: l10n.string(.sellTitleLabel),
-                        text: Binding(get: { model.form.title }, set: { model.form.title = SellForm.cappedTitle($0) }),
+                        text: $model.form.title,
                         placeholder: l10n.string(.sellTitlePlaceholder),
                         error: model.fieldErrors[.title].map(message(for:)),
-                        focus: $titleFocused)
+                        focus: $titleFocused,
+                        lineLimit: 1...3,
+                        maxLength: SellLimits.titleMax,
+                        counter: model.form.title.fieldCounter(max: SellLimits.titleMax))
             .textInputAutocapitalization(.sentences)
             .accessibilityIdentifier("sell.title")
     }
@@ -168,7 +132,8 @@ struct SellFormView: View {
                                      set: { model.form.description = SellForm.cappedDescription($0) }),
                        placeholder: l10n.string(.sellDescriptionPlaceholder),
                        helper: l10n.string(.appSellDescriptionHint),
-                       error: model.fieldErrors[.description].map(message(for:)))
+                       error: model.fieldErrors[.description].map(message(for:)),
+                       counter: model.form.description.fieldCounter(max: SellLimits.descriptionMax))
             .textInputAutocapitalization(.sentences)
             .accessibilityIdentifier("sell.description")
     }
@@ -177,7 +142,9 @@ struct SellFormView: View {
     private func categoryFields(_ catalog: Catalog) -> some View {
         let parent = catalog.categories.first { $0.id == model.form.parentCategoryId }
         let child = parent?.children.first { $0.id == model.form.categoryId }
-        return VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+        // The category's error keeps the subcategory's label at a distance, so it reads as the category's.
+        let spacing = model.fieldErrors[.category] == nil ? TaleedSpacing.s8 : TaleedSpacing.s16
+        return VStack(alignment: .leading, spacing: spacing) {
             TaleedSelectField(label: l10n.string(.sellCategoryLabel), value: parent?.name,
                               placeholder: l10n.string(.sellSelectCategory),
                               error: model.fieldErrors[.category].map(message(for:)), isActive: picker == .category) {
@@ -242,9 +209,13 @@ struct SellFormView: View {
     }
 
     private var priceField: some View {
+        // The Money icon of the Figma specimen; the digits grouped as prices are ("3 000") while not
+        // being typed.
         TaleedTextField(label: l10n.string(.sellPriceLabel),
-                        text: Binding(get: { model.form.priceText }, set: { model.form.priceText = FilterDraft.priceText($0) }),
+                        text: Binding(get: { priceFocused ? model.form.priceText : groupedPrice },
+                                      set: { model.form.priceText = FilterDraft.priceText($0) }),
                         placeholder: "0",
+                        leadingIcon: .money,
                         helper: l10n.string(.sellPriceHint),
                         error: model.fieldErrors[.price].map(message(for:)),
                         focus: $priceFocused)
@@ -273,16 +244,30 @@ struct SellFormView: View {
                     .accessibilityIdentifier("sell.notice")
             }
             if let error = model.publishError {
-                InlineAlert(kind: .error, title: l10n.message(for: error))
+                // "No connection" over its remedy, as the design system's alert (§2.13).
+                InlineAlert(kind: .error, title: l10n.string(ErrorStateView.titleKey(for: error)),
+                            message: ErrorStateView.message(for: error, l10n: l10n))
                     .accessibilityIdentifier("sell.publishError")
             }
-            TaleedButton(title: l10n.string(model.isPublishing ? .sellPublishing : submitTitle),
-                         kind: .secondary, size: .large, isFullWidth: true) {
+            TaleedButton(title: l10n.string(submitButtonTitle), kind: .secondary, size: .large,
+                         isLoading: model.isPublishing, isFullWidth: true, keepsLabelWhileLoading: true) {
                 Task { await submit() }
             }
-            .disabled(!model.canPublish)
+            // The edit form saves once something differs from the listing as loaded.
+            .disabled(!model.canPublish || !model.hasEdits)
             .accessibilityIdentifier("sell.publish")
         }
+    }
+
+    /// "Publication…" while publishing, "Enregistrement…" while the edit form saves.
+    private var submitButtonTitle: L10nKey {
+        guard model.isPublishing else { return submitTitle }
+        return model.isEditing ? .appSellSaving : .sellPublishing
+    }
+
+    /// The price with its digits grouped ("3 000"; "3.000" in Arabic), as prices show.
+    private var groupedPrice: String {
+        model.form.price.map { PriceFormatter.number($0, language: l10n.language) } ?? model.form.priceText
     }
 
     // MARK: Publishing

@@ -66,7 +66,10 @@ struct EditListingView: View {
     private var content: some View {
         switch model.phase {
         case .loading:
-            LoadingStateView()
+            // The form's shape while it loads, so it does not jump in.
+            ScrollView { SkeletonPhotoForm() }
+                .scrollDisabled(true)
+                .accessibilityIdentifier("editListing.loading")
         case let .failed(error):
             ErrorStateView(error: error, retry: { Task { await model.retry() } }, onBack: { dismiss() })
         case .notFound:

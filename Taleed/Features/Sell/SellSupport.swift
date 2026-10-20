@@ -37,13 +37,15 @@ enum SellMessages {
     static func text(for error: SellFieldError, language: AppLanguage) -> String {
         let locale = language.locale
         func string(_ key: L10nKey) -> String { DesignSystemStrings.string(key, language: language) }
+        // The limits grouped as prices are ("2 000", "2.000" in Arabic).
+        func number(_ value: Int) -> String { PriceFormatter.number(value, language: language) }
         switch error {
         case .photoRequired: return string(.sellErrorPhotoRequired)
         case .photoUploadFailed: return string(.sellErrorUpload)
         case let .titleLength(min, max):
-            return DesignSystemStrings.format(.appSellErrorTitleLength, locale: locale, min, max)
+            return DesignSystemStrings.format(.appSellErrorTitleLength, locale: locale, number(min), number(max))
         case let .descriptionLength(min, max):
-            return DesignSystemStrings.format(.appSellErrorDescriptionLength, locale: locale, min, max)
+            return DesignSystemStrings.format(.appSellErrorDescriptionLength, locale: locale, number(min), number(max))
         case .categoryRequired: return string(.sellErrorCategoryRequired)
         case let .priceRange(min, max):
             return DesignSystemStrings.format(.appSellErrorPriceRange, locale: locale,

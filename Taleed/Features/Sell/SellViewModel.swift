@@ -65,6 +65,15 @@ final class SellViewModel {
 
     var isEditing: Bool { baseline != nil }
 
+    /// The edit form: whether a field or the photos differ from the listing as loaded (Save stays off
+    /// until then). Always true for a new listing.
+    var hasEdits: Bool {
+        guard let baseline else { return true }
+        return !form.hasSameValues(as: baseline.form)
+            || photos.contains { $0.reference == nil }
+            || baseline.photoChanges(photoReferences) != nil
+    }
+
     // MARK: State
 
     var remainingPhotoSlots: Int { max(0, Self.maxPhotos - photos.count) }

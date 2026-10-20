@@ -49,9 +49,11 @@ struct ErrorStateView: View {
                    action: retry, icon: .warningCircle, iconTone: .error)
     }
 
+    private var message: String? { Self.message(for: error, l10n: l10n) }
+
     /// "Check your network…" offline; otherwise the error's own message, none when it is the generic one
     /// (the title already says it).
-    private var message: String? {
+    static func message(for error: ApiError, l10n: LanguageManager) -> String? {
         if error == .network { return l10n.string(.appErrorOfflineBody) }
         return error.messageKey == .commonErrorGeneric ? nil : l10n.message(for: error)
     }
@@ -116,16 +118,29 @@ extension MessageStateView where Action == EmptyView {
 }
 
 /// "Sign in to continue" with a Secondary Large "Sign in" that hugs its label and opens the sign-in
-/// sheet (Android's sign-in placeholder).
+/// sheet (Android's sign-in placeholder). With an icon and a title: the empty-state layout (84 pt
+/// circle on `brandSoft`, title, the same body), as the app's other prompt states.
 struct SignInPromptView: View {
+    var icon: TaleedIcon?
+    var title: String?
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
 
     var body: some View {
-        MessageStateView(text: l10n.string(.authSignInRequired)) {
-            TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large) {
-                router.presentSignIn()
+        if let icon, let title {
+            CenteredStateColumn {
+                EmptyState(title: title, message: l10n.string(.authSignInRequired), icon: icon)
+                signInButton
             }
+            .accessibilityIdentifier("signInPrompt")
+        } else {
+            MessageStateView(text: l10n.string(.authSignInRequired)) { signInButton }
+        }
+    }
+
+    private var signInButton: some View {
+        TaleedButton(title: l10n.string(.authSignIn), kind: .secondary, size: .large) {
+            router.presentSignIn()
         }
     }
 }

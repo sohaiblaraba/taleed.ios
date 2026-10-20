@@ -27,6 +27,9 @@ struct PhotoUploader: View {
     let onMakeCover: (PhotoUploaderItem.ID) -> Void
     /// Sends a failed photo again.
     var onRetry: ((PhotoUploaderItem.ID) -> Void)?
+    /// The Error look of the fields (design-system §2.4): the label and the empty upload zone's border in
+    /// `feedback/error` (a failed photo has its own red border). The error text is the caller's.
+    var hasError = false
     @Environment(\.locale) private var locale
 
     private static let zoneSubtitleStyle = TaleedTextStyle(size: 11, weight: .regular, lineHeight: nil, letterSpacing: 0,
@@ -37,7 +40,7 @@ struct PhotoUploader: View {
             HStack {
                 Text(string(.photoUploaderLabel))
                     .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textPrimary)
+                    .foregroundStyle(hasError ? TaleedColor.feedbackError : TaleedColor.textPrimary)
                 Spacer()
                 Text(verbatim: DesignSystemStrings.format(.photoUploaderCount, locale: locale, photos.count, maxPhotos))
                     .taleedFont(TaleedFont.bodySmall)
@@ -79,7 +82,7 @@ struct PhotoUploader: View {
             .multilineTextAlignment(.center)
             .padding(TaleedSpacing.s16)
             .frame(maxWidth: .infinity, minHeight: TaleedSize.photoUploaderEmptyZoneHeight)
-            .modifier(DashedMintBox())
+            .modifier(DashedMintBox(hasError: hasError))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -123,12 +126,17 @@ struct PhotoUploader: View {
 }
 
 /// `mint/50` fill with a dashed `mint/400` border (4 on, 4 off): the uploader's empty zone and add tile.
+/// On error the border is `feedback/error`, as a field's.
 struct DashedMintBox: ViewModifier {
+    var hasError = false
+
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
         content
             .background(shape.fill(TaleedColor.mint50))
-            .overlay(shape.strokeBorder(TaleedColor.mint400, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
+            .overlay(shape.strokeBorder(hasError ? TaleedColor.feedbackError : TaleedColor.mint400,
+                                        style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
+            .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: hasError)
     }
 }
 
@@ -149,6 +157,11 @@ private struct PhotoTile: View {
         return false
     }
 
+    private var hasFailed: Bool {
+        if case .failed = item.status { return true }
+        return false
+    }
+
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
         Color.clear
@@ -162,7 +175,8 @@ private struct PhotoTile: View {
             .overlay { failureLayer }
             .overlay(alignment: .topTrailing) { removeButton.padding(TaleedSize.photoUploaderRemoveInset) }
             .overlay(alignment: .bottomLeading) {
-                if !needsRemoving { coverControl.padding(TaleedSize.photoUploaderRemoveInset) }
+                // A failed cover shows only its failure until the retry works.
+                if !needsRemoving, !(isCover && hasFailed) { coverControl.padding(TaleedSize.photoUploaderRemoveInset) }
             }
     }
 

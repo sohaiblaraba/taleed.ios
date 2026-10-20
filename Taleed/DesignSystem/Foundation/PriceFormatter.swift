@@ -29,6 +29,13 @@ enum PriceFormatter {
         format(amount, language: AppLanguage(locale: locale))
     }
 
+    /// A whole number grouped as prices are, without the currency: `2 000` (narrow no-break space) in
+    /// French and English, `2.000` in Arabic (the website's `ar-DZ`). For counts and limits in messages.
+    static func number(_ value: Int, language: AppLanguage) -> String {
+        let sign = value < 0 ? "-" : ""
+        return sign + grouped(abs(value), separator: language == .ar ? "." : narrowNoBreakSpace)
+    }
+
     /// Groups the digits by three from the right: `1234567` → `1 234 567`.
     private static func grouped(_ value: Int, separator: String) -> String {
         let digits = Array(String(value))

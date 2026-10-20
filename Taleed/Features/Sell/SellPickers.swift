@@ -91,24 +91,30 @@ struct SellSearchableChoiceSheet: View {
                 .padding(.bottom, TaleedSpacing.s12)
                 .accessibilityIdentifier("sell.search")
             let shown = options.filter { $0.matches(searchText) }
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(shown) { option in
-                        FilterOptionRow(option: option, isSelected: option.value == selection) {
-                            if let value = option.value { onSelect(value) }
-                            dismiss()
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(shown) { option in
+                            FilterOptionRow(option: option, isSelected: option.value == selection) {
+                                if let value = option.value { onSelect(value) }
+                                dismiss()
+                            }
+                        }
+                        if shown.isEmpty {
+                            Text(l10n.string(.filtersNoResults))
+                                .taleedFont(TaleedFont.bodyRegular)
+                                .foregroundStyle(TaleedColor.textBody)
+                                .multilineTextAlignment(.center)
+                                .padding(TaleedSpacing.s24)
                         }
                     }
-                    if shown.isEmpty {
-                        Text(l10n.string(.filtersNoResults))
-                            .taleedFont(TaleedFont.bodyRegular)
-                            .foregroundStyle(TaleedColor.textBody)
-                            .multilineTextAlignment(.center)
-                            .padding(TaleedSpacing.s24)
-                    }
+                }
+                .scrollDismissesKeyboard(.immediately)
+                // Opens on the current choice ("25 — Constantine"), not at the top of the list.
+                .onAppear {
+                    if let selection { proxy.scrollTo(selection, anchor: .center) }
                 }
             }
-            .scrollDismissesKeyboard(.immediately)
         }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
         .presentationDetents([.large])

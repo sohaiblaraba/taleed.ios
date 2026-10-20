@@ -410,6 +410,9 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appSellErrorTooLong = "app_sell_error_too_long"
     case appSellPhotoLibrary = "app_sell_photo_library"
     case appSellSizeSuggestions = "app_sell_size_suggestions"
+    case appSellSaving = "app_sell_saving"
+    case appSellSignedOutTitle = "app_sell_signed_out_title"
+    case appKeyboardDone = "app_keyboard_done"
 
     // Edit listing and my listings (G8): website keys, then app-only keys.
     case sellEditTitle = "sell_edit_title"

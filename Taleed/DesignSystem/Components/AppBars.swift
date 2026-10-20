@@ -262,6 +262,8 @@ struct PageHeading: View {
             Text(title)
                 .taleedFont(TaleedFont.screenTitle)
                 .foregroundStyle(TaleedColor.textPrimary)
+                // Stops growing at Accessibility 2, so the form under it starts higher on screen.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .accessibilityAddTraits(.isHeader)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

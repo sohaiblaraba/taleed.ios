@@ -24,7 +24,8 @@ struct SellPhotosSection: View {
                 onRetry: { id in
                     guard let uuid = UUID(uuidString: id) else { return }
                     Task { await model.retry(uuid) }
-                }
+                },
+                hasError: errorText != nil
             )
             .accessibilityIdentifier("sell.photos")
             if let text = errorText {
@@ -101,13 +102,14 @@ struct SellPhotosSection: View {
     private var sourceSheet: some View {
         TaleedBottomSheet(title: l10n.string(.photoUploaderLabel), onClose: { choosesSource = false }, content: {
             VStack(spacing: TaleedSpacing.s12) {
-                TaleedButton(title: l10n.string(.appVisualTakePhoto), kind: .secondary, size: .large, isFullWidth: true) {
-                    choosesSource = false
-                    showsCamera = true
-                }
-                TaleedButton(title: l10n.string(.appSellPhotoLibrary), kind: .outline, size: .large, isFullWidth: true) {
+                // The library first, as the upload zone says ("Choose photos from your gallery").
+                TaleedButton(title: l10n.string(.appSellPhotoLibrary), kind: .secondary, size: .large, isFullWidth: true) {
                     choosesSource = false
                     showsLibrary = true
+                }
+                TaleedButton(title: l10n.string(.appVisualTakePhoto), kind: .outline, size: .large, isFullWidth: true) {
+                    choosesSource = false
+                    showsCamera = true
                 }
             }
         })

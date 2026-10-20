@@ -153,6 +153,51 @@ struct SkeletonSellerHeader: View {
     }
 }
 
+/// Loading placeholder of a form with photos (the edit form, §3.6 "Preserve layout · avoid jump"): the
+/// uploader's label and tiles (a cover and a 2 × 2 grid), then `fields` label and 44 pt field bars, at
+/// the form's margins and gaps.
+struct SkeletonPhotoForm: View {
+    var fields = 4
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: TaleedLayout.formFieldGap) {
+            VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                SkeletonBlock(width: 110, height: 12)
+                HStack(alignment: .top, spacing: TaleedSize.photoUploaderTileGap) {
+                    RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
+                        .fill(TaleedColor.skeleton)
+                        .aspectRatio(1, contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                    Grid(horizontalSpacing: TaleedSize.photoUploaderTileGap, verticalSpacing: TaleedSize.photoUploaderTileGap) {
+                        ForEach(0..<2, id: \.self) { _ in
+                            GridRow {
+                                ForEach(0..<2, id: \.self) { _ in
+                                    RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
+                                        .fill(TaleedColor.surfaceSubtle)
+                                        .aspectRatio(1, contentMode: .fit)
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            ForEach(0..<min(fields, TaleedMotion.skeletonMaxPlaceholders), id: \.self) { index in
+                VStack(alignment: .leading, spacing: TaleedSize.inputLabelGap) {
+                    SkeletonBlock(width: index.isMultiple(of: 2) ? 70 : 96, height: 12)
+                    SkeletonBlock(height: TaleedSize.inputHeight, color: TaleedColor.surfaceGrouped, radius: TaleedRadius.m)
+                }
+            }
+        }
+        .padding(.top, TaleedLayout.formBodyPaddingTop)
+        .padding(.horizontal, TaleedLayout.formBodyPaddingX)
+        .modifier(SkeletonPulse())
+        .accessibilityElement()
+        .accessibilityLabel(DesignSystemStrings.string(.commonLoading, locale: locale))
+    }
+}
+
 /// The specimen's row of three skeleton cards.
 struct SkeletonCardRow: View {
     @Environment(\.locale) private var locale

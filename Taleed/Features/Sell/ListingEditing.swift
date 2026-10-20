@@ -59,6 +59,19 @@ extension SellForm {
         return changes
     }
 
+    /// Whether the form would save the same listing as `baseline` (the values as `PATCH` compares them).
+    func hasSameValues(as baseline: SellForm) -> Bool {
+        trimmedTitle == baseline.trimmedTitle
+            && trimmedDescription == baseline.trimmedDescription
+            && price == baseline.price
+            && parentCategoryId == baseline.parentCategoryId
+            && categoryId == baseline.categoryId
+            && brand == baseline.brand
+            && trimmedSize == baseline.trimmedSize
+            && condition == baseline.condition
+            && wilayaId == baseline.wilayaId
+    }
+
     /// The brand as `PATCH` replaces it.
     private var brandChange: ListingChanges.Brand {
         switch brand {

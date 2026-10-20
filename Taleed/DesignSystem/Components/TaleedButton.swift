@@ -234,6 +234,9 @@ struct TaleedButton: View {
     /// Shows a spinner instead of the label and ignores taps; the colours stay the default ones.
     var isLoading = false
     var isFullWidth = false
+    /// While loading, a small spinner before the label instead of in its place (a label that says what
+    /// runs: "Publication…").
+    var keepsLabelWhileLoading = false
     var minWidth: CGFloat?
     /// Overrides the colour of the leading icon (Login "Continue with email" uses `blue/600`).
     var leadingIconColor: Color?
@@ -248,7 +251,11 @@ struct TaleedButton: View {
         let resolved = metrics ?? .of(kind, size)
         Button(action: action) {
             HStack(spacing: TaleedSize.buttonGap) {
-                if let leadingIcon {
+                if isLoading, keepsLabelWhileLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(TaleedButtonColors.of(kind, .normal).content)
+                } else if let leadingIcon {
                     TaleedIconView(leadingIcon, size: size.iconSize, color: leadingIconColor)
                 }
                 Text(title)
@@ -259,9 +266,9 @@ struct TaleedButton: View {
                     TaleedIconView(trailingIcon, size: size.iconSize, color: nil)
                 }
             }
-            .opacity(isLoading ? 0 : 1)
+            .opacity(isLoading && !keepsLabelWhileLoading ? 0 : 1)
             .overlay {
-                if isLoading {
+                if isLoading, !keepsLabelWhileLoading {
                     ProgressView()
                         .tint(TaleedButtonColors.of(kind, .normal).content)
                 }

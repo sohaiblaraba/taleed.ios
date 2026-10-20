@@ -1599,6 +1599,29 @@
         }
       }
     },
+    "app_keyboard_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
     "app_listing_accepted_offer": {
       "extractionState": "manual",
       "localizations": {
@@ -2801,19 +2824,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يجب أن يتكوّن الوصف من %1$d إلى %2$d حرفًا."
+            "value": "يجب أن يتكوّن الوصف من %1$@ إلى %2$@ حرفًا."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The description must be between %1$d and %2$d characters."
+            "value": "The description must be between %1$@ and %2$@ characters."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La description doit contenir entre %1$d et %2$d caractères."
+            "value": "La description doit contenir entre %1$@ et %2$@ caractères."
           }
         }
       }
@@ -2870,19 +2893,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يجب أن يتكوّن العنوان من %1$d إلى %2$d حرفًا."
+            "value": "يجب أن يتكوّن العنوان من %1$@ إلى %2$@ حرفًا."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The title must be between %1$d and %2$d characters."
+            "value": "The title must be between %1$@ and %2$@ characters."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le titre doit contenir entre %1$d et %2$d caractères."
+            "value": "Le titre doit contenir entre %1$@ et %2$@ caractères."
           }
         }
       }
@@ -2929,6 +2952,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choisir dans la galerie"
+          }
+        }
+      }
+    },
+    "app_sell_saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ الحفظ…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement…"
+          }
+        }
+      }
+    },
+    "app_sell_signed_out_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بِع أغراضك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sell your items"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vendez vos articles"
           }
         }
       }
