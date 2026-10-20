@@ -37,6 +37,9 @@ final class SessionManager {
     @ObservationIgnored var onSuspended: (() -> Void)?
     /// Called after the member deleted their account: the signed-out Home, without the welcome screen.
     @ObservationIgnored var onAccountDeleted: (() -> Void)?
+    /// Called when a session starts: a sign-in, a sign-up, or launch with a stored token that `GET /me`
+    /// accepted (the push device registers again, slice C).
+    @ObservationIgnored var onSessionStarted: (() -> Void)?
 
     @ObservationIgnored private let api: TaleedApi
     @ObservationIgnored private let apiSession: ApiSession
@@ -64,6 +67,7 @@ final class SessionManager {
         apiSession.setToken(token)
         do {
             state = .signedIn(try await api.me())
+            onSessionStarted?()
         } catch {
             switch error {
             case .unauthorized: clearSession()
@@ -125,6 +129,7 @@ final class SessionManager {
         tokenStore.save(token)
         apiSession.setToken(token)
         state = .signedIn(user)
+        onSessionStarted?()
     }
 
     /// Signs out at once and deletes the token whatever the server answers, even offline.

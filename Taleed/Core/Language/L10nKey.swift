@@ -779,4 +779,6 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appSettingsDeleteKeptBody = "app_settings_delete_kept_body"
     case appSettingsDeleteIrreversible = "app_settings_delete_irreversible"
     case appSettingsDeleteContinue = "app_settings_delete_continue"
+    case appSettingsPushDenied = "app_settings_push_denied"
+    case appSettingsOpenSystemSettings = "app_settings_open_system_settings"
 }

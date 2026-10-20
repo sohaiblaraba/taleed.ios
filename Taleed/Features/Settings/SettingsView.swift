@@ -17,12 +17,10 @@ struct SettingsView: View {
     @Environment(AccountStore.self) private var account
     @Environment(PushRegistration.self) private var push
     @Environment(AppToasts.self) private var toasts
-    @Environment(\.settingsDependencies) private var dependencies
     @Environment(\.appEnvironment) private var environment
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
-    /// The newsletter switch while its change is on its way (optimistic, as the website's).
-    @State private var newsletterPending: Bool?
+    @Environment(\.openURL) private var openURL
     @State private var pushPending: Bool?
 
     var body: some View {
@@ -43,9 +41,13 @@ struct SettingsView: View {
             .accessibilityIdentifier("settings.scroll")
         }
         .task(id: session.user?.id) { await account.loadIfNeeded() }
+        // The push permission may have changed in the system settings.
+        .task { await push.refresh() }
         // Back in the foreground: the email may have been verified or changed meanwhile (slice E, Email).
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active, session.isSignedIn { Task { await account.reload(automatic: true) } }
+            guard phase == .active, session.isSignedIn else { return }
+            Task { await account.reload(automatic: true) }
+            Task { await push.refresh() }
         }
     }
 
@@ -95,16 +97,16 @@ struct SettingsView: View {
     }
 
     /// The website's newsletter card: the switch changes at once and is disabled while it saves; on a
-    /// failure it goes back, with `newsletter.error`.
+    /// failure it goes back, with `newsletter.error` (`AccountStore.setNewsletter`).
     @ViewBuilder
     private func newsletterSection(_ profile: AccountProfile) -> some View {
         SettingsEyebrow(text: l10n.string(.settingsNewsletterTitle))
         VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-            Toggle(isOn: Binding(get: { newsletterPending ?? profile.newsletter }, set: { setNewsletter($0) })) {
+            Toggle(isOn: Binding(get: { account.newsletterPending ?? profile.newsletter }, set: { setNewsletter($0) })) {
                 Text(l10n.string(.settingsNewsletterToggle))
             }
             .toggleStyle(.taleed)
-            .disabled(newsletterPending != nil)
+            .disabled(account.newsletterPending != nil)
             .accessibilityIdentifier("settings.newsletter")
             FieldHelper(text: l10n.string(.settingsNewsletterDescription), color: TaleedColor.textSecondary)
         }
@@ -112,15 +114,8 @@ struct SettingsView: View {
     }
 
     private func setNewsletter(_ isOn: Bool) {
-        guard newsletterPending == nil, let api = dependencies?.account else { return }
-        newsletterPending = isOn
         Task {
-            do {
-                account.apply(try await api.setNewsletter(isOn))
-            } catch {
-                toasts.show(l10n.string(.settingsNewsletterError), kind: .error)
-            }
-            newsletterPending = nil
+            if await !account.setNewsletter(isOn) { toasts.show(l10n.string(.settingsNewsletterError), kind: .error) }
         }
     }
 
@@ -142,17 +137,27 @@ struct SettingsView: View {
         .padding(.horizontal, TaleedLayout.screenMargin)
     }
 
-    /// Only with `features.push` and a token: off unregisters this device, on registers it again.
+    /// Only with `features.push` and a token: off unregisters this device, on registers it again. The
+    /// switch shows the real state (the member's choice, the system permission, the registration); with
+    /// the permission refused it says so and opens the system settings.
     @ViewBuilder
     private var pushSection: some View {
         SettingsEyebrow(text: l10n.string(.commonNotifications))
-        VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-            Toggle(isOn: Binding(get: { pushPending ?? push.isSwitchedOn }, set: { setPush($0) })) {
-                Text(l10n.string(.pwaPushTitle))
+        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+            VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
+                Toggle(isOn: Binding(get: { pushPending ?? push.isSwitchedOn }, set: { setPush($0) })) {
+                    Text(l10n.string(.pwaPushTitle))
+                }
+                .toggleStyle(.taleed)
+                .disabled(pushPending != nil)
+                .accessibilityIdentifier("settings.push")
+                FieldHelper(text: l10n.string(.pwaPushBody), color: TaleedColor.textSecondary)
             }
-            .toggleStyle(.taleed)
-            .disabled(pushPending != nil)
-            FieldHelper(text: l10n.string(.pwaPushBody), color: TaleedColor.textSecondary)
+            if push.isPermissionDenied {
+                InlineAlert(kind: .warning, title: l10n.string(.appSettingsPushDenied),
+                            actionTitle: l10n.string(.appSettingsOpenSystemSettings), action: openSystemSettings)
+                    .accessibilityIdentifier("settings.pushDenied")
+            }
         }
         .padding(.horizontal, TaleedLayout.screenMargin)
     }
@@ -161,9 +166,17 @@ struct SettingsView: View {
         guard pushPending == nil else { return }
         pushPending = isOn
         Task {
-            if await !push.setSwitchedOn(isOn) { toasts.show(l10n.string(.commonErrorGeneric), kind: .error) }
+            switch await push.setSwitchedOn(isOn) {
+            case .done: break
+            case .permissionDenied: toasts.show(l10n.string(.appSettingsPushDenied), kind: .error)
+            case .failed: toasts.show(l10n.string(.commonErrorGeneric), kind: .error)
+            }
             pushPending = nil
         }
+    }
+
+    private func openSystemSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
     }
 
     @ViewBuilder

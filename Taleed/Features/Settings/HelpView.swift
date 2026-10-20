@@ -46,7 +46,8 @@ struct HelpView: View {
 }
 
 /// The email, the phone and WhatsApp of `config.support`: each reads as text and opens Mail, the phone
-/// or WhatsApp. Emails and numbers read left to right in Arabic too.
+/// or WhatsApp. WhatsApp shows its number (from `whatsappUrl`) with "WhatsApp" beside it, so a member
+/// whose link fails can still read it. Emails and numbers read left to right in Arabic too.
 struct SupportContactRows: View {
     let support: SupportContacts
     @Environment(\.openURL) private var openURL
@@ -56,20 +57,48 @@ struct SupportContactRows: View {
         VStack(spacing: 0) {
             if let url = URL(string: "mailto:\(support.email)") {
                 row(support.email, icon: .envelope, url: url)
+                    .accessibilityIdentifier("support.email")
             }
             if let url = URL(string: "tel:\(support.phone.filter { !$0.isWhitespace })") {
                 row(support.phone, icon: .phone, url: url)
+                    .accessibilityIdentifier("support.phone")
             }
             if let url = support.whatsappURL {
-                row(l10n.string(.footerWhatsapp), icon: .chatCircle, url: url)
+                whatsappRow(url)
+                    .accessibilityIdentifier("support.whatsapp")
             }
         }
     }
 
-    private func row(_ title: String, icon: TaleedIcon, url: URL) -> some View {
-        ListRow(label: title.isolatedLeftToRight, leadingIcon: icon, labelColor: TaleedColor.brandPrimary) {
+    @ViewBuilder
+    private func whatsappRow(_ url: URL) -> some View {
+        let name = l10n.string(.footerWhatsapp)
+        if let number = support.whatsappNumber {
+            row(number, icon: .chatCircle, url: url, trailingText: name)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(name), \(number)")
+        } else {
+            row(name, icon: .chatCircle, url: url)
+        }
+    }
+
+    private func row(_ title: String, icon: TaleedIcon, url: URL, trailingText: String? = nil) -> some View {
+        ListRow(label: title.isolatedLeftToRight, leadingIcon: icon, trailingText: trailingText, labelColor: TaleedColor.brandPrimary) {
             openURL(url)
         }
         .accessibilityAddTraits(.isLink)
+    }
+}
+
+extension SupportContacts {
+    /// The WhatsApp number of `whatsappUrl`, as "+213540693236": the digits of a `wa.me/<number>` path
+    /// or of a `phone=` parameter (`api.whatsapp.com/send?phone=…`). Nil when the link carries none.
+    var whatsappNumber: String? {
+        guard let url = whatsappURL else { return nil }
+        let fromPath = url.path.filter(\.isASCIIDigit)
+        let fromQuery = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?
+            .first { $0.name == "phone" }?.value?.filter(\.isASCIIDigit) ?? ""
+        let digits = fromPath.isEmpty ? fromQuery : fromPath
+        return digits.count >= 6 ? "+\(digits)" : nil
     }
 }

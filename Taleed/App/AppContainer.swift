@@ -50,10 +50,7 @@ final class AppContainer {
         toasts = AppToasts(languageManager: languageManager)
         uploads = PhotoUploadService(api: api)
         welcome = WelcomeGate()
-        // No token source until Firebase is set up (G16): nothing is asked or registered meanwhile.
-        push = PushRegistration(api: api, permission: SystemNotificationPermission(), tokenSource: nil,
-                                isEnabled: { [launch] in launch.config?.features.push == true },
-                                language: { [languageManager] in languageManager.language })
+        push = Self.makePush(api: api, launch: launch, session: session, languageManager: languageManager)
         account = AccountStore(api: api, session: session)
 
         // A suspended member who was signed in keeps the screens that still answer (orders, wallet,
@@ -99,14 +96,31 @@ final class AppContainer {
         connectSettings()
     }
 
+    /// No token source until Firebase is set up (plan action 3): nothing is asked or registered meanwhile.
+    private static func makePush(api: GeneratedTaleedApi, launch: LaunchViewModel, session: SessionManager,
+                                 languageManager: LanguageManager) -> PushRegistration {
+        PushRegistration(api: api, permission: SystemNotificationPermission(), tokenSource: nil,
+                         isEnabled: { [launch] in launch.config?.features.push == true },
+                         isSignedIn: { [session] in session.isSignedIn },
+                         language: { [languageManager] in languageManager.language })
+    }
+
     /// The settings (G16): a deleted account, and the language switch.
     private func connectSettings() {
-        // Deleted: the signed-out Home, without the welcome screen (screens.md §2 G16).
+        // Deleted: the signed-out Home, without the welcome screen (screens.md §2 G16). After a lost
+        // answer the retry's `401` already asked to sign in (`onSessionExpired`): the account is gone, so
+        // that sheet closes (slice E, Retrying).
         session.onAccountDeleted = { [router, push, account] in
             push.sessionDidEnd()
             account.reset()
+            router.closeSignIn()
             router.sessionDidEnd()
             router.selectedTab = .home
+        }
+        // Each sign-in, sign-up and launch with a session registers the push device again once the
+        // permission is granted (slice C, Registering the device).
+        session.onSessionStarted = { [push] in
+            Task { await push.sessionDidStart() }
         }
         languageManager.onChange = { [apiSession, catalog, push] language in
             apiSession.setLanguage(language)

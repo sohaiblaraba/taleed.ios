@@ -13,9 +13,9 @@ protocol DevicesApi: AnyObject {
 
 /// The installation's Firebase Cloud Messaging registration token, the one `POST /devices` takes.
 ///
-/// This build has none: Firebase (the SDK and each environment's `GoogleService-Info.plist`, plan
-/// action 3) arrives with the push setup of G16 Settings, which also owns the push switch, the
-/// registration after sign-in and after a language switch, and the token refresh.
+/// This build has none yet: Firebase (the SDK and each environment's `GoogleService-Info.plist`, plan
+/// action 3) brings it, with the token refresh. `PushRegistration` already owns the push switch and the
+/// registration after sign-in and after a language switch.
 @MainActor
 protocol PushTokenSource: AnyObject {
     func registrationToken() async -> String?
@@ -49,91 +49,130 @@ struct SystemNotificationPermission: NotificationPermission {
 /// offer, then registers the device (screens.md §2 G9 Ops, slice C "Push notifications"). Only when
 /// `GET /config` says `features.push` (`false` on a local backend) and the build can get a token.
 ///
+/// Registers again, without asking, after each sign-in (and at launch with a session) once the permission
+/// is granted, and after a language switch, so pushes follow the new language (slice C, Registering the
+/// device; screens.md §0.8).
+///
 /// The switch in Settings (G16) turns pushes off for this installation (`DELETE /devices`) and back on
-/// (the permission, then `POST /devices`); the choice is kept on the device. A language switch registers
-/// again, so pushes follow the new language.
+/// (the permission, then `POST /devices`); the choice is kept on the device. It shows the real state: on
+/// only while the member wants pushes, the system allows them and this installation is registered.
 @MainActor
 @Observable
 final class PushRegistration {
+    /// What turning the Settings switch on or off did.
+    enum SwitchResult: Equatable {
+        case done
+        /// The system refuses notifications: only the system settings can allow them again.
+        case permissionDenied
+        /// No token, or the API did not answer: the switch stays as it was.
+        case failed
+    }
+
     @ObservationIgnored private let api: DevicesApi
     @ObservationIgnored private let permission: NotificationPermission
     @ObservationIgnored private let tokenSource: PushTokenSource?
     @ObservationIgnored private let isEnabled: () -> Bool
+    @ObservationIgnored private let isSignedIn: () -> Bool
     @ObservationIgnored private let language: () -> AppLanguage
     @ObservationIgnored private let defaults: UserDefaults
-    /// Registered in this session: the next messages do not register again.
-    @ObservationIgnored private var isRegistered = false
     @ObservationIgnored private var isWorking = false
-    /// The Settings switch: on unless the member turned it off on this device.
-    private(set) var isSwitchedOn: Bool
+    /// This installation is registered for the current session.
+    private(set) var isRegistered = false
+    /// The system permission as last read: `nil` before the member was asked (or before it was read).
+    private(set) var isPermissionGranted: Bool?
+    /// The member's choice on this device: true unless they turned pushes off in Settings.
+    private(set) var isWanted: Bool
 
     static let switchKey = "push_switched_on"
 
     init(api: DevicesApi, permission: NotificationPermission, tokenSource: PushTokenSource?,
-         isEnabled: @escaping () -> Bool, language: @escaping () -> AppLanguage, defaults: UserDefaults = .standard) {
+         isEnabled: @escaping () -> Bool, isSignedIn: @escaping () -> Bool = { true },
+         language: @escaping () -> AppLanguage, defaults: UserDefaults = .standard) {
         self.api = api
         self.permission = permission
         self.tokenSource = tokenSource
         self.isEnabled = isEnabled
+        self.isSignedIn = isSignedIn
         self.language = language
         self.defaults = defaults
-        isSwitchedOn = defaults.object(forKey: Self.switchKey) as? Bool ?? true
+        isWanted = defaults.object(forKey: Self.switchKey) as? Bool ?? true
     }
 
     /// The Settings switch shows only when the server sends pushes (`features.push`) and the build can
     /// get a token.
     var canBeSwitched: Bool { isEnabled() && tokenSource != nil }
 
+    /// The Settings switch: on only when pushes really reach this installation.
+    var isSwitchedOn: Bool { isWanted && isPermissionGranted == true && isRegistered }
+
+    /// The system refuses notifications: the Settings switch points to the system settings.
+    var isPermissionDenied: Bool { isPermissionGranted == false }
+
     /// The Settings switch. Off: `DELETE /devices`. On: the permission (asked when it never was), then
-    /// `POST /devices`. Returns false when it could not be done; the switch then goes back.
-    func setSwitchedOn(_ isOn: Bool) async -> Bool {
-        guard canBeSwitched, let tokenSource else { return false }
+    /// `POST /devices`. Anything but `.done` leaves the switch as it was.
+    func setSwitchedOn(_ isOn: Bool) async -> SwitchResult {
+        guard canBeSwitched, let tokenSource else { return .failed }
         if isOn {
-            switch await permission.isGranted() {
+            switch await readPermission() {
             case nil:
-                guard await permission.request() else { return false }
+                let granted = await permission.request()
+                isPermissionGranted = granted
+                guard granted else { return .permissionDenied }
             case true?:
                 break
             case false?:
-                return false
+                return .permissionDenied
             }
-            guard let token = await tokenSource.registrationToken() else { return false }
+            guard let token = await tokenSource.registrationToken() else { return .failed }
             do {
                 try await api.registerDevice(token: token, language: language())
             } catch {
-                return false
+                return .failed
             }
             isRegistered = true
         } else {
             do {
                 try await api.unregisterDevice()
             } catch {
-                return false
+                return .failed
             }
             isRegistered = false
         }
-        isSwitchedOn = isOn
+        isWanted = isOn
         defaults.set(isOn, forKey: Self.switchKey)
-        return true
+        return .done
     }
 
-    /// The app's language changed: a registered installation registers again, so pushes follow it.
+    /// A session started: a sign-in, a sign-up, or launch with a stored session. Registers when the
+    /// permission is already granted; never asks for it here (slice C, Registering the device).
+    func sessionDidStart() async {
+        isRegistered = false
+        await registerIfAllowed()
+    }
+
+    /// The app's language changed: registers again, so pushes follow it (screens.md §0.8).
     func languageDidChange() async {
-        guard isEnabled(), isSwitchedOn, isRegistered, let tokenSource,
-              let token = await tokenSource.registrationToken() else { return }
-        try? await api.registerDevice(token: token, language: language())
+        await registerIfAllowed(again: true)
+    }
+
+    /// Settings opened, or the app came back to the foreground: reads the permission again (the member
+    /// may have changed it in the system settings) and registers when it is now granted.
+    func refresh() async {
+        await registerIfAllowed()
     }
 
     /// The member sent a message or made an offer. Asks for the permission the first time; a member
     /// who said no is never asked again here (the system settings can change it). Best effort: a failed
     /// registration is tried again after the next message. Nothing while the Settings switch is off.
     func memberReachedOut() async {
-        guard isEnabled(), isSwitchedOn, let tokenSource, !isRegistered, !isWorking else { return }
+        guard isEnabled(), isWanted, let tokenSource, !isRegistered, !isWorking, isSignedIn() else { return }
         isWorking = true
         defer { isWorking = false }
-        switch await permission.isGranted() {
+        switch await readPermission() {
         case nil:
-            guard await permission.request() else { return }
+            let granted = await permission.request()
+            isPermissionGranted = granted
+            guard granted else { return }
         case true?:
             break
         case false?:
@@ -149,6 +188,27 @@ final class PushRegistration {
     /// Signed out: pushes stop with the session (slice C); the next member registers again.
     func sessionDidEnd() {
         isRegistered = false
+    }
+
+    /// Registers without asking: only with `features.push`, a session, the member's choice and a granted
+    /// permission. `again`: even when already registered (a new language).
+    private func registerIfAllowed(again: Bool = false) async {
+        guard isEnabled(), let tokenSource, again || !isWorking else { return }
+        let granted = await readPermission()
+        guard isWanted, isSignedIn(), granted == true, again || !isRegistered else { return }
+        isWorking = true
+        defer { isWorking = false }
+        guard let token = await tokenSource.registrationToken() else { return }
+        do {
+            try await api.registerDevice(token: token, language: language())
+            isRegistered = true
+        } catch {}
+    }
+
+    private func readPermission() async -> Bool? {
+        let granted = await permission.isGranted()
+        isPermissionGranted = granted
+        return granted
     }
 }
 

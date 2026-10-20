@@ -56,7 +56,10 @@ protocol BlocksApi: AnyObject {
 
 extension GeneratedTaleedApi: AccountApi {
     func account(automatic: Bool) async throws(ApiError) -> AccountProfile {
-        AccountProfile(try await caller.call(.read, automatic: automatic) { try await AccountAPI.getMe(apiConfiguration: $0) })
+        #if DEBUG
+        try SettingsDebugFailures.fail(.account)
+        #endif
+        return AccountProfile(try await caller.call(.read, automatic: automatic) { try await AccountAPI.getMe(apiConfiguration: $0) })
     }
 
     func updateProfile(_ changes: ProfileChanges) async throws(ApiError) -> AccountProfile {
@@ -67,7 +70,10 @@ extension GeneratedTaleedApi: AccountApi {
     }
 
     func billing() async throws(ApiError) -> BillingInfo {
-        BillingInfo(try await caller.call(.read) { try await AccountAPI.getBilling(apiConfiguration: $0) })
+        #if DEBUG
+        try SettingsDebugFailures.fail(.billing)
+        #endif
+        return BillingInfo(try await caller.call(.read) { try await AccountAPI.getBilling(apiConfiguration: $0) })
     }
 
     func updateBilling(_ billing: BillingInfo) async throws(ApiError) -> BillingInfo {
@@ -110,6 +116,13 @@ extension GeneratedTaleedApi: AccountApi {
     }
 
     func deleteAccount(password: String) async throws(ApiError) {
+        #if DEBUG
+        if SettingsDebugFailures.answersDeletionUnauthorized() {
+            // As a retry after a lost answer: the server ended the session, so the token is rejected.
+            caller.record(.unauthorized, sentToken: caller.session.token)
+            throw .unauthorized
+        }
+        #endif
         let body = AccountDeletion(password: password)
         // Password attempts are counted (5 per 15 minutes): the member's tap only.
         try await caller.call(.write) { try await AccountAPI.deleteAccount(accountDeletion: body, apiConfiguration: $0) }
@@ -118,6 +131,9 @@ extension GeneratedTaleedApi: AccountApi {
 
 extension GeneratedTaleedApi: AddressesApi {
     func addresses(automatic: Bool) async throws(ApiError) -> [SavedAddress] {
+        #if DEBUG
+        try SettingsDebugFailures.fail(.addresses)
+        #endif
         let list = try await caller.call(.read, automatic: automatic) { try await AddressesAPI.listAddresses(apiConfiguration: $0) }
         return list.items.map(SavedAddress.init)
     }
@@ -146,6 +162,9 @@ extension GeneratedTaleedApi: AddressesApi {
 
 extension GeneratedTaleedApi: BlocksApi {
     func blocks(cursor: String?, automatic: Bool) async throws(ApiError) -> Page<BlockedMemberRow> {
+        #if DEBUG
+        try SettingsDebugFailures.fail(.blocks)
+        #endif
         let page = try await caller.call(.read, automatic: automatic) {
             try await SafetyAPI.listBlocks(cursor: cursor, apiConfiguration: $0)
         }

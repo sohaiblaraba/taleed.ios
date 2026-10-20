@@ -47,6 +47,13 @@ import Foundation
 ///     -TaleedDebugNotifications offline        the notifications' first page fails offline (then works);
 ///                                              `empty` answers no notifications; `hidden`: a first page
 ///                                              without rows that has a next page (the real first page)
+///     -TaleedDebugSettings offline             the first load of the settings hub's account rows, the
+///                                              profile form, the addresses and the blocked members each
+///                                              fail offline once (then work); `newsletter`: the first
+///                                              newsletter change fails offline (the switch flips back);
+///                                              `offline,newsletter`: both
+///     -TaleedDebugDelete unauthorized          deleting the account answers `401` without calling the
+///                                              API (the retry after a lost answer): the signed-out Home
 ///
 /// The language can be forced the same way with `-app_language ar`.
 @MainActor

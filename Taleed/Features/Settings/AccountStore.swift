@@ -11,6 +11,8 @@ final class AccountStore {
     /// The first load failed and nothing is on screen.
     private(set) var loadError: ApiError?
     private(set) var isLoading = false
+    /// The newsletter switch while its change is on its way (optimistic, as the website's).
+    private(set) var newsletterPending: Bool?
 
     @ObservationIgnored private let api: AccountApi
     @ObservationIgnored private let session: SessionManager
@@ -61,9 +63,28 @@ final class AccountStore {
         session.updateUser(profile.user)
     }
 
+    /// `PATCH /me/preferences {newsletter}`. The switch shows the new value at once and is disabled
+    /// meanwhile; a failure (offline included) puts it back: returns false, and the screen shows
+    /// `newsletter.error`.
+    func setNewsletter(_ isOn: Bool) async -> Bool {
+        guard newsletterPending == nil, profile != nil else { return true }
+        newsletterPending = isOn
+        defer { newsletterPending = nil }
+        do {
+            #if DEBUG
+            try SettingsDebugFailures.fail(.newsletter)
+            #endif
+            apply(try await api.setNewsletter(isOn))
+            return true
+        } catch {
+            return false
+        }
+    }
+
     /// Signed out, or the account was deleted: nothing of it stays on the device.
     func reset() {
         profile = nil
         loadError = nil
+        newsletterPending = nil
     }
 }

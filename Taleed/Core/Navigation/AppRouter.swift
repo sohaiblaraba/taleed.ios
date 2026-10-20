@@ -290,6 +290,12 @@ final class AppRouter {
         authEntry = .signIn
     }
 
+    /// Closes the sign-in sheet, and forgets what it was to continue (the account was deleted).
+    func closeSignIn() {
+        afterSignIn = nil
+        authEntry = nil
+    }
+
     /// The sheet closed. Signed in: run the waiting action, once.
     func authSheetDidDismiss() {
         let action = afterSignIn

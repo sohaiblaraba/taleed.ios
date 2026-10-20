@@ -89,6 +89,7 @@
 		485B6CC3CE87FB46E7FE7105 /* ListingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32DC0CCECE87810144E4C3B3 /* ListingDetailView.swift */; };
 		494259EBF4322B09E2119014 /* TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EF53C4E3FF9186DCBE31DE6 /* TokenStore.swift */; };
 		4977B48116CF75EBEAF6F51C /* Promotions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FFACD65A7F9493BE1E0CE5D /* Promotions.swift */; };
+		4A63F011102EDCD265F60A18 /* SettingsDebugFailures.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A8D5129F6AF65B42EFADC3 /* SettingsDebugFailures.swift */; };
 		4AB2AFE79A56F89324A356DD /* MemberProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4797CED77C10CB74BC9F16 /* MemberProfileTests.swift */; };
 		4B16C50F28E158816203E962 /* ConfirmationHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54842F07093A5A7C4B43E488 /* ConfirmationHost.swift */; };
 		4C103FA128CF5996D7AB45A5 /* AddressesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A5208E47ED3D33BBA19EBD /* AddressesView.swift */; };
@@ -509,6 +510,7 @@
 		B048E0B5C1B236D2C083A4D2 /* LaunchViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchViewModelTests.swift; sourceTree = "<group>"; };
 		B0A2E4FD03B16F11F769ED3F /* PagedListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PagedListTests.swift; sourceTree = "<group>"; };
 		B113761F5E7890C6F4A49589 /* PhotoUpload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoUpload.swift; sourceTree = "<group>"; };
+		B1A8D5129F6AF65B42EFADC3 /* SettingsDebugFailures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDebugFailures.swift; sourceTree = "<group>"; };
 		B29D45BE48ECC2E93DDC0041 /* FavoritesPagingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesPagingTests.swift; sourceTree = "<group>"; };
 		B2A927EB7A25F3A136CC167B /* ShippingLabelSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingLabelSheet.swift; sourceTree = "<group>"; };
 		B36533E98CAACED9DB970E57 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -1239,6 +1241,7 @@
 				D6B26C24834902A860FD5FEF /* ProfileSettingsView.swift */,
 				3660DAEC3761FC7CAB7F4427 /* ProfileSettingsViewModel.swift */,
 				0A26E0EE94FD701E99DD8302 /* SettingsApi.swift */,
+				B1A8D5129F6AF65B42EFADC3 /* SettingsDebugFailures.swift */,
 				53DFA44786268F172F598510 /* SettingsModels.swift */,
 				4CC268271159177D2A2EB27F /* SettingsRules.swift */,
 				4EF1945ED568E486F99AE8F3 /* SettingsView.swift */,
@@ -1669,6 +1672,7 @@
 				E298DDEF3B4B797A94DD1560 /* SellerOrderButton.swift in Sources */,
 				899E0B397E18F7C093014988 /* SessionManager.swift in Sources */,
 				170D3C68D2CD6C4C03C8BC71 /* SettingsApi.swift in Sources */,
+				4A63F011102EDCD265F60A18 /* SettingsDebugFailures.swift in Sources */,
 				A95E6740515213EAD1C705A9 /* SettingsModels.swift in Sources */,
 				1F699F40659AAE1957F35E58 /* SettingsRules.swift in Sources */,
 				74A89296218FFAA3DE48C78C /* SettingsView.swift in Sources */,

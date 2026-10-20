@@ -25,6 +25,21 @@ struct AccountStoreTests {
         #expect(store.profile != nil)
         #expect(store.loadError == nil)
     }
+
+    /// The website's newsletter card: a failure (offline included) puts the switch back.
+    @Test func aFailedNewsletterChangeFlipsBack() async {
+        let api = FakeAccountApi()
+        api.profile = .fixture(newsletter: true)
+        let (store, _) = await signedInStore(api)
+        api.newsletterError = .network
+        #expect(await !store.setNewsletter(false))
+        #expect(store.newsletterPending == nil)
+        #expect(store.profile?.newsletter == true)
+        api.newsletterError = nil
+        #expect(await store.setNewsletter(false))
+        #expect(store.newsletterPending == nil)
+        #expect(store.profile?.newsletter == false)
+    }
 }
 
 @MainActor

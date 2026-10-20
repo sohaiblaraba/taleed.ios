@@ -39,6 +39,7 @@ struct AppEnvironment: Sendable {
     }
 }
 
-private extension Character {
+extension Character {
+    /// 0 to 9 only (not Arabic-Indic or other digits).
     var isASCIIDigit: Bool { isASCII && isNumber }
 }

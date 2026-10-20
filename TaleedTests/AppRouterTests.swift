@@ -289,3 +289,21 @@ struct AppRouterTests {
 private final class SignedIn {
     var value = false
 }
+
+@MainActor
+struct AppRouterSignInTests {
+    /// A deletion whose lost answer came back `401`: the session-expired sheet closes, nothing waits.
+    @Test func closingSignInForADeletedAccountForgetsTheAction() {
+        var isSignedIn = false
+        let router = AppRouter()
+        router.isSignedIn = { isSignedIn }
+        router.shellDidAppear()
+        var ran = false
+        router.requireSignIn { ran = true }
+        router.closeSignIn()
+        #expect(router.authEntry == nil)
+        isSignedIn = true
+        router.authSheetDidDismiss()
+        #expect(!ran)
+    }
+}

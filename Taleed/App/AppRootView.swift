@@ -80,6 +80,8 @@ struct AppRootView: View {
                 case .active where wasInBackground:
                     wasInBackground = false
                     Task { await container.launch.didReturnToForeground() }
+                    // The push permission may have changed in the system settings meanwhile.
+                    Task { await container.push.refresh() }
                 default:
                     break
                 }

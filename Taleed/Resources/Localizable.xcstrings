@@ -18181,6 +18181,29 @@
         }
       }
     },
+    "app_settings_push_denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإشعارات محظورة لتطبيق Taleed. اسمح بها من إعدادات الهاتف."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are blocked for Taleed. Allow them in your phone’s settings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les notifications sont bloquées pour Taleed. Autorisez-les dans les réglages du téléphone."
+          }
+        }
+      }
+    },
     "app_settings_password_changed": {
       "extractionState": "manual",
       "localizations": {
@@ -18614,6 +18637,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Informations légales"
+          }
+        }
+      }
+    },
+    "app_settings_open_system_settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح الإعدادات"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open settings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les réglages"
           }
         }
       }

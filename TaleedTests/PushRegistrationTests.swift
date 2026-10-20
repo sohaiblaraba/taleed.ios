@@ -47,9 +47,10 @@ struct PushRegistrationTests {
 
     private let defaults = UserDefaults(suiteName: "PushRegistrationTests.\(UUID().uuidString)")!
 
-    private func registration(enabled: Bool = true, tokens: PushTokenSource? = FakeTokenSource()) -> PushRegistration {
-        PushRegistration(api: api, permission: permission, tokenSource: tokens, isEnabled: { enabled }, language: { .ar },
-                         defaults: defaults)
+    private func registration(enabled: Bool = true, signedIn: Bool = true, tokens: PushTokenSource? = FakeTokenSource(),
+                              language: @escaping () -> AppLanguage = { .ar }) -> PushRegistration {
+        PushRegistration(api: api, permission: permission, tokenSource: tokens, isEnabled: { enabled }, isSignedIn: { signedIn },
+                         language: language, defaults: defaults)
     }
 
     /// The Settings switch shows only with `features.push` and a token source.
@@ -59,33 +60,102 @@ struct PushRegistrationTests {
         #expect(!registration(tokens: nil).canBeSwitched)
     }
 
-    @Test func switchingOffUnregistersAndStopsLaterRegistrations() async {
+    /// Never registered, or the permission never given: the switch is off, whatever the stored choice.
+    @Test func theSwitchShowsTheRealState() async {
         let push = registration()
+        #expect(!push.isSwitchedOn)
+        permission.granted = false
+        await push.refresh()
+        #expect(!push.isSwitchedOn)
+        #expect(push.isPermissionDenied)
+        #expect(api.registered.isEmpty)
+        permission.granted = true
+        await push.refresh()
         #expect(push.isSwitchedOn)
-        #expect(await push.setSwitchedOn(false))
+        #expect(!push.isPermissionDenied)
+        #expect(api.registered.count == 1)
+    }
+
+    @Test func switchingOffUnregistersAndStopsLaterRegistrations() async {
+        permission.granted = true
+        let push = registration()
+        await push.sessionDidStart()
+        #expect(push.isSwitchedOn)
+        #expect(await push.setSwitchedOn(false) == .done)
         #expect(api.unregistered == 1)
         #expect(!push.isSwitchedOn)
         await push.memberReachedOut()
-        #expect(api.registered.isEmpty)
+        await push.languageDidChange()
+        await push.sessionDidStart()
+        #expect(api.registered.count == 1)
         // Kept on the device.
-        #expect(!registration().isSwitchedOn)
+        #expect(!registration().isWanted)
     }
 
     @Test func switchingOnAsksThenRegisters() async {
         let push = registration()
         _ = await push.setSwitchedOn(false)
-        #expect(await push.setSwitchedOn(true))
+        #expect(await push.setSwitchedOn(true) == .done)
         #expect(permission.requests == 1)
         #expect(api.registered.map(\.token) == ["fcm-token"])
         #expect(push.isSwitchedOn)
     }
 
-    @Test func aRefusedPermissionLeavesTheSwitchOff() async {
+    @Test func aRefusedPermissionLeavesTheSwitchOffAndPointsToTheSystemSettings() async {
         let push = registration()
         _ = await push.setSwitchedOn(false)
         permission.answer = false
-        #expect(await !push.setSwitchedOn(true))
+        #expect(await push.setSwitchedOn(true) == .permissionDenied)
         #expect(!push.isSwitchedOn)
+        #expect(push.isPermissionDenied)
+        // Refused before: not asked again, the system settings decide.
+        #expect(await push.setSwitchedOn(true) == .permissionDenied)
+        #expect(permission.requests == 1)
+    }
+
+    @Test func aFailedRegistrationLeavesTheSwitchAsItWas() async {
+        permission.granted = true
+        let push = registration()
+        _ = await push.setSwitchedOn(false)
+        api.failure = .network
+        #expect(await push.setSwitchedOn(true) == .failed)
+        #expect(!push.isSwitchedOn)
+        #expect(!push.isWanted)
+    }
+
+    /// Each sign-in registers once the permission is granted, without asking for it.
+    @Test func aSignInRegistersOnlyWithTheGrantedPermission() async {
+        let push = registration()
+        await push.sessionDidStart()
+        #expect(permission.requests == 0)
+        #expect(api.registered.isEmpty)
+        permission.granted = true
+        await push.sessionDidStart()
+        #expect(api.registered.count == 1)
+        // A new session registers again (the phone may have changed hands).
+        push.sessionDidEnd()
+        await push.sessionDidStart()
+        #expect(api.registered.count == 2)
+    }
+
+    /// A new session that has not sent a message yet: the language switch still registers again.
+    @Test func aLanguageSwitchRegistersAgainWithoutAMessage() async {
+        permission.granted = true
+        var language = AppLanguage.fr
+        let push = registration(language: { language })
+        await push.sessionDidStart()
+        language = .ar
+        await push.languageDidChange()
+        #expect(api.registered.map(\.language) == [.fr, .ar])
+    }
+
+    @Test func nothingIsRegisteredSignedOut() async {
+        permission.granted = true
+        let push = registration(signedIn: false)
+        await push.sessionDidStart()
+        await push.languageDidChange()
+        await push.memberReachedOut()
+        #expect(api.registered.isEmpty)
     }
 
     @Test func aLanguageSwitchRegistersAgain() async {
@@ -108,7 +178,11 @@ struct PushRegistrationTests {
 
     /// `features.push` is `false` (a local backend): nothing is asked or registered.
     @Test func nothingWhilePushIsOff() async {
-        await registration(enabled: false).memberReachedOut()
+        permission.granted = true
+        let push = registration(enabled: false)
+        await push.memberReachedOut()
+        await push.sessionDidStart()
+        await push.languageDidChange()
         #expect(permission.requests == 0)
         #expect(api.registered.isEmpty)
     }
