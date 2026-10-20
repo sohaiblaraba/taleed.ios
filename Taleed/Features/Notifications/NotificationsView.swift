@@ -151,7 +151,7 @@ struct NotificationRowView: View {
             icon
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: row.text)
-                    .taleedFont(isUnread ? TaleedFont.bodyRegular.with(weight: .semibold) : TaleedFont.bodyRegular)
+                    .taleedFont(isUnread ? TaleedFont.bodyRegular.with(weight: .medium) : TaleedFont.bodyRegular)
                     .foregroundStyle(isUnread ? TaleedColor.textPrimary : TaleedColor.textSecondary)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)

@@ -91,6 +91,16 @@ struct NotificationRulesTests {
         #expect(notification("n", type: "REPORT_DISMISSED", url: "https://taleed.app/fr/notifications").destination == nil)
     }
 
+    @Test func aRoleOfferIsPlain() {
+        // Decision 8: staff roles are web-only, so the row has no link (it must not fall to Home).
+        #expect(notification("n", type: "ROLE_OFFERED", url: "http://localhost:3000/role-offers").destination == nil)
+        #expect(notification("n", type: "role_offered", url: "https://taleed.app/ar/role-offers").destination == nil)
+        #expect(notification("n", type: "ROLE_OFFERED", url: nil).destination == nil)
+        // A `/role-offers` link stays plain whatever the type says.
+        #expect(notification("n", type: "MILESTONE_REACHED", url: "https://taleed.app/en/role-offers").destination == nil)
+        #expect(notification("n", type: "ORDER_SHIPPED", url: "http://localhost:3000/role-offers/").destination == nil)
+    }
+
     @MainActor
     @Test func theFeedCountsArrivals() {
         let feed = NotificationsFeed()

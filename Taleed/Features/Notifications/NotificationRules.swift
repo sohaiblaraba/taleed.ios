@@ -15,13 +15,25 @@ struct NotificationRow: Identifiable, Equatable, Sendable {
 
     var theme: NotificationTheme { NotificationTheme(type: type) }
 
-    /// Where a tap leads: nil for a row without a link, and for one that points at the notifications
-    /// screen itself (`REPORT_RESOLVED`, `REPORT_DISMISSED`: the screen is already open, §7 G15). Such a
-    /// row is drawn plain, like the website's rows without a link.
+    /// Where a tap leads: nil for a row without a link, for one that points at the notifications
+    /// screen itself (`REPORT_RESOLVED`, `REPORT_DISMISSED`: the screen is already open, §7 G15), and
+    /// for a staff role offer (`ROLE_OFFERED`, `/role-offers`: staff roles are web-only, decision 8).
+    /// Such a row is drawn plain, like the website's rows without a link.
     var destination: AppDestination? {
-        guard let url else { return nil }
+        guard let url, !isRoleOffer(url) else { return nil }
         let destination = LinkRouter.destination(for: url)
         return destination == .screen(.notifications) ? nil : destination
+    }
+
+    /// A `ROLE_OFFERED` row, or any row whose link is the website's `/role-offers` page (with or
+    /// without a language prefix).
+    private func isRoleOffer(_ url: URL) -> Bool {
+        if type.uppercased() == "ROLE_OFFERED" { return true }
+        var segments = url.pathComponents.filter { $0 != "/" }
+        if let first = segments.first, ["ar", "en", "fr"].contains(first.lowercased()) {
+            segments.removeFirst()
+        }
+        return segments.first?.lowercased() == "role-offers"
     }
 }
 
