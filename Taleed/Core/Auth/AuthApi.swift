@@ -44,6 +44,7 @@ enum AuthRules {
     static let namePartMinLength = SignUpRequest.firstNameRule.minLength ?? 2
     static let namePartMaxLength = SignUpRequest.firstNameRule.maxLength ?? 30
     /// `^[a-zA-Z0-9][a-zA-Z0-9._-]{2,29}$` (`src/lib/username.ts`): 3 to 30 characters.
+    static let usernameMinLength = 3
     static let usernameMaxLength = 30
     /// The field takes 8 characters, as the website's (`maxLength={8}`).
     static let referralCodeFieldLength = 8

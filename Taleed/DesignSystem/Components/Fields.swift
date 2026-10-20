@@ -5,10 +5,11 @@ enum TaleedFieldState: Sendable {
     case normal, active, error, disabled
 }
 
-/// A label above a field (Caption 12/600, decision D-4).
+/// A label above a field (Caption 12/600 in `text/body`, decision D-4): the same on text fields, selects
+/// and text areas.
 struct FieldLabel: View {
     let text: String
-    var color: Color = TaleedColor.textPrimary
+    var color: Color = TaleedColor.textBody
 
     var body: some View {
         Text(text)
@@ -97,6 +98,8 @@ struct TaleedTextField: View {
     var forcedState: TaleedFieldState?
 
     @FocusState private var ownFocus: Bool
+    /// A secure field showing its text (the eye button).
+    @State private var isRevealed = false
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.locale) private var locale
 
@@ -148,6 +151,9 @@ struct TaleedTextField: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(DesignSystemStrings.string(.commonClear, locale: locale))
             }
+            if isSecure {
+                revealButton
+            }
         }
         .padding(.horizontal, TaleedSize.inputPaddingX)
         .padding(.vertical, 6)
@@ -160,15 +166,57 @@ struct TaleedTextField: View {
     @ViewBuilder
     private var field: some View {
         let prompt = Text(placeholder).foregroundStyle(TaleedColor.textSecondary)
-        if isSecure {
+        if isSecure, !isRevealed {
             SecureField("", text: $text, prompt: prompt)
         } else {
             TextField("", text: $text, prompt: prompt)
         }
     }
 
+    /// Shows or hides a password (the design system's eye; slashed while the text shows), 44 pt target.
+    /// The field keeps the focus while it switches.
+    private var revealButton: some View {
+        Button {
+            let wasFocused = isFocused
+            isRevealed.toggle()
+            if wasFocused {
+                // Once the other field is in place: the one that left took the focus with it.
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(60))
+                    focusField()
+                }
+            }
+        } label: {
+            TaleedIconView(.eye, size: TaleedSize.inputIconTrailing + 2,
+                           color: state == .active ? TaleedColor.brandPrimary : TaleedColor.textSecondary)
+                .overlay {
+                    if isRevealed {
+                        SlashShape()
+                            .stroke(state == .active ? TaleedColor.brandPrimary : TaleedColor.textSecondary,
+                                    style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                    }
+                }
+                .frame(width: 24, height: 24)
+                .minimumHitArea()
+        }
+        .buttonStyle(.plain)
+        .disabled(state == .disabled)
+        .accessibilityLabel(DesignSystemStrings.string(isRevealed ? .appAuthHidePassword : .appAuthShowPassword,
+                                                       locale: locale))
+    }
+
     private func focusField() {
         if let focus { focus.wrappedValue = true } else { ownFocus = true }
+    }
+}
+
+/// The slash across the eye of a revealed password (Phosphor's eye-slash diagonal).
+private struct SlashShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX + rect.width * 0.12, y: rect.minY + rect.height * 0.12))
+        path.addLine(to: CGPoint(x: rect.maxX - rect.width * 0.12, y: rect.maxY - rect.height * 0.12))
+        return path
     }
 }
 
@@ -196,7 +244,7 @@ struct TaleedSelectField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSize.inputLabelGap) {
             if let label {
-                FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textPrimary)
+                FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textBody)
             }
             Button(action: action) {
                 HStack(spacing: TaleedSize.selectGap) {
@@ -251,7 +299,7 @@ struct TaleedTextArea: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSize.inputLabelGap) {
             if let label {
-                FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textPrimary)
+                FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textBody)
             }
             TextField("", text: $text, prompt: Text(placeholder).foregroundStyle(TaleedColor.textSecondary), axis: .vertical)
                 .lineLimit(5...10)

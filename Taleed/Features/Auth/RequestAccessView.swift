@@ -11,6 +11,10 @@ struct RequestAccessFormView: View {
     @FocusState private var emailFocused: Bool
     @FocusState private var phoneFocused: Bool
     @FocusState private var referralFocused: Bool
+    @Environment(\.sheetScrollProxy) private var scrollProxy
+
+    /// The message and the button, scrolled into view together when a message appears.
+    private static let submitID = "requestAccess.submit"
 
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSize.bottomSheetGap) {
@@ -24,14 +28,19 @@ struct RequestAccessFormView: View {
                 }
                 fields.disabled(viewModel.isLoading)
 
-                if let message = viewModel.formMessage {
-                    AuthFormMessage(text: l10n.text(for: message),
-                                    actionTitle: viewModel.offersSignIn ? l10n.string(.authLoginCta) : nil,
-                                    action: viewModel.offersSignIn ? { flow.show(.signIn) } : nil)
-                }
+                // As on Sign in, the message sits right above the button; the sheet scrolls to both when
+                // it appears (`account_exists` comes back with the form filled, the button below the fold).
+                VStack(alignment: .leading, spacing: TaleedSize.bottomSheetGap) {
+                    if let message = viewModel.formMessage {
+                        AuthFormMessage(text: l10n.text(for: message),
+                                        actionTitle: viewModel.offersSignIn ? l10n.string(.authLoginCta) : nil,
+                                        action: viewModel.offersSignIn ? { flow.show(.signIn) } : nil)
+                    }
 
-                TaleedButton(title: l10n.string(.authRequestAccessCta), kind: .secondary, size: .large,
-                             isLoading: viewModel.isLoading, isFullWidth: true, action: submit)
+                    TaleedButton(title: l10n.string(.authRequestAccessCta), kind: .secondary, size: .large,
+                                 isLoading: viewModel.isLoading, isFullWidth: true, action: submit)
+                }
+                .id(Self.submitID)
             }
 
             AuthFooterLink(prompt: l10n.string(.authHaveAccount), action: l10n.string(.authLoginCta)) {
@@ -39,6 +48,12 @@ struct RequestAccessFormView: View {
             }
         }
         .padding(.bottom, TaleedSpacing.s8)
+        .autofocus($firstNameFocused)
+        .onChange(of: viewModel.formMessage) { _, message in
+            guard message != nil else { return }
+            // After the layout has the message.
+            Task { @MainActor in scrollProxy?.scrollAnimated(to: Self.submitID, anchor: .bottom) }
+        }
     }
 
     @ViewBuilder
@@ -69,8 +84,8 @@ struct RequestAccessFormView: View {
                 .limitLength($viewModel.lastName, to: AuthRules.namePartMaxLength)
                 .submitLabel(.next)
                 .onSubmit { emailFocused = true }
-            TaleedTextField(label: l10n.string(.authEmail), text: $viewModel.email, error: error(.email),
-                            showsClearButton: false, focus: $emailFocused)
+            TaleedTextField(label: l10n.string(.authEmail), text: $viewModel.email, leadingIcon: .envelope,
+                            error: error(.email), showsClearButton: false, focus: $emailFocused)
                 .textContentType(.emailAddress)
                 .emailInput()
                 .limitLength($viewModel.email, to: AuthRules.emailMaxLength)
@@ -95,9 +110,10 @@ struct RequestAccessFormView: View {
         }
     }
 
-    /// "Phone number (optional)", as the website's label.
+    /// "Numéro de téléphone (facultatif)": the referral code's word ("Code de parrainage (facultatif)"),
+    /// so every optional field of the form says it the same way.
     private func optional(_ label: String) -> String {
-        "\(label) (\(l10n.string(.commonOptional)))"
+        "\(label) (\(l10n.string(.appAuthOptional)))"
     }
 
     private func error(_ field: RequestAccessViewModel.Field) -> String? {

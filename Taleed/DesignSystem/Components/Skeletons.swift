@@ -66,15 +66,30 @@ struct SkeletonProductCard: View {
     }
 }
 
+/// The product grid's columns: two (Figma Home: gap 8), one from accessibility text sizes on, where
+/// two columns leave each card too narrow for its title, price and city.
+enum ProductGridColumns {
+    static func count(for dynamicTypeSize: DynamicTypeSize) -> Int {
+        dynamicTypeSize.isAccessibilitySize ? 1 : 2
+    }
+
+    static func columns(for dynamicTypeSize: DynamicTypeSize, alignment: Alignment = .center) -> [GridItem] {
+        let count = count(for: dynamicTypeSize)
+        return (0..<count).map { index in
+            GridItem(.flexible(), spacing: index < count - 1 ? TaleedLayout.productGridGap : nil, alignment: alignment)
+        }
+    }
+}
+
 /// Loading placeholders that keep the layout: a grid of product-card skeletons, at most six
 /// (Android `SkeletonProductGrid`).
 struct SkeletonProductGrid: View {
     var count = 4
     @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedLayout.productGridGap),
-                            GridItem(.flexible())], spacing: TaleedLayout.productGridGap) {
+        LazyVGrid(columns: ProductGridColumns.columns(for: dynamicTypeSize), spacing: TaleedLayout.productGridGap) {
             ForEach(0..<min(count, TaleedMotion.skeletonMaxPlaceholders), id: \.self) { _ in
                 SkeletonProductCard()
             }

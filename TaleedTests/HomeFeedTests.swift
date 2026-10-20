@@ -347,6 +347,9 @@ struct HomeViewModelTests {
     @Test func categoryChipIcons() {
         #expect(HomeCategoryIcon.icon(forSlug: "kids") == .baby)
         #expect(HomeCategoryIcon.icon(forSlug: "women") == .dress)
-        #expect(HomeCategoryIcon.icon(forSlug: "food") == nil)
+        #expect(HomeCategoryIcon.icon(forSlug: "food") == .storefront)
+        #expect(HomeCategoryIcon.icon(forSlug: "entertainment") == .ticket)
+        #expect(HomeCategoryIcon.icon(forSlug: "other") == .dotsThree)
+        #expect(HomeCategoryIcon.icon(forSlug: "garden") == nil)
     }
 }

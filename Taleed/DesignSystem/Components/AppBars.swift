@@ -56,6 +56,9 @@ struct BrandAppBar: View {
     /// Defaults to "Profile" (`tab_profile`).
     var avatarAccessibilityLabel: String?
     var onAvatar: (() -> Void)?
+    /// Signed out (no `avatarInitials`): a neutral avatar (the `user` icon in a 36 pt `blue/100` circle)
+    /// that opens sign-in, so the bar keeps Figma's shape. Nil shows nothing.
+    var onSignIn: (() -> Void)?
     @Environment(\.locale) private var locale
 
     var body: some View {
@@ -95,6 +98,15 @@ struct BrandAppBar: View {
                     } else {
                         avatar
                     }
+                } else if let onSignIn {
+                    Button(action: onSignIn) {
+                        TaleedIconView(.user, size: 20, color: TaleedColor.blue600)
+                            .frame(width: 36, height: 36)
+                            .background(Circle().fill(TaleedColor.blue100))
+                            .minimumHitArea()
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(DesignSystemStrings.string(.authSignIn, locale: locale))
                 }
             }
         }
@@ -264,6 +276,8 @@ struct Eyebrow: View {
         Text(text.uppercased(with: locale))
             .taleedFont(TaleedFont.eyebrow)
             .foregroundStyle(TaleedColor.brandPrimary)
+            // A small uppercase header: it stops growing at Accessibility 1 rather than wrap over huge lines.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             .accessibilityLabel(text)
     }
 }
@@ -303,14 +317,21 @@ struct ListRow: View {
     var showsDivider = true
     var labelColor: Color = TaleedColor.textPrimary
     var isSelected = false
+    /// One line that scales down instead of wrapping, for a label that must not break inside a word
+    /// (an email address, a phone number).
+    var keepsLabelOnOneLine = false
     var action: (() -> Void)?
+    /// The leading icon grows with the text (up to 36 pt), so it does not look tiny beside large text.
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 20
 
     var body: some View {
         let content = HStack(spacing: TaleedSpacing.s12) {
-            if let leadingIcon { TaleedIconView(leadingIcon, size: 20, color: TaleedColor.textSecondary) }
+            if let leadingIcon { TaleedIconView(leadingIcon, size: min(iconSize, 36), color: TaleedColor.textSecondary) }
             Text(label)
                 .taleedFont(TaleedFont.bodyLarge)
                 .foregroundStyle(labelColor)
+                .lineLimit(keepsLabelOnOneLine ? 1 : nil)
+                .minimumScaleFactor(keepsLabelOnOneLine ? 0.4 : 1)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if let trailingText {
                 Text(trailingText)

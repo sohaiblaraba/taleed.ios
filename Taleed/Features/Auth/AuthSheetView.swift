@@ -121,7 +121,23 @@ struct AuthFormMessage: View {
     }
 }
 
+extension ScrollViewProxy {
+    /// Brings `id` into view, animated (a form's first error, a message above the button).
+    func scrollAnimated(to id: some Hashable, anchor: UnitPoint) {
+        withAnimation(.easeInOut(duration: TaleedMotion.transitionMin)) { scrollTo(id, anchor: anchor) }
+    }
+}
+
 extension View {
+    /// Focuses a field once the form shows (the sheet has finished rising), so the keyboard comes up
+    /// and lifts the sheet's actions above it.
+    func autofocus(_ focus: FocusState<Bool>.Binding) -> some View {
+        task {
+            try? await Task.sleep(for: .milliseconds(450))
+            focus.wrappedValue = true
+        }
+    }
+
     /// An email field: no capitals, no corrections, the email keyboard.
     func emailInput() -> some View {
         keyboardType(.emailAddress)

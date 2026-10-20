@@ -15,6 +15,7 @@ struct SignUpFormView: View {
     @FocusState private var emailFocused: Bool
     @FocusState private var passwordFocused: Bool
     @FocusState private var referralFocused: Bool
+    @Environment(\.sheetScrollProxy) private var scrollProxy
 
     var body: some View {
         VStack(alignment: .leading, spacing: TaleedSize.bottomSheetGap) {
@@ -47,14 +48,17 @@ struct SignUpFormView: View {
                 .limitLength($viewModel.firstName, to: AuthRules.namePartMaxLength)
                 .submitLabel(.next)
                 .onSubmit { lastNameFocused = true }
+                .id(SignUpViewModel.Field.firstName)
             TaleedTextField(label: l10n.string(.authLastName), text: $viewModel.lastName,
                             error: error(.lastName), showsClearButton: false, focus: $lastNameFocused)
                 .textContentType(.familyName)
                 .limitLength($viewModel.lastName, to: AuthRules.namePartMaxLength)
                 .submitLabel(.next)
                 .onSubmit { usernameFocused = true }
+                .id(SignUpViewModel.Field.lastName)
+            // The helper gives the whole rule (length and characters); an error names only the part that failed.
             TaleedTextField(label: l10n.string(.authUsername), text: $viewModel.username,
-                            helper: l10n.string(.authUsernameHint), error: error(.username), showsClearButton: false,
+                            helper: l10n.string(.appAuthUsernameHint), error: error(.username), showsClearButton: false,
                             focus: $usernameFocused)
                 .textContentType(.username)
                 .textInputAutocapitalization(.never)
@@ -62,9 +66,10 @@ struct SignUpFormView: View {
                 .limitLength($viewModel.username, to: AuthRules.usernameMaxLength)
                 .submitLabel(.next)
                 .onSubmit { emailFocused = true }
+                .id(SignUpViewModel.Field.username)
             VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-                TaleedTextField(label: l10n.string(.authEmail), text: $viewModel.email, error: error(.email),
-                                showsClearButton: false, focus: $emailFocused)
+                TaleedTextField(label: l10n.string(.authEmail), text: $viewModel.email, leadingIcon: .envelope,
+                                error: error(.email), showsClearButton: false, focus: $emailFocused)
                     .textContentType(.emailAddress)
                     .emailInput()
                     .limitLength($viewModel.email, to: AuthRules.emailMaxLength)
@@ -82,12 +87,14 @@ struct SignUpFormView: View {
                     }
                 }
             }
-            TaleedTextField(label: l10n.string(.authPassword), text: $viewModel.password, error: error(.password),
-                            isSecure: true, focus: $passwordFocused)
+            .id(SignUpViewModel.Field.email)
+            TaleedTextField(label: l10n.string(.authPassword), text: $viewModel.password, leadingIcon: .lockKey,
+                            error: error(.password), isSecure: true, focus: $passwordFocused)
                 .textContentType(Self.newPasswordContentType)
                 .limitLength($viewModel.password, to: AuthRules.passwordMaxLength)
                 .submitLabel(.next)
                 .onSubmit { referralFocused = true }
+                .id(SignUpViewModel.Field.password)
             TaleedTextField(label: l10n.string(.authReferralCode), text: $viewModel.referralCode,
                             placeholder: l10n.string(.authReferralCodePlaceholder), error: error(.referralCode),
                             showsClearButton: false, focus: $referralFocused)
@@ -97,6 +104,7 @@ struct SignUpFormView: View {
                 .limitLength($viewModel.referralCode, to: AuthRules.referralCodeFieldLength)
                 .submitLabel(.done)
                 .onSubmit(submit)
+                .id(SignUpViewModel.Field.referralCode)
         }
     }
 
@@ -130,7 +138,11 @@ struct SignUpFormView: View {
         }
     }
 
+    /// Focus on the first field in error, scrolled to the top of the sheet.
     private func focusFirstError() {
+        if let field = viewModel.firstFieldInError {
+            scrollProxy?.scrollAnimated(to: field, anchor: .top)
+        }
         switch viewModel.firstFieldInError {
         case .firstName: firstNameFocused = true
         case .lastName: lastNameFocused = true

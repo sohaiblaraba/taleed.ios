@@ -20,14 +20,20 @@ struct SplashView: View {
     }
 }
 
+// The three blocking launch screens share one treatment: the brand app bar (wordmark) at the top,
+// then a title and a body (the empty/error-state pattern here, an alert on Suspended).
+
 /// The launch could not finish (no network, server error). The token, if any, is kept.
 struct LaunchErrorView: View {
     let error: ApiError
     let retry: () -> Void
 
     var body: some View {
-        ErrorStateView(error: error, retry: retry)
-            .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        VStack(spacing: 0) {
+            BrandAppBar(showsDivider: true)
+            ErrorStateView(error: error, retry: retry)
+        }
+        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
     }
 }
 
@@ -38,33 +44,20 @@ struct UpdateRequiredView: View {
     @Environment(\.openURL) private var openURL
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: TaleedSpacing.s16) {
-                Image(taleed: .lettermark)
-                    .resizable()
-                    .frame(width: 64, height: 64)
-                    .accessibilityHidden(true)
-                Text(l10n.string(.updateRequiredTitle))
-                    .taleedFont(TaleedFont.title2)
-                    .foregroundStyle(TaleedColor.textPrimary)
-                    .multilineTextAlignment(.center)
-                    .accessibilityAddTraits(.isHeader)
-                Text(l10n.string(.updateRequiredBody))
-                    .taleedFont(TaleedFont.bodyLarge)
-                    .foregroundStyle(TaleedColor.textBody)
-                    .multilineTextAlignment(.center)
+        VStack(spacing: 0) {
+            BrandAppBar(showsDivider: true)
+            CenteredStateColumn {
+                EmptyState(title: l10n.string(.updateRequiredTitle), message: l10n.string(.updateRequiredBody),
+                           icon: .sparkle)
                 if let storeURL {
                     TaleedButton(title: l10n.string(.updateRequiredAction), kind: .secondary, size: .large,
                                  isFullWidth: true) {
                         openURL(storeURL)
                     }
-                    .padding(.top, TaleedSpacing.s8)
+                    .padding(.horizontal, TaleedLayout.screenMargin)
                 }
             }
-            .padding(TaleedSpacing.s24)
-            .frame(maxWidth: .infinity)
         }
-        .defaultScrollAnchor(.center)
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
     }
 }
@@ -151,7 +144,7 @@ struct SuspendedView: View {
     private func contactRow(_ title: String, icon: TaleedIcon, url: URL, showsDivider: Bool = true) -> some View {
         // Emails and phone numbers read left to right in Arabic too.
         ListRow(label: title.isolatedLeftToRight, leadingIcon: icon, showsDivider: showsDivider,
-                labelColor: TaleedColor.brandPrimary) {
+                labelColor: TaleedColor.brandPrimary, keepsLabelOnOneLine: true) {
             openURL(url)
         }
         .accessibilityAddTraits(.isLink)

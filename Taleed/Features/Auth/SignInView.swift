@@ -33,6 +33,10 @@ struct SignInForm: View {
             }
         }
         .padding(.bottom, TaleedSpacing.s8)
+        .task {
+            try? await Task.sleep(for: .milliseconds(450))
+            if viewModel.email.isEmpty { emailFocused = true } else { passwordFocused = true }
+        }
     }
 
     private var fields: some View {

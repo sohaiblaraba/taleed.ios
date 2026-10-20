@@ -129,8 +129,10 @@ struct HomeView: View {
         if feed.hasLoaded {
             let listings = listingChanges.cards(feed.items.filter { !favorites.removedIds.contains($0.id) })
             if listings.isEmpty {
-                EmptyState(title: l10n.string(.homeEmptyFeed), actionTitle: l10n.string(.homeCtaSell),
-                           action: { router.selectedTab = .sell }, icon: .storefront)
+                // The website's one sentence (`home.emptyFeed`), split into a title and a body.
+                EmptyState(title: l10n.string(.appHomeEmptyTitle), message: l10n.string(.appHomeEmptyBody),
+                           actionTitle: l10n.string(.homeCtaSell), action: { router.selectedTab = .sell },
+                           icon: .storefront)
                     .padding(.top, TaleedSpacing.s32)
             } else {
                 // Siblings in the screen's lazy stack: the grid after the strip and the footer load
@@ -147,8 +149,9 @@ struct HomeView: View {
                 PaginationFooter(list: feed)
             }
         } else if let error = feed.error {
-            ErrorStateView(error: error) { Task { await viewModel.retry() } }
-                .frame(height: 320)
+            // Where the empty state sits, in the same layout.
+            ErrorStateView(error: error, retry: { Task { await viewModel.retry() } }, isInline: true)
+                .padding(.top, TaleedSpacing.s32)
         } else {
             SkeletonProductGrid(count: TaleedMotion.skeletonMaxPlaceholders)
                 .padding(.horizontal, TaleedLayout.screenMargin)
@@ -168,8 +171,9 @@ struct HomeView: View {
     }
 }
 
-/// The icons of the Home category chips (Figma Home #5), by top-level category slug. Other
-/// categories show their name only.
+/// The icons of the Home category chips (Figma Home #5), by top-level category slug: Figma's five, and
+/// the closest glyphs of the set for the catalog's other three (Figma draws an icon on every chip). A
+/// category added later shows its name only.
 enum HomeCategoryIcon {
     static func icon(forSlug slug: String) -> TaleedIcon? {
         switch slug {
@@ -178,6 +182,9 @@ enum HomeCategoryIcon {
         case "men": .tShirt
         case "home": .houseLine
         case "electronics": .washingMachine
+        case "entertainment": .ticket
+        case "food": .storefront
+        case "other": .dotsThree
         default: nil
         }
     }

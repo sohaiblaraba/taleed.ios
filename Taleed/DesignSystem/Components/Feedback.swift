@@ -15,10 +15,12 @@ struct InlineAlert: View {
 
     private static let messageStyle = TaleedTextStyle(size: 11, weight: .regular, lineHeight: 15.4, letterSpacing: 0,
                                                       relativeTo: .caption2)
+    /// The icon grows with the title (up to twice its size).
+    @ScaledMetric(relativeTo: .body) private var iconSize = TaleedSize.alertIconSize
 
     var body: some View {
         HStack(alignment: .top, spacing: TaleedSize.alertGap) {
-            TaleedIconView(icon, size: TaleedSize.alertIconSize, color: iconColor)
+            TaleedIconView(icon, size: min(iconSize, 2 * TaleedSize.alertIconSize), color: iconColor)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 // Title and message read as one element; the link stays its own element.
@@ -305,15 +307,24 @@ extension View {
 }
 
 /// Empty state (design-system §3.5, "Explain · reassure · act"): illustration 84, title 18/400,
-/// description 13/400 145 % (max 360 wide), optional Outline Medium action.
+/// description 13/400 145 % (max 360 wide), optional Outline Medium action. Error states use the same
+/// layout with the error tone (`warningCircle` on `errorSoft`), so both read as one pattern.
 struct EmptyState: View {
+    enum IconTone: Sendable {
+        /// `brandPrimary` on `brandSoft`.
+        case brand
+        /// `feedbackError` on `errorSoft`.
+        case error
+    }
+
     let title: String
     var message: String?
     var actionTitle: String?
     var action: (() -> Void)?
     var illustration: TaleedImage = .emptyStateSearch
-    /// Draws this icon in the 84 pt `brandSoft` circle instead of the illustration.
+    /// Draws this icon in the 84 pt circle instead of the illustration.
     var icon: TaleedIcon?
+    var iconTone: IconTone = .brand
 
     private static let titleStyle = TaleedTextStyle(size: 18, weight: .regular, lineHeight: nil, letterSpacing: 0,
                                                     relativeTo: .body)
@@ -348,9 +359,10 @@ struct EmptyState: View {
     @ViewBuilder
     private var artwork: some View {
         if let icon {
-            TaleedIconView(icon, size: TaleedSize.emptyStateIcon, color: TaleedColor.brandPrimary)
+            TaleedIconView(icon, size: TaleedSize.emptyStateIcon,
+                           color: iconTone == .error ? TaleedColor.feedbackError : TaleedColor.brandPrimary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Circle().fill(TaleedColor.brandSoft))
+                .background(Circle().fill(iconTone == .error ? TaleedColor.errorSoft : TaleedColor.brandSoft))
         } else {
             Image(taleed: illustration).resizable()
         }

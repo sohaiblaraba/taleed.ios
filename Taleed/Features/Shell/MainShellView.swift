@@ -202,7 +202,8 @@ struct ShellScreen<Bar: View, Content: View>: View {
 }
 
 /// The brand app bar of Home and Sell. Signed in, it shows the notifications bell (opens the
-/// notifications placeholder) and the member's avatar (opens Profile), as on Android.
+/// notifications placeholder) and the member's avatar (opens Profile), as on Android. Signed out, a
+/// neutral avatar opens the sign-in sheet.
 struct ShellBrandAppBar: View {
     var showsDivider = true
     @Environment(SessionManager.self) private var session
@@ -221,7 +222,8 @@ struct ShellBrandAppBar: View {
                 ? l10n.format(.appBadgeUnreadNotifications, unreadNotifications) : nil,
             avatarInitials: session.user.map { TaleedAvatar.initials(from: $0.displayName) },
             avatarURL: session.user?.avatarURL,
-            onAvatar: { router.selectedTab = .profile }
+            onAvatar: { router.selectedTab = .profile },
+            onSignIn: { router.presentSignIn() }
         )
     }
 }

@@ -262,6 +262,19 @@ extension View {
     }
 }
 
+private struct SheetScrollProxyKey: EnvironmentKey {
+    static var defaultValue: ScrollViewProxy? { nil }
+}
+
+extension EnvironmentValues {
+    /// The scroll view of the `taleedSheet` around this view, to bring a part of a long sheet into view
+    /// (a form's first error, a message under the fields). Nil outside such a sheet.
+    var sheetScrollProxy: ScrollViewProxy? {
+        get { self[SheetScrollProxyKey.self] }
+        set { self[SheetScrollProxyKey.self] = newValue }
+    }
+}
+
 private struct TaleedSheetPresenter<Sheet: View>: ViewModifier {
     @Binding var isPresented: Bool
     let onDismiss: (() -> Void)?
@@ -274,12 +287,15 @@ private struct TaleedSheetPresenter<Sheet: View>: ViewModifier {
         content.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
             // Sized to the content (24 pt top corners, the design-system handle instead of the system
             // one); taller content (large text) gets the full height and scrolls.
-            ScrollView {
-                sheet()
-                    .fixedSize(horizontal: false, vertical: true)
-                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    sheet()
+                        .fixedSize(horizontal: false, vertical: true)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+                        .environment(\.sheetScrollProxy, proxy)
+                }
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .scrollBounceBehavior(.basedOnSize)
             .presentationDetents([.height(height)])
             .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
             .presentationDragIndicator(.hidden)

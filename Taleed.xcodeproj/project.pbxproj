@@ -223,6 +223,7 @@
 		B302537E9FEF0F121603CAC4 /* AppRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A09654AEF99572E9D50D0D98 /* AppRouter.swift */; };
 		B47BED46CE886D4AA0062B09 /* GalleryCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C749C144A891516BF2CFBE /* GalleryCore.swift */; };
 		B4ADCCFFDE0409F85AE90114 /* FavoritesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0C7B36BE060DDC29E20EDE /* FavoritesTests.swift */; };
+		B58C39037792E59D70250BEE /* UsernameRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05B8440C9B49F3B2C234802 /* UsernameRuleTests.swift */; };
 		B6A429572190C053E7FD58C6 /* OffersApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8009F0D1ED8ABF52AD487380 /* OffersApi.swift */; };
 		B72BCE66B5E844E794A159EE /* TaleedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33392415F8DAE11A1675C5BC /* TaleedButton.swift */; };
 		B90A99F733F40B093E36BCFE /* Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E21C7F15EAFCCD44D94E892 /* Navigation.swift */; };
@@ -509,6 +510,7 @@
 		9D5CEF016F0DE5A82C21C4C8 /* WalletViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletViewModel.swift; sourceTree = "<group>"; };
 		9F58DE996C36CE1D8923DD61 /* MemberProfileRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberProfileRules.swift; sourceTree = "<group>"; };
 		9F65DECAF632B8E78972B941 /* ReportsApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsApi.swift; sourceTree = "<group>"; };
+		A05B8440C9B49F3B2C234802 /* UsernameRuleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsernameRuleTests.swift; sourceTree = "<group>"; };
 		A09654AEF99572E9D50D0D98 /* AppRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRouter.swift; sourceTree = "<group>"; };
 		A0AA15474F4023CDCA9E6F89 /* ListingDetailApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingDetailApi.swift; sourceTree = "<group>"; };
 		A111D2D5D66B51A0AF14DE69 /* VersionComparator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionComparator.swift; sourceTree = "<group>"; };
@@ -729,6 +731,7 @@
 				AAA3D9E494B3B87225011B8F /* SettingsListsTests.swift */,
 				53E21580CD3FD6E53318D9C0 /* SettingsRulesTests.swift */,
 				036B422B7EA77A406EC79487 /* SettingsViewModelTests.swift */,
+				A05B8440C9B49F3B2C234802 /* UsernameRuleTests.swift */,
 				7C7480F23FD208030F6690F0 /* VersionComparatorTests.swift */,
 				7291EDAB7CEFF57EB8948CD4 /* VisualSearchTests.swift */,
 				BB4211A1822B65E158FB66E9 /* WalletFixtures.swift */,
@@ -1534,6 +1537,7 @@
 				B2FA4233B50BD86DED3D67FB /* SettingsListsTests.swift in Sources */,
 				1B5112FDA68C1CA8B10D415E /* SettingsRulesTests.swift in Sources */,
 				A4737B74614D882E363B3036 /* SettingsViewModelTests.swift in Sources */,
+				B58C39037792E59D70250BEE /* UsernameRuleTests.swift in Sources */,
 				43CC2A3A457AF6468E0D572D /* VersionComparatorTests.swift in Sources */,
 				F5AB75D7B9A25FFB56648CB4 /* VisualSearchTests.swift in Sources */,
 				2E308A994F1CB39630908D23 /* WalletFixtures.swift in Sources */,

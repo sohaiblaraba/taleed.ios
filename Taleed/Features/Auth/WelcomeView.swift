@@ -10,6 +10,7 @@ struct WelcomeView: View {
     let onBrowse: () -> Void
     @Environment(LanguageManager.self) private var l10n
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.layoutDirection) private var layoutDirection
 
     /// The Figma frame the positions below are measured in.
     static let frame = CGSize(width: 440, height: 956)
@@ -17,9 +18,11 @@ struct WelcomeView: View {
     /// Where the headline starts, in the Figma frame: Figma's 438, a little higher so that a long second
     /// line (Arabic) ends above the camera and the dress hanger, below the pink knit.
     static let headlineTop: CGFloat = 428
-    /// The legal line's width in the Figma frame: the open sky between the camera and the dress. Figma's
-    /// 368 frame holds two short English lines; the French and Arabic ones are longer and take three.
-    static let legalWidth: CGFloat = 196
+    /// The legal line's box in the Figma frame: all the open sky from the camera's edge to the dress
+    /// (the artwork does not mirror, so these are left-to-right in every language). Figma's centred 368
+    /// frame holds two short English lines between the two; the French and Arabic ones take three.
+    static let legalStart: CGFloat = 118
+    static let legalEnd: CGFloat = 338
 
     var body: some View {
         GeometryReader { proxy in
@@ -67,13 +70,12 @@ struct WelcomeView: View {
                     .padding(.top, isAccessibilitySize ? minimumTop : max(minimumTop, Self.headlineTop * scaleY))
                 Spacer(minLength: TaleedSpacing.s24)
                 // Figma: legal 604, its frame 48 high, then 16 to the actions.
-                LegalText(text: l10n.string(.appWelcomeLegal), style: TaleedFont.legal, color: TaleedColor.navy900,
-                          linkColor: TaleedColor.navy900)
-                    .frame(maxWidth: isAccessibilitySize ? .infinity : Self.legalWidth * scaleX)
+                legal(scaleX: scaleX, isAccessibilitySize: isAccessibilitySize)
                 VStack(spacing: TaleedSpacing.s12) {
-                    TaleedButton(title: l10n.string(.appWelcomeContinueEmail), kind: .mintSoft, size: .large,
-                                 leadingIcon: .envelope, isFullWidth: true, leadingIconColor: TaleedColor.blue600,
-                                 action: onContinueWithEmail)
+                    // With "Continue with phone" hidden, email is the only way in: it takes the phone
+                    // button's mint Secondary look (the main CTA, decision D-10) and keeps its envelope.
+                    TaleedButton(title: l10n.string(.appWelcomeContinueEmail), kind: .secondary, size: .large,
+                                 leadingIcon: .envelope, isFullWidth: true, action: onContinueWithEmail)
                     TaleedButton(title: l10n.string(.appWelcomeBrowse), kind: .hyperlinkUnderlined, size: .large,
                                  action: onBrowse)
                 }
@@ -86,6 +88,26 @@ struct WelcomeView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .scrollIndicators(.hidden)
+    }
+
+    /// The legal line in the sky between the camera and the dress, from the camera's edge on (left to
+    /// right as the artwork, the text itself in the reading direction). Accessibility sizes use the
+    /// whole width over the scrim.
+    @ViewBuilder
+    private func legal(scaleX: CGFloat, isAccessibilitySize: Bool) -> some View {
+        let text = LegalText(text: l10n.string(.appWelcomeLegal), style: TaleedFont.legal, color: TaleedColor.navy900,
+                             linkColor: TaleedColor.navy900)
+        if isAccessibilitySize {
+            text.frame(maxWidth: .infinity)
+        } else {
+            // The column has 16 pt of padding on each side.
+            text
+                .environment(\.layoutDirection, layoutDirection)
+                .frame(width: (Self.legalEnd - Self.legalStart) * scaleX)
+                .padding(.leading, max(0, Self.legalStart * scaleX - TaleedSpacing.s16))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .environment(\.layoutDirection, .leftToRight)
+        }
     }
 }
 

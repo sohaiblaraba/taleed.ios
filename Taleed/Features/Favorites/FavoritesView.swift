@@ -71,7 +71,16 @@ struct FavoritesView: View {
             .refreshable { await model.refresh() }
             .accessibilityIdentifier("favorites.scroll")
         } else if let error = list.error {
-            ErrorStateView(error: error, retry: { Task { await model.retry() } }, onBack: { dismiss() })
+            if error.isNotFound {
+                ErrorStateView(error: error, retry: { Task { await model.retry() } }, onBack: { dismiss() })
+            } else {
+                // At the empty state's position, in the same layout.
+                ScrollView {
+                    ErrorStateView(error: error, retry: { Task { await model.retry() } }, isInline: true)
+                        .padding(.top, TaleedSpacing.s16 + TaleedSpacing.s48)
+                }
+                .scrollBounceBehavior(.basedOnSize)
+            }
         } else {
             ScrollView {
                 SkeletonProductGrid(count: TaleedMotion.skeletonMaxPlaceholders)
@@ -83,9 +92,10 @@ struct FavoritesView: View {
         }
     }
 
-    /// "3 articles" (the website's `filters.results` under the title).
+    /// "3 articles" under the title, as on the website. Its own key: the website's `filters.results` reads
+    /// "results" in Arabic, which belongs to search.
     private var countRow: some View {
-        Text(l10n.format(.filtersResults, model.resultCount))
+        Text(l10n.format(.appFavoritesCount, model.resultCount))
             .taleedFont(TaleedFont.bodyRegular)
             .foregroundStyle(TaleedColor.textBody)
             .frame(maxWidth: .infinity, alignment: .leading)

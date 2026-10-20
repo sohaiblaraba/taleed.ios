@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Forgot password (website `forgot-password-form.tsx`): subtitle, email, "Send link" (blue Primary,
-/// as the website's default button), and once sent the neutral "if an account exists for this email,
+/// Forgot password (website `forgot-password-form.tsx`): subtitle, email, "Send link" (mint Secondary
+/// Large, the main CTA of every auth sheet, decision D-10), and once sent the neutral "if an account exists for this email,
 /// a link has been sent". The link opens the website's reset page (decision 2).
 struct ForgotPasswordFormView: View {
     @Bindable var viewModel: ForgotPasswordViewModel
@@ -28,7 +28,7 @@ struct ForgotPasswordFormView: View {
                 AuthFormMessage(text: l10n.text(for: message))
             }
 
-            TaleedButton(title: l10n.string(.authSendResetLink), kind: .primary, size: .large,
+            TaleedButton(title: l10n.string(.authSendResetLink), kind: .secondary, size: .large,
                          isLoading: viewModel.isLoading, isFullWidth: true, action: submit)
                 .disabled(!viewModel.canSubmit && !viewModel.isLoading)
 
@@ -37,6 +37,7 @@ struct ForgotPasswordFormView: View {
             }
         }
         .padding(.bottom, TaleedSpacing.s8)
+        .autofocus($emailFocused)
     }
 
     private func submit() {

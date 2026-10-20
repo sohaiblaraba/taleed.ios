@@ -88,15 +88,16 @@ enum ListingCardContent {
     }
 }
 
-/// The two-column grid of listing cards (Figma Home: gap 8, inside the 16 pt margins).
+/// The two-column grid of listing cards (Figma Home: gap 8, inside the 16 pt margins); one column at
+/// accessibility text sizes.
 struct ListingGrid: View {
     let listings: [ListingSummary]
     /// See `ListingCardView.onFavorite`.
     var onFavorite: ((ListingSummary) -> Void)?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: TaleedLayout.productGridGap, alignment: .top),
-                            GridItem(.flexible(), alignment: .top)],
+        LazyVGrid(columns: ProductGridColumns.columns(for: dynamicTypeSize, alignment: .top),
                   spacing: TaleedLayout.productGridGap) {
             ForEach(listings) { ListingCardView(listing: $0, onFavorite: onFavorite) }
         }

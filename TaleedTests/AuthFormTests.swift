@@ -91,7 +91,7 @@ struct SignUpViewModelTests {
         let outcome = await viewModel.submit()
 
         #expect(outcome == .failed)
-        #expect(viewModel.fieldErrors == [.username: .usernameInvalid])
+        #expect(viewModel.fieldErrors == [.username: .usernameLength])
         #expect(viewModel.firstFieldInError == .username)
         #expect(api.signUps.isEmpty)
     }
@@ -101,7 +101,7 @@ struct SignUpViewModelTests {
 
         _ = await viewModel.submit()
 
-        #expect(viewModel.fieldErrors == [.firstName: .nameLength, .lastName: .nameLength, .username: .usernameInvalid,
+        #expect(viewModel.fieldErrors == [.firstName: .nameLength, .lastName: .nameLength, .username: .usernameLength,
                                           .email: .emailInvalid, .password: .passwordTooShort])
         #expect(viewModel.firstFieldInError == .firstName)
     }

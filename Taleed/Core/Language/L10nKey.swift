@@ -849,4 +849,16 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appReferralsRuleInviterSale = "app_referrals_rule_inviter_sale"
     case appReferralsShare = "app_referrals_share"
     case appReferralsInviteLink = "app_referrals_invite_link"
+    case appAuthOptional = "app_auth_optional"
+    case appAuthUsernameHint = "app_auth_username_hint"
+    case appAuthUsernameStart = "app_auth_username_start"
+    case appAuthUsernameCharacters = "app_auth_username_characters"
+    case appAuthShowPassword = "app_auth_show_password"
+    case appAuthHidePassword = "app_auth_hide_password"
+    case appErrorOfflineTitle = "app_error_offline_title"
+    case appErrorOfflineBody = "app_error_offline_body"
+    case appErrorTitle = "app_error_title"
+    case appHomeEmptyTitle = "app_home_empty_title"
+    case appHomeEmptyBody = "app_home_empty_body"
+    case appFavoritesCount = "app_favorites_count"  // plural
 }

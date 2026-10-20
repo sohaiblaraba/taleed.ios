@@ -21,6 +21,24 @@ enum AuthValidation {
         trimmed(username).wholeMatch(of: /[a-zA-Z0-9][a-zA-Z0-9._-]{2,29}/) != nil
     }
 
+    enum UsernameProblem: Equatable {
+        /// Not 3 to 30 characters.
+        case length
+        /// Starts with `.`, `_` or `-`.
+        case start
+        /// A character other than letters, digits, `.`, `_` and `-`.
+        case characters
+    }
+
+    /// What is wrong with a username, the length first (the same rule as `isValidUsername`).
+    static func usernameProblem(_ username: String) -> UsernameProblem? {
+        let username = trimmed(username)
+        guard !isValidUsername(username) else { return nil }
+        if !(AuthRules.usernameMinLength...AuthRules.usernameMaxLength).contains(username.utf16.count) { return .length }
+        if username.wholeMatch(of: /[a-zA-Z0-9._-]+/) == nil { return .characters }
+        return .start
+    }
+
     /// First or family name: 2 to 30 characters once trimmed.
     static func isValidNamePart(_ name: String) -> Bool {
         (AuthRules.namePartMinLength...AuthRules.namePartMaxLength).contains(trimmed(name).utf16.count)
@@ -68,7 +86,11 @@ enum AuthValidation {
 enum AuthFieldError: Equatable, Sendable {
     case emailInvalid
     case nameLength
+    /// The server refused the username (`invalid_username`): the whole rule.
     case usernameInvalid
+    case usernameLength
+    case usernameStart
+    case usernameCharacters
     case usernameTaken
     case emailTaken
     case passwordTooShort
@@ -88,12 +110,22 @@ extension LanguageManager {
         switch error {
         case .emailInvalid: string(.appAuthEmailInvalid)
         case .nameLength: format(.appAuthNameLength, AuthRules.namePartMinLength, AuthRules.namePartMaxLength)
-        case .usernameInvalid: string(.authErrorUsernameInvalid)
+        case .usernameInvalid, .usernameLength, .usernameStart, .usernameCharacters: usernameText(for: error)
         case .usernameTaken: string(.authErrorUsernameTaken)
         case .emailTaken: string(.authErrorEmailExists)
         case .passwordTooShort: string(.settingsPasswordTooShort)
         case .passwordTooLong: string(.appErrorPasswordTooLong)
         case .invalid: string(.appErrorInvalidRequest)
+        }
+    }
+
+    /// A username error names only the part of the rule that failed; the server's refusal gives the whole rule.
+    private func usernameText(for error: AuthFieldError) -> String {
+        switch error {
+        case .usernameLength: format(.appAuthNameLength, AuthRules.usernameMinLength, AuthRules.usernameMaxLength)
+        case .usernameStart: string(.appAuthUsernameStart)
+        case .usernameCharacters: string(.appAuthUsernameCharacters)
+        default: string(.authErrorUsernameInvalid)
         }
     }
 

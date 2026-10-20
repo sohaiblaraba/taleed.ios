@@ -1,7 +1,12 @@
 import SwiftUI
 
 /// Home hero banner (wireframe Home #4): photo with a 40 % overlay (the title's only contrast aid), a cut-out that pops 24 pt above
-/// the card, a two-line title, a mint CTA and a dismiss button. Photos do not mirror.
+/// the card, a two-line title, a mint CTA and a dismiss button. In Arabic the banner mirrors like the
+/// other screens: the copy on the right (leading), the dismiss button top-left (trailing) and the
+/// decorative lifestyle photo flipped so the copy stays on its empty side.
+///
+/// The title wraps only between words: the column widens at accessibility sizes, the banner's text
+/// stops growing at Accessibility 2, and a word still too wide steps the title down in size.
 struct HeroBanner: View {
     let title: String
     let ctaLabel: String
@@ -10,9 +15,12 @@ struct HeroBanner: View {
     let onCta: () -> Void
     var onDismiss: (() -> Void)?
     @Environment(\.locale) private var locale
-    @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private let popOut = TaleedSize.heroBannerForegroundOverflowTop
+    /// The copy column: Figma's 160, wider once the text reaches accessibility sizes (the photo's
+    /// overlay keeps the title readable over it).
+    private var columnWidth: CGFloat { dynamicTypeSize.isAccessibilitySize ? 240 : 160 }
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: TaleedSize.heroBannerRadius, style: .continuous)
@@ -21,7 +29,7 @@ struct HeroBanner: View {
             .background {
                 ZStack {
                     Color.clear
-                        .overlay { background.resizable().scaledToFill() }
+                        .overlay { background.resizable().scaledToFill().flipsForRightToLeftLayoutDirection(true) }
                         .overlay(TaleedColor.heroOverlay)
                         .clipShape(shape)
                     // The cut-out's own frame is the banner plus `popOut`, with the same corner radius,
@@ -29,7 +37,9 @@ struct HeroBanner: View {
                     if let foreground {
                         GeometryReader { proxy in
                             Color.clear
-                                .overlay(alignment: .bottom) { foreground.resizable().scaledToFill() }
+                                .overlay(alignment: .bottom) {
+                                    foreground.resizable().scaledToFill().flipsForRightToLeftLayoutDirection(true)
+                                }
                                 .frame(width: proxy.size.width, height: proxy.size.height + popOut)
                                 .clipShape(shape)
                                 .offset(y: -popOut)
@@ -52,23 +62,18 @@ struct HeroBanner: View {
                 }
             }
             .padding(.top, popOut)
-            // The artwork does not mirror, so the copy stays on the photo's empty side in every
-            // language; the copy itself keeps the reading direction.
-            .environment(\.layoutDirection, .leftToRight)
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
     }
 
     private var content: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
-            Text(title)
-                .taleedFont(TaleedFont.headline)
+            WordFittingText(text: title, style: TaleedFont.headline)
                 .foregroundStyle(TaleedColor.textInverse)
-                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 0)
             TaleedButton(title: ctaLabel, kind: .secondary, size: .small, isFullWidth: true, action: onCta)
         }
-        .environment(\.layoutDirection, layoutDirection)
-        .frame(width: 160, alignment: .leading)
+        .frame(width: columnWidth, alignment: .leading)
         .frame(minHeight: 112)
         .padding(.vertical, TaleedSize.heroBannerPaddingY)
         .padding(.horizontal, TaleedSize.heroBannerPaddingX)

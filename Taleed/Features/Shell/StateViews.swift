@@ -19,30 +19,46 @@ struct LoadingStateView: View {
     }
 }
 
-/// An error with Retry: warning icon, the app's message for the error (offline, rate limit, server…),
-/// a Tertiary Medium "Retry". A `404 not_found` shows the "no longer available" state instead, with
-/// "Back to home" (screens that live in a stack may pass `onBack` to go back instead).
+/// An error with Retry, in the empty-state layout (design-system §3.5) so both states read as one
+/// pattern: `warningCircle` in the 84 pt `errorSoft` circle, a title ("No connection" offline), the
+/// app's message for the error (rate limit, server…) and an Outline Medium "Retry". A `404 not_found`
+/// shows the "no longer available" state instead, with "Back to home" (screens that live in a stack
+/// may pass `onBack` to go back instead).
 struct ErrorStateView: View {
     let error: ApiError
     let retry: () -> Void
     var onBack: (() -> Void)?
+    /// True draws the state where the caller places it (at its empty state's position) instead of
+    /// centred in the space.
+    var isInline = false
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router: AppRouter?
 
     var body: some View {
         if error.isNotFound {
             NotFoundStateView(onBack: onBack ?? router.map { router in { router.open(.home) } })
+        } else if isInline {
+            state
         } else {
-            CenteredStateColumn {
-                TaleedIconView(.warningCircle, size: 32, color: TaleedColor.feedbackError)
-                    .accessibilityHidden(true)
-                Text(l10n.message(for: error))
-                    .taleedFont(TaleedFont.bodyLarge)
-                    .foregroundStyle(TaleedColor.textPrimary)
-                    .multilineTextAlignment(.center)
-                TaleedButton(title: l10n.string(.commonRetry), kind: .tertiary, size: .medium, action: retry)
-            }
+            CenteredStateColumn { state }
         }
+    }
+
+    private var state: some View {
+        EmptyState(title: l10n.string(Self.titleKey(for: error)), message: message, actionTitle: l10n.string(.commonRetry),
+                   action: retry, icon: .warningCircle, iconTone: .error)
+    }
+
+    /// "Check your network…" offline; otherwise the error's own message, none when it is the generic one
+    /// (the title already says it).
+    private var message: String? {
+        if error == .network { return l10n.string(.appErrorOfflineBody) }
+        return error.messageKey == .commonErrorGeneric ? nil : l10n.message(for: error)
+    }
+
+    /// "No connection" offline, "Something went wrong" otherwise.
+    static func titleKey(for error: ApiError) -> L10nKey {
+        error == .network ? .appErrorOfflineTitle : .appErrorTitle
     }
 }
 

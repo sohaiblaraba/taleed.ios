@@ -200,7 +200,9 @@ struct CountBadge: View {
                 if size == .small { Capsule().strokeBorder(TaleedColor.surfacePrimary, lineWidth: 1.5) }
             }
             .environment(\.layoutDirection, .leftToRight)
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            // The small badge sits on the corner of a fixed-size icon (the bell, a tab), so it keeps its
+            // size; the regular one (list rows) grows a little with the text.
+            .dynamicTypeSize(...(size == .small ? DynamicTypeSize.large : DynamicTypeSize.xxxLarge))
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(accessibilityLabel)
     }

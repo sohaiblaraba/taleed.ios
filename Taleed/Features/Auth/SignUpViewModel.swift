@@ -61,7 +61,12 @@ final class SignUpViewModel {
         var errors: [Field: AuthFieldError] = [:]
         if !AuthValidation.isValidNamePart(firstName) { errors[.firstName] = .nameLength }
         if !AuthValidation.isValidNamePart(lastName) { errors[.lastName] = .nameLength }
-        if !AuthValidation.isValidUsername(username) { errors[.username] = .usernameInvalid }
+        switch AuthValidation.usernameProblem(username) {
+        case .length: errors[.username] = .usernameLength
+        case .start: errors[.username] = .usernameStart
+        case .characters: errors[.username] = .usernameCharacters
+        case nil: break
+        }
         if !AuthValidation.isValidEmail(email) { errors[.email] = .emailInvalid }
         switch AuthValidation.newPasswordProblem(password) {
         case .tooShort: errors[.password] = .passwordTooShort
