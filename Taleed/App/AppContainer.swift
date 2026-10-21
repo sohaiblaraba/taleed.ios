@@ -85,18 +85,26 @@ final class AppContainer {
             try await api.openConversation(listingId: listingId, buyerId: buyerId)
         }
         router.websiteLinks = { [launch] in launch.config?.links ?? WebsiteLinks() }
-        launch.willShowScreen = { [router] in router.launchWillShowItsScreen() }
         router.onNotificationsOpened = { [notificationsFeed] in notificationsFeed.somethingArrived() }
         favorites.onFailure = { [toasts] error in toasts.show(error: error) }
         favorites.onRemoved = { [toasts, languageManager] _ in
             toasts.show(languageManager.string(.appNotFoundTitle), kind: .info)
         }
+        connectLinks()
 
         #if DEBUG
         DebugLaunchOptions.apply(to: router)
         #endif
 
         connectSettings()
+    }
+
+    /// When links and pushes open: once the launch knows the session, and not while the account is
+    /// suspended (they wait for the suspension to lift instead of opening over the suspended screen).
+    private func connectLinks() {
+        launch.willShowScreen = { [router] in router.launchWillShowItsScreen() }
+        router.isSuspended = { [session] in session.state == .suspended }
+        session.onSuspensionLifted = { [router] in router.suspensionDidLift() }
     }
 
     /// No token source until Firebase is set up (plan action 3): nothing is asked or registered meanwhile.

@@ -37,6 +37,9 @@ final class SessionManager {
     @ObservationIgnored var onSuspended: (() -> Void)?
     /// Called after the member deleted their account: the signed-out Home, without the welcome screen.
     @ObservationIgnored var onAccountDeleted: (() -> Void)?
+    /// Called when a suspended member's session works again (`GET /me` answered `200`), just after the
+    /// state changed: the shell shows again, with a link that waited meanwhile.
+    @ObservationIgnored var onSuspensionLifted: (() -> Void)?
     /// Called when a session starts: a sign-in, a sign-up, or launch with a stored token that `GET /me`
     /// accepted (the push device registers again, slice C).
     @ObservationIgnored var onSessionStarted: (() -> Void)?
@@ -83,7 +86,10 @@ final class SessionManager {
     func refresh() async {
         guard isSignedIn || hasSuspendedSession else { return }
         do {
-            state = .signedIn(try await api.me(automatic: true))
+            let user = try await api.me(automatic: true)
+            let wasSuspended = state == .suspended
+            state = .signedIn(user)
+            if wasSuspended { onSuspensionLifted?() }
         } catch {
             if error == .banned, state != .suspended { suspend() }
             // `.unauthorized` is handled by `handleUnauthorized`.

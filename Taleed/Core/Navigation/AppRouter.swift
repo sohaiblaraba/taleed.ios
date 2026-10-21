@@ -47,6 +47,9 @@ final class AppRouter {
 
     // Set by `AppContainer`.
     @ObservationIgnored var isSignedIn: () -> Bool = { false }
+    /// The account is suspended: the suspended screen shows instead of the shell, so links and pushes
+    /// wait (`suspensionDidLift`) rather than open over it (a website page in the in-app browser).
+    @ObservationIgnored var isSuspended: () -> Bool = { false }
     /// `POST /conversations`: the conversation about a listing; `buyerId` only for the seller (`?with=`).
     @ObservationIgnored var resolveConversation: ((_ listingId: String, _ buyerId: String?) async throws(ApiError) -> String)?
     @ObservationIgnored var websiteLinks: () -> WebsiteLinks = { WebsiteLinks() }
@@ -60,7 +63,8 @@ final class AppRouter {
 
     /// The action waiting for sign-in, run once the sheet closes signed in.
     @ObservationIgnored private var afterSignIn: (() -> Void)?
-    /// A link that arrived before the launch flow finished (`GET /config`, the session restored).
+    /// A link that arrived before the launch flow finished (`GET /config`, the session restored), or
+    /// while the account is suspended. Only the latest one is kept.
     @ObservationIgnored private var pendingDestination: AppDestination?
     @ObservationIgnored private var isLaunchFinished = false
 
@@ -141,9 +145,11 @@ final class AppRouter {
     }
 
     /// Opens a destination with a valid stack under it. During launch the destination waits for the launch
-    /// flow (`launchWillShowItsScreen`), which knows whether the member is signed in.
+    /// flow (`launchWillShowItsScreen`), which knows whether the member is signed in; while the account is
+    /// suspended it waits for the suspension to lift (`suspensionDidLift`), and is dropped if the
+    /// session ends instead.
     func open(_ destination: AppDestination) { // swiftlint:disable:this cyclomatic_complexity
-        guard isLaunchFinished else {
+        guard isLaunchFinished, !isSuspended() else {
             pendingDestination = destination
             return
         }
@@ -268,6 +274,14 @@ final class AppRouter {
         }
     }
 
+    /// The suspension was lifted (`GET /me` answered again on return to the foreground): the shell shows
+    /// again, with a link that came meanwhile.
+    func suspensionDidLift() {
+        guard isLaunchFinished, !isSuspended(), let pending = pendingDestination else { return }
+        pendingDestination = nil
+        open(pending)
+    }
+
     private func show(_ tab: AppTab, stack: [AppRoute]) {
         var navigation = navigation
         navigation.paths[tab] = stack
@@ -328,8 +342,10 @@ final class AppRouter {
         if isSignedIn() { action?() }
     }
 
-    /// The session ended: screens that need an account leave every stack.
+    /// The session ended: screens that need an account leave every stack, and a link held while the
+    /// account was suspended is dropped (the member signed out of the suspended screen).
     func sessionDidEnd() {
+        if isLaunchFinished { pendingDestination = nil }
         var navigation = navigation
         for (tab, stack) in navigation.paths {
             if let index = stack.firstIndex(where: \.requiresSignIn) {
