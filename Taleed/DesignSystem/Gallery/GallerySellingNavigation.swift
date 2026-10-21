@@ -124,14 +124,23 @@ struct GalleryNavigation: View {
             .background(TaleedColor.surfaceGrouped)
         }
         GallerySection(id: "bottom-nav", number: "5.2", title: "Bottom navigation",
-                       note: "Five destinations (D-2). One label size for all five; never truncated.", fullBleed: true) {
-            TaleedBottomNavigation(items: [
-                BottomNavItem(id: AppTab.home, icon: .houseLine, title: copy("Accueil", "الرئيسية", "Home")),
-                BottomNavItem(id: .explore, icon: .magnifyingGlass, title: copy("Explorer", "استكشاف", "Explore")),
-                BottomNavItem(id: .sell, icon: .plus, title: copy("Vendre", "بيع", "Sell")),
-                BottomNavItem(id: .messages, icon: .chatCircleText, title: copy("Messages", "الرسائل", "Messages")),
-                BottomNavItem(id: .profile, icon: .user, title: copy("Profil", "الملف الشخصي", "Profile")),
-            ], selection: $tab)
+                       note: "Five destinations (D-2). One label size for all five; never truncated. Only the top corners "
+                           + "are rounded; the fill runs under the home indicator, and the items keep max(16, inset) below "
+                           + "them, not 16 + inset (D-15).",
+                       fullBleed: true) {
+            VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+                GalleryCaption(text: copy("Avec l’indicateur d’accueil (34) : la barre se pose sur la marge",
+                                          "مع مؤشر الشاشة الرئيسية (34): يستقر الشريط على الهامش",
+                                          "With a home indicator (34): the bar sits on the inset"))
+                    .padding(.horizontal, TaleedLayout.screenMargin)
+                GalleryScreenBottom(inset: 34) { bottomNavigation(copy) }
+                GalleryCaption(text: copy("Sans indicateur d’accueil : 16 sous les éléments",
+                                          "بدون مؤشر الشاشة الرئيسية: 16 أسفل العناصر",
+                                          "Without a home indicator: 16 below the items"))
+                    .padding(.horizontal, TaleedLayout.screenMargin)
+                    .padding(.top, TaleedSpacing.s8)
+                GalleryScreenBottom(inset: 0) { bottomNavigation(copy) }
+            }
             .padding(.top, TaleedSpacing.s16)
             .background(TaleedColor.surfaceGrouped)
         }
@@ -180,6 +189,16 @@ struct GalleryNavigation: View {
         GallerySection(id: "trust-full", number: "6", title: "Trust strip, full bleed", fullBleed: true) {
             TrustStrip(style: .fullBleed)
         }
+    }
+
+    private func bottomNavigation(_ copy: GalleryCopy) -> some View {
+        TaleedBottomNavigation(items: [
+            BottomNavItem(id: AppTab.home, icon: .houseLine, title: copy("Accueil", "الرئيسية", "Home")),
+            BottomNavItem(id: .explore, icon: .magnifyingGlass, title: copy("Explorer", "استكشاف", "Explore")),
+            BottomNavItem(id: .sell, icon: .plus, title: copy("Vendre", "بيع", "Sell")),
+            BottomNavItem(id: .messages, icon: .chatCircleText, title: copy("Messages", "الرسائل", "Messages")),
+            BottomNavItem(id: .profile, icon: .user, title: copy("Profil", "الملف الشخصي", "Profile")),
+        ], selection: $tab)
     }
 
     private func sortTitle(_ copy: GalleryCopy) -> String { copy("Trier par", "الترتيب حسب", "Sort by") }

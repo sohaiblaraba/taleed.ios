@@ -100,8 +100,9 @@ struct FilterSheetView: View {
             if !stacked { applyButton }
         }
         .padding(.horizontal, TaleedLayout.screenMargin)
-        .padding(.vertical, TaleedSpacing.s12)
-        .background(TaleedColor.surfacePrimary)
+        .padding(.top, TaleedSpacing.s12)
+        .bottomBarPadding(TaleedSpacing.s12)
+        .bottomBarBackground(TaleedColor.surfacePrimary)
         .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
     }
 

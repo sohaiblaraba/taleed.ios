@@ -31,18 +31,33 @@ final class NetworkMonitor {
 }
 
 /// "Vous êtes hors ligne…" while the device is offline (Android's shell banner): above the tab bar, or
-/// above the bottom bar of a screen that hides it (a conversation, checkout). Nothing when online.
+/// above the bottom bar of a screen that hides it (a conversation), or itself at the bottom of a screen
+/// without a bottom bar (checkout, the payment screen). Nothing when online.
 struct OfflineBanner: View {
+    /// The banner is the screen's bottom bar: it sits on the home indicator's inset (D-15).
+    var isAtScreenBottom = false
     @Environment(NetworkMonitor.self) private var network: NetworkMonitor?
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
         if let network, !network.isOnline {
-            InlineAlert(kind: .warning, title: l10n.string(.appOfflineBanner))
-                .padding(.horizontal, TaleedLayout.screenMargin)
-                .padding(.vertical, TaleedSpacing.s8)
-                .background(TaleedColor.surfacePrimary)
-                .transition(.opacity)
+            if isAtScreenBottom {
+                banner
+                    .padding(.top, TaleedSpacing.s8)
+                    .bottomBarPadding(TaleedSpacing.s8)
+                    .bottomBarBackground(TaleedColor.surfacePrimary)
+                    .transition(.opacity)
+            } else {
+                banner
+                    .padding(.vertical, TaleedSpacing.s8)
+                    .background(TaleedColor.surfacePrimary)
+                    .transition(.opacity)
+            }
         }
+    }
+
+    private var banner: some View {
+        InlineAlert(kind: .warning, title: l10n.string(.appOfflineBanner))
+            .padding(.horizontal, TaleedLayout.screenMargin)
     }
 }

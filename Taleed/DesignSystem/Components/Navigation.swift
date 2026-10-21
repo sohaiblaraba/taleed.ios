@@ -12,8 +12,78 @@ struct BottomNavItem<ID: Hashable>: Identifiable {
     var badgeAccessibilityLabel: String?
 }
 
+// MARK: - Bars at the bottom of the screen (decision D-15)
+
+extension View {
+    /// The bottom padding of a bar that sits at the bottom of the screen (decision D-15): `minimum`, or the
+    /// home indicator's inset when that is larger, never the two added. The bar stays laid out above the
+    /// safe area (so a screen that reserves its height still lets its last row scroll clear of it) and
+    /// only adds what the inset does not already give; its background runs under the home indicator
+    /// (`bottomBarBackground`). Where the bar sits above something else instead (the keyboard, the tab
+    /// bar), it keeps `elsewhere` (`minimum` by default).
+    func bottomBarPadding(_ minimum: CGFloat, elsewhere: CGFloat? = nil) -> some View {
+        modifier(BottomBarPadding(minimum: minimum, elsewhere: elsewhere ?? minimum))
+    }
+
+    /// A bottom bar's fill, run down to the screen's bottom edge behind the home indicator (decision D-15).
+    func bottomBarBackground(_ color: Color) -> some View {
+        background(color.ignoresSafeArea(edges: .bottom))
+    }
+}
+
+/// The safe-area inset that bottom bars plan for: the design-system gallery draws a bar as it would sit
+/// over a home indicator. Nil (the default) measures the real one.
+private struct BottomBarInsetOverrideKey: EnvironmentKey {
+    static var defaultValue: CGFloat? { nil }
+}
+
+extension EnvironmentValues {
+    var bottomBarInsetOverride: CGFloat? {
+        get { self[BottomBarInsetOverrideKey.self] }
+        set { self[BottomBarInsetOverrideKey.self] = newValue }
+    }
+}
+
+private struct BottomBarPadding: ViewModifier {
+    let minimum: CGFloat
+    let elsewhere: CGFloat
+    @State private var measuredInset: CGFloat = 0
+    @Environment(\.bottomBarInsetOverride) private var insetOverride
+
+    func body(content: Content) -> some View {
+        content
+            .padding(.bottom, BottomBarMetrics.padding(minimum: minimum, elsewhere: elsewhere,
+                                                       safeAreaInset: insetOverride ?? measuredInset,
+                                                       homeIndicatorInset: insetOverride ?? BottomBarMetrics.windowBottomInset))
+            .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { measuredInset = $0 }
+    }
+}
+
+/// The arithmetic of `bottomBarPadding`, apart for the tests.
+enum BottomBarMetrics {
+    /// The padding under a bar's content. `safeAreaInset` is the bar's own bottom inset: the home
+    /// indicator's when the bar sits at the screen's bottom edge, more when it sits above the keyboard or
+    /// another bar (that one already keeps its own space), 0 on a screen without a home indicator.
+    static func padding(minimum: CGFloat, elsewhere: CGFloat, safeAreaInset: CGFloat, homeIndicatorInset: CGFloat) -> CGFloat {
+        guard safeAreaInset <= homeIndicatorInset + 0.5 else { return elsewhere }
+        return max(0, minimum - safeAreaInset)
+    }
+
+    /// The window's bottom inset (the home indicator's, 0 on a phone with a Home button), which, unlike
+    /// a view's safe area, never includes the keyboard.
+    @MainActor static var windowBottomInset: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)?
+            .safeAreaInsets.bottom ?? 0
+    }
+}
+
 /// Bottom navigation (design-system §5.2, decision D-2): five equal items, the active one in a
-/// `blue/50` pill. Place it with `.safeAreaInset(edge: .bottom)`; it draws under the home indicator.
+/// `blue/50` pill. Place it at the bottom of the screen (`.safeAreaInset(edge: .bottom)` or an overlay):
+/// its fill, with only the top corners rounded, runs under the home indicator, and the items keep
+/// max(16, inset) below them (D-15).
 struct TaleedBottomNavigation<ID: Hashable>: View {
     let items: [BottomNavItem<ID>]
     @Binding var selection: ID
@@ -36,7 +106,7 @@ struct TaleedBottomNavigation<ID: Hashable>: View {
         }
         .padding(.top, TaleedSize.bottomNavPaddingTop)
         .padding(.horizontal, TaleedSize.bottomNavPaddingX)
-        .padding(.bottom, TaleedSize.bottomNavPaddingBottom)
+        .bottomBarPadding(TaleedSize.bottomNavPaddingBottom)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { barWidth = $0 }
         .background {
             if !isEmbedded {

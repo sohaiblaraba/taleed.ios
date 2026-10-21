@@ -12,19 +12,25 @@ struct GalleryComposed: View {
     var body: some View {
         let copy = GalleryCopy(locale)
         GallerySection(id: "item-detail", number: "6.3", title: "Item Detail pieces",
-                       note: "Spec rows, photo gallery (page dots, count pill, circle buttons), sticky CTA bar.",
+                       note: "Spec rows, photo gallery (page dots, count pill, circle buttons), sticky CTA bar. At the "
+                           + "bottom of the screen the bar's fill runs under the home indicator and its last row keeps "
+                           + "max(16, inset) below it (D-15).",
                        fullBleed: true) {
             VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
                 specRows(copy)
                 photoHero
                     .padding(.horizontal, TaleedLayout.screenMargin)
                 VStack(spacing: TaleedSpacing.s16) {
-                    ItemDetailActionBar(makeOfferLabel: copy("Faire une offre", "قدّم عرضًا", "Make an offer"), onMakeOffer: {},
-                                        buyNowLabel: copy("Acheter", "اشترِ الآن", "Buy now"), onBuyNow: {})
-                    ItemDetailActionBar(makeOfferLabel: copy("Faire une offre", "قدّم عرضًا", "Make an offer"), onMakeOffer: {},
-                                        buyNowLabel: copy("Acheter", "اشترِ الآن", "Buy now"), onBuyNow: {}, footer: {
-                        TaleedBottomNavigation(items: navItems(copy), selection: $tab, isEmbedded: true)
-                    })
+                    GalleryScreenBottom(inset: 0) {
+                        ItemDetailActionBar(makeOfferLabel: copy("Faire une offre", "قدّم عرضًا", "Make an offer"), onMakeOffer: {},
+                                            buyNowLabel: copy("Acheter", "اشترِ الآن", "Buy now"), onBuyNow: {})
+                    }
+                    GalleryScreenBottom(inset: 34) {
+                        ItemDetailActionBar(makeOfferLabel: copy("Faire une offre", "قدّم عرضًا", "Make an offer"), onMakeOffer: {},
+                                            buyNowLabel: copy("Acheter", "اشترِ الآن", "Buy now"), onBuyNow: {}, footer: {
+                            TaleedBottomNavigation(items: navItems(copy), selection: $tab, isEmbedded: true)
+                        })
+                    }
                 }
                 .padding(.top, TaleedSpacing.s16)
                 .background(TaleedColor.surfaceGrouped)

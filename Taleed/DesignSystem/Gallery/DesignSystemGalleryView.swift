@@ -92,6 +92,33 @@ struct GalleryCaption: View {
     }
 }
 
+/// A bottom bar as it sits at the bottom of a screen (decision D-15): with `inset` 34, over an iPhone's
+/// home indicator, the bar's fill runs on under the indicator and its content keeps max(minimum, 34)
+/// below it, never minimum + 34; with 0 (a phone with a Home button), the minimum.
+struct GalleryScreenBottom<Bar: View>: View {
+    let inset: CGFloat
+    @ViewBuilder let bar: Bar
+
+    var body: some View {
+        VStack(spacing: 0) {
+            bar
+            if inset > 0 {
+                // The safe area the bar draws under on a device, with the home indicator.
+                TaleedColor.surfacePrimary
+                    .frame(height: inset)
+                    .overlay(alignment: .bottom) {
+                        Capsule()
+                            .fill(TaleedColor.textPrimary)
+                            .frame(width: 134, height: 5)
+                            .padding(.bottom, 8)
+                    }
+                    .accessibilityHidden(true)
+            }
+        }
+        .environment(\.bottomBarInsetOverride, inset)
+    }
+}
+
 /// Sample copy for the gallery in the app language (French, Arabic, English).
 struct GalleryCopy {
     let language: AppLanguage

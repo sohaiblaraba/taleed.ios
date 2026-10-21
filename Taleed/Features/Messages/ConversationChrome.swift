@@ -147,8 +147,10 @@ struct ChatComposer: View {
             }
         }
         .padding(.horizontal, TaleedSpacing.s12)
-        .padding(.vertical, TaleedSpacing.s8)
-        .background(TaleedColor.surfacePrimary)
+        .padding(.top, TaleedSpacing.s8)
+        // On the home indicator's inset rather than above it (D-15); 8 above the keyboard.
+        .bottomBarPadding(TaleedSpacing.s8)
+        .bottomBarBackground(TaleedColor.surfacePrimary)
         .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
     }
 
@@ -239,8 +241,9 @@ struct ConversationReadOnlyBar: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, TaleedLayout.screenMargin)
-        .padding(.vertical, TaleedSpacing.s12)
-        .background(TaleedColor.surfaceGrouped)
+        .padding(.top, TaleedSpacing.s12)
+        .bottomBarPadding(TaleedSpacing.s12)
+        .bottomBarBackground(TaleedColor.surfaceGrouped)
         .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
     }
 

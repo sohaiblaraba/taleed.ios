@@ -376,8 +376,9 @@ struct SheetFooterButton: View {
         }
         .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
         .padding(.top, TaleedSpacing.s12)
-        .padding(.bottom, TaleedSpacing.s16)
-        .background(TaleedColor.surfacePrimary)
+        // max(16, inset) on the sheet's bottom edge (D-15); 16 above the keyboard.
+        .bottomBarPadding(TaleedSpacing.s16)
+        .bottomBarBackground(TaleedColor.surfacePrimary)
         .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
         .announcesFieldError(error)
     }

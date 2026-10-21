@@ -5,18 +5,23 @@ import SwiftUI
 /// Sticky bottom bar of Item Detail (wireframes.md #4.17, `size.bottomActionBar`): white, top corners
 /// `radius.l`, `elevation.navTop`; the actions row has padding 12 / 16 / 8 / 16 and gap 8, and every
 /// action grows from its own width ("Make an offer" Tertiary + "Buy now" Secondary render 180 / 220
-/// on 440). `footer` takes the bottom navigation drawn without its own background.
+/// on 440). `footer` takes the bottom navigation drawn without its own background. Only the top corners
+/// are rounded: the fill runs under the home indicator. Without a footer, at the bottom of the screen,
+/// the actions keep max(16, inset) below them, as the bottom navigation (D-15); above the tab bar, 8.
 struct BottomActionBar<Actions: View, Footer: View>: View {
     @ViewBuilder let actions: Actions
     @ViewBuilder let footer: Footer
 
     var body: some View {
         VStack(spacing: 0) {
-            GrowRow(spacing: TaleedSize.bottomActionBarGap) { actions }
-                .padding(.top, TaleedSize.bottomActionBarPaddingTop)
-                .padding(.horizontal, TaleedSize.bottomActionBarPaddingX)
-                .padding(.bottom, TaleedSize.bottomActionBarPaddingBottom)
-            footer
+            if Footer.self == EmptyView.self {
+                actionsRow
+                    .bottomBarPadding(TaleedSize.bottomNavPaddingBottom, elsewhere: TaleedSize.bottomActionBarPaddingBottom)
+            } else {
+                actionsRow
+                    .padding(.bottom, TaleedSize.bottomActionBarPaddingBottom)
+                footer
+            }
         }
         .background {
             UnevenRoundedRectangle(topLeadingRadius: TaleedRadius.l, topTrailingRadius: TaleedRadius.l, style: .continuous)
@@ -25,6 +30,12 @@ struct BottomActionBar<Actions: View, Footer: View>: View {
                 .ignoresSafeArea(edges: .bottom)
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private var actionsRow: some View {
+        GrowRow(spacing: TaleedSize.bottomActionBarGap) { actions }
+            .padding(.top, TaleedSize.bottomActionBarPaddingTop)
+            .padding(.horizontal, TaleedSize.bottomActionBarPaddingX)
     }
 }
 

@@ -96,3 +96,24 @@ struct DesignSystemConsistencyTests {
         #expect(state.toasts.map(\.message) == ["2", "3"])
     }
 }
+
+/// Decision D-15: a bar at the bottom of the screen keeps max(minimum, inset) below its content.
+struct BottomBarPaddingTests {
+    @Test func theBarSitsOnTheHomeIndicatorsInset() {
+        // 34 pt home indicator: the inset alone, nothing added above it.
+        #expect(BottomBarMetrics.padding(minimum: 16, elsewhere: 16, safeAreaInset: 34, homeIndicatorInset: 34) == 0)
+        // A smaller inset than the minimum: topped up to the minimum.
+        #expect(BottomBarMetrics.padding(minimum: 16, elsewhere: 16, safeAreaInset: 10, homeIndicatorInset: 10) == 6)
+    }
+
+    @Test func withoutAHomeIndicatorTheMinimumApplies() {
+        #expect(BottomBarMetrics.padding(minimum: 16, elsewhere: 8, safeAreaInset: 0, homeIndicatorInset: 0) == 16)
+    }
+
+    @Test func aboveTheKeyboardOrAnotherBarTheBarKeepsItsOwnPadding() {
+        // The keyboard's inset (or the tab bar's room under a bar) is more than the home indicator's.
+        #expect(BottomBarMetrics.padding(minimum: 8, elsewhere: 8, safeAreaInset: 336, homeIndicatorInset: 34) == 8)
+        #expect(BottomBarMetrics.padding(minimum: 16, elsewhere: 8, safeAreaInset: 111, homeIndicatorInset: 34) == 8)
+        #expect(BottomBarMetrics.padding(minimum: 16, elsewhere: 8, safeAreaInset: 77, homeIndicatorInset: 0) == 8)
+    }
+}

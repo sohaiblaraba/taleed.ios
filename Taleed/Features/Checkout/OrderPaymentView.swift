@@ -35,7 +35,7 @@ struct OrderPaymentView: View {
             content
         }
         // No tab bar here, as on checkout: the offline banner takes the bottom, toasts sit above it.
-        .safeAreaInset(edge: .bottom, spacing: 0) { OfflineBanner() }
+        .safeAreaInset(edge: .bottom, spacing: 0) { OfflineBanner(isAtScreenBottom: true) }
         .task { await model.loadIfNeeded() }
         .onAppear {
             if let shellTab { toasts.setBottomBarHeight(0, tab: shellTab, route: route) }
