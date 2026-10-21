@@ -281,7 +281,7 @@ struct NotificationLinkRoutingTests {
 
     init() {
         router.isSignedIn = { true }
-        router.shellDidAppear()
+        router.launchWillShowItsScreen()
     }
 
     @Test func aScreenGoesOnTopOfTheNotifications() {

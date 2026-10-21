@@ -6,7 +6,7 @@ import Foundation
 ///     -TaleedDebugTab profile                  select a tab (home, explore, sell, messages, profile)
 ///     -TaleedDebugProfilePath settings,designSystem   (settings, designSystem, developerMenu, favorites,
 ///                                              myListings, orders, wallet, notifications, referrals…)
-///     -TaleedDebugOpenURL /listings/42             open a link through the router once the shell shows
+///     -TaleedDebugOpenURL /listings/42             open a link through the router once the launch ends
 ///     -TaleedGallerySection buttons            scroll the design-system gallery to a section
 ///     -TaleedGalleryLargeText YES              turn on the gallery's "Text 200 %" switch
 ///     -TaleedDebugSignIn YES                   open the sign-in sheet

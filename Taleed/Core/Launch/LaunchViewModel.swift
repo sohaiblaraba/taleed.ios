@@ -28,6 +28,11 @@ final class LaunchViewModel {
     /// it off (screenshots, and the `503 feature_disabled` path). Cleared by that answer.
     private var forcesVisualSearch = false
 
+    /// Called once the launch knows the session, just before `route` leaves `.loading` for the shell (or
+    /// the suspended screen): the router opens a link that came during launch, so the screen's first
+    /// frame shows it (`AppRouter.launchWillShowItsScreen`).
+    @ObservationIgnored var willShowScreen: (() -> Void)?
+
     @ObservationIgnored private let api: TaleedApi
     @ObservationIgnored private let session: SessionManager
     @ObservationIgnored private let environment: AppEnvironment
@@ -78,6 +83,7 @@ final class LaunchViewModel {
                 return
             }
             try await session.restore()
+            willShowScreen?()
             phase = .ready
         } catch {
             phase = .failed(error)

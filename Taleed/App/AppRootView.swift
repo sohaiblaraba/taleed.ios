@@ -70,7 +70,7 @@ struct AppRootView: View {
             // The disk copy shows at once; the launch fetches the catalog again (api-guide.md, Caching).
             .task { await container.catalog.refresh() }
             // App links (taleed.app), the payment return (`taleed://payment-return`) and pushes all go
-            // through the router; one that comes during launch waits for the shell.
+            // through the router; one that comes during launch waits for the launch flow.
             .onOpenURL { container.router.open(url: $0) }
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                 if let url = activity.webpageURL { container.router.open(url: url) }

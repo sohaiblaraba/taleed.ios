@@ -339,3 +339,35 @@ extension LaunchViewModelTests {
         #expect(launch.route == .main)
     }
 }
+
+@MainActor
+struct LaunchLinkTests {
+    /// A link that came during launch (`-TaleedDebugOpenURL`, a cold-start link) is open by the time the
+    /// launch route changes: the shell's first frame shows the link's tab with its stack, not Home's
+    /// content under the Explore button.
+    @Test func aLinkFromTheLaunchIsOpenBeforeTheShellShows() async {
+        let api = FakeTaleedApi()
+        let apiSession = ApiSession(environment: .fixture(), language: .fr, configuration: .init())
+        let session = SessionManager(api: api, apiSession: apiSession, tokenStore: InMemoryTokenStore(token: "t"))
+        api.sentToken = { [apiSession] in apiSession.token }
+        let launch = LaunchViewModel(api: api, session: session, environment: .fixture())
+        let router = AppRouter()
+        router.isSignedIn = { true }
+        launch.willShowScreen = { router.launchWillShowItsScreen() }
+        router.open(url: URL(string: "taleed://wallet")!)
+        #expect(router.path(.profile).isEmpty)
+        var lastSeen: (AppTab, [AppRoute])?
+        let watcher = ChangeCounter()
+        watcher.watch {
+            _ = launch.route
+            lastSeen = (router.selectedTab, router.path(.profile))
+        }
+
+        await launch.start()
+
+        #expect(launch.route == .main)
+        // Read in the `willSet` of the route's last change, before the shell is drawn.
+        #expect(lastSeen?.0 == .profile)
+        #expect(lastSeen?.1 == [.wallet])
+    }
+}

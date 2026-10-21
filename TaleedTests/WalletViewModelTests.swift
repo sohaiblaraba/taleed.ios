@@ -166,7 +166,7 @@ struct WalletRouterTests {
     @Test func aTopUpReturnWaitsForTheWalletWhateverItsId() {
         let router = AppRouter()
         router.isSignedIn = { true }
-        router.shellDidAppear()
+        router.launchWillShowItsScreen()
         router.open(url: URL(string: "taleed://payment-return?kind=top_up&id=t5&result=success")!)
         #expect(router.path(.profile) == [.wallet])
         #expect(router.consumePaymentReturn(kind: .order) == nil)

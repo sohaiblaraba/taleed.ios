@@ -22,8 +22,21 @@ enum AuthEntry: Hashable, Identifiable, Sendable {
 @MainActor
 @Observable
 final class AppRouter {
-    var selectedTab: AppTab = .home
-    private(set) var paths: [AppTab: [AppRoute]] = [:]
+    /// The selected tab and every tab's stack, in one value: a link changes both in a single mutation, so
+    /// no view can draw the new tab over the old stack, or read one of them before the other is set.
+    private struct Navigation {
+        var selectedTab: AppTab = .home
+        var paths: [AppTab: [AppRoute]] = [:]
+    }
+
+    private var navigation = Navigation()
+
+    var selectedTab: AppTab {
+        get { navigation.selectedTab }
+        set { navigation.selectedTab = newValue }
+    }
+
+    var paths: [AppTab: [AppRoute]] { navigation.paths }
     /// The sign-in (or sign-up) sheet.
     var authEntry: AuthEntry?
     /// The last top-up's payment return, for the wallet screen to sync (then `consumePaymentReturn`). An
@@ -38,7 +51,7 @@ final class AppRouter {
     @ObservationIgnored var resolveConversation: ((_ listingId: String, _ buyerId: String?) async throws(ApiError) -> String)?
     @ObservationIgnored var websiteLinks: () -> WebsiteLinks = { WebsiteLinks() }
     @ObservationIgnored var browser: (URL) -> Void = { InAppBrowser.open($0) }
-    /// Called when a destination opens once the shell shows (a link, a push, a launch argument): the
+    /// Called when a destination opens after the launch (a link, a push, a launch argument): the
     /// welcome screen steps aside for it.
     @ObservationIgnored var onDestinationOpened: (() -> Void)?
     /// Called when a link or a push opens the notifications screen: one already open reloads and marks
@@ -47,9 +60,9 @@ final class AppRouter {
 
     /// The action waiting for sign-in, run once the sheet closes signed in.
     @ObservationIgnored private var afterSignIn: (() -> Void)?
-    /// A link that arrived before the shell was on screen (launch, update check).
+    /// A link that arrived before the launch flow finished (`GET /config`, the session restored).
     @ObservationIgnored private var pendingDestination: AppDestination?
-    @ObservationIgnored private var isShellReady = false
+    @ObservationIgnored private var isLaunchFinished = false
 
     // MARK: Stacks
 
@@ -57,12 +70,12 @@ final class AppRouter {
 
     /// The binding a tab's `NavigationStack` uses.
     func pathBinding(_ tab: AppTab) -> Binding<[AppRoute]> {
-        Binding(get: { self.paths[tab] ?? [] }, set: { self.paths[tab] = $0 })
+        Binding(get: { self.paths[tab] ?? [] }, set: { self.navigation.paths[tab] = $0 })
     }
 
     /// Pushes a screen on the current tab: the in-app way to open a listing, a profile, an order…
     func push(_ route: AppRoute) {
-        paths[selectedTab, default: []].append(route)
+        navigation.paths[selectedTab, default: []].append(route)
     }
 
     /// Pushes a screen that needs an account, through the sign-in gate.
@@ -76,9 +89,9 @@ final class AppRouter {
     func replace(_ route: AppRoute, with newRoute: AppRoute) {
         let tabs = [selectedTab] + AppTab.allCases.filter { $0 != selectedTab }
         for tab in tabs {
-            if let index = paths[tab]?.lastIndex(of: route) {
-                paths[tab]?[index] = newRoute
-                paths[tab] = Array(paths[tab]?[...index] ?? [])
+            if var stack = paths[tab], let index = stack.lastIndex(of: route) {
+                stack[index] = newRoute
+                navigation.paths[tab] = Array(stack[...index])
                 return
             }
         }
@@ -99,11 +112,11 @@ final class AppRouter {
 
     func pop() {
         guard !(paths[selectedTab]?.isEmpty ?? true) else { return }
-        paths[selectedTab]?.removeLast()
+        navigation.paths[selectedTab]?.removeLast()
     }
 
     func popToRoot(_ tab: AppTab? = nil) {
-        paths[tab ?? selectedTab] = []
+        navigation.paths[tab ?? selectedTab] = []
     }
 
     /// The bottom navigation's selection. Selecting the current tab again returns it to its first screen.
@@ -111,8 +124,11 @@ final class AppRouter {
         Binding(
             get: { self.selectedTab },
             set: { tab in
-                if tab == self.selectedTab { self.popToRoot(tab) }
-                self.selectedTab = tab
+                if tab == self.selectedTab {
+                    self.popToRoot(tab)
+                } else {
+                    self.selectedTab = tab
+                }
             }
         )
     }
@@ -124,14 +140,15 @@ final class AppRouter {
         open(LinkRouter.destination(for: url))
     }
 
-    /// Opens a destination with a valid stack under it. Before the shell is on screen (launch), the
-    /// destination waits and opens as soon as it shows.
+    /// Opens a destination with a valid stack under it. During launch the destination waits for the launch
+    /// flow (`launchWillShowItsScreen`), which knows whether the member is signed in.
     func open(_ destination: AppDestination) { // swiftlint:disable:this cyclomatic_complexity
-        guard isShellReady else {
+        guard isLaunchFinished else {
             pendingDestination = destination
             return
         }
-        onDestinationOpened?()
+        // The welcome screen steps aside after the tab and its stack are set, never between them.
+        defer { onDestinationOpened?() }
         switch destination {
         case .home: show(.home, stack: [])
         case let .explore(query): show(.explore, stack: query.isEmpty ? [] : [AppRoute.search(query).reopened])
@@ -189,7 +206,7 @@ final class AppRouter {
             let tab = selectedTab
             requireSignIn { [weak self] in
                 self?.resolveListingChat(listingId: listingId, memberId: memberId) { route in
-                    self?.paths[tab, default: []].append(route)
+                    self?.navigation.paths[tab, default: []].append(route)
                 }
             }
         case .home, .explore, .sell, .inbox, .profile, .signUp, .paymentReturn, .web:
@@ -238,9 +255,13 @@ final class AppRouter {
         return pending
     }
 
-    /// Called when the shell appears: opens a link that arrived during launch.
-    func shellDidAppear() {
-        isShellReady = true
+    /// Called by the launch flow once it knows the session, just before its screen (the shell) shows:
+    /// opens a link that arrived during launch now, so that the shell's first frame already has its tab
+    /// and stack. Opening it from the shell's `onAppear` raced with that first frame: SwiftUI could draw
+    /// the shell in the middle of the change, the content of the old tab under the new tab's button.
+    func launchWillShowItsScreen() {
+        guard !isLaunchFinished else { return }
+        isLaunchFinished = true
         if let pending = pendingDestination {
             pendingDestination = nil
             open(pending)
@@ -248,8 +269,10 @@ final class AppRouter {
     }
 
     private func show(_ tab: AppTab, stack: [AppRoute]) {
-        paths[tab] = stack
-        selectedTab = tab
+        var navigation = navigation
+        navigation.paths[tab] = stack
+        navigation.selectedTab = tab
+        self.navigation = navigation
     }
 
     /// `POST /conversations`, then `present` the conversation, or the listing when that fails.
@@ -307,11 +330,13 @@ final class AppRouter {
 
     /// The session ended: screens that need an account leave every stack.
     func sessionDidEnd() {
-        for (tab, stack) in paths {
+        var navigation = navigation
+        for (tab, stack) in navigation.paths {
             if let index = stack.firstIndex(where: \.requiresSignIn) {
-                paths[tab] = Array(stack[..<index])
+                navigation.paths[tab] = Array(stack[..<index])
             }
         }
+        self.navigation = navigation
     }
 
     // MARK: Website pages

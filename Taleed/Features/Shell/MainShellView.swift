@@ -82,7 +82,6 @@ struct MainShellView: View {
             AuthSheetView(entry: router.authEntry)
                 .appLanguage(l10n.language)
         })
-        .onAppear { router.shellDidAppear() }
         // Home reloads after a while in the background (here, since Home may sit under a pushed screen).
         .onChange(of: scenePhase) { _, phase in
             switch phase {

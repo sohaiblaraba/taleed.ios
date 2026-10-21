@@ -85,6 +85,7 @@ final class AppContainer {
             try await api.openConversation(listingId: listingId, buyerId: buyerId)
         }
         router.websiteLinks = { [launch] in launch.config?.links ?? WebsiteLinks() }
+        launch.willShowScreen = { [router] in router.launchWillShowItsScreen() }
         router.onNotificationsOpened = { [notificationsFeed] in notificationsFeed.somethingArrived() }
         favorites.onFailure = { [toasts] error in toasts.show(error: error) }
         favorites.onRemoved = { [toasts, languageManager] _ in

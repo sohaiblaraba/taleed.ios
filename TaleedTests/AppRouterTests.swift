@@ -9,7 +9,7 @@ struct AppRouterTests {
 
     init() {
         router.isSignedIn = { [signedIn] in signedIn.value }
-        router.shellDidAppear()
+        router.launchWillShowItsScreen()
     }
 
     @Test func listingOpensOnHomeWithTheListingOnTop() {
@@ -249,14 +249,6 @@ struct AppRouterTests {
         #expect(router.path(.home) == [.listing(id: "l1"), payment, .order(id: "o2")])
     }
 
-    @Test func linksWaitForTheShell() {
-        let router = AppRouter()
-        router.open(url: URL(string: "https://taleed.app/listings/l1")!)
-        #expect(router.path(.home).isEmpty)
-        router.shellDidAppear()
-        #expect(router.path(.home) == [.listing(id: "l1")])
-    }
-
     @Test func signOutRemovesPrivateScreensFromTheStacks() {
         signedIn.value = true
         router.open(.screen(.order(id: "o1")))
@@ -284,10 +276,72 @@ struct AppRouterTests {
     }
 }
 
+/// Links that come during launch, and the tab selection.
+@MainActor
+struct AppRouterTabTests {
+    @Test func linksWaitForTheLaunch() {
+        let router = AppRouter()
+        router.open(url: URL(string: "https://taleed.app/listings/l1")!)
+        #expect(router.path(.home).isEmpty)
+        router.launchWillShowItsScreen()
+        #expect(router.path(.home) == [.listing(id: "l1")])
+        // Once only: a second call does not open it again.
+        router.popToRoot(.home)
+        router.launchWillShowItsScreen()
+        #expect(router.path(.home).isEmpty)
+    }
+
+    /// The tab and its stack change in one mutation, so that no redraw can fall between the two: the shell
+    /// never draws the Explore button over Home's content (or the reverse).
+    @Test func aLinkSetsItsTabAndStackInOneChange() {
+        let router = AppRouter()
+        router.launchWillShowItsScreen()
+        let changes = ChangeCounter()
+        changes.watch { _ = (router.selectedTab, router.path(.explore)) }
+        router.open(url: URL(string: "taleed://browse?q=robe")!)
+        #expect(changes.count == 1)
+        #expect(router.selectedTab == .explore)
+        guard case let .search(query, _) = router.path(.explore).first else {
+            Issue.record("Explore should show the search results")
+            return
+        }
+        #expect(query.text == "robe")
+        #expect(router.path(.explore).count == 1)
+    }
+
+    @Test func selectingTheCurrentTabAgainReturnsToItsFirstScreen() {
+        let router = AppRouter()
+        router.launchWillShowItsScreen()
+        router.open(.screen(.listing(id: "l1")))
+        router.tabSelection.wrappedValue = .home
+        #expect(router.selectedTab == .home)
+        #expect(router.path(.home).isEmpty)
+        router.push(.listing(id: "l2"))
+        router.tabSelection.wrappedValue = .explore
+        #expect(router.selectedTab == .explore)
+        #expect(router.path(.home) == [.listing(id: "l2")])
+    }
+}
+
 /// A mutable flag the router's closure reads.
 @MainActor
 private final class SignedIn {
     var value = false
+}
+
+/// Counts the changes of what `read` reads, one per mutation (Observation calls back once per tracking).
+@MainActor
+final class ChangeCounter {
+    private(set) var count = 0
+
+    func watch(_ read: @escaping @MainActor () -> Void) {
+        withObservationTracking(read) { [self] in
+            MainActor.assumeIsolated {
+                count += 1
+                watch(read)
+            }
+        }
+    }
 }
 
 @MainActor
@@ -297,7 +351,7 @@ struct AppRouterSignInTests {
         var isSignedIn = false
         let router = AppRouter()
         router.isSignedIn = { isSignedIn }
-        router.shellDidAppear()
+        router.launchWillShowItsScreen()
         var ran = false
         router.requireSignIn { ran = true }
         router.closeSignIn()
