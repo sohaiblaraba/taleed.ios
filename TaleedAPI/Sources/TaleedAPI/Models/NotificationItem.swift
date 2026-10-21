@@ -13,7 +13,7 @@ public struct NotificationItem: Sendable, Codable, Hashable {
     public var id: String
     /** What happened, such as `ORDER_SHIPPED`, `NEW_OFFER` or `NEW_FOLLOWER`: the `type` its push carried too. For an icon; new types appear without notice, so give an unknown one a generic icon. */
     public var type: String
-    /** The sentence to show, in the response language. */
+    /** The sentence to show, in the response language, with amounts and dates written as the apps write them: \"1 500 DA\", \"24 Oct 2026\". */
     public var text: String
     /** The website page it is about: route it like an app link (see the API guide). Null: there is nothing to open. */
     public var url: String?

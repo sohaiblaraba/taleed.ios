@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.14",
+    "version": "1.5.16",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -14603,7 +14603,7 @@
           },
           "text": {
             "type": "string",
-            "description": "The sentence to show, in the response language."
+            "description": "The sentence to show, in the response language, with amounts and dates written as the apps write them: \"1 500 DA\", \"24 Oct 2026\"."
           },
           "url": {
             "nullable": true,
@@ -15410,7 +15410,7 @@
           "REFUNDED",
           "DISPUTED"
         ],
-        "description": "Where an order stands. `PENDING_PAYMENT`: placed, the goods are reserved until the online payment lands. `PAID`: paid, or confirmed for cash on delivery: the seller ships. `PREPARED`: the parcel and its label exist, the seller drops it off. `SHIPPED`: with the carrier. `DELIVERED`: delivered; the payment is released to the seller at `autoCompleteAt` unless the buyer confirms or reports a problem first. `COMPLETED`: the seller was paid. `CANCELLED`: called off before any money moved, or given back. `REFUNDED`: the buyer was refunded. `DISPUTED`: a dispute froze the payment. Each order carries its localized label (`statusLabel`)."
+        "description": "Where an order stands. `PENDING_PAYMENT`: placed, the goods are reserved until the online payment lands. `PAID`: paid, or confirmed for cash on delivery: the seller ships. `PREPARED`: the parcel and its label exist, the seller drops it off. `SHIPPED`: with the carrier. `DELIVERED`: delivered; the payment is released to the seller at `autoCompleteAt` unless the buyer confirms or reports a problem first. `COMPLETED`: the seller was paid. `CANCELLED`: called off before any money moved, or given back. `REFUNDED`: the buyer was refunded. `DISPUTED`: a dispute froze the payment. Each order carries its localized label (`statusLabel`): a cash-on-delivery order in `PAID` reads \"Confirmée — à expédier\", since the buyer pays the carrier at delivery."
       },
       "OrderStep": {
         "type": "object",
