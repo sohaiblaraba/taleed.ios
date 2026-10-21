@@ -93,7 +93,7 @@ struct OfferEyebrow: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// "Offre sur un lot · 2 articles", "Votre offre", "Offre" or "Offre du vendeur" (§7 G9).
+    /// "Offre sur un lot · 2 articles", "Votre offre", "Offre de l’acheteur" or "Offre du vendeur" (§7 G9).
     private var text: String {
         switch ChatText.offerEyebrow(offer) {
         case let .bundle(count): l10n.format(.offersBundleOffer, count)

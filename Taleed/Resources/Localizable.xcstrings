@@ -21711,19 +21711,19 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Offre"
+            "value": "Offre de l’acheteur"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "عرض"
+            "value": "عرض المشتري"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Offer"
+            "value": "Buyer’s offer"
           }
         }
       }
