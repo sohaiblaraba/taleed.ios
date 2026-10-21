@@ -103,4 +103,11 @@ final class LaunchViewModel {
         guard phase == .ready else { return }
         await session.refresh()
     }
+
+    /// The device is online again: refresh the member, so the badges that kept their last known count
+    /// while offline (the bell, Messages) take the server's again.
+    func didComeBackOnline() async {
+        guard phase == .ready else { return }
+        await session.refresh()
+    }
 }

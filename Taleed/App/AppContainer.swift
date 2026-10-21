@@ -86,6 +86,8 @@ final class AppContainer {
         }
         router.websiteLinks = { [launch] in launch.config?.links ?? WebsiteLinks() }
         router.onNotificationsOpened = { [notificationsFeed] in notificationsFeed.somethingArrived() }
+        // Back online: `GET /me` again for the badges (the bell kept its last count meanwhile).
+        network.onBackOnline = { [launch] in Task { await launch.didComeBackOnline() } }
         favorites.onFailure = { [toasts] error in toasts.show(error: error) }
         favorites.onRemoved = { [toasts, languageManager] _ in
             toasts.show(languageManager.string(.appNotFoundTitle), kind: .info)

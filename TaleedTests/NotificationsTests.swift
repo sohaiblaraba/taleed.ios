@@ -255,6 +255,15 @@ struct NotificationsViewModelTests {
         #expect(api.markCalls == ["n1"])
     }
 
+    @Test func aFailedFirstPageLeavesTheBadgesAlone() async {
+        api.pages[nil] = [.failure(.network)]
+        let model = makeModel()
+        await model.loadIfNeeded()
+        #expect(model.list.error == .network)
+        // The bell keeps its last known count: nothing is sent to the badges.
+        #expect(badges.counts.isEmpty)
+    }
+
     @Test func pagesAreDeduplicatedById() async {
         api.pages[nil] = [page(["n4", "n3"], next: "c1", total: 4)]
         api.pages["c1"] = [page(["n3", "n2", "n1"], total: 4)]

@@ -8,9 +8,13 @@ import SwiftUI
 @Observable
 final class NetworkMonitor {
     private(set) var isOnline = true
+    /// Called when the device has a network path again after it had none: the badges (`GET /me`) are
+    /// asked again, since what failed meanwhile kept the last known counts.
+    @ObservationIgnored var onBackOnline: (() -> Void)?
     @ObservationIgnored private let monitor = NWPathMonitor()
 
-    init() {
+    /// `startsMonitoring: false` leaves the system monitor off (tests feed `pathDidChange(isOnline:)`).
+    init(startsMonitoring: Bool = true) {
         #if DEBUG
         // `-TaleedDebugOffline YES`: show the banner while the simulator is online (screenshots).
         if UserDefaults.standard.bool(forKey: "TaleedDebugOffline") {
@@ -18,15 +22,21 @@ final class NetworkMonitor {
             return
         }
         #endif
+        guard startsMonitoring else { return }
         monitor.pathUpdateHandler = { [weak self] path in
             let isOnline = path.status == .satisfied
-            Task { @MainActor [weak self] in
-                guard let self, self.isOnline != isOnline else { return }
-                self.isOnline = isOnline
-            }
+            Task { @MainActor [weak self] in self?.pathDidChange(isOnline: isOnline) }
         }
         // The app's one monitor lives as long as the app: never cancelled.
         monitor.start(queue: DispatchQueue(label: "app.taleed.network-monitor"))
+    }
+
+    /// The system's answer about the network path. Only a change counts; offline then online again
+    /// calls `onBackOnline`.
+    func pathDidChange(isOnline: Bool) {
+        guard self.isOnline != isOnline else { return }
+        self.isOnline = isOnline
+        if isOnline { onBackOnline?() }
     }
 }
 

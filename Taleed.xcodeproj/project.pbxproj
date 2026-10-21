@@ -50,6 +50,7 @@
 		24DBE3987549356C808EF570 /* FilterSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704310F686141585970752EB /* FilterSheetView.swift */; };
 		261E01688928BC43261F7F84 /* Alexandria-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AC58C677B7E3BD15D0259DED /* Alexandria-ExtraBold.ttf */; };
 		263E80A4F152A843AEDB007E /* ListingDetailLoadingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37206FB4DD4B005585FA9DC0 /* ListingDetailLoadingTests.swift */; };
+		28592620D39FFF6C45D042C6 /* BadgeRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 405A4217885BBB0DECE0D1ED /* BadgeRefreshTests.swift */; };
 		29604D0D434240E79F60910F /* PlusJakartaSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4816538B75A44855603AFEA7 /* PlusJakartaSans-Medium.ttf */; };
 		29647A40EA0F48CE931F7BD2 /* ConversationEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1C8877A08A7526EC089284 /* ConversationEvents.swift */; };
 		29FE43590140F1E7B11EDA15 /* ChatOfferStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83262ADE61741402DD8EA6C8 /* ChatOfferStates.swift */; };
@@ -421,6 +422,7 @@
 		3CC3472D361A748AA50A752E /* ForgotPasswordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordViewModel.swift; sourceTree = "<group>"; };
 		3ED3B0AD4EA46737C36AE0FA /* SellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SellView.swift; sourceTree = "<group>"; };
 		3FB7B149252A37C0E1D7EB38 /* WalletModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletModels.swift; sourceTree = "<group>"; };
+		405A4217885BBB0DECE0D1ED /* BadgeRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeRefreshTests.swift; sourceTree = "<group>"; };
 		40C0649EDD88B13E1D921589 /* PlusJakartaSans-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Bold.ttf"; sourceTree = "<group>"; };
 		42678C8EE2FB53D75EC564D8 /* DisputeViewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisputeViewModels.swift; sourceTree = "<group>"; };
 		4816538B75A44855603AFEA7 /* PlusJakartaSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Medium.ttf"; sourceTree = "<group>"; };
@@ -709,6 +711,7 @@
 				4B1E3F6AE4F0764C7BA20EAC /* ApiErrorTests.swift */,
 				BB15DA3DB844A92190FD80B8 /* AppRouterTests.swift */,
 				803F762A22500DFC7937C33B /* AuthFormTests.swift */,
+				405A4217885BBB0DECE0D1ED /* BadgeRefreshTests.swift */,
 				2E75CCAA4B29A281142F20CB /* BundlesTests.swift */,
 				20873A38F408809A8120EA24 /* CatalogStoreTests.swift */,
 				4EB987AEBB2EDE1285D1D34A /* CheckoutTests.swift */,
@@ -1526,6 +1529,7 @@
 				FDA1CC3F52A525FFC9D05126 /* ApiErrorTests.swift in Sources */,
 				F387D26407B7747445A5A51F /* AppRouterTests.swift in Sources */,
 				D17231590DF611B188376921 /* AuthFormTests.swift in Sources */,
+				28592620D39FFF6C45D042C6 /* BadgeRefreshTests.swift in Sources */,
 				475CAC93AF54D737B5C1CA81 /* BundlesTests.swift in Sources */,
 				61ABAEB5F94917603E7B9057 /* CatalogStoreTests.swift in Sources */,
 				1EE7E448BB67BD69782717DB /* CheckoutTests.swift in Sources */,
