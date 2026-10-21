@@ -3,12 +3,15 @@ import SwiftUI
 /// The "Historique" tab: its states, then the lines in one bordered card, as the website's list.
 struct WalletHistorySection: View {
     let list: PagedList<WalletEntryRow>
+    /// The labels of the top-up lines' methods.
+    var topUpMethods: [PaymentChoice] = []
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
 
     var body: some View {
         WalletListSection(list: list, emptyIcon: .money) { entry in
-            WalletEntryRowView(entry: entry, onOpenOrder: entry.orderId.map { id in { router.push(.order(id: id)) } })
+            WalletEntryRowView(entry: entry, topUpMethods: topUpMethods,
+                               onOpenOrder: entry.orderId.map { id in { router.push(.order(id: id)) } })
         }
     }
 }
@@ -79,6 +82,7 @@ private struct WalletListSection<Item: Identifiable & Sendable, Row: View>: View
 /// sizes the line stacks (icon, label, detail, then the amount), so the label keeps the width.
 struct WalletEntryRowView: View {
     let entry: WalletEntryRow
+    var topUpMethods: [PaymentChoice] = []
     let onOpenOrder: (() -> Void)?
     @Environment(LanguageManager.self) private var l10n
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -161,7 +165,7 @@ struct WalletEntryRowView: View {
     }
 
     private var detail: String {
-        WalletText.entryDetail(entry, locale: l10n.language.formattingLocale) { date in
+        WalletText.entryDetail(entry, locale: l10n.language.formattingLocale, topUpMethods: topUpMethods) { date in
             l10n.format(.referralsVoucherExpires, date)
         }
     }

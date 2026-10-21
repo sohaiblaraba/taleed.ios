@@ -115,10 +115,9 @@ struct UsernameSettingsView: View {
         }
     }
 
-    /// "Vous pourrez changer de nom d'utilisateur à partir du 19 nov. 2026." (the month by name in
-    /// Arabic too).
+    /// "Vous pourrez changer de nom d'utilisateur à partir du 19 nov. 2026." (the app's date).
     private func cooldownText(_ date: Date) -> String {
-        l10n.format(.settingsUsernameCooldown, OrderText.dateWithMonthName(date, locale: l10n.language.formattingLocale))
+        l10n.format(.settingsUsernameCooldown, OrderText.date(date, locale: l10n.language.formattingLocale))
     }
 }
 

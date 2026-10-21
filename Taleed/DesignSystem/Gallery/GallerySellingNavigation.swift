@@ -77,7 +77,7 @@ struct GallerySellingAndCheckout: View {
             lines: [
                 OrderSummaryLine(id: "item", label: copy("Article", "الغرض", "Item"), amount: 800),
                 OrderSummaryLine(id: "fee", label: copy("Frais de plateforme et de service", "رسوم المنصة والخدمة",
-                                                        "Platform & Service Fee"), amount: 90, onInfo: {}),
+                                                        "Platform & service fee"), amount: 90, onInfo: {}),
                 OrderSummaryLine(id: "shipping", label: copy("Livraison", "التوصيل", "Shipping"), amount: shipping),
             ],
             totalLabel: copy("Total à payer", "المجموع المستحق", "Total to pay"),
@@ -104,7 +104,7 @@ struct GalleryNavigation: View {
                 TaleedTopAppBar(title: copy("Profil", "الملف الشخصي", "Profile"))
                 TaleedTopAppBar(title: copy("Paiement", "الدفع", "Checkout"), onBack: {},
                                 actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: "Secure")])
-                TaleedTopAppBar(title: copy("Détail de l’article", "تفاصيل الغرض", "Item Detail"), onBack: {},
+                TaleedTopAppBar(title: copy("Détail de l’article", "تفاصيل الغرض", "Item details"), onBack: {},
                                 actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: "Secure", isCircled: true)])
                 TaleedTopAppBar(title: copy("Détail de l’article", "تفاصيل الغرض", "Item details"), onBack: {},
                                 actions: [AppBarAction(icon: .shareNetwork, accessibilityLabel: "Share",

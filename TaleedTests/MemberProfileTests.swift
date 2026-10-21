@@ -125,12 +125,12 @@ struct MemberProfileTests {
         #expect("123 👍".naturalLayoutDirection == nil)
     }
 
-    @Test func memberSinceNamesTheMonthInEveryLanguage() {
+    @Test func memberSinceIsTheAppDate() {
         let date = Date(timeIntervalSince1970: 1_792_404_000) // 19 Oct 2026
         #expect(MemberProfileText.memberSince(date, locale: AppLanguage.fr.formattingLocale).contains("oct."))
+        #expect(MemberProfileText.memberSince(date, locale: AppLanguage.en.formattingLocale).hasPrefix("19\u{00A0}Oct"))
         let arabic = MemberProfileText.memberSince(date, locale: AppLanguage.ar.formattingLocale)
-        #expect(!arabic.contains("/"))
-        #expect(arabic.contains("أكتوبر 2026"))
+        #expect(arabic.contains("/10\u{200F}/2026"))
     }
 
     // MARK: Wardrobe filter

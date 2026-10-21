@@ -72,8 +72,11 @@ enum WalletText {
     }
 
     /// A history line's second line: "T-000104 · 4 oct. 2026" (a date, not a relative time). Vouchers:
-    /// "Utilisable dès 1500 DA d’achat · 4 oct. 2026 · Expire le 4 oct. 2027".
-    static func entryDetail(_ entry: WalletEntryRow, locale: Locale, expires: (String) -> String) -> String {
+    /// "Utilisable dès 1500 DA d’achat · 4 oct. 2026 · Expire le 4 oct. 2027". A top-up's note is its
+    /// method's id ("mock"): the line shows the method's label from `topUpMethods` ("Paiement simulé"),
+    /// or no note for a method the wallet no longer offers.
+    static func entryDetail(_ entry: WalletEntryRow, locale: Locale, topUpMethods: [PaymentChoice] = [],
+                            expires: (String) -> String) -> String {
         let date = OrderText.date(entry.createdAt, locale: locale)
         if let voucher = entry.voucher {
             var parts = [voucher.statusLabel, date]
@@ -82,7 +85,10 @@ enum WalletText {
             }
             return parts.joined(separator: separator)
         }
-        return [entry.note?.isolatedLeftToRight, date].compactMap { $0 }.joined(separator: separator)
+        let note = entry.kind == .topUp
+            ? entry.note.flatMap { id in topUpMethods.first { $0.value == id }?.label }
+            : entry.note?.isolatedLeftToRight
+        return [note, date].compactMap { $0 }.joined(separator: separator)
     }
 
     /// A payout's second line: "CCP · 4 oct. 2026, 14:32 · VIR-2026-0042" (the time tells apart requests

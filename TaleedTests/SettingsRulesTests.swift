@@ -171,12 +171,16 @@ struct SupportPhoneTests {
     }
 }
 
-struct MonthNameDateTests {
-    @Test func arabicNamesTheMonth() {
+struct AppDateTests {
+    /// One date format in every place: the cooldown, "member since" and the orders write the same date.
+    @Test func everyScreenUsesTheSameDate() {
         let date = Date(timeIntervalSince1970: 1_795_132_800) // 2026-11-20
-        let arabic = OrderText.dateWithMonthName(date, locale: AppLanguage.ar.formattingLocale)
-        #expect(!arabic.contains("/"))
-        #expect(arabic.contains("2026"))
-        #expect(OrderText.dateWithMonthName(date, locale: AppLanguage.fr.formattingLocale) == "20\u{00A0}nov.\u{00A0}2026")
+        #expect(OrderText.date(date, locale: AppLanguage.fr.formattingLocale) == "20\u{00A0}nov.\u{00A0}2026")
+        #expect(OrderText.date(date, locale: AppLanguage.en.formattingLocale) == "20\u{00A0}Nov\u{00A0}2026")
+        #expect(OrderText.date(date, locale: AppLanguage.ar.formattingLocale) == "20\u{200F}/11\u{200F}/2026")
+        for language in AppLanguage.allCases {
+            #expect(MemberProfileText.memberSince(date, locale: language.formattingLocale)
+                == OrderText.date(date, locale: language.formattingLocale))
+        }
     }
 }

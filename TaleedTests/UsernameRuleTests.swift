@@ -19,6 +19,6 @@ struct UsernameRuleTests {
         let l10n = LanguageManager(defaults: defaults, preferredLanguages: ["fr"])
         #expect(l10n.text(for: .usernameLength) == "Entre 3 et 30 caractères.")
         #expect(l10n.text(for: .usernameStart) == "Commencez par une lettre ou un chiffre.")
-        #expect(l10n.text(for: .usernameCharacters) == "Lettres, chiffres, points, tirets ou _ uniquement.")
+        #expect(l10n.text(for: .usernameCharacters) == "Utilisez uniquement des lettres, chiffres, points, tirets et tirets bas.")
     }
 }

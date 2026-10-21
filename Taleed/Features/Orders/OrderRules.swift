@@ -190,44 +190,65 @@ enum OrderRules {
     }
 }
 
-/// Dates of the orders screens, as the website prints them (`formatDate`, `formatDateTime` in
-/// `src/lib/i18n-helpers.ts`: fr-FR, en-GB and ar-DZ, `dateStyle: "medium"` with `timeStyle: "short"`),
-/// Arabic with Latin digits. The same as Android's `WebDates`:
-/// - French: "20 oct. 2026", "20 oct. 2026, 09:39";
-/// - English: "20 Oct 2026", "20 Oct 2026, 09:39";
-/// - Arabic: "20‏/10‏/2026", "20‏/10‏/2026، 9:39 ص".
-///
-/// The date-time patterns are the browsers' (ICU's) for those locales, spelled out: iOS joins the date
-/// and the time with "à" / "at" where the browsers write a comma.
+/// The app's one date format and one time format, used on every screen (and by the API's own texts,
+/// decision E-1). The date is the website's medium date (`formatDate` in `src/lib/i18n-helpers.ts`:
+/// fr-FR, en-GB and ar-DZ), Arabic with Latin digits. The time is 24-hour in French and Arabic, and
+/// follows the device's 12- or 24-hour setting in English:
+/// - French: "20 oct. 2026", "14:05", "20 oct. 2026, 14:05";
+/// - English: "20 Oct 2026", "2:05 PM" or "14:05", "20 Oct 2026, 2:05 PM";
+/// - Arabic: "20‏/10‏/2026", "14:05", "20‏/10‏/2026، 14:05".
 enum OrderText {
     static func date(_ date: Date, locale: Locale) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = webLocale(AppLanguage(locale: locale))
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        // No break inside a date ("21 / oct. 2026"): it wraps as one unit in a line of text.
-        return formatter.string(from: date).replacingOccurrences(of: " ", with: Self.noBreakSpace)
-    }
-
-    /// The medium date with the month by name in every language ("20 nov. 2026", "20 نوفمبر 2026"):
-    /// Arabic's medium style is numeric.
-    static func dateWithMonthName(_ date: Date, locale: Locale) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = webLocale(AppLanguage(locale: locale))
-        formatter.setLocalizedDateFormatFromTemplate("dMMMy")
-        return formatter.string(from: date).replacingOccurrences(of: " ", with: Self.noBreakSpace)
-    }
-
-    static func dateTime(_ date: Date, locale: Locale) -> String {
         let language = AppLanguage(locale: locale)
         let formatter = DateFormatter()
         formatter.locale = webLocale(language)
-        formatter.dateFormat = switch language {
-        // The date keeps together; the line may break after the comma, before the time.
-        case .fr, .en: "d\u{00A0}MMM\u{00A0}y, HH:mm"
-        case .ar: "dd\u{200F}/MM\u{200F}/y\u{060C} h:mm a"
-        }
+        formatter.dateFormat = datePattern(language)
         return formatter.string(from: date)
+    }
+
+    /// The time alone ("14:05", "2:05 PM").
+    static func time(_ date: Date, locale: Locale, uses12HourClock: Bool = deviceUses12HourClock) -> String {
+        let language = AppLanguage(locale: locale)
+        let formatter = timeFormatter(language)
+        formatter.dateFormat = timePattern(language, uses12HourClock: uses12HourClock)
+        return formatter.string(from: date)
+    }
+
+    static func dateTime(_ date: Date, locale: Locale, uses12HourClock: Bool = deviceUses12HourClock) -> String {
+        let language = AppLanguage(locale: locale)
+        let formatter = timeFormatter(language)
+        // The date keeps together; the line may break after the comma, before the time.
+        let separator = language == .ar ? "\u{060C} " : ", "
+        formatter.dateFormat = datePattern(language) + "'\(separator)'"
+            + timePattern(language, uses12HourClock: uses12HourClock)
+        return formatter.string(from: date)
+    }
+
+    /// Whether the device writes times on a 12-hour clock (its region, or the 24-hour switch in Settings).
+    static var deviceUses12HourClock: Bool {
+        let pattern = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: .autoupdatingCurrent) ?? ""
+        return pattern.contains("a") || pattern.contains("h") || pattern.contains("K")
+    }
+
+    /// No break inside a date ("21 / oct. 2026"): it wraps as one unit in a line of text.
+    private static func datePattern(_ language: AppLanguage) -> String {
+        switch language {
+        case .fr, .en: "d\u{00A0}MMM\u{00A0}y"
+        case .ar: "dd\u{200F}/MM\u{200F}/y"
+        }
+    }
+
+    private static func timePattern(_ language: AppLanguage, uses12HourClock: Bool) -> String {
+        language == .en && uses12HourClock ? "h:mm\u{00A0}a" : "HH:mm"
+    }
+
+    private static func timeFormatter(_ language: AppLanguage) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = webLocale(language)
+        // en-GB writes "pm"; English times read "2:05 PM".
+        formatter.amSymbol = language == .en ? "AM" : formatter.amSymbol
+        formatter.pmSymbol = language == .en ? "PM" : formatter.pmSymbol
+        return formatter
     }
 
     private static let noBreakSpace = "\u{00A0}"
@@ -243,7 +264,7 @@ enum OrderText {
     }
 
     /// The website's `Intl` locale for the language.
-    private static func webLocale(_ language: AppLanguage) -> Locale {
+    static func webLocale(_ language: AppLanguage) -> Locale {
         switch language {
         case .fr: Locale(identifier: "fr_FR")
         case .en: Locale(identifier: "en_GB")

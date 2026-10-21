@@ -83,19 +83,8 @@ enum WardrobeFilterRules {
 
 /// The text of the "verified information" list, and of the stars (VoiceOver).
 enum MemberProfileText {
-    /// "Membre depuis 19 oct. 2026": the website's medium date (`formatDate`). Arabic's medium date is
-    /// numeric ("2026/10/19"), so it names the month as the long one does ("19 أكتوبر 2026"), like
-    /// the other languages.
+    /// "Membre depuis 19 oct. 2026": the app's date (`OrderText.date`).
     static func memberSince(_ date: Date, locale: Locale) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = locale
-        if AppLanguage(locale: locale) == .ar {
-            // The website's long Arabic date (`ar-DZ`, `dateStyle: "long"`), without Foundation's comma.
-            formatter.dateFormat = "d MMMM y"
-            return formatter.string(from: date)
-        }
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter.string(from: date)
+        OrderText.date(date, locale: locale)
     }
 }

@@ -11,11 +11,11 @@ enum ProductCondition: String, CaseIterable, Sendable {
 
     /// Which of the two labels a tag shows.
     enum LabelLength: Sendable {
-        /// "New, tagged", "Like new", "Very good", "Good", "Fair" (fr/ar: the website's `short…` labels,
-        /// the same as the catalog's `shortLabel`).
+        /// "New, tagged", "New", "Very good", "Good", "Fair": the catalog's `shortLabel` (the website's
+        /// `short…` labels).
         case short
-        /// "New with tags", "Like new", "Very good condition", "Good condition", "Fair condition"
-        /// (fr/ar: the website's full labels, the same as the catalog's `label`).
+        /// "New with tags", "New without tags", "Very good condition", "Good condition", "Fair condition"
+        /// (fr/ar: the website's full labels, the same as the catalog's `label`; the sell picker too).
         case full
     }
 
@@ -44,7 +44,8 @@ enum ProductCondition: String, CaseIterable, Sendable {
     }
 
     /// The label of an API code. Known codes use the app strings: in fr and ar they are the catalog's
-    /// `shortLabel` / `label`; in en they keep Figma's copy ("Like new", where the catalog says "New").
+    /// `shortLabel` / `label`; in en the full labels name the condition ("Very good condition", where
+    /// the catalog says "Very good"), so that all five read alike.
     /// An unknown code shows the catalog's `shortLabel` (short tags, decision 6), then its `label`.
     static func label(code: String, catalogLabel: String, catalogShortLabel: String? = nil,
                       length: LabelLength = .short, language: AppLanguage) -> String {

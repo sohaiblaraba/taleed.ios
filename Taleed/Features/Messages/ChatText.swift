@@ -40,16 +40,18 @@ enum ChatText {
         }
     }
 
-    /// The offer card's eyebrow: "Offre sur un lot · 2 articles", "Faire une offre" (a buyer's offer) or
-    /// "Offre du vendeur" (§7 G9).
+    /// The offer card's eyebrow: "Offre sur un lot · 2 articles", "Votre offre" (the member's own),
+    /// "Offre" (the buyer's, seen by the seller) or "Offre du vendeur" (§7 G9).
     enum OfferEyebrow: Equatable {
         case bundle(count: Int)
+        case mine
         case buyer
         case seller
     }
 
     static func offerEyebrow(_ offer: ChatOffer) -> OfferEyebrow {
         if let bundle = offer.bundle { return .bundle(count: bundle.items.count) }
+        if offer.isMine { return .mine }
         return offer.sentBy == .seller ? .seller : .buyer
     }
 
@@ -106,13 +108,9 @@ enum ChatText {
 
     // MARK: Dates
 
-    /// The time under a bubble ("14:05"), as the website's `timeStyle: short`.
+    /// The time under a bubble ("14:05", "2:05 PM"): the app's time format (`OrderText.time`).
     static func time(_ date: Date, locale: Locale) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = locale
-        formatter.dateStyle = .none
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        OrderText.time(date, locale: locale)
     }
 
     /// The inbox's short time of the last message, so the item's title keeps its room: "34 s", "5 min",
@@ -141,19 +139,22 @@ enum ChatText {
             units.allowedUnits = [.day]
             return units.string(from: TimeInterval(days * 86400)) ?? ""
         }
-        let formatter = DateFormatter()
-        formatter.locale = locale
-        formatter.calendar = calendar
         let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
-        formatter.setLocalizedDateFormatFromTemplate(sameYear ? "dMMM" : "dMMMy")
+        guard sameYear else { return OrderText.date(date, locale: locale) }
+        // The app's date without its year: "12 oct.", "12 Oct", "12‏/10".
+        let language = AppLanguage(locale: locale)
+        let formatter = DateFormatter()
+        formatter.locale = OrderText.webLocale(language)
+        formatter.calendar = calendar
+        formatter.dateFormat = language == .ar ? "dd\u{200F}/MM" : "d\u{00A0}MMM"
         return formatter.string(from: date)
     }
 
-    /// The day above a day's messages: "Aujourd'hui", "Hier", then "12 oct. 2026" (the system's
-    /// relative names, nothing to translate).
+    /// The day above a day's messages: "Aujourd'hui", "Hier", then the app's date "12 oct. 2026" (the
+    /// system's relative names, nothing to translate; the website's locales give the app's medium date).
     static func day(_ date: Date, locale: Locale) -> String {
         let formatter = DateFormatter()
-        formatter.locale = locale
+        formatter.locale = OrderText.webLocale(AppLanguage(locale: locale))
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         formatter.doesRelativeDateFormatting = true

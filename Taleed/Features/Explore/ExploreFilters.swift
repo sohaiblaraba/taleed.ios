@@ -219,8 +219,8 @@ enum ExploreLabels {
 
     static func conditionName(_ code: String?, catalog: Catalog?, language: AppLanguage) -> String? {
         guard let code else { return nil }
-        if let label = catalog?.condition(code)?.label, !label.isEmpty { return label }
-        return ProductCondition.label(code: code, catalogLabel: "", catalogShortLabel: nil, length: .full, language: language)
+        return ProductCondition.label(code: code, catalogLabel: catalog?.condition(code)?.label ?? code, length: .full,
+                                      language: language)
     }
 
     static func wilayaName(_ id: Int?, catalog: Catalog?) -> String? {

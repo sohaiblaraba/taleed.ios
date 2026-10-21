@@ -13,11 +13,11 @@ struct ProductConditionTests {
         #expect(ProductCondition(code: "LIKE_NEW") == nil)
     }
 
-    @Test func englishLabelsAreTheFigmaLabels() {
+    @Test func englishLabelsReadAlike() {
         #expect(ProductCondition.allCases.map { $0.label(.short, in: .en) } ==
-            ["New, tagged", "Like new", "Very good", "Good", "Fair"])
+            ["New, tagged", "New", "Very good", "Good", "Fair"])
         #expect(ProductCondition.allCases.map { $0.label(.full, in: .en) } ==
-            ["New with tags", "Like new", "Very good condition", "Good condition", "Fair condition"])
+            ["New with tags", "New without tags", "Very good condition", "Good condition", "Fair condition"])
     }
 
     @Test func frenchAndArabicShortLabelsAreTheWebsiteShortLabels() {

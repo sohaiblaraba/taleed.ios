@@ -1864,7 +1864,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Item Detail"
+            "value": "Item details"
           }
         },
         "fr": {
@@ -3422,19 +3422,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "اسم مستخدم غير صالح: من 3 إلى 30 حرفًا — أحرف أو أرقام أو نقاط أو شرطات أو شرطات سفلية."
+            "value": "اسم مستخدم غير صالح. استخدم من 3 إلى 30 حرفًا: أحرف وأرقام ونقاط وشرطات وشرطات سفلية."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Invalid username: 3–30 characters — letters, digits, dots, hyphens or underscores."
+            "value": "Invalid username. Use 3 to 30 characters: letters, numbers, dots, dashes and underscores."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nom d’utilisateur invalide : 3 à 30 caractères, lettres, chiffres, points, tirets ou underscores."
+            "value": "Nom d’utilisateur invalide. Utilisez 3 à 30 caractères : lettres, chiffres, points, tirets et tirets bas."
           }
         }
       }
@@ -4227,19 +4227,19 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lettres, chiffres, points et tirets uniquement."
+            "value": "Lettres, chiffres, points, tirets et tirets bas uniquement."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أحرف وأرقام ونقاط وشرطات فقط."
+            "value": "أحرف وأرقام ونقاط وشرطات وشرطات سفلية فقط."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Letters, numbers, dots and dashes only."
+            "value": "Letters, numbers, dots, dashes and underscores only."
           }
         }
       }
@@ -4587,7 +4587,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create Bundle"
+            "value": "Create bundle"
           }
         },
         "fr": {
@@ -4762,7 +4762,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Platform & Service Fee"
+            "value": "Platform & service fee"
           }
         }
       }
@@ -6306,7 +6306,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Platform & Service Fee"
+            "value": "Platform & service fee"
           }
         },
         "fr": {
@@ -7476,7 +7476,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Like new"
+            "value": "New without tags"
           }
         },
         "fr": {
@@ -7568,7 +7568,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Like new"
+            "value": "New"
           }
         },
         "fr": {
@@ -10861,7 +10861,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "About the platform and service fee"
+            "value": "About the platform & service fee"
           }
         },
         "fr": {
@@ -11168,7 +11168,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Platform & Service Fee"
+            "value": "Platform & service fee"
           }
         },
         "fr": {
@@ -12536,7 +12536,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You will receive this full amount. The Platform & Service Fee is paid by the buyer."
+            "value": "You will receive this full amount. The platform & service fee is paid by the buyer."
           }
         },
         "fr": {
@@ -14258,19 +14258,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تُحرَّر الأموال تلقائيًا في %@"
+            "value": "ستُحرَّر الأموال تلقائيًا في %@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Funds auto-released on %@"
+            "value": "Funds will be released automatically on %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fonds libérés automatiquement le %@"
+            "value": "Les fonds seront libérés automatiquement le %@"
           }
         }
       }
@@ -17032,13 +17032,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "3 to 30 characters: letters, numbers, dots, underscores and dashes. Always shown in lowercase."
+            "value": "3 to 30 characters: letters, numbers, dots, dashes and underscores. Always shown in lowercase."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "De 3 à 30 caractères : lettres, chiffres, points, tirets et tirets bas. Toujours affiché en minuscules."
+            "value": "3 à 30 caractères : lettres, chiffres, points, tirets et tirets bas. Toujours affiché en minuscules."
           }
         }
       }
@@ -18360,19 +18360,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تُستعمل لملء بيانات التوصيل إلى المنزل تلقائيًا عند الطلب."
+            "value": "تُستعمل لملء عنوان التوصيل إلى المنزل تلقائيًا عند الطلب."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "They fill in home delivery when you order."
+            "value": "We use them to fill in your home delivery address when you order."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elles préremplissent la livraison à domicile quand vous commandez."
+            "value": "Elles servent à préremplir l’adresse de livraison à domicile lors de la commande."
           }
         }
       }
@@ -18912,19 +18912,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "احصل على الشارة الزرقاء: أرسل صورة لوثيقة هويتك. يقوم فريقنا بمراجعتها."
+            "value": "احصل على شارة التوثيق: أرسل صورة لوثيقة هويتك. يقوم فريقنا بمراجعتها."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Get the blue badge: send a photo of your ID. A team member reviews it."
+            "value": "Get the verified badge: send a photo of your ID. A team member reviews it."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obtenez le badge bleu : envoyez une photo de votre pièce d’identité. Un membre de l’équipe l’examine."
+            "value": "Obtenez le badge vérifié : envoyez une photo de votre pièce d’identité. Un membre de l’équipe l’examine."
           }
         }
       }
@@ -18935,19 +18935,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم توثيق هويتك. الشارة الزرقاء ظاهرة على ملفك."
+            "value": "تم توثيق هويتك. شارة التوثيق ظاهرة على ملفك."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your identity is verified. The blue badge is shown on your profile."
+            "value": "Your identity is verified. The verified badge is shown on your profile."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre identité est vérifiée. Le badge bleu est visible sur votre profil."
+            "value": "Votre identité est vérifiée. Le badge vérifié est visible sur votre profil."
           }
         }
       }
@@ -19769,7 +19769,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your voucher will be automatically deducted from your next order of %@ or more (not including shipping or the Platform & Service Fee)."
+            "value": "Your voucher will be automatically deducted from your next order of %@ or more (not including shipping or the platform & service fee)."
           }
         },
         "fr": {
@@ -20765,19 +20765,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "من 3 إلى 30 حرفًا: أحرف أو أرقام أو نقاط أو شرطات أو _"
+            "value": "من 3 إلى 30 حرفًا: أحرف وأرقام ونقاط وشرطات وشرطات سفلية."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "3 to 30 characters: letters, digits, dots, dashes or _"
+            "value": "3 to 30 characters: letters, numbers, dots, dashes and underscores."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "3 à 30 caractères : lettres, chiffres, points, tirets ou _"
+            "value": "3 à 30 caractères : lettres, chiffres, points, tirets et tirets bas."
           }
         }
       }
@@ -20794,7 +20794,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start with a letter or a digit."
+            "value": "Start with a letter or a number."
           }
         },
         "fr": {
@@ -20811,19 +20811,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أحرف أو أرقام أو نقاط أو شرطات أو _ فقط."
+            "value": "استخدم الأحرف والأرقام والنقاط والشرطات والشرطات السفلية فقط."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Letters, digits, dots, dashes or _ only."
+            "value": "Use only letters, numbers, dots, dashes and underscores."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lettres, chiffres, points, tirets ou _ uniquement."
+            "value": "Utilisez uniquement des lettres, chiffres, points, tirets et tirets bas."
           }
         }
       }
@@ -21678,6 +21678,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voir mon portefeuille"
+          }
+        }
+      }
+    },
+    "app_offer_your_offer": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre offre"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرضك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your offer"
+          }
+        }
+      }
+    },
+    "app_offer_buyer_offer": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offre"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offer"
           }
         }
       }

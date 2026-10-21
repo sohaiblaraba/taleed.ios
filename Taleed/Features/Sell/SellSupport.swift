@@ -57,3 +57,10 @@ enum SellMessages {
         }
     }
 }
+
+extension CatalogCondition {
+    /// The full label, as the tags in list rows write it ("Very good condition").
+    func fullLabel(in language: AppLanguage) -> String {
+        ProductCondition.label(code: value, catalogLabel: label, length: .full, language: language)
+    }
+}

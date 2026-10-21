@@ -74,7 +74,7 @@ struct OfferStatusBadge: View {
     }
 }
 
-/// An offer's eyebrow ("OFFRE SUR UN LOT · 3 ARTICLES", "FAIRE UNE OFFRE", "OFFRE DU VENDEUR") with its
+/// An offer's eyebrow ("OFFRE SUR UN LOT · 3 ARTICLES", "VOTRE OFFRE", "OFFRE", "OFFRE DU VENDEUR") with its
 /// icon, on a row of its own so that it never has to share the width with the status.
 struct OfferEyebrow: View {
     let offer: ChatOffer
@@ -93,11 +93,12 @@ struct OfferEyebrow: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// "Offre sur un lot · 2 articles", "Faire une offre" or "Offre du vendeur" (§7 G9).
+    /// "Offre sur un lot · 2 articles", "Votre offre", "Offre" or "Offre du vendeur" (§7 G9).
     private var text: String {
         switch ChatText.offerEyebrow(offer) {
         case let .bundle(count): l10n.format(.offersBundleOffer, count)
-        case .buyer: l10n.string(.offersMakeOffer)
+        case .mine: l10n.string(.appOfferYourOffer)
+        case .buyer: l10n.string(.appOfferBuyerOffer)
         case .seller: l10n.string(.offersSellerOffer)
         }
     }

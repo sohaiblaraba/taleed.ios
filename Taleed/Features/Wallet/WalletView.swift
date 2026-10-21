@@ -131,7 +131,7 @@ private struct WalletScreen: View {
                     .padding(.bottom, TaleedSpacing.s24)
                     Section {
                         switch model.tab {
-                        case .history: WalletHistorySection(list: model.history)
+                        case .history: WalletHistorySection(list: model.history, topUpMethods: model.summary?.topUpMethods ?? [])
                         case .payouts: WalletPayoutsSection(list: model.payouts)
                         }
                     } header: {

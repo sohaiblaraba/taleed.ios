@@ -72,9 +72,19 @@ struct WalletTextTests {
     @Test func ledgerLinesShowTheNoteAndTheDate() {
         let locale = Locale(identifier: "fr_FR")
         let date = OrderText.date(Date(timeIntervalSince1970: 1_760_000_000), locale: locale)
-        let detail = WalletText.entryDetail(walletEntry("a", note: "T-000010"), locale: locale) { "Expire le \($0)" }
+        let detail = WalletText.entryDetail(walletEntry("a", kind: .saleRelease, note: "T-000010"), locale: locale) { "Expire le \($0)" }
         #expect(detail == "\("T-000010".isolatedLeftToRight)\u{00A0}·\u{00A0}\(date)")
-        #expect(WalletText.entryDetail(walletEntry("b", note: nil), locale: locale) { $0 } == date)
+        #expect(WalletText.entryDetail(walletEntry("b", kind: .saleRelease, note: nil), locale: locale) { $0 } == date)
+    }
+
+    /// A top-up's note is its method's id: the line shows the method's label, never "mock".
+    @Test func topUpLinesShowTheMethodLabel() {
+        let locale = Locale(identifier: "fr_FR")
+        let date = OrderText.date(Date(timeIntervalSince1970: 1_760_000_000), locale: locale)
+        let methods = [PaymentChoice(value: "mock", label: "Paiement simulé", hint: "")]
+        let detail = WalletText.entryDetail(walletEntry("t", note: "mock"), locale: locale, topUpMethods: methods) { $0 }
+        #expect(detail == "Paiement simulé\u{00A0}·\u{00A0}\(date)")
+        #expect(WalletText.entryDetail(walletEntry("u", note: "mock"), locale: locale) { $0 } == date)
     }
 
     @Test func voucherLinesShowTheirStatusAndExpiryWhileActive() {

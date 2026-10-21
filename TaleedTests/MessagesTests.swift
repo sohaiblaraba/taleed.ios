@@ -33,8 +33,9 @@ extension ChatListing {
 
 extension ChatOffer {
     static func fixture(id: String = "o1", status: ChatOfferStatus = .pending, expiresAt: Date = chatNow.addingTimeInterval(3600),
-                        sentBy: ChatRole = .buyer, bundle: ChatBundle? = nil) -> ChatOffer {
-        ChatOffer(id: id, amount: 2500, status: status, expiresAt: expiresAt, createdAt: chatNow, senderId: "me", isMine: true,
+                        sentBy: ChatRole = .buyer, bundle: ChatBundle? = nil, isMine: Bool = true) -> ChatOffer {
+        ChatOffer(id: id, amount: 2500, status: status, expiresAt: expiresAt, createdAt: chatNow, senderId: isMine ? "me" : "other",
+                  isMine: isMine,
                   sentBy: sentBy, listingId: "l1", bundle: bundle, canAccept: false, canDecline: false, canCounter: false,
                   canCancel: status == .pending, canPay: false, counterRange: nil)
     }
@@ -106,8 +107,10 @@ struct ChatTextTests {
     @Test func offerStatusAndEyebrow() {
         #expect(ChatText.offerStatusKey(.unknown) == .appOfferStatusClosed)
         #expect(ChatText.offerStatusKey(.countered) == .offersStatusCountered)
-        #expect(ChatText.offerEyebrow(.fixture(sentBy: .buyer)) == .buyer)
-        #expect(ChatText.offerEyebrow(.fixture(sentBy: .seller)) == .seller)
+        #expect(ChatText.offerEyebrow(.fixture(sentBy: .buyer)) == .mine)
+        #expect(ChatText.offerEyebrow(.fixture(sentBy: .seller)) == .mine)
+        #expect(ChatText.offerEyebrow(.fixture(sentBy: .buyer, isMine: false)) == .buyer)
+        #expect(ChatText.offerEyebrow(.fixture(sentBy: .seller, isMine: false)) == .seller)
         let bundle = ChatBundle(id: "b1", items: [ChatBundleItem(listingId: "a", title: "A", price: 1, imageURL: nil),
                                                   ChatBundleItem(listingId: "b", title: "B", price: 2, imageURL: nil)], itemsTotal: 3)
         #expect(ChatText.offerEyebrow(.fixture(bundle: bundle)) == .bundle(count: 2))

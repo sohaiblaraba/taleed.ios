@@ -200,7 +200,8 @@ struct SellFormView: View {
     }
 
     private func conditionField(_ catalog: Catalog) -> some View {
-        TaleedSelectField(label: l10n.string(.sellConditionLabel), value: catalog.condition(model.form.condition)?.label,
+        TaleedSelectField(label: l10n.string(.sellConditionLabel),
+                          value: catalog.condition(model.form.condition)?.fullLabel(in: l10n.language),
                           placeholder: l10n.string(.sellSelectCondition),
                           error: model.fieldErrors[.condition].map(message(for:)), isActive: picker == .condition) {
             open(.condition)
@@ -329,7 +330,7 @@ extension SellFormView {
         case .condition:
             SellChoiceSheet(title: l10n.string(.sellConditionLabel),
                             options: (catalog?.conditions ?? []).filter { SellLimits.isSendableCondition($0.value) }
-                                .map { FilterOption(value: $0.value, title: $0.label) },
+                                .map { FilterOption(value: $0.value, title: $0.fullLabel(in: l10n.language)) },
                             selection: model.form.condition) { model.form.condition = $0 }
         case .brand, .wilaya, nil:
             EmptyView()

@@ -109,15 +109,20 @@ struct OrderRulesTests {
         #expect(!text.unicodeScalars.contains { (0x0660...0x0669).contains($0.value) })
     }
 
-    /// The website's `formatDateTime`: a comma between the date and the time, not "à" / "at".
-    @Test func dateTimesAreTheWebsites() {
+    /// One date format and one time format: a comma between the date and the time, 24-hour in French
+    /// and Arabic, the device's clock in English.
+    @Test func dateTimesUseTheAppFormat() {
         let date = Date(timeIntervalSince1970: 1_792_000_000)
-        let french = OrderText.dateTime(date, locale: AppLanguage.fr.formattingLocale)
-        let english = OrderText.dateTime(date, locale: AppLanguage.en.formattingLocale)
-        let arabic = OrderText.dateTime(date, locale: AppLanguage.ar.formattingLocale)
+        let french = OrderText.dateTime(date, locale: AppLanguage.fr.formattingLocale, uses12HourClock: true)
+        let english24 = OrderText.dateTime(date, locale: AppLanguage.en.formattingLocale, uses12HourClock: false)
+        let english12 = OrderText.dateTime(date, locale: AppLanguage.en.formattingLocale, uses12HourClock: true)
+        let arabic = OrderText.dateTime(date, locale: AppLanguage.ar.formattingLocale, uses12HourClock: true)
         #expect(french.wholeMatch(of: #/\d{1,2}\u{00A0}[a-zéû.]+\u{00A0}2026, \d{2}:\d{2}/#) != nil, "\(french)")
-        #expect(english.wholeMatch(of: #/\d{1,2}\u{00A0}[A-Z][a-z]+\u{00A0}2026, \d{2}:\d{2}/#) != nil, "\(english)")
+        #expect(english24.wholeMatch(of: #/\d{1,2}\u{00A0}[A-Z][a-z]+\u{00A0}2026, \d{2}:\d{2}/#) != nil, "\(english24)")
+        #expect(english12.wholeMatch(of: #/\d{1,2}\u{00A0}[A-Z][a-z]+\u{00A0}2026, \d{1,2}:\d{2}\u{00A0}(AM|PM)/#) != nil, "\(english12)")
         #expect(arabic.contains("\u{060C} "))
+        #expect(arabic.hasSuffix(OrderText.time(date, locale: AppLanguage.ar.formattingLocale, uses12HourClock: true)))
+        #expect(OrderText.time(date, locale: AppLanguage.ar.formattingLocale).wholeMatch(of: #/\d{2}:\d{2}/#) != nil)
         #expect(!arabic.unicodeScalars.contains { (0x0660...0x0669).contains($0.value) })
         let englishDate = OrderText.date(date, locale: AppLanguage.en.formattingLocale)
         #expect(englishDate.wholeMatch(of: #/\d{1,2}\u{00A0}[A-Z][a-z]+\u{00A0}2026/#) != nil)
