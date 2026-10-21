@@ -3,17 +3,16 @@ import SwiftUI
 import OSLog
 #endif
 
-/// Search results (screens.md §2 G3, Figma composed pattern "B. Search results" 8:14404): the search
-/// header with back, the editable keywords and clear; the filter chips ("Filtres · 2" opens the filter
-/// sheet, each active filter is a removable chip, then "Tout effacer"); the count and the sort control,
-/// which opens the sort sheet (§5.3); then the dense result rows, page by page.
+/// Search results (search-results.md, Figma "Search Results" 218:2909; screens.md §2 G3): the app bar
+/// with back, the centred "Résultats" and the trust shield; the search row — the editable keywords with
+/// clear, and the filter button with the number of active filters (sort excluded) that opens the
+/// filters sheet, where the sort lives too; one removable chip per active filter; then the count and the
+/// two-column product-card grid, page by page.
 ///
-/// States: skeleton rows while the first page loads, the error (offline included) with Retry, the empty
+/// States: skeleton cards while the first page loads, the error (offline included) with Retry, the empty
 /// state with "Clear filters", pull-to-refresh, the pagination footer.
 struct SearchResultsView: View {
     @State private var viewModel: SearchResultsViewModel
-    @State private var showsSort = false
-    @State private var sortSelection = ExploreQuery.defaultSort
     @State private var showsFilters = false
     @Environment(LanguageManager.self) private var l10n
     @Environment(CatalogStore.self) private var catalog
@@ -24,27 +23,20 @@ struct SearchResultsView: View {
     @Environment(SessionManager.self) private var session
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private static let topID = "results.top"
+    private static let chipsStartID = "results.chips.start"
 
     init(query: ExploreQuery, api: any ListingsApi) {
         _viewModel = State(initialValue: SearchResultsViewModel(query: query, api: api))
     }
 
     var body: some View {
-        @Bindable var viewModel = viewModel
         ShellScreen {
-            SearchHeader(text: $viewModel.searchText, placeholder: l10n.string(.appExploreSearchPlaceholder),
-                         onBack: { dismiss() }, onSubmit: { viewModel.submitSearch() }, filters: { filterChips })
-            .textInputAutocapitalization(.never)
-            .onChange(of: viewModel.searchText) { _, text in
-                if text.utf16.count > ListingSearchParameters.maxTextLength {
-                    viewModel.searchText = text.prefix(utf16Units: ListingSearchParameters.maxTextLength)
-                }
-            }
+            header
         } content: {
             results
-                .background(TaleedColor.surfaceGrouped)
         }
         .task(id: ObjectIdentifier(viewModel.results)) { await viewModel.results.loadIfNeeded() }
         .task(id: viewModel.query.brand) {
@@ -55,6 +47,10 @@ struct SearchResultsView: View {
         .onChange(of: viewModel.results.items.count) { _, count in
             let unique = Set(viewModel.results.items.map(\.id)).count
             Logger(subsystem: "app.taleed", category: "search").notice("results show \(count) cards, \(unique) unique")
+        }
+        .task {
+            // `-TaleedDebugSearchFilters YES` opens the filters sheet (screenshots).
+            if UserDefaults.standard.bool(forKey: "TaleedDebugSearchFilters") { showsFilters = true }
         }
         #endif
         .onChange(of: viewModel.results.refreshError) { _, error in
@@ -68,74 +64,96 @@ struct SearchResultsView: View {
             default: break
             }
         }
-        .sortBottomSheet(isPresented: $showsSort, title: l10n.string(.filtersSort),
-                         options: ExploreLabels.sorts(catalog: catalog.catalog, text: l10n.string),
-                         selection: $sortSelection) {
-            viewModel.sort(by: sortSelection)
-        }
         .sheet(isPresented: $showsFilters) {
-            FilterSheetView(query: viewModel.query) { viewModel.apply($0) }
-                .appLanguage(l10n.language)
+            FilterSheetView(query: viewModel.query, startsExpanded: dynamicTypeSize.isAccessibilitySize) {
+                viewModel.apply($0)
+            }
+            .appLanguage(l10n.language)
         }
     }
 
     // MARK: Header
 
-    private var filterChips: some View {
-        let query = viewModel.query
-        let active = query.activeFilters
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: TaleedSpacing.s8) {
-                FilterChip(title: filtersTitle(count: active.count), icon: .slidersHorizontal, tone: .brand) {
-                    showsFilters = true
-                }
-                .accessibilityIdentifier("results.filters")
-                ForEach(active, id: \.self) { filter in
-                    RemovableFilterChip(title: chipLabel(filter), tone: Self.tone(filter)) {
-                        withAnimation { viewModel.remove(filter) }
-                    }
-                }
-                if !active.isEmpty {
-                    TaleedButton(title: l10n.string(.filtersClear), kind: .hyperlink, size: .small) {
-                        withAnimation { viewModel.clearFilters() }
-                    }
+    private var header: some View {
+        VStack(spacing: 0) {
+            TaleedTopAppBar(
+                title: l10n.string(.appExploreResultsTitle),
+                onBack: { dismiss() },
+                // The wireframe's trust indicator, as on Item Detail and Checkout: no action.
+                actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: l10n.string(.trustProtectedPay))]
+            )
+            VStack(spacing: TaleedSpacing.s16) {
+                searchRow
+                if !viewModel.query.activeFilters.isEmpty {
+                    filterChips
                 }
             }
-            .padding(.horizontal, TaleedLayout.screenMargin)
-            .padding(.vertical, 2)
+            .padding(.top, TaleedSpacing.s16)
         }
-        // Chips that run past the edge fade out there, so the row reads as one that scrolls.
-        .mask {
-            HStack(spacing: 0) {
-                Rectangle()
-                LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
-                    .frame(width: TaleedLayout.screenMargin + TaleedSpacing.s8)
-                    .flipsForRightToLeftLayoutDirection(true)
-            }
-        }
+        .background(TaleedColor.surfacePrimary)
     }
 
-    /// "Filtres", or "Filtres · 2" with active filters (the Figma pattern's chip).
-    private func filtersTitle(count: Int) -> String {
-        let title = l10n.string(.filtersTitle)
-        guard count > 0 else { return title }
-        return "\(title) · \(count)"
+    /// The keywords (Search keeps the filters) and the 44 pt filter button with its count badge.
+    private var searchRow: some View {
+        @Bindable var viewModel = viewModel
+        let count = viewModel.query.activeFilters.count
+        return HStack(spacing: TaleedSpacing.s12) {
+            TaleedTextField(text: $viewModel.searchText, placeholder: l10n.string(.appExploreSearchPlaceholder),
+                            leadingIcon: .magnifyingGlass, maxLength: ListingSearchParameters.maxTextLength)
+                .submitLabel(.search)
+                .onSubmit { viewModel.submitSearch() }
+                .textInputAutocapitalization(.never)
+                .accessibilityIdentifier("results.search")
+            TaleedIconOnlyButton(icon: .slidersHorizontal, accessibilityLabel: l10n.string(.filtersTitle),
+                                 kind: .tertiary, size: .medium, boxSize: TaleedSize.inputHeight) {
+                showsFilters = true
+            }
+            .overlay(alignment: .topTrailing) {
+                if count > 0 {
+                    // Centred on the button's corner, as in Figma (18 pt, 8 pt past the edges).
+                    CountBadge(count: count, accessibilityLabel: "", size: .small)
+                        // SwiftUI mirrors the offset in right-to-left.
+                        .offset(x: 8, y: -8)
+                        .accessibilityHidden(true)
+                        .allowsHitTesting(false)
+                }
+            }
+            .accessibilityValue(count > 0 ? "\(count)" : "")
+            .accessibilityIdentifier("results.filters")
+        }
+        .padding(.horizontal, TaleedLayout.screenMargin)
+    }
+
+    /// One removable chip per active filter, in the brand tone as in Figma.
+    private var filterChips: some View {
+        let chips = viewModel.query.activeFilters.map { (filter: $0, title: chipLabel($0)) }
+        return ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: TaleedSpacing.s8) {
+                    // The start margin (with the spacing), which the row scrolls back to.
+                    Color.clear.frame(width: TaleedLayout.screenMargin - TaleedSpacing.s8, height: 1).id(Self.chipsStartID)
+                    ForEach(chips, id: \.filter) { chip in
+                        let filter = chip.filter
+                        RemovableFilterChip(title: chip.title, tone: .brand) {
+                            withAnimation { viewModel.remove(filter) }
+                        }
+                        .accessibilityIdentifier("results.chip.\(filter.rawValue)")
+                    }
+                    Color.clear.frame(width: TaleedLayout.screenMargin - TaleedSpacing.s8, height: 1)
+                }
+                .padding(.vertical, 2)
+            }
+            // The row starts at its first chip, also in right-to-left, where a row pushed on the stack
+            // otherwise opens on its end; again when a label changes (the catalog's names arrive late).
+            .onAppear { proxy.scrollTo(Self.chipsStartID) }
+            .onChange(of: chips.map(\.title)) { _, _ in proxy.scrollTo(Self.chipsStartID) }
+        }
     }
 
     private func chipLabel(_ filter: ExploreFilter) -> String {
         ExploreLabels.chip(filter, query: viewModel.query,
                            context: .init(catalog: catalog.catalog, brands: references.brands.value ?? [],
                                           language: l10n.language, text: { l10n.string($0) }))
-    }
-
-    /// The Figma pattern's chip colours: the location in the success tone, the size neutral, the others
-    /// in the brand tone.
-    static func tone(_ filter: ExploreFilter) -> TaleedTone {
-        switch filter {
-        case .wilaya: .success
-        case .size: .neutral
-        case .category, .brand, .condition, .price: .brand
-        }
     }
 
     // MARK: Results
@@ -146,39 +164,41 @@ struct SearchResultsView: View {
         if list.hasLoaded {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: TaleedSpacing.s12) {
+                    LazyVStack(alignment: .leading, spacing: TaleedSpacing.s12) {
                         let listings = listingChanges.cards(list.items.filter { !favorites.removedIds.contains($0.id) })
-                        // No count and sort over the empty state, which already says there is nothing.
+                        // No count over the empty state, which already says there is nothing.
                         Group {
                             if listings.isEmpty {
                                 Color.clear.frame(height: 0)
                             } else {
-                                summary
+                                countRow
                             }
                         }
                         .id(Self.topID)
                         .onAppear { Task { await viewModel.topAppeared() } }
                         .onDisappear { viewModel.topDisappeared() }
                         if listings.isEmpty {
-                            emptyState.padding(.top, TaleedSpacing.s24)
+                            emptyState
+                                .padding(.horizontal, TaleedLayout.screenMargin)
+                                .padding(.top, TaleedSpacing.s24)
                         } else {
-                            ForEach(listings) { SearchResultRow(listing: $0) }
+                            ListingGrid(listings: listings)
                             PaginationFooter(list: list)
                         }
                     }
-                    .padding(.horizontal, TaleedLayout.screenMargin)
-                    .padding(.top, TaleedSpacing.s4)
+                    .padding(.top, TaleedSpacing.s16)
                     .padding(.bottom, TaleedSpacing.s24)
                 }
                 .refreshable { await list.refresh() }
                 .scrollDismissesKeyboard(.immediately)
+                .accessibilityIdentifier("results.scroll")
                 .onChange(of: ObjectIdentifier(list)) { _, _ in proxy.scrollTo(Self.topID, anchor: .top) }
             }
         } else if let error = list.error {
             ErrorStateView(error: error, retry: { Task { await list.reload() } }, onBack: { dismiss() })
         } else {
             ScrollView {
-                SkeletonProductList(count: 5)
+                SkeletonProductGrid(count: TaleedMotion.skeletonMaxPlaceholders)
                     .padding(.horizontal, TaleedLayout.screenMargin)
                     .padding(.top, TaleedSpacing.s16)
             }
@@ -186,29 +206,20 @@ struct SearchResultsView: View {
         }
     }
 
-    /// "126 articles" and the sort ("Recommandés ⌄"), which opens the sort sheet.
-    private var summary: some View {
-        let total = viewModel.results.total ?? 0
-        let count = l10n.format(.filtersResults, total)
-        let sort = viewModel.query.effectiveSort
-        let sortName = ExploreLabels.sortName(sort, catalog: catalog.catalog, text: l10n.string)
-        return ResultsSummaryRow(countLabel: count, sortLabel: sortName) {
-            sortSelection = sort
-            showsSort = true
-        }
-        // One element: the count (with the keywords), then the sort it opens.
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(summaryAccessibilityLabel(count: count))
-        .accessibilityValue("\(l10n.string(.filtersSort)) : \(sortName)")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction {
-            sortSelection = sort
-            showsSort = true
-        }
+    /// "126 articles" over the grid (kept from the build: Figma draws no count).
+    private var countRow: some View {
+        let count = l10n.format(.filtersResults, viewModel.results.total ?? 0)
+        return Text(count)
+            .taleedFont(PatternStyles.body13)
+            .foregroundStyle(TaleedColor.textBody)
+            .padding(.horizontal, TaleedLayout.screenMargin)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityLabel(countAccessibilityLabel(count: count))
+            .accessibilityIdentifier("results.count")
     }
 
     /// "Résultats pour « zara », 1 article" (the website's heading and count) for VoiceOver.
-    private func summaryAccessibilityLabel(count: String) -> String {
+    private func countAccessibilityLabel(count: String) -> String {
         guard let text = viewModel.query.text, !text.isEmpty else { return count }
         return l10n.format(.filtersSearchFor, text) + ", " + count
     }
@@ -224,34 +235,5 @@ struct SearchResultsView: View {
             actionTitle: hasFilters ? l10n.string(.appExploreClearFilters) : nil,
             action: hasFilters ? { withAnimation { viewModel.clearFilters() } } : nil
         )
-    }
-}
-
-/// A result row (design-system §3.3 dense variant, as in the Figma search pattern): photo, condition
-/// tag, title, price and wilaya, the heart top right. Opens the listing.
-struct SearchResultRow: View {
-    let listing: ListingSummary
-    @Environment(CatalogStore.self) private var catalog
-    @Environment(FavoriteStore.self) private var favorites
-    @Environment(AppRouter.self) private var router
-    @Environment(SessionManager.self) private var session
-    @Environment(LanguageManager.self) private var l10n
-
-    var body: some View {
-        ProductListRow(
-            product: ListingCardContent.product(for: listing, favorite: favorites.state(for: listing),
-                                                catalog: catalog.catalog, text: { l10n.string($0) }),
-            style: .dense,
-            onTap: { router.push(.listing(id: listing.id)) },
-            onFavorite: favorite
-        )
-    }
-
-    private func favorite() {
-        if session.isSignedIn {
-            favorites.toggle(listing)
-        } else {
-            router.requireSignIn { [favorites, listing] in favorites.setFavorite(listing, to: true) }
-        }
     }
 }

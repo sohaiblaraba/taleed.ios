@@ -1,39 +1,47 @@
 import SwiftUI
 
-/// The filter sheet (screens.md §2 G3 screen 3, §7 G3): one value per filter, as on the website —
-/// category (two levels in one list), brand (searchable), condition, size, the wilaya the item ships
-/// from, and a price range checked on the device (`min ≤ max`). "Tout effacer" empties the sheet;
-/// "Appliquer" shows the results. The keywords and the sort are not touched.
+/// The filters sheet (search-results.md, Figma "Filters" 218:3162; screens.md §2 G3 screen 3, §7 G3): the
+/// drag handle, then "SORT BY" with the API's sorts as single-select chips, then "FILTERS": one value per
+/// filter, as on the website — category (two levels in one list), brand (searchable), condition, size,
+/// the wilaya the item ships from — and the price: a two-thumb slider over 0–200 000 DA (step 500) with
+/// the two amounts below, which are the source of truth and checked on the device (`min ≤ max`). The
+/// sticky footer: "Tout effacer" empties the sheet, "Appliquer" shows the results. The keywords stay.
 ///
-/// A sheet for filters (design-system §5.3: handle, start-aligned title, close), full height because
-/// the lists are long; each list opens inside the sheet and comes back to it.
+/// It covers the bottom navigation; each list opens inside the sheet and comes back to it.
 struct FilterSheetView: View {
     let query: ExploreQuery
     let onApply: (ExploreQuery) -> Void
     @State private var draft: FilterDraft
     @State private var path: [FilterPicker] = []
+    @State private var detent: PresentationDetent
     @Environment(LanguageManager.self) private var l10n
     @Environment(CatalogStore.self) private var catalog
     @Environment(ExploreReferenceStore.self) private var references
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    init(query: ExploreQuery, onApply: @escaping (ExploreQuery) -> Void) {
+    /// Figma's sheet stands over about 70 % of the screen; it grows to the full height for a list.
+    private static let partialDetent = PresentationDetent.fraction(0.75)
+
+    init(query: ExploreQuery, startsExpanded: Bool = false, onApply: @escaping (ExploreQuery) -> Void) {
         self.query = query
         self.onApply = onApply
         _draft = State(initialValue: FilterDraft(query))
+        _detent = State(initialValue: startsExpanded ? .large : Self.partialDetent)
     }
 
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
-                header
+                handle
                 ScrollView {
                     fields
-                        .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
-                        .padding(.top, TaleedSpacing.s8)
+                        .padding(.horizontal, TaleedLayout.screenMargin)
+                        .padding(.top, TaleedSpacing.s24)
                         .padding(.bottom, TaleedSpacing.s24)
                 }
                 .scrollDismissesKeyboard(.interactively)
+                .accessibilityIdentifier("filters.scroll")
                 footer
             }
             .background(TaleedColor.surfacePrimary.ignoresSafeArea())
@@ -55,64 +63,66 @@ struct FilterSheetView: View {
             async let brands: Void = references.loadBrands()
             _ = await (sizes, brands)
         }
-        .presentationDetents([.large])
+        // A list needs the height (and its search field the keyboard's room).
+        .onChange(of: path) { _, path in if !path.isEmpty { detent = .large } }
+        .presentationDetents([Self.partialDetent, .large], selection: $detent)
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)
         .presentationBackground(TaleedColor.surfacePrimary)
+        .accessibilityAction(.escape) { dismiss() }
     }
 
     // MARK: Chrome
 
-    private var header: some View {
-        VStack(spacing: TaleedSize.bottomSheetGap) {
-            Capsule()
-                .fill(TaleedColor.sheetHandle)
-                .frame(width: TaleedSize.bottomSheetHandleWidth, height: TaleedSize.bottomSheetHandleHeight)
-                .accessibilityHidden(true)
-            HStack {
-                Text(l10n.string(.filtersTitle))
-                    .taleedFont(TaleedTextStyle(size: 18, weight: .regular, lineHeight: nil, letterSpacing: 0, relativeTo: .body))
-                    .foregroundStyle(TaleedColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Button { dismiss() } label: {
-                    TaleedIconView(.x, size: 20, color: TaleedColor.textSecondary)
-                        .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(l10n.string(.commonClose))
-            }
-        }
-        .padding(.top, TaleedSize.bottomSheetPaddingTop)
-        .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
-        .padding(.bottom, TaleedSpacing.s8)
+    /// The design-system sheet handle (§5.3); Figma's sheet has no title or close button.
+    private var handle: some View {
+        Capsule()
+            .fill(TaleedColor.sheetHandle)
+            .frame(width: TaleedSize.bottomSheetHandleWidth, height: TaleedSize.bottomSheetHandleHeight)
+            .frame(maxWidth: .infinity)
+            .padding(.top, TaleedSize.bottomSheetPaddingTop)
+            .accessibilityHidden(true)
     }
 
-    /// "Tout effacer" and "Appliquer", above the keyboard and the home indicator.
+    /// "Tout effacer" and "Appliquer", above the keyboard and the home indicator; one above the other
+    /// from accessibility text sizes on, so that neither label breaks.
     private var footer: some View {
-        HStack(spacing: TaleedSpacing.s12) {
-            TaleedButton(title: l10n.string(.filtersClear), kind: .outline, size: .large) {
+        let stacked = dynamicTypeSize.isAccessibilitySize
+        let layout = stacked ? AnyLayout(VStackLayout(spacing: TaleedSpacing.s8))
+            : AnyLayout(HStackLayout(spacing: TaleedSpacing.s12))
+        return layout {
+            if stacked { applyButton }
+            TaleedButton(title: l10n.string(.filtersClear), kind: .outline, size: .large, isFullWidth: stacked) {
                 withAnimation { draft.clear() }
             }
             .disabled(draft == FilterDraft(ExploreQuery()))
-            TaleedButton(title: l10n.string(.commonApply), kind: .primary, size: .large, isFullWidth: true) {
-                onApply(draft.applied(to: query))
-                dismiss()
-            }
-            .disabled(!draft.canApply)
-            .accessibilityIdentifier("filters.apply")
+            .accessibilityIdentifier("filters.clear")
+            if !stacked { applyButton }
         }
-        .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
+        .padding(.horizontal, TaleedLayout.screenMargin)
         .padding(.vertical, TaleedSpacing.s12)
         .background(TaleedColor.surfacePrimary)
         .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
+    }
+
+    private var applyButton: some View {
+        TaleedButton(title: l10n.string(.commonApply), kind: .primary, size: .large, isFullWidth: true) {
+            onApply(draft.applied(to: query))
+            dismiss()
+        }
+        .disabled(!draft.canApply)
+        .accessibilityIdentifier("filters.apply")
     }
 
     // MARK: Fields
 
     private var fields: some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
+            Eyebrow(text: l10n.string(.appExploreSortBy))
+                .accessibilityAddTraits(.isHeader)
+            sortChips
+            Eyebrow(text: l10n.string(.filtersTitle))
+                .accessibilityAddTraits(.isHeader)
             select(.category, value: ExploreLabels.categoryName(draft.category, catalog: catalog.catalog))
             select(.brand, value: ExploreLabels.brandName(draft.brand, brands: references.brands.value ?? []))
             select(.condition,
@@ -121,32 +131,59 @@ struct FilterSheetView: View {
             if draft.size != nil || !(references.sizes.value?.isEmpty ?? true) {
                 select(.size, value: draft.size)
             }
+            // Not in Figma; the website filters on it (search-results.md).
             select(.wilaya, value: ExploreLabels.wilayaName(draft.wilaya, catalog: catalog.catalog))
             priceRange
         }
     }
 
+    /// The API's sorts in one scrolling row, edge to edge.
+    private var sortChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: TaleedSpacing.s8) {
+                ForEach(ExploreLabels.sorts(catalog: catalog.catalog, text: l10n.string)) { option in
+                    ChoiceChip(title: option.title, isSelected: option.id == draft.sort) { draft.sort = option.id }
+                        .accessibilityIdentifier("filters.sort.\(option.id)")
+                }
+            }
+            .padding(.horizontal, TaleedLayout.screenMargin)
+            .padding(.vertical, 2)
+        }
+        .padding(.horizontal, -TaleedLayout.screenMargin)
+    }
+
     private func select(_ picker: FilterPicker, value: String?) -> some View {
-        TaleedSelectField(label: title(of: picker), value: value, placeholder: l10n.string(.navAllItems)) {
+        TaleedSelectField(label: title(of: picker), value: value, placeholder: placeholder(of: picker)) {
             path.append(picker)
         }
         .accessibilityIdentifier("filters.\(picker.rawValue)")
     }
 
+    /// "Prix", the slider, then "Min" "à" "Max" (amounts with the DA suffix, decision D-5).
     private var priceRange: some View {
         let error = draft.hasPriceRangeError ? l10n.string(.appExplorePriceRangeInvalid) : nil
-        return VStack(alignment: .leading, spacing: TaleedSize.inputLabelGap) {
+        let currency = PriceFormatter.currencySuffix(language: l10n.language)
+        return VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
             FieldLabel(text: l10n.string(.filtersPrice),
                        color: error == nil ? TaleedColor.textPrimary : TaleedColor.feedbackError)
-            HStack(spacing: TaleedSpacing.s8) {
+            TaleedRangeSlider(lower: Binding(get: { draft.sliderLower }, set: { draft.setSliderLower($0) }),
+                              upper: Binding(get: { draft.sliderUpper }, set: { draft.setSliderUpper($0) }),
+                              bounds: FilterDraft.priceSliderBounds, step: FilterDraft.priceSliderStep,
+                              accessibilityStep: 5_000,
+                              lowerLabel: l10n.string(.filtersMinPrice), upperLabel: l10n.string(.filtersMaxPrice),
+                              valueText: { PriceFormatter.format($0, language: l10n.language) })
+                .accessibilityIdentifier("filters.priceSlider")
+            HStack(spacing: TaleedSpacing.s16) {
                 TaleedTextField(text: priceBinding(\.minPriceText), placeholder: l10n.string(.filtersMinPrice),
-                                error: error, showsMessage: false)
+                                suffix: currency, error: error, showsClearButton: false, showsMessage: false)
                     .accessibilityIdentifier("filters.minPrice")
-                Text(verbatim: "—")
+                Text(l10n.string(.appExplorePriceTo))
+                    .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textSecondary)
+                    .fixedSize()
                     .accessibilityHidden(true)
                 TaleedTextField(text: priceBinding(\.maxPriceText), placeholder: l10n.string(.filtersMaxPrice),
-                                error: error, showsMessage: false)
+                                suffix: currency, error: error, showsClearButton: false, showsMessage: false)
                     .accessibilityIdentifier("filters.maxPrice")
             }
             .keyboardType(.numberPad)
@@ -179,6 +216,17 @@ struct FilterSheetView: View {
         case .condition: l10n.string(.filtersCondition)
         case .size: l10n.string(.filtersSize)
         case .wilaya: l10n.string(.listingShipsFrom)
+        }
+    }
+
+    /// Figma's placeholders ("Choose brand"), in the website's words where it has them.
+    private func placeholder(of picker: FilterPicker) -> String {
+        switch picker {
+        case .category: l10n.string(.sellSelectCategory)
+        case .brand: l10n.string(.sellSelectBrand)
+        case .condition: l10n.string(.sellSelectCondition)
+        case .size: l10n.string(.appExploreSelectSize)
+        case .wilaya: l10n.string(.checkoutSelectWilaya)
         }
     }
 
@@ -248,144 +296,5 @@ struct FilterSheetView: View {
         case .size: await references.loadSizes()
         case .category, .condition, .wilaya: if catalog.catalog == nil { await catalog.refresh() }
         }
-    }
-}
-
-/// A list of the filter sheet.
-enum FilterPicker: String, Hashable, Sendable {
-    case category, brand, condition, size, wilaya
-
-    /// Long lists get a search field.
-    var isSearchable: Bool { self == .brand || self == .wilaya || self == .category }
-}
-
-/// A choice of a filter list: nil `value` is "Tout" (no filter).
-struct FilterOption: Identifiable, Hashable, Sendable {
-    let value: String?
-    let title: String
-    /// A top-level category: bold, its subcategories indented under it.
-    var isGroup = false
-    var isIndented = false
-    /// Also matched by the search field (the wilaya's code).
-    var searchText: String?
-
-    var id: String { value ?? "" }
-
-    /// The two levels in one list, as the website's category select: each top-level category (which
-    /// includes its subcategories), then its subcategories.
-    static func categories(_ categories: [CatalogCategory]) -> [FilterOption] {
-        categories.flatMap { parent in
-            [FilterOption(value: parent.slug, title: parent.name, isGroup: !parent.children.isEmpty)]
-                + parent.children.map { FilterOption(value: $0.slug, title: $0.name, isIndented: true, searchText: parent.name) }
-        }
-    }
-
-    /// Whether the option matches what the member typed: case- and accent-insensitive, on its title,
-    /// its extra search text, or (for a subcategory) its category's name.
-    func matches(_ typed: String) -> Bool {
-        let query = typed.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return true }
-        if value == nil { return false }
-        return [title, searchText].compactMap { $0 }.contains { $0.localizedStandardContains(query) }
-    }
-}
-
-/// One filter's choices, pushed inside the filter sheet: back, the list (searchable when long), a check
-/// on the current choice. Choosing goes back to the sheet.
-struct FilterOptionsView: View {
-    struct Remote {
-        var isLoading = false
-        var error: ApiError?
-    }
-
-    let title: String
-    let options: [FilterOption]
-    let selection: String?
-    let isSearchable: Bool
-    let remote: Remote
-    let retry: () -> Void
-    let onSelect: (String?) -> Void
-    @State private var searchText = ""
-    @Environment(LanguageManager.self) private var l10n
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        VStack(spacing: 0) {
-            TaleedTopAppBar(title: title, onBack: { dismiss() })
-            if isSearchable, options.count > 1 {
-                TaleedTextField(text: $searchText, placeholder: l10n.string(.commonSearch), leadingIcon: .magnifyingGlass)
-                    .padding(.horizontal, TaleedLayout.screenMargin)
-                    .padding(.vertical, TaleedSpacing.s12)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-            }
-            content
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        if options.count <= 1, let error = remote.error {
-            ErrorStateView(error: error, retry: retry, onBack: { dismiss() })
-        } else if options.count <= 1, remote.isLoading {
-            LoadingStateView()
-        } else {
-            let shown = options.filter { $0.matches(searchText) }
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(shown) { option in
-                        FilterOptionRow(option: option, isSelected: option.value == selection) { onSelect(option.value) }
-                    }
-                    if shown.isEmpty {
-                        Text(l10n.string(.filtersNoResults))
-                            .taleedFont(TaleedFont.bodyRegular)
-                            .foregroundStyle(TaleedColor.textBody)
-                            .multilineTextAlignment(.center)
-                            .padding(TaleedSpacing.s24)
-                    }
-                }
-            }
-            .scrollDismissesKeyboard(.immediately)
-        }
-    }
-}
-
-/// A choice row: at least 56 high, the label (bold for a category, indented for a subcategory) and a
-/// check when chosen.
-struct FilterOptionRow: View {
-    let option: FilterOption
-    let isSelected: Bool
-    /// The leading and trailing inset: the screen margin under an app bar, the sheet's padding under a
-    /// sheet heading (so the rows line up with its title).
-    var inset: CGFloat = TaleedLayout.screenMargin
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 0) {
-                HStack(spacing: TaleedSpacing.s12) {
-                    Text(verbatim: option.title)
-                        .taleedFont(option.isGroup || isSelected ? TaleedFont.bodyLarge.with(weight: .semibold) : TaleedFont.bodyLarge)
-                        .foregroundStyle(TaleedColor.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    if isSelected { TaleedIconView(.check, size: 20, color: TaleedColor.brandPrimary) }
-                }
-                .padding(.vertical, TaleedSpacing.s12)
-                .padding(.leading, option.isIndented ? inset + TaleedSpacing.s24 : inset)
-                .padding(.trailing, inset)
-                .frame(maxWidth: .infinity, minHeight: 56)
-                Rectangle()
-                    .fill(TaleedColor.borderSubtle)
-                    .frame(height: 1)
-                    .padding(.leading, inset)
-                    .accessibilityHidden(true)
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

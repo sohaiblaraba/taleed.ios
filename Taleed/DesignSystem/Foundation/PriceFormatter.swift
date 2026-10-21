@@ -25,6 +25,11 @@ enum PriceFormatter {
         }
     }
 
+    /// The currency after an amount typed in a field: "DA", or "د.ج." in Arabic (the same as `format`).
+    static func currencySuffix(language: AppLanguage) -> String {
+        language == .ar ? "د.ج." : "DA"
+    }
+
     static func format(_ amount: Int, locale: Locale) -> String {
         format(amount, language: AppLanguage(locale: locale))
     }

@@ -95,72 +95,6 @@ struct ExploreQueryTests {
     }
 }
 
-// MARK: - The filter sheet
-
-struct FilterDraftTests {
-    @Test func startsFromTheQueryAndKeepsKeywordsAndSort() {
-        let query = ExploreQuery(text: "robe", category: "women", wilaya: 16, minPrice: 1000, sort: "newest")
-        var draft = FilterDraft(query)
-        #expect(draft.category == "women")
-        #expect(draft.minPriceText == "1000")
-        #expect(draft.maxPriceText.isEmpty)
-        draft.brand = "zara"
-        draft.maxPriceText = "5000"
-        #expect(draft.applied(to: query) == ExploreQuery(text: "robe", category: "women", brand: "zara", wilaya: 16,
-                                                         minPrice: 1000, maxPrice: 5000, sort: "newest"))
-        #expect(draft.activeCount == 4)
-    }
-
-    @Test func clearEmptiesEveryFilter() {
-        var draft = FilterDraft(ExploreQuery(category: "women", condition: "GOOD", size: "M", maxPrice: 900))
-        draft.clear()
-        #expect(draft == FilterDraft(ExploreQuery()))
-        #expect(draft.applied(to: ExploreQuery(text: "robe", sort: "newest")) == ExploreQuery(text: "robe", sort: "newest"))
-    }
-
-    @Test func minimumAboveMaximumIsRefused() {
-        var draft = FilterDraft(ExploreQuery())
-        draft.minPriceText = "5000"
-        draft.maxPriceText = "3000"
-        #expect(draft.hasPriceRangeError)
-        #expect(!draft.canApply)
-        draft.maxPriceText = "5000"
-        #expect(!draft.hasPriceRangeError)
-        draft.maxPriceText = ""
-        #expect(draft.canApply)
-    }
-
-    @Test(arguments: [
-        ("5000", "5000"),
-        ("٥٠٠٠", "5000"),
-        ("۱۲۰۰", "1200"),
-        ("5 000 DA", "5000"),
-        ("-12.5", "125"),
-        ("007", "7"),
-        ("0", "0"),
-        ("abc", ""),
-        ("12345678901", "123456789"),
-    ])
-    func pricesKeepDigitsOnly(typed: String, kept: String) {
-        #expect(FilterDraft.priceText(typed) == kept)
-    }
-
-    @Test func categoriesAreTwoLevelsInOneList() {
-        let categories = [CatalogCategory(id: "1", slug: "women", name: "Femmes", children: [
-            CatalogCategory(id: "2", slug: "women-shoes", name: "Chaussures"),
-        ])]
-        let options = FilterOption.categories(categories)
-        #expect(options.map(\.value) == ["women", "women-shoes"])
-        #expect(options[0].isGroup && !options[0].isIndented)
-        #expect(options[1].isIndented)
-        // A subcategory is found by its name or its category's name, without accents.
-        #expect(options[1].matches("chaussure"))
-        #expect(options[1].matches("femmes"))
-        #expect(FilterOption(value: "16", title: "Béjaïa", searchText: "6").matches("bejaia"))
-        #expect(!FilterOption(value: nil, title: "Tout").matches("tout"))
-    }
-}
-
 // MARK: - Labels
 
 @MainActor
@@ -190,6 +124,13 @@ struct ExploreLabelsTests {
         #expect(ExploreLabels.chip(.wilaya, query: query, context: context) == "99")
     }
 
+    @Test func priceFieldsShowTheCurrencyOfThePrices() {
+        #expect(PriceFormatter.currencySuffix(language: .fr) == "DA")
+        #expect(PriceFormatter.currencySuffix(language: .en) == "DA")
+        #expect(PriceFormatter.currencySuffix(language: .ar) == "د.ج.")
+        #expect(PriceFormatter.format(500, language: .ar).contains(PriceFormatter.currencySuffix(language: .ar)))
+    }
+
     @Test func thePriceChipReadsLikeTheWebsite() {
         let context = ExploreLabels.Context(catalog: nil, language: .fr, text: text)
         let low = PriceFormatter.format(1000, language: .fr)
@@ -208,7 +149,6 @@ struct ExploreLabelsTests {
         let fallback = ExploreLabels.sorts(catalog: nil, text: text)
         #expect(fallback.map(\.id) == ["recommended", "newest", "price_asc", "price_desc"])
         #expect(fallback.map(\.title) == ["Recommandés", "Plus récents", "Prix croissant", "Prix décroissant"])
-        #expect(ExploreLabels.sortName("newest", catalog: nil, text: text) == "Plus récents")
     }
 
     @Test(arguments: [(AppLanguage.fr, 0, "Aucun article"), (.fr, 1, "1 article"), (.fr, 13, "13 articles"),
@@ -262,7 +202,7 @@ struct SearchResultsViewModelTests {
         let model = SearchResultsViewModel(query: ExploreQuery(category: "women"), api: fake)
         await model.results.loadIfNeeded()
         let first = model.results
-        model.sort(by: "price_asc")
+        model.apply(model.query.sorted(by: "price_asc"))
         #expect(model.results !== first)
         #expect(!model.results.hasLoaded)
         await model.results.loadIfNeeded()

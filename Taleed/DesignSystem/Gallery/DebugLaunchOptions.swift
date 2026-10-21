@@ -19,6 +19,7 @@ import Foundation
 ///     -TaleedDebugHomeFeed offline             Home's first feed request fails offline (then works);
 ///                                              `empty` answers an empty feed
 ///     -TaleedDebugSearchResults offline        the first search-results request fails offline (then works)
+///     -TaleedDebugSearchFilters YES            search results open their filters sheet (screenshots)
 ///     -TaleedDebugListing offline              the first listing-screen request fails offline (then works)
 ///     -TaleedDebugMember offline               the first profile request fails offline (then works)
 ///     -TaleedDebugFavorites offline            the first favorites request fails offline (then works);

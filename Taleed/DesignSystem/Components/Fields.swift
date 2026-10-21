@@ -85,6 +85,8 @@ struct TaleedTextField: View {
     @Binding var text: String
     var placeholder: String = ""
     var leadingIcon: TaleedIcon?
+    /// A unit after the text, in the field ("DA" after a price), shown once there is text.
+    var suffix: String?
     var helper: String?
     var error: String?
     var isSecure = false
@@ -161,6 +163,14 @@ struct TaleedTextField: View {
                 .focused(focus ?? $ownFocus)
                 .accessibilityLabel(label ?? placeholder)
                 .accessibilityHint(error ?? helper ?? "")
+            if let suffix, !text.isEmpty {
+                Text(verbatim: suffix)
+                    .taleedFont(TaleedFont.bodyRegular)
+                    .foregroundStyle(TaleedColor.textSecondary)
+                    .lineLimit(1)
+                    .fixedSize()
+                    .accessibilityHidden(true)
+            }
             if showsClearButton, !isSecure, !text.isEmpty, state != .disabled {
                 Button { text = "" } label: {
                     TaleedIconView(.x, size: min(clearIconSize, 28), color: TaleedColor.textSecondary)

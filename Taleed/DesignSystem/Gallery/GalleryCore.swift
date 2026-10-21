@@ -185,6 +185,7 @@ private struct GalleryFields: View {
 private struct GalleryChips: View {
     @State private var selected = 0
     @State private var filters = ["condition", "delivery", "size"]
+    @State private var sort = 0
     @Environment(\.locale) private var locale
 
     var body: some View {
@@ -228,6 +229,34 @@ private struct GalleryChips: View {
                     }
                 }
             }
+            // The Filters sheet's sort (218:3162): single choice.
+            ChipRow(spacing: TaleedSpacing.s8) {
+                let sorts = [copy("Plus récents", "الأحدث", "Newest"), copy("Recommandés", "مقترحة", "Recommended"),
+                             copy("Prix croissant", "السعر تصاعديًا", "Price: low to high")]
+                ForEach(Array(sorts.enumerated()), id: \.offset) { index, title in
+                    ChoiceChip(title: title, isSelected: index == sort) { sort = index }
+                }
+            }
+            GalleryRangeSlider()
+                .padding(.horizontal, TaleedLayout.screenMargin)
+        }
+    }
+}
+
+/// The Filters sheet's price slider (218:3162): 0–200 000 DA, step 500.
+private struct GalleryRangeSlider: View {
+    @State private var low = 5_000
+    @State private var high = 100_000
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        let language = AppLanguage(locale: locale)
+        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+            TaleedRangeSlider(lower: $low, upper: $high, bounds: 0...200_000, step: 500, lowerLabel: "Min", upperLabel: "Max",
+                              valueText: { PriceFormatter.format($0, language: language) })
+            Text(verbatim: "\(PriceFormatter.format(low, language: language)) — \(PriceFormatter.format(high, language: language))")
+                .taleedFont(TaleedFont.meta)
+                .foregroundStyle(TaleedColor.textBody)
         }
     }
 }

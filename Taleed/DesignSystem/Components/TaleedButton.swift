@@ -168,6 +168,8 @@ struct TaleedButtonStyle: ButtonStyle {
     var kind: TaleedButtonKind = .secondary
     var size: TaleedButtonSize = .large
     var isIconOnly = false
+    /// An icon-only box other than the size's (the search row's 44 pt filter button, as tall as the field).
+    var iconOnlyBoxSize: CGFloat?
     var isFullWidth = false
     var minWidth: CGFloat?
     var metrics: TaleedButtonMetrics?
@@ -176,8 +178,9 @@ struct TaleedButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         TaleedButtonChrome(
-            kind: kind, size: size, isIconOnly: isIconOnly, isFullWidth: isFullWidth, minWidth: minWidth,
-            metrics: metrics ?? .of(kind, size), isPressed: configuration.isPressed, forcedState: forcedState
+            kind: kind, size: size, isIconOnly: isIconOnly, iconOnlyBoxSize: iconOnlyBoxSize, isFullWidth: isFullWidth,
+            minWidth: minWidth, metrics: metrics ?? .of(kind, size), isPressed: configuration.isPressed,
+            forcedState: forcedState
         ) {
             configuration.label
         }
@@ -189,6 +192,7 @@ struct TaleedButtonChrome<Content: View>: View {
     let kind: TaleedButtonKind
     let size: TaleedButtonSize
     var isIconOnly = false
+    var iconOnlyBoxSize: CGFloat?
     var isFullWidth = false
     var minWidth: CGFloat?
     var metrics: TaleedButtonMetrics
@@ -204,16 +208,17 @@ struct TaleedButtonChrome<Content: View>: View {
     var body: some View {
         let colors = TaleedButtonColors.of(kind, state)
         let shape = RoundedRectangle(cornerRadius: metrics.radius, style: .continuous)
+        let box = iconOnlyBoxSize ?? size.iconOnlySize
         content
             .foregroundStyle(colors.content)
             .padding(.horizontal, isIconOnly ? 0 : metrics.paddingX)
             .padding(.vertical, isIconOnly ? 0 : 4)
             .frame(
-                minWidth: isIconOnly ? size.iconOnlySize : minWidth,
+                minWidth: isIconOnly ? box : minWidth,
                 maxWidth: isFullWidth ? .infinity : nil,
-                minHeight: isIconOnly ? size.iconOnlySize : (kind.isHyperlink ? size.hyperlinkHeight : size.height)
+                minHeight: isIconOnly ? box : (kind.isHyperlink ? size.hyperlinkHeight : size.height)
             )
-            .frame(width: isIconOnly ? size.iconOnlySize : nil, height: isIconOnly ? size.iconOnlySize : nil)
+            .frame(width: isIconOnly ? box : nil, height: isIconOnly ? box : nil)
             .background {
                 if let fill = colors.fill { shape.fill(fill) }
             }
@@ -303,6 +308,8 @@ struct TaleedIconOnlyButton: View {
     var isLoading = false
     /// Overrides the icon colour while enabled.
     var iconColor: Color?
+    /// Overrides the size's box (the icon keeps the size's), e.g. 44 beside a 44 pt field.
+    var boxSize: CGFloat?
     var forcedState: TaleedButtonState?
     let action: () -> Void
 
@@ -323,7 +330,7 @@ struct TaleedIconOnlyButton: View {
                 }
             }
         }
-        .buttonStyle(TaleedButtonStyle(kind: kind, size: size, isIconOnly: true,
+        .buttonStyle(TaleedButtonStyle(kind: kind, size: size, isIconOnly: true, iconOnlyBoxSize: boxSize,
                                        forcedState: forcedState ?? (isLoading ? .normal : nil)))
         .allowsHitTesting(!isLoading)
         .accessibilityLabel(accessibilityLabel)

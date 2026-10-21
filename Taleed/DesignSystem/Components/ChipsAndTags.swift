@@ -113,7 +113,8 @@ struct FilterChip: View {
     }
 }
 
-/// Removable filter (design-system §2.7): label then ×; tapping removes the filter.
+/// Removable filter (design-system §2.7, Search Results 218:2909): label then the 16 pt ×; tapping
+/// removes the filter.
 struct RemovableFilterChip: View {
     let title: String
     var tone: TaleedTone = .brand
@@ -126,7 +127,8 @@ struct RemovableFilterChip: View {
                 HStack(spacing: TaleedSpacing.s4) {
                     Text(title)
                         .taleedFont(TaleedFont.caption)
-                    TaleedIconView(.x, size: 12, color: nil)
+                    // 16 as in the Search Results frame (218:2909).
+                    TaleedIconView(.x, size: 16, color: nil)
                 }
                 .foregroundStyle(tone.foreground)
             }
@@ -134,6 +136,36 @@ struct RemovableFilterChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(DesignSystemStrings.format(.commonRemoveFilter, locale: locale, title))
+    }
+}
+
+/// Single-select choice chip (Filters sheet 218:3162, "SORT BY"): a pill, padding 16 / 8, body 14/400.
+/// Selected: `lit.brandSoft` fill, `blue/200` border, `lit.brandDark` label; otherwise `surfaceGrouped`
+/// with a `navy/600` label. Android: `ChoiceChip`.
+struct ChoiceChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    /// Padding 8 above and below the 14 pt label (line height 1.2).
+    private static let height: CGFloat = 33
+
+    var body: some View {
+        Button(action: action) {
+            Pill(fill: isSelected ? TaleedColor.brandSoft : TaleedColor.surfaceGrouped,
+                 border: isSelected ? TaleedColor.blue200 : nil,
+                 height: Self.height, paddingX: TaleedSpacing.s16) {
+                Text(title)
+                    .taleedFont(TaleedFont.bodyRegular)
+                    .foregroundStyle(isSelected ? TaleedColor.brandDark : TaleedColor.navy600)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            .minimumHitArea()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
 }
 

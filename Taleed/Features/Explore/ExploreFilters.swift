@@ -63,11 +63,17 @@ extension ExploreQuery {
     }
 }
 
-/// What the filter sheet edits before "Apply": every filter of the query, with the prices as typed.
+/// What the filter sheet edits before "Apply": the sort and every filter of the query, with the prices
+/// as typed (search-results.md: sort and filters share one sheet).
 struct FilterDraft: Equatable, Sendable {
     /// Prices are whole dinars; nine digits is far above any price the API accepts.
     static let maxPriceDigits = 9
+    /// The price slider's range and step (search-results.md); the fields take any amount.
+    static let priceSliderBounds = 0...200_000
+    static let priceSliderStep = 500
 
+    /// The sort in effect (the default one when the query has none).
+    var sort: String
     var category: String?
     var brand: String?
     var condition: String?
@@ -78,6 +84,7 @@ struct FilterDraft: Equatable, Sendable {
 
     init(_ query: ExploreQuery) {
         let sent = ListingSearchParameters(query)
+        sort = query.effectiveSort
         category = sent.category
         brand = sent.brand
         condition = sent.condition
@@ -102,9 +109,9 @@ struct FilterDraft: Equatable, Sendable {
     /// The filters set in the sheet, the price range counting once ("Filtres · 2").
     var activeCount: Int { applied(to: ExploreQuery()).activeFilters.count }
 
-    /// The query with these filters; the keywords and the sort stay.
+    /// The query with this sort and these filters; the keywords stay.
     func applied(to query: ExploreQuery) -> ExploreQuery {
-        var result = query
+        var result = query.sorted(by: sort)
         result.category = category
         result.brand = brand
         result.condition = condition
@@ -115,9 +122,32 @@ struct FilterDraft: Equatable, Sendable {
         return result
     }
 
-    /// Clears every filter of the sheet.
+    /// "Tout effacer": every filter and the sort, as the results' "Tout effacer" on the website.
     mutating func clear() {
         self = FilterDraft(ExploreQuery())
+    }
+
+    // MARK: Price slider
+
+    /// Where the slider's thumbs stand. The fields are the source of truth: no minimum is the start, no
+    /// maximum the end, and an amount past the end pins its thumb there.
+    var sliderLower: Int { Self.pinned(minPrice ?? Self.priceSliderBounds.lowerBound) }
+    var sliderUpper: Int { Self.pinned(maxPrice ?? Self.priceSliderBounds.upperBound) }
+
+    /// A thumb moved: its field takes the amount; back at the start (minimum) or the end (maximum) the
+    /// field empties, so the slider's ends mean "no limit".
+    mutating func setSliderLower(_ value: Int) {
+        guard value != sliderLower else { return }
+        minPriceText = value <= Self.priceSliderBounds.lowerBound ? "" : String(value)
+    }
+
+    mutating func setSliderUpper(_ value: Int) {
+        guard value != sliderUpper else { return }
+        maxPriceText = value >= Self.priceSliderBounds.upperBound ? "" : String(value)
+    }
+
+    private static func pinned(_ value: Int) -> Int {
+        min(max(value, priceSliderBounds.lowerBound), priceSliderBounds.upperBound)
     }
 
     /// What a price field keeps of the typed text: digits only (Arabic-Indic digits become ASCII ones,
@@ -138,7 +168,7 @@ struct FilterDraft: Equatable, Sendable {
     }
 }
 
-/// The labels of chips, fields and the sort control, from the catalog (screens.md §0.1: labels come
+/// The labels of chips, fields and the sort chips, from the catalog (screens.md §0.1: labels come
 /// from the server) with the website's own words before the catalog arrived.
 enum ExploreLabels {
     /// The chip of an active filter: the category's or brand's name, the condition's catalog label,
@@ -211,9 +241,5 @@ enum ExploreLabels {
             SheetOption(id: "price_asc", title: text(.filtersSortPriceAsc)),
             SheetOption(id: "price_desc", title: text(.filtersSortPriceDesc)),
         ]
-    }
-
-    static func sortName(_ sort: String, catalog: Catalog?, text: (L10nKey) -> String) -> String {
-        sorts(catalog: catalog, text: text).first { $0.id == sort }?.title ?? text(.filtersSortRecommended)
     }
 }

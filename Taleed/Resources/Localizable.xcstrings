@@ -1507,6 +1507,52 @@
         }
       }
     },
+    "app_explore_price_to": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "à"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلى"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "to"
+          }
+        }
+      }
+    },
+    "app_explore_results_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Résultats"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نتائج البحث"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search results"
+          }
+        }
+      }
+    },
     "app_explore_search_placeholder": {
       "extractionState": "manual",
       "localizations": {
@@ -20939,6 +20985,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Soyez le premier à vendre !"
+          }
+        }
+      }
+    },
+    "app_explore_select_size": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir la taille"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر المقاس"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a size"
+          }
+        }
+      }
+    },
+    "app_explore_sort_by": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trier par"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترتيب حسب"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort by"
           }
         }
       }

@@ -25,7 +25,7 @@ final class SearchResultsViewModel {
     @ObservationIgnored private let origin = SearchRequestOrigin()
     /// When the app went to the background; nil while in the foreground.
     @ObservationIgnored private var backgroundSince: ContinuousClock.Instant?
-    /// The top of the results (the count and sort row) is on screen.
+    /// The top of the results (the count row) is on screen.
     @ObservationIgnored private var isShowingTop = true
     @ObservationIgnored private var needsQuietReload = false
 
@@ -62,13 +62,10 @@ final class SearchResultsViewModel {
         apply(query.removing(filter))
     }
 
-    /// "Tout effacer": every filter and the sort go, the keywords stay (as on the website).
+    /// The empty state's "Clear filters": every filter and the sort go, the keywords stay (as the
+    /// website's "Tout effacer").
     func clearFilters() {
         apply(query.clearingFilters)
-    }
-
-    func sort(by sort: String) {
-        apply(query.sorted(by: sort))
     }
 
     /// Another member signed in or out: the results again from the first page, since a member's own
