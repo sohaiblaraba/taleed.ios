@@ -7,10 +7,12 @@ struct AppBarAction: Identifiable {
     /// Draws the 40 pt `blue/50` circle behind the icon (Item Detail trust icon).
     var isCircled = false
     var color: Color = TaleedColor.blue600
-    /// Nil draws a non-interactive indicator (the wireframes' trust shield).
+    /// Nil draws a non-interactive indicator.
     var action: (() -> Void)?
     /// An overflow menu instead of `action` (screens.md §2 G4: Report listing): `TaleedOverflowMenu`.
     var menu: [AppBarMenuItem] = []
+    /// For UI tests and screenshot scripts.
+    var accessibilityIdentifier: String?
 
     var id: String { icon.rawValue }
 }
@@ -195,6 +197,7 @@ private struct AppBarActionView: View {
             Button(action: handler) { icon.minimumHitArea() }
                 .buttonStyle(.plain)
                 .accessibilityLabel(action.accessibilityLabel)
+                .accessibilityIdentifier(action.accessibilityIdentifier ?? "")
         } else {
             icon
                 .accessibilityElement()

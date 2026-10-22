@@ -318,6 +318,7 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appListingResumedToast = "app_listing_resumed_toast"
     case appListingDeletedToast = "app_listing_deleted_toast"
     case appA11yShare = "app_a11y_share"
+    case appA11yBuyerProtection = "app_a11y_buyer_protection"
     case appA11yOpenPhoto = "app_a11y_open_photo"
     case appReportAddPhoto = "app_report_add_photo"
     case appReportScreenshot = "app_report_screenshot"

@@ -185,6 +185,29 @@
         }
       }
     },
+    "app_a11y_buyer_protection": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حماية المشتري"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buyer protection"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protection des acheteurs"
+          }
+        }
+      }
+    },
     "app_auth_email_invalid": {
       "extractionState": "manual",
       "localizations": {

@@ -103,9 +103,10 @@ struct GalleryNavigation: View {
                 BrandAppBar(showsDivider: true, onNotifications: {}, avatarInitials: "NT", onAvatar: {})
                 TaleedTopAppBar(title: copy("Profil", "الملف الشخصي", "Profile"))
                 TaleedTopAppBar(title: copy("Paiement", "الدفع", "Checkout"), onBack: {},
-                                actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: "Secure")])
+                                // The shield opens the buyer-protection page (Saad, 2026-10-22).
+                                actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: "Buyer protection") {}])
                 TaleedTopAppBar(title: copy("Détail de l’article", "تفاصيل الغرض", "Item details"), onBack: {},
-                                actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: "Secure", isCircled: true)])
+                                actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: "Buyer protection", isCircled: true) {}])
                 TaleedTopAppBar(title: copy("Détail de l’article", "تفاصيل الغرض", "Item details"), onBack: {},
                                 actions: [AppBarAction(icon: .shareNetwork, accessibilityLabel: "Share",
                                                        color: TaleedColor.textPrimary) {},

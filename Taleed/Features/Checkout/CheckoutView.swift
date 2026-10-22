@@ -2,7 +2,7 @@ import AuthenticationServices
 import SwiftUI
 
 /// The checkout screen (screens.md §2 G11 and §7 G11; Figma Buy Now 184:2383; website
-/// `checkout/[listingId]`): the app bar with the trust shield, "Récapitulatif · Finaliser l'achat", the
+/// `checkout/[listingId]`): the app bar with the trust shield (buyer protection), "Récapitulatif · Finaliser l'achat", the
 /// goods, the delivery method with both fees, the delivery address, the server's summary, the promo
 /// code, the wallet, the payment method and the button, without the tab bar.
 ///
@@ -35,8 +35,8 @@ struct CheckoutView: View {
             TaleedTopAppBar(
                 title: l10n.string(.checkoutTitle),
                 onBack: { dismiss() },
-                // The wireframe's trust indicator: no action.
-                actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: l10n.string(.trustProtectedPay))]
+                // The wireframe's trust shield: opens the buyer-protection page.
+                actions: [router.buyerProtectionAction(accessibilityLabel: l10n.string(.appA11yBuyerProtection))]
             )
         } content: {
             content

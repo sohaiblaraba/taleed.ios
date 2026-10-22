@@ -4,7 +4,7 @@ import OSLog
 #endif
 
 /// Search results (search-results.md, Figma "Search Results" 218:2909; screens.md §2 G3): the app bar
-/// with back, the centred "Résultats" and the trust shield; the search row — the editable keywords with
+/// with back, the centred "Résultats" and the trust shield (buyer protection); the search row — the editable keywords with
 /// clear, and the filter button with the number of active filters (sort excluded) that opens the
 /// filters sheet, where the sort lives too; one removable chip per active filter; then the count and the
 /// two-column product-card grid, page by page.
@@ -21,6 +21,7 @@ struct SearchResultsView: View {
     @Environment(ListingChangeCenter.self) private var listingChanges
     @Environment(AppToasts.self) private var toasts
     @Environment(SessionManager.self) private var session
+    @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -79,8 +80,8 @@ struct SearchResultsView: View {
             TaleedTopAppBar(
                 title: l10n.string(.appExploreResultsTitle),
                 onBack: { dismiss() },
-                // The wireframe's trust indicator, as on Item Detail and Checkout: no action.
-                actions: [AppBarAction(icon: .shieldCheck, accessibilityLabel: l10n.string(.trustProtectedPay))]
+                // The wireframe's trust shield, as on Checkout: opens the buyer-protection page.
+                actions: [router.buyerProtectionAction(accessibilityLabel: l10n.string(.appA11yBuyerProtection))]
             )
             VStack(spacing: TaleedSpacing.s16) {
                 searchRow

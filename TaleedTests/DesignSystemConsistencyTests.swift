@@ -43,6 +43,13 @@ struct DesignSystemConsistencyTests {
             == "Votre argent est en sécurité. Le vendeur a maintenant 3 jours pour expédier votre commande.")
     }
 
+    /// The app bars' trust shield reads the same on both apps (`app_a11y_buyer_protection`).
+    @Test func buyerProtectionLabelMatchesAndroid() {
+        #expect(LanguageManager.localizedString(.appA11yBuyerProtection, language: .en) == "Buyer protection")
+        #expect(LanguageManager.localizedString(.appA11yBuyerProtection, language: .fr) == "Protection des acheteurs")
+        #expect(LanguageManager.localizedString(.appA11yBuyerProtection, language: .ar) == "حماية المشتري")
+    }
+
     @Test func sizeAndLayoutTokensAreFlattened() {
         #expect(TaleedSize.buttonSmallHeight == 32)
         #expect(TaleedSize.buttonHyperlinkHeightMediumLarge == 36)

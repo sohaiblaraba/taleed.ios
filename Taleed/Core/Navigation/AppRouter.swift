@@ -367,4 +367,14 @@ final class AppRouter {
         guard let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else { return }
         browser(url)
     }
+
+    /// The trust shield of the app bars (Search results, Checkout): opens the buyer-protection page of
+    /// `GET /config` `links` in the in-app browser (Saad, 2026-10-22). Without the link (config not
+    /// loaded) the shield stays a plain indicator.
+    func buyerProtectionAction(accessibilityLabel: String) -> AppBarAction {
+        let hasLink = websiteLinks().url(for: .buyerProtection) != nil
+        return AppBarAction(icon: .shieldCheck, accessibilityLabel: accessibilityLabel,
+                            action: hasLink ? { [weak self] in self?.openWebsite(.buyerProtection) } : nil,
+                            accessibilityIdentifier: "appBar.buyerProtection")
+    }
 }
