@@ -69,8 +69,8 @@ Links can be tried on the simulator with the app's scheme, which reads like a pa
 
 | Configuration | Bundle ID | App name | API |
 |---|---|---|---|
-| Debug | `app.taleed.debug` | Taleed Dev | `http://localhost:3000/api/v1` (plain HTTP allowed for local hosts only) |
-| Release | `app.taleed` | Taleed | `https://taleed.app/api/v1` |
+| Debug | `app.taleed.mobile.debug` | Taleed Dev | `http://localhost:3000/api/v1` (plain HTTP allowed for local hosts only) |
+| Release | `app.taleed.mobile` | Taleed | `https://taleed.app/api/v1` |
 
 To add a configuration such as Staging: create `Config/Staging.xcconfig` (include
 `Base.xcconfig`, set `TALEED_API_BASE_URL`), add it under `configs` and `configFiles` in

@@ -123,7 +123,7 @@ final class SearchResultsViewModel {
             #endif
             let page = try await api.searchListings(query, cursor: cursor, automatic: origin.isAutomatic)
             #if DEBUG
-            Logger(subsystem: "app.taleed", category: "search").notice(
+            Logger(subsystem: "app.taleed.mobile", category: "search").notice(
                 "results page cursor=\(cursor ?? "-", privacy: .public) items=\(page.items.count) total=\(page.total)")
             #endif
             return page

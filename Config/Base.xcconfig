@@ -9,7 +9,7 @@ SWIFT_VERSION = 6.0
 SWIFT_STRICT_CONCURRENCY = complete
 
 // Release identity. Debug overrides it.
-PRODUCT_BUNDLE_IDENTIFIER = app.taleed
+PRODUCT_BUNDLE_IDENTIFIER = app.taleed.mobile
 APP_DISPLAY_NAME = Taleed
 
 // The base URL of the API. "/$()/" keeps "//" from starting a comment.

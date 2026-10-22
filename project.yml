@@ -1,7 +1,7 @@
 # XcodeGen spec. Regenerate the project after editing it: `xcodegen generate`.
 name: Taleed
 options:
-  bundleIdPrefix: app.taleed
+  bundleIdPrefix: app.taleed.mobile
   developmentLanguage: fr
   deploymentTarget:
     iOS: "17.0"
@@ -61,7 +61,7 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: app.taleed.tests
+        PRODUCT_BUNDLE_IDENTIFIER: app.taleed.mobile.tests
         TEST_HOST: $(BUILT_PRODUCTS_DIR)/Taleed.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Taleed
         BUNDLE_LOADER: $(TEST_HOST)
 

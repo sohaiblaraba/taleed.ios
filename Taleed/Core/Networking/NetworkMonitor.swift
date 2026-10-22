@@ -28,7 +28,7 @@ final class NetworkMonitor {
             Task { @MainActor [weak self] in self?.pathDidChange(isOnline: isOnline) }
         }
         // The app's one monitor lives as long as the app: never cancelled.
-        monitor.start(queue: DispatchQueue(label: "app.taleed.network-monitor"))
+        monitor.start(queue: DispatchQueue(label: "app.taleed.mobile.network-monitor"))
     }
 
     /// The system's answer about the network path. Only a change counts; offline then online again

@@ -14,7 +14,7 @@ struct KeychainTokenStore: TokenStore {
     private let service: String
     private let account = "session_token"
 
-    init(service: String = Bundle.main.bundleIdentifier ?? "app.taleed") {
+    init(service: String = Bundle.main.bundleIdentifier ?? "app.taleed.mobile") {
         self.service = service
     }
 

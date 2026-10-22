@@ -47,7 +47,7 @@ struct SearchResultsView: View {
         #if DEBUG
         .onChange(of: viewModel.results.items.count) { _, count in
             let unique = Set(viewModel.results.items.map(\.id)).count
-            Logger(subsystem: "app.taleed", category: "search").notice("results show \(count) cards, \(unique) unique")
+            Logger(subsystem: "app.taleed.mobile", category: "search").notice("results show \(count) cards, \(unique) unique")
         }
         .task {
             // `-TaleedDebugSearchFilters YES` opens the filters sheet (screenshots).

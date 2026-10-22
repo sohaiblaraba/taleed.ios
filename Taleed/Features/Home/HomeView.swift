@@ -59,7 +59,7 @@ struct HomeView: View {
         #if DEBUG
         .onChange(of: viewModel.feed.items.count) { _, count in
             let unique = Set(viewModel.feed.items.map(\.id)).count
-            Logger(subsystem: "app.taleed", category: "home").notice("feed shows \(count) cards, \(unique) unique")
+            Logger(subsystem: "app.taleed.mobile", category: "home").notice("feed shows \(count) cards, \(unique) unique")
         }
         #endif
         .onChange(of: viewModel.refreshFailure) { _, failure in

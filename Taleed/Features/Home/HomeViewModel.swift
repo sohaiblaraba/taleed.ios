@@ -61,7 +61,7 @@ final class HomeViewModel {
             #endif
             let page = try await api.searchListings(ExploreQuery(), cursor: cursor, automatic: origin.isAutomatic)
             #if DEBUG
-            Logger(subsystem: "app.taleed", category: "home").notice(
+            Logger(subsystem: "app.taleed.mobile", category: "home").notice(
                 "feed page cursor=\(cursor ?? "-", privacy: .public) items=\(page.items.count) total=\(page.total)")
             #endif
             return page

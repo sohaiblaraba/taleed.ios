@@ -1914,7 +1914,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.taleed.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.taleed.mobile.tests;
 				SDKROOT = iphoneos;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Taleed.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Taleed";
 			};
@@ -1951,7 +1951,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.taleed.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = app.taleed.mobile.tests;
 				SDKROOT = iphoneos;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Taleed.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Taleed";
 			};

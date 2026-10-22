@@ -1,7 +1,7 @@
 // Debug: the local backend over plain HTTP (simulator only).
 #include "Base.xcconfig"
 
-PRODUCT_BUNDLE_IDENTIFIER = app.taleed.debug
+PRODUCT_BUNDLE_IDENTIFIER = app.taleed.mobile.debug
 APP_DISPLAY_NAME = Taleed Dev
 TALEED_API_BASE_URL = http:/$()/localhost:3000/api/v1
 

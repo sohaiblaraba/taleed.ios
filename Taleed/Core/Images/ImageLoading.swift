@@ -10,7 +10,7 @@ enum ImageLoading {
 
     /// Call once at launch, before the first image loads.
     static func configure() {
-        var configuration = ImagePipeline.Configuration.withDataCache(name: "app.taleed.images", sizeLimit: diskCacheBytes)
+        var configuration = ImagePipeline.Configuration.withDataCache(name: "app.taleed.mobile.images", sizeLimit: diskCacheBytes)
         // Photos are WebP and JPEG that iOS decodes; decode off the main thread, progressively.
         configuration.isProgressiveDecodingEnabled = false
         configuration.isTaskCoalescingEnabled = true
