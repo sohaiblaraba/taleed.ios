@@ -127,7 +127,8 @@ struct GalleryNavigation: View {
         GallerySection(id: "bottom-nav", number: "5.2", title: "Bottom navigation",
                        note: "Five destinations (D-2). One label size for all five; never truncated. Only the top corners "
                            + "are rounded; the fill runs under the home indicator, and the items keep max(16, inset) below "
-                           + "them, not 16 + inset (D-15).",
+                           + "them, not 16 + inset (D-15). Inactive labels and icons in navInactive (navy/600 #575E6F, "
+                           + "6.5:1), not Figma's navy/400 (D-9b).",
                        fullBleed: true) {
             VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
                 GalleryCaption(text: copy("Avec l’indicateur d’accueil (34) : la barre se pose sur la marge",

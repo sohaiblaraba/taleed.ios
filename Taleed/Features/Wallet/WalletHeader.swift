@@ -47,7 +47,7 @@ struct WalletActions: View {
             if let minimumText {
                 Text(minimumText)
                     .taleedFont(TaleedFont.bodySmall)
-                    .foregroundStyle(TaleedColor.navy500)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .fixedSize(horizontal: false, vertical: true)

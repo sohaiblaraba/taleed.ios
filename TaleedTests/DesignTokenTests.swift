@@ -40,6 +40,47 @@ struct DesignTokenTests {
         #expect(Set(names).count == names.count)
     }
 
+    /// D-9b (Saad, 2026-10-22): field helpers and inactive bottom-nav tabs pass WCAG AA, as on Android.
+    @Test func fieldHelperAndInactiveTabUseTheAAGreys() {
+        let app = { (name: String) in TaleedColor.appCatalog.first { $0.name == name }?.hex }
+        #expect(app("fieldHelper") == hex("neutral700"))
+        #expect(app("navInactive") == hex("navy600"))
+        #expect(app("navInactive") == 0x575E6F)
+        #expect(TaleedFieldState.normal.helperColor == TaleedColor.fieldHelper)
+        #expect(TaleedFieldState.disabled.helperColor == TaleedColor.fieldHelper)
+        #expect(FieldHelper(text: "").color == TaleedColor.fieldHelper)
+    }
+
+    /// Small secondary text, field helpers and inactive tab labels reach 4.5:1 on the light surfaces.
+    @Test func secondaryGreysPassAAOnTheLightSurfaces() throws {
+        let surfaces = try ["surfacePrimary", "surfaceGrouped", "navy50"].map { try #require(hex($0)) }
+        for name in ["textSecondarySmall", "fieldHelper", "navInactive"] {
+            let foreground = try #require(TaleedColor.appCatalog.first { $0.name == name }?.hex)
+            for surface in surfaces {
+                #expect(Self.contrast(foreground, surface) >= 4.5, "\(name) on \(String(surface, radix: 16))")
+            }
+        }
+        // The inactive tab stays lighter than the active one (blue/600).
+        let active = try #require(hex("blue600"))
+        let inactive = try #require(TaleedColor.appCatalog.first { $0.name == "navInactive" }?.hex)
+        #expect(Self.luminance(inactive) > Self.luminance(active))
+        // Figma's greys fail, which is why the app replaces them.
+        #expect(try Self.contrast(#require(hex("navy500")), 0xFFFFFF) < 4.5)
+        #expect(try Self.contrast(#require(hex("navy400")), 0xFFFFFF) < 4.5)
+    }
+
+    /// WCAG 2.x relative luminance of a 24-bit sRGB colour.
+    private static func luminance(_ hex: UInt32) -> Double {
+        let channels = [hex >> 16, hex >> 8, hex].map { Double($0 & 0xFF) / 255 }
+        let linear = channels.map { $0 <= 0.04045 ? $0 / 12.92 : pow(($0 + 0.055) / 1.055, 2.4) }
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+    }
+
+    private static func contrast(_ first: UInt32, _ second: UInt32) -> Double {
+        let (lighter, darker) = (max(luminance(first), luminance(second)), min(luminance(first), luminance(second)))
+        return (lighter + 0.05) / (darker + 0.05)
+    }
+
     @Test func everyScaleHasElevenSteps() {
         for scale in ["blue", "mint", "navy", "neutral"] {
             #expect(TaleedColor.catalog.filter { $0.group == scale }.count == 11)

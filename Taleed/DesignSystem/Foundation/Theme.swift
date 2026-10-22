@@ -36,9 +36,20 @@ extension TaleedColor {
         style.size < 16
     }
 
+    /// Helper text under a field (D-9b, Saad 2026-10-22): `neutral/700` #46506A, 8.0:1 on white.
+    /// Figma's `navy/500` #727887 reads 4.4:1 on white and 4.2:1 on `surfaceGrouped`.
+    static let fieldHelper = neutral700
+
+    /// Label and icon of an inactive bottom-navigation tab (D-9b): `navy/600` #575E6F, 6.5:1 on white,
+    /// still lighter than the active tab's `blue/600` on its `blue/50` pill. Figma's `navy/400` #9095A1
+    /// reads 3.0:1.
+    static let navInactive = navy600
+
     /// Colours the app adds to tokens.json, for the design-system gallery.
     static let appCatalog: [ColorToken] = [
         ColorToken(group: "app", name: "textSecondarySmall", color: textSecondarySmall, hex: 0x46506A, opacity: 1),
+        ColorToken(group: "app", name: "fieldHelper", color: fieldHelper, hex: 0x46506A, opacity: 1),
+        ColorToken(group: "app", name: "navInactive", color: navInactive, hex: 0x575E6F, opacity: 1),
     ]
 }
 

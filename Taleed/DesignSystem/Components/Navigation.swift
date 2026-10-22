@@ -150,7 +150,7 @@ private struct BottomNavButton<ID: Hashable>: View {
     let action: () -> Void
 
     var body: some View {
-        let color = isActive ? TaleedColor.blue600 : TaleedColor.navy400
+        let color = isActive ? TaleedColor.blue600 : TaleedColor.navInactive
         let style = isActive ? TaleedFont.navLabelActive : TaleedFont.navLabel
         Button(action: action) {
             VStack(spacing: TaleedSpacing.s4) {

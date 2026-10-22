@@ -20,14 +20,14 @@ struct FieldLabel: View {
     }
 }
 
-/// The helper line's colour (design-system §2.4–2.6, as Android's FieldHelper): `navy/500`,
-/// `feedback/info` while the field is focused or its picker open, `feedback/error` on error.
+/// The helper line's colour (design-system §2.4–2.6, as Android's FieldHelper): `fieldHelper`
+/// (`neutral/700`, D-9b; Figma `navy/500`), `feedback/info` while the field is focused or its picker open, `feedback/error` on error.
 extension TaleedFieldState {
     var helperColor: Color {
         switch self {
         case .error: TaleedColor.feedbackError
         case .active: TaleedColor.feedbackInfo
-        case .normal, .disabled: TaleedColor.navy500
+        case .normal, .disabled: TaleedColor.fieldHelper
         }
     }
 }
@@ -47,7 +47,7 @@ extension View {
 /// Helper or error text under a field (Body/Small).
 struct FieldHelper: View {
     let text: String
-    var color: Color = TaleedColor.navy500
+    var color: Color = TaleedColor.fieldHelper
 
     var body: some View {
         Text(text)

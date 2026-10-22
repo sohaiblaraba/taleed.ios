@@ -12,7 +12,8 @@ struct GalleryCoreComponents: View {
         GallerySection(id: "icon-buttons", number: "2.2–2.3", title: "Icon button, favorite control") {
             GalleryIconButtons()
         }
-        GallerySection(id: "fields", number: "2.4–2.6", title: "Text field, select, text area") {
+        GallerySection(id: "fields", number: "2.4–2.6", title: "Text field, select, text area",
+                       note: "Helper text in fieldHelper (neutral/700 #46506A, 8.0:1), not Figma's navy/500 (D-9b).") {
             GalleryFields()
         }
         GallerySection(id: "chips", number: "2.7", title: "Chips and filters", fullBleed: true) {
