@@ -15,7 +15,7 @@ struct ProductConditionTests {
 
     @Test func englishLabelsReadAlike() {
         #expect(ProductCondition.allCases.map { $0.label(.short, in: .en) } ==
-            ["New, tagged", "New", "Very good", "Good", "Fair"])
+            ["New, tagged", "Like new", "Very good", "Good", "Fair"])
         #expect(ProductCondition.allCases.map { $0.label(.full, in: .en) } ==
             ["New with tags", "New without tags", "Very good condition", "Good condition", "Fair condition"])
     }
@@ -40,7 +40,18 @@ struct ProductConditionTests {
         #expect(ProductCondition.label(code: "REFURBISHED", catalogLabel: "Reconditionné", language: .fr) == "Reconditionné")
         #expect(ProductCondition.label(code: "REFURBISHED", catalogLabel: "Reconditionné", catalogShortLabel: "court",
                                        length: .full, language: .fr) == "Reconditionné")
-        #expect(ProductCondition.label(code: "GOOD", catalogLabel: "ignored", catalogShortLabel: "ignored", language: .en) == "Good")
+        #expect(ProductCondition.label(code: "GOOD", catalogLabel: "ignored", language: .en) == "Good")
+        #expect(ProductCondition.label(code: "GOOD", catalogLabel: "ignored", catalogShortLabel: "", language: .en) == "Good")
+        #expect(ProductCondition.label(code: "GOOD", catalogLabel: "ignored", catalogShortLabel: "ignored", length: .full,
+                                       language: .en) == "Good condition")
+    }
+
+    /// Short tags show the catalog's `shortLabel` (E-6: the server's English "Like new").
+    @Test func shortTagsShowTheCatalogShortLabel() {
+        #expect(ProductCondition.label(code: "NEW_WITHOUT_TAGS", catalogLabel: "New without tags", catalogShortLabel: "Like new",
+                                       language: .en) == "Like new")
+        #expect(ProductCondition.label(code: "NEW_WITHOUT_TAGS", catalogLabel: "Neuf sans étiquette", catalogShortLabel: "Neuf",
+                                       language: .fr) == "Neuf")
     }
 
     @Test func tagTonesFollowTheSpec() {
