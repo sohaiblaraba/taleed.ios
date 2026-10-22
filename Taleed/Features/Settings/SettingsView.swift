@@ -116,7 +116,7 @@ struct SettingsView: View {
             .toggleStyle(.taleedRow)
             .disabled(account.newsletterPending != nil)
             .accessibilityIdentifier("settings.newsletter")
-            FieldHelper(text: l10n.string(.settingsNewsletterDescription), color: TaleedColor.textSecondary)
+            FieldHelper(text: l10n.string(.settingsNewsletterDescription), color: TaleedColor.textSecondarySmall)
         }
         .padding(.horizontal, TaleedLayout.screenMargin)
     }
@@ -159,7 +159,7 @@ struct SettingsView: View {
                 .toggleStyle(.taleedRow)
                 .disabled(pushPending != nil)
                 .accessibilityIdentifier("settings.push")
-                FieldHelper(text: l10n.string(.pwaPushBody), color: TaleedColor.textSecondary)
+                FieldHelper(text: l10n.string(.pwaPushBody), color: TaleedColor.textSecondarySmall)
             }
             if push.isPermissionDenied {
                 InlineAlert(kind: .warning, title: l10n.string(.appSettingsPushDenied),

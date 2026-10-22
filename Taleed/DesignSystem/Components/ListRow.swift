@@ -102,7 +102,7 @@ struct ListRow: View {
         if let trailingText {
             Text(trailingText)
                 .taleedFont(TaleedFont.bodyRegular)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
         } else if let trailingBadge {
             trailingBadge
         } else if isTrailingLoading {

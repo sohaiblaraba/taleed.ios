@@ -71,7 +71,7 @@ struct ListingSellerSection: View {
         } else {
             Text(l10n.string(.reviewsNoReviews))
                 .taleedFont(TaleedFont.caption)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
         }
     }
 
@@ -82,12 +82,12 @@ struct ListingSellerSection: View {
                 Circle().fill(TaleedColor.feedbackSuccess).frame(width: 6, height: 6).accessibilityHidden(true)
                 Text(l10n.string(.listingOnlineNow))
                     .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
         } else if let lastSeen = seller.lastSeenAt {
             Text(l10n.format(.listingLastSeen, RelativeTimeText.string(for: lastSeen, locale: l10n.language.formattingLocale)))
                 .taleedFont(TaleedFont.caption)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
         }
     }
 }

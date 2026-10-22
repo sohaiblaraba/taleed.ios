@@ -117,7 +117,7 @@ struct MemberReviewRow: View {
                     }
                     Text(MemberProfileText.memberSince(review.createdAt, locale: l10n.language.formattingLocale))
                         .taleedFont(TaleedFont.caption)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                 }
                 RatingStarsView(value: review.rating)
                     .accessibilityElement()

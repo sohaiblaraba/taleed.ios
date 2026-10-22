@@ -18,6 +18,30 @@ enum Theme {
     static let minTouchTarget = TaleedSize.touchTargetMin
 }
 
+/// Secondary text that must pass WCAG AA (decision D-9, Saad 2026-10-22). Figma's `text/secondary`
+/// #778198 reads 3.9:1 on white: small text keeps the secondary role but in `neutral/700`.
+extension TaleedColor {
+    /// Small secondary text (below 16 pt, any weight: 11–12 pt semibold labels fail AA too): `neutral/700`
+    /// #46506A, 8.0:1 on white and 7.6:1 on `surfaceGrouped` / `navy/50`. Secondary text from 16 pt,
+    /// placeholders, disabled text and decorative icons keep `textSecondary`.
+    static let textSecondarySmall = neutral700
+
+    /// The secondary colour for text set in `style`: `textSecondarySmall` below 16 pt, otherwise
+    /// Figma's `textSecondary` (the Android app's `secondaryText(style)`).
+    static func secondaryText(for style: TaleedTextStyle) -> Color {
+        usesSmallSecondary(style) ? textSecondarySmall : textSecondary
+    }
+
+    static func usesSmallSecondary(_ style: TaleedTextStyle) -> Bool {
+        style.size < 16
+    }
+
+    /// Colours the app adds to tokens.json, for the design-system gallery.
+    static let appCatalog: [ColorToken] = [
+        ColorToken(group: "app", name: "textSecondarySmall", color: textSecondarySmall, hex: 0x46506A, opacity: 1),
+    ]
+}
+
 extension Color {
     /// A colour from a 24-bit sRGB hex value such as `0x2455F5`.
     init(taleedHex hex: UInt32, opacity: Double = 1) {

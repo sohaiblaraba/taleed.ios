@@ -174,7 +174,7 @@ struct CategoryField: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(label.uppercased(with: locale))
                         .taleedFont(TaleedFont.navLabelActive)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                     Text(value)
                         .taleedFont(PatternStyles.body13)
                         .foregroundStyle(TaleedColor.textPrimary)

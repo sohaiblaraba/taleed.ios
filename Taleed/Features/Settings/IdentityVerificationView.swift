@@ -144,7 +144,7 @@ struct IdentityVerificationView: View {
                 .accessibilityHidden(true)
             Text(l10n.string(.settingsVerificationDescription))
                 .taleedFont(TaleedFont.bodySmall)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -171,7 +171,7 @@ struct IdentityVerificationView: View {
                 TaleedTextField(label: l10n.string(.authLastName), text: .constant(profile.lastName), showsClearButton: false)
                     .disabled(true)
                     .accessibilityIdentifier("verification.lastName")
-                FieldHelper(text: l10n.string(.settingsNameLockedHint), color: TaleedColor.textSecondary)
+                FieldHelper(text: l10n.string(.settingsNameLockedHint), color: TaleedColor.textSecondarySmall)
             }
             .padding(.top, TaleedSpacing.s8)
         }
@@ -189,7 +189,7 @@ struct IdentityVerificationView: View {
                 .accessibilityIdentifier("verification.photo")
             Text(l10n.string(.settingsVerificationPrivacyNote))
                 .taleedFont(TaleedFont.bodySmall)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
             if let failure = model.submitError {
@@ -212,7 +212,7 @@ struct IdentityVerificationView: View {
             SectionTitle(text: l10n.string(.appVerificationNameTitle))
             Text(l10n.string(.appVerificationNameHint))
                 .taleedFont(TaleedFont.bodySmall)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
             TaleedTextField(label: l10n.string(.authFirstName),

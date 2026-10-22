@@ -136,7 +136,7 @@ struct DisputeThreadView: View {
             if dispute.canPost {
                 Text(l10n.string(.disputesThreadHint))
                     .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .fixedSize(horizontal: false, vertical: true)
                 if !model.photos.items.isEmpty {
                     EvidencePhotosRow(photos: model.photos, isDisabled: model.isSending)
@@ -148,7 +148,7 @@ struct DisputeThreadView: View {
             } else {
                 Text(l10n.string(.disputesThreadClosed))
                     .taleedFont(TaleedFont.bodySmall)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("dispute.closed")
             }
@@ -284,7 +284,7 @@ private struct DisputeHeaderCard: View {
                     if let resolvedAt = dispute.resolvedAt {
                         Text(OrderText.dateTime(resolvedAt, locale: l10n.language.formattingLocale))
                             .taleedFont(TaleedFont.caption)
-                            .foregroundStyle(TaleedColor.textSecondary)
+                            .foregroundStyle(TaleedColor.textSecondarySmall)
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -354,7 +354,7 @@ private struct DisputeMessageBubble: View {
             Spacer(minLength: 0)
             Text(OrderText.dateTime(message.createdAt, locale: l10n.language.formattingLocale))
                 .taleedFont(TaleedFont.caption)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
                 .lineLimit(1)
         }
         .accessibilityElement(children: .combine)

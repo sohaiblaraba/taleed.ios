@@ -166,7 +166,7 @@ struct TaleedTextField: View {
             if let suffix, !text.isEmpty {
                 Text(verbatim: suffix)
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .lineLimit(1)
                     .fixedSize()
                     .accessibilityHidden(true)

@@ -115,7 +115,7 @@ struct SellerCard<Details: View, Actions: View>: View {
     private func presenceText(_ text: String) -> some View {
         Text(verbatim: text)
             .taleedFont(TaleedFont.caption)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
     }
 
     // MARK: Stats
@@ -162,7 +162,7 @@ struct SellerCard<Details: View, Actions: View>: View {
         // One word per label: never broken mid-word (the rows take over first).
         Text(verbatim: label)
             .taleedFont(TaleedFont.meta)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
             .lineLimit(1)
             .fixedSize()
     }

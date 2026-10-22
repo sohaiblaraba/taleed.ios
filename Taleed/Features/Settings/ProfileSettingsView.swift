@@ -183,7 +183,7 @@ struct ProfileSettingsView: View {
             VStack(alignment: .leading, spacing: TaleedSpacing.s16) { nameFieldPair }
             let nameError = model.error(.firstName) == .nameLocked
             FieldHelper(text: l10n.string(model.nameLocked || nameError ? .settingsNameLockedHint : .settingsNameHint),
-                        color: nameError ? TaleedColor.feedbackError : TaleedColor.textSecondary)
+                        color: nameError ? TaleedColor.feedbackError : TaleedColor.textSecondarySmall)
                 .accessibilityHidden(false)
         }
     }
@@ -210,7 +210,7 @@ struct ProfileSettingsView: View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
             VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
                 SectionTitle(text: l10n.string(.settingsBillingTitle))
-                FieldHelper(text: l10n.string(.settingsBillingHint), color: TaleedColor.textSecondary)
+                FieldHelper(text: l10n.string(.settingsBillingHint), color: TaleedColor.textSecondarySmall)
                     .accessibilityHidden(false)
             }
             .padding(.top, TaleedSpacing.s16)

@@ -35,7 +35,7 @@ struct OrderStatusHeader: View {
     private var date: some View {
         Text(OrderText.date(order.createdAt, locale: l10n.language.formattingLocale))
             .taleedFont(TaleedFont.caption)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
     }
 }
 
@@ -261,7 +261,7 @@ struct OrderGoodsCard: View {
                 roleText(role)
                 Text(l10n.string(.ordersDeletedAccount))
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
             .accessibilityElement(children: .combine)
         }
@@ -270,7 +270,7 @@ struct OrderGoodsCard: View {
     private func roleText(_ role: String) -> some View {
         Text(role)
             .taleedFont(TaleedFont.caption)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
     }
 
     private func avatar(_ member: MemberRef) -> some View {
@@ -347,7 +347,7 @@ struct OrderDeliveryCard: View {
                 HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s12) {
                     Text(l10n.string(.ordersTracking))
                         .taleedFont(TaleedFont.caption)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                     Spacer(minLength: 0)
                     Text(verbatim: tracking)
                         .font(.system(.footnote, design: .monospaced).weight(.medium))

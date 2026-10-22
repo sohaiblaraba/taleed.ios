@@ -141,7 +141,7 @@ struct SpecRow<Value: View>: View {
         let row = HStack(spacing: TaleedSpacing.s16) {
             Text(label)
                 .taleedFont(PatternStyles.body13)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
             Spacer(minLength: 0)
             value
                 .multilineTextAlignment(.trailing)

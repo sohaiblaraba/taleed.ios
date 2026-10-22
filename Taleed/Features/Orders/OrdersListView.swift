@@ -182,7 +182,7 @@ struct OrderRowView: View {
     private var metaText: some View {
         Text(meta)
             .taleedFont(TaleedFont.meta)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
     }
 

@@ -15,7 +15,7 @@ struct CheckoutItem: View {
             VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
                 Text(DesignSystemStrings.string(.checkoutItemLabel, locale: locale))
                     .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                 Text(verbatim: title.isolatedByContent)
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textPrimary)
@@ -63,7 +63,7 @@ struct DeliveryOption: View {
                     }
                     Text(description)
                         .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 RadioIndicator(isSelected: selected)
@@ -134,7 +134,7 @@ struct OrderSummary: View {
                 .foregroundStyle(TaleedColor.textPrimary)
                 .accessibilityAddTraits(.isHeader)
             ForEach(lines) { line in
-                row(line, style: TaleedFont.bodyRegular, labelColor: TaleedColor.textSecondary)
+                row(line, style: TaleedFont.bodyRegular, labelColor: TaleedColor.textSecondarySmall)
             }
             Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)
             row(OrderSummaryLine(id: "total", label: totalLabel, amount: total), style: TaleedFont.buttonMedium,

@@ -79,7 +79,7 @@ struct WardrobeFilterSheet: View {
                 if let count {
                     Text(verbatim: "\(count)")
                         .taleedFont(TaleedFont.caption)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                         .monospacedDigit()
                 }
                 RadioIndicator(isSelected: isSelected)

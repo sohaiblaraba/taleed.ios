@@ -44,7 +44,7 @@ struct PhotoUploader: View {
                 Spacer()
                 Text(verbatim: DesignSystemStrings.format(.photoUploaderCount, locale: locale, photos.count, maxPhotos))
                     .taleedFont(TaleedFont.bodySmall)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .monospacedDigit()
                     .environment(\.layoutDirection, .leftToRight)
             }
@@ -54,7 +54,7 @@ struct PhotoUploader: View {
             } else {
                 tiles
             }
-            FieldHelper(text: helper, color: TaleedColor.textSecondary)
+            FieldHelper(text: helper, color: TaleedColor.textSecondarySmall)
                 .accessibilityHidden(false)
         }
     }
@@ -77,7 +77,7 @@ struct PhotoUploader: View {
                     .foregroundStyle(TaleedColor.mint600)
                 Text(string(.photoUploaderZoneBody))
                     .taleedFont(Self.zoneSubtitleStyle)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
             .multilineTextAlignment(.center)
             .padding(TaleedSpacing.s16)

@@ -303,7 +303,7 @@ struct CheckoutBundleCard: View {
             HStack {
                 Text(label)
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 PriceText(amount: total, style: TaleedFont.buttonMedium)
             }

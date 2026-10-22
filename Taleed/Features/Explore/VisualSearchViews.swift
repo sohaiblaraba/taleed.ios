@@ -268,7 +268,7 @@ struct VisualSearchResultsView: View {
                     .accessibilityAddTraits(.isHeader)
                 Text(l10n.format(.visualResultsCount, viewModel.results.total ?? 0))
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

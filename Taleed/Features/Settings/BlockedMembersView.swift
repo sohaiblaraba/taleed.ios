@@ -105,7 +105,7 @@ private struct BlockedMemberRowView: View {
                             Text(l10n.format(.appSettingsBlockedSince,
                                              OrderText.date(member.blockedAt, locale: l10n.language.formattingLocale)))
                                 .taleedFont(TaleedFont.bodySmall)
-                                .foregroundStyle(TaleedColor.textSecondary)
+                                .foregroundStyle(TaleedColor.textSecondarySmall)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }

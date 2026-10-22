@@ -210,7 +210,7 @@ private struct ReferralHeroCard<Invite: View>: View {
         let text = Text(ReferralsCopy.termsNote(l10n.string(.referralsTermsNote), termsURL: copy.program.termsURL,
                                                 linkColor: TaleedColor.textPrimary, isLink: false))
             .taleedFont(TaleedFont.bodySmall)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
         if let termsURL = copy.program.termsURL {

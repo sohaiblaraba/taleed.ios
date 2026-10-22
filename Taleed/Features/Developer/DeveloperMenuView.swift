@@ -102,7 +102,7 @@ struct DeveloperMenuView: View {
             if !link.isEmpty {
                 Text(verbatim: String(describing: LinkRouter.destination(for: link)))
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
             TaleedButton(title: "Open", kind: .secondary, size: .medium) {
                 router.open(LinkRouter.destination(for: link))
@@ -121,7 +121,7 @@ struct DeveloperMenuView: View {
                         .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.s))
                     Text(verbatim: upload.key)
                         .taleedFont(TaleedFont.bodyRegular)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                         .accessibilityIdentifier("upload_key")
                 }
             }

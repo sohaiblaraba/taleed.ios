@@ -30,11 +30,11 @@ struct OrderTimelineCard: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(step.label)
                                 .taleedFont(TaleedFont.bodyRegular.with(weight: step.done ? .semibold : .regular))
-                                .foregroundStyle(step.done ? TaleedColor.textPrimary : TaleedColor.textSecondary)
+                                .foregroundStyle(step.done ? TaleedColor.textPrimary : TaleedColor.textSecondarySmall)
                             if let date = step.date {
                                 Text(OrderText.dateTime(date, locale: l10n.language.formattingLocale))
                                     .taleedFont(TaleedFont.caption)
-                                    .foregroundStyle(TaleedColor.textSecondary)
+                                    .foregroundStyle(TaleedColor.textSecondarySmall)
                             }
                         }
                     }
@@ -76,13 +76,13 @@ struct OrderTimelineCard: View {
                                     if let place = scan.place {
                                         Text(verbatim: place)
                                             .taleedFont(TaleedFont.caption)
-                                            .foregroundStyle(TaleedColor.textSecondary)
+                                            .foregroundStyle(TaleedColor.textSecondarySmall)
                                     }
                                 }
                                 Spacer(minLength: TaleedSpacing.s8)
                                 Text(OrderText.dateTime(scan.date, locale: l10n.language.formattingLocale))
                                     .taleedFont(TaleedFont.caption)
-                                    .foregroundStyle(TaleedColor.textSecondary)
+                                    .foregroundStyle(TaleedColor.textSecondarySmall)
                             }
                             .padding(.horizontal, TaleedSpacing.s16)
                             .padding(.vertical, TaleedSpacing.s8)
@@ -137,7 +137,7 @@ struct OrderReviewsCard: View {
                 Spacer(minLength: 0)
                 Text(OrderText.date(review.createdAt, locale: l10n.language.formattingLocale))
                     .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
             if let comment = review.comment {
                 Text(verbatim: "“\(comment)”")

@@ -94,7 +94,7 @@ struct WalletTiles: View {
                 FirstLineIcon(icon: icon, size: min(eyebrowIconSize, 24), textStyle: TaleedFont.eyebrow)
                 Text(title.uppercased(with: l10n.language.locale))
                     .taleedFont(TaleedFont.eyebrow)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityLabel(title)
             }
@@ -108,7 +108,7 @@ struct WalletTiles: View {
                     FirstLineIcon(icon: note.0, size: min(noteIconSize, 24), textStyle: TaleedFont.bodySmall)
                     Text(note.1)
                         .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }

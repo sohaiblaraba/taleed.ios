@@ -137,7 +137,7 @@ struct InboxRow: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Text(ChatText.inboxTime(conversation.lastMessageAt, locale: l10n.language.formattingLocale))
                             .taleedFont(TaleedFont.meta)
-                            .foregroundStyle(isUnread ? TaleedColor.brandPrimary : TaleedColor.textSecondary)
+                            .foregroundStyle(isUnread ? TaleedColor.brandPrimary : TaleedColor.textSecondarySmall)
                             .lineLimit(1)
                             .fixedSize()
                     }
@@ -145,7 +145,7 @@ struct InboxRow: View {
                         HStack(spacing: TaleedSpacing.s8) {
                             Text(verbatim: listing.title.isolatedByContent)
                                 .taleedFont(TaleedFont.caption)
-                                .foregroundStyle(TaleedColor.textSecondary)
+                                .foregroundStyle(TaleedColor.textSecondarySmall)
                                 .lineLimit(isLarge ? 2 : 1)
                             // The 22 pt tag, drawn over the line's own height: a "Vendu" row is as tall
                             // as the others.

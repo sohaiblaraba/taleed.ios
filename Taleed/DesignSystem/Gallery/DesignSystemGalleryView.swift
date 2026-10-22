@@ -70,7 +70,7 @@ struct GallerySection<Content: View>: View {
                 if let note {
                     Text(verbatim: note)
                         .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                 }
             }
             .padding(.horizontal, TaleedLayout.screenMargin)
@@ -88,7 +88,7 @@ struct GalleryCaption: View {
     var body: some View {
         Text(verbatim: text)
             .taleedFont(TaleedFont.caption)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
     }
 }
 

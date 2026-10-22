@@ -8,13 +8,13 @@ struct GalleryFoundations: View {
     var body: some View {
         let copy = GalleryCopy(locale)
         GallerySection(id: "colors", number: "1.2", title: "Colour",
-                       note: "Scales, semantic variables and recurring literals (tokens.json).") {
-            ForEach(["semantic", "literal", "blue", "mint", "navy", "neutral"], id: \.self) { group in
+                       note: "Scales, semantic variables and recurring literals (tokens.json); app: colours the app adds (D-9).") {
+            ForEach(["semantic", "literal", "app", "blue", "mint", "navy", "neutral"], id: \.self) { group in
                 VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
                     GalleryCaption(text: group)
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: TaleedSpacing.s8)],
                               spacing: TaleedSpacing.s8) {
-                        ForEach(TaleedColor.catalog.filter { $0.group == group }, id: \.name) { token in
+                        ForEach((TaleedColor.catalog + TaleedColor.appCatalog).filter { $0.group == group }, id: \.name) { token in
                             ColorSwatch(token: token)
                         }
                     }
@@ -33,6 +33,20 @@ struct GalleryFoundations: View {
                                   "Give your treasures a second life"))
                             .taleedFont(item.style)
                             .foregroundStyle(TaleedColor.textPrimary)
+                    }
+                }
+                // D-9: secondary text below 16 pt in neutral/700 (AA), from 16 pt in text/secondary.
+                GalleryCaption(text: "secondary text (D-9)")
+                ForEach(["meta", "bodySmall", "bodyRegular", "caption", "bodyLarge"], id: \.self) { name in
+                    if let style = TaleedFont.catalog.first(where: { $0.name == name })?.style {
+                        let small = TaleedColor.usesSmallSecondary(style)
+                        VStack(alignment: .leading, spacing: 2) {
+                            GalleryCaption(text: "\(name) · " + (small ? "textSecondarySmall #46506A" : "textSecondary #778198"))
+                            Text(copy("Expédié depuis Oran · il y a 2 h", "يُشحن من وهران · منذ ساعتين",
+                                      "Ships from Oran · 2 h ago"))
+                                .taleedFont(style)
+                                .foregroundStyle(TaleedColor.secondaryText(for: style))
+                        }
                     }
                 }
             }
@@ -74,7 +88,7 @@ struct GalleryFoundations: View {
                         TaleedIconView(icon, size: 24, color: icon.isDirectional ? TaleedColor.brandPrimary : TaleedColor.textPrimary)
                         Text(verbatim: icon.rawValue)
                             .font(.custom(TaleedTypeface.plusJakartaSans.postScriptName(.regular), fixedSize: 9))
-                            .foregroundStyle(TaleedColor.textSecondary)
+                            .foregroundStyle(TaleedColor.textSecondarySmall)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
@@ -124,7 +138,7 @@ private struct ColorSwatch: View {
                 .minimumScaleFactor(0.6)
             Text(verbatim: String(format: "#%06X", token.hex) + (token.opacity < 1 ? " \(Int(token.opacity * 100))%" : ""))
                 .font(.custom(TaleedTypeface.plusJakartaSans.postScriptName(.regular), fixedSize: 9))
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
         }
         .environment(\.layoutDirection, .leftToRight)
     }

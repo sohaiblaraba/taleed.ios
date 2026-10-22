@@ -136,7 +136,7 @@ private extension MemberProfileHeader {
         VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
             Text(l10n.string(.memberChecksTitle).uppercased(with: l10n.language.locale))
                 .taleedFont(TaleedFont.eyebrow)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
                 .accessibilityLabel(l10n.string(.memberChecksTitle))
                 .accessibilityAddTraits(.isHeader)
             ViewThatFits(in: .horizontal) {
@@ -165,7 +165,7 @@ private extension MemberProfileHeader {
             TaleedIconView(icon, size: glyph, color: isDone ? TaleedColor.textPrimary : TaleedColor.textSecondary)
             Text(l10n.string(label))
                 .taleedFont(isDone ? TaleedFont.caption.with(weight: .semibold) : TaleedFont.caption)
-                .foregroundStyle(isDone ? TaleedColor.textPrimary : TaleedColor.textSecondary)
+                .foregroundStyle(isDone ? TaleedColor.textPrimary : TaleedColor.textSecondarySmall)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(l10n.string(label))

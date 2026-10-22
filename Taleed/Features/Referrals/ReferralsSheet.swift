@@ -173,7 +173,7 @@ private struct ReferralRowView: View {
                             .lineLimit(1)
                         Text(copy.joined(row))
                             .taleedFont(TaleedFont.bodySmall)
-                            .foregroundStyle(TaleedColor.textSecondary)
+                            .foregroundStyle(TaleedColor.textSecondarySmall)
                         VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
                             MilestoneBadge(text: listings)
                             MilestoneBadge(text: sale)
@@ -211,7 +211,7 @@ private struct MilestoneBadge: View {
             if let caption = text.caption {
                 Text(caption)
                     .taleedFont(TaleedFont.bodySmall)
-                    .foregroundStyle(text.milestone == .missed ? TaleedColor.feedbackError : TaleedColor.textSecondary)
+                    .foregroundStyle(text.milestone == .missed ? TaleedColor.feedbackError : TaleedColor.textSecondarySmall)
             }
         }
     }
@@ -259,11 +259,11 @@ private struct VoucherCard: View {
                     .foregroundStyle(TaleedColor.textBody)
                 Text(verbatim: voucher.statusLabel)
                     .taleedFont(TaleedFont.bodySmall)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                 if let expiry = voucher.shownExpiry {
                     Text(l10n.format(.referralsVoucherExpires, copy.date(expiry)))
                         .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                 }
             }
             .fixedSize(horizontal: false, vertical: true)

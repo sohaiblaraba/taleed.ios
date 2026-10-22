@@ -230,7 +230,7 @@ struct EvidencePhotosField: View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
             FieldLabel(text: l10n.string(.disputesEvidencePhotos) + (isRequired ? " *" : ""))
             EvidencePhotosRow(photos: photos, isDisabled: isDisabled)
-            FieldHelper(text: hint, color: TaleedColor.textSecondary)
+            FieldHelper(text: hint, color: TaleedColor.textSecondarySmall)
             if let failed = photos.firstError {
                 FieldHelper(text: l10n.message(for: failed), color: TaleedColor.feedbackError)
             }
@@ -366,7 +366,7 @@ struct SheetFooterButton: View {
             } else if let hint {
                 Text(hint)
                     .taleedFont(TaleedFont.bodySmall)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .accessibilityIdentifier("sheet.hint")

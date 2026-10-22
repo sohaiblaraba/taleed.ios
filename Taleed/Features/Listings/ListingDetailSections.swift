@@ -111,18 +111,18 @@ struct ListingInfoSection: View {
                 }
                 Text(l10n.format(.listingProtectionFeeNote, PriceFormatter.format(listing.protectionFee, language: l10n.language)))
                     .taleedFont(TaleedFont.meta)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .accessibilityIdentifier("listing.fee")
                 Text(l10n.format(.appListingPosted, posted))
                     .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
             Spacer(minLength: 0)
             HStack(spacing: TaleedSpacing.s4) {
                 TaleedIconView(.eyeBold, size: 14, color: TaleedColor.navy500)
                 Text(l10n.format(.listingViews, listing.viewsCount))
                     .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
             .accessibilityElement(children: .combine)
         }
@@ -199,7 +199,7 @@ struct ListingDescriptionSection: View {
             // alignment), so a French description starts at the left in the Arabic app.
             Text(verbatim: text)
                 .taleedFont(TaleedFont.descriptionBody)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)

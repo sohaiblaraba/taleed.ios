@@ -159,7 +159,7 @@ struct RoutePlaceholderView: View {
                 #if DEBUG
                 Text(verbatim: String(describing: route))
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .multilineTextAlignment(.center)
                     .environment(\.layoutDirection, .leftToRight)
                     .accessibilityIdentifier("route_placeholder")

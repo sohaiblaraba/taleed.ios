@@ -389,7 +389,7 @@ private struct AwaitingArrivalButton: View {
                 .accessibilityHint(l10n.string(.ordersConfirmReceiptWaiting))
             Text(l10n.string(.ordersConfirmReceiptWaiting))
                 .taleedFont(TaleedFont.bodySmall)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .accessibilityHidden(true)

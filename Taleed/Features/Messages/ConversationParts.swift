@@ -53,7 +53,7 @@ struct ChatMemberName: View {
             } else {
                 Text(l10n.string(.chatDeletedUser))
                     .taleedFont(style)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.secondaryText(for: style))
                     .lineLimit(1)
             }
         }
@@ -82,7 +82,7 @@ struct ChatDayLabel: View {
     var body: some View {
         Text(ChatText.day(date, locale: l10n.language.formattingLocale))
             .taleedFont(TaleedFont.caption)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
             .frame(maxWidth: .infinity)
             .padding(.vertical, TaleedSpacing.s8)
             .accessibilityAddTraits(.isHeader)
@@ -152,7 +152,7 @@ struct ChatOrderPill: View {
 enum ChatBubbleStyle {
     static func fill(isMine: Bool) -> Color { isMine ? TaleedColor.brandPrimary : TaleedColor.surfaceGrouped }
     static func text(isMine: Bool) -> Color { isMine ? TaleedColor.textInverse : TaleedColor.textPrimary }
-    static func meta(isMine: Bool) -> Color { isMine ? TaleedColor.textInverse.opacity(0.8) : TaleedColor.textSecondary }
+    static func meta(isMine: Bool) -> Color { isMine ? TaleedColor.textInverse.opacity(0.8) : TaleedColor.textSecondarySmall }
     static let shape = RoundedRectangle(cornerRadius: TaleedRadius.l, style: .continuous)
 }
 
@@ -298,7 +298,7 @@ struct OutgoingStatus: View {
                 TaleedIconView(.clock, size: 14, color: TaleedColor.textSecondary)
                 Text(l10n.string(.appChatSending))
                     .taleedFont(TaleedFont.meta)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             case .failed:
                 TaleedIconView(.warningCircle, size: 14, color: TaleedColor.feedbackError)
                 Text(l10n.string(.appChatNotSent))

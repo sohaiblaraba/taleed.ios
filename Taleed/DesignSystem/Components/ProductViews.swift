@@ -138,7 +138,7 @@ struct ProductCard: View {
                         TaleedIconView(.mapPin, size: 13, color: TaleedColor.textSecondary)
                         Text(verbatim: location)
                             .taleedFont(TaleedFont.meta)
-                            .foregroundStyle(TaleedColor.textSecondary)
+                            .foregroundStyle(TaleedColor.textSecondarySmall)
                             .lineLimit(1)
                     }
                 }
@@ -275,7 +275,7 @@ struct ProductListRow: View {
                 }
             }
             .taleedFont(TaleedFont.meta)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
             .lineLimit(1)
         }
         .padding(.trailing, dense ? 0 : 48)

@@ -77,7 +77,7 @@ struct AddressesView: View {
                 } else {
                     Text(l10n.string(.appSettingsAddressesHint))
                         .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .fixedSize(horizontal: false, vertical: true)
                     ForEach(addresses) { address in
@@ -89,7 +89,7 @@ struct AddressesView: View {
                     VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
                         addButton
                         if !model.canAdd {
-                            FieldHelper(text: l10n.string(.appErrorAddressLimit), color: TaleedColor.textSecondary)
+                            FieldHelper(text: l10n.string(.appErrorAddressLimit), color: TaleedColor.textSecondarySmall)
                                 .accessibilityHidden(false)
                         }
                     }
@@ -167,7 +167,7 @@ private struct AddressCard: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Text("\(address.commune), \(address.wilaya.name)")
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                 if address.communeId == nil {
                     FieldHelper(text: l10n.string(.appSettingsAddressCommuneAgain), color: TaleedColor.warningText)
                         .accessibilityHidden(false)

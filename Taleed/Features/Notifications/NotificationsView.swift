@@ -160,13 +160,13 @@ struct NotificationRowView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: row.text)
                     .taleedFont(isUnread ? TaleedFont.bodyRegular.with(weight: .medium) : TaleedFont.bodyRegular)
-                    .foregroundStyle(isUnread ? TaleedColor.textPrimary : TaleedColor.textSecondary)
+                    .foregroundStyle(isUnread ? TaleedColor.textPrimary : TaleedColor.textSecondarySmall)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text(RelativeTimeText.string(for: row.createdAt, locale: l10n.language.formattingLocale))
                     .taleedFont(TaleedFont.meta)
-                    .foregroundStyle(isUnread ? TaleedColor.brandPrimary : TaleedColor.textSecondary)
+                    .foregroundStyle(isUnread ? TaleedColor.brandPrimary : TaleedColor.textSecondarySmall)
             }
         }
         .padding(.horizontal, TaleedLayout.screenMargin)

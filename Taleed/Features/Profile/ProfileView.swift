@@ -159,7 +159,7 @@ private struct MemberHeader: View {
             if let handle = user.handle, handle != user.displayName {
                 Text(verbatim: handle.isolatedLeftToRight)
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
             if user.isOfficial {
                 TaleedBadge(title: l10n.string(.profileOfficial), tone: .brand, icon: .sealCheck)

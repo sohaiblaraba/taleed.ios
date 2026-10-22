@@ -79,7 +79,7 @@ struct MyListingRow: View {
             if let location = product.location {
                 Text(verbatim: location)
                     .taleedFont(TaleedFont.meta)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .lineLimit(1)
             }
         }

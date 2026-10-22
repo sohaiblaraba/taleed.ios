@@ -116,7 +116,7 @@ struct OrderPaymentView: View {
             VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
                 Text(l10n.format(.ordersOrderNumber, order.number))
                     .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                 Text(verbatim: order.title.isolatedByContent)
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textPrimary)
@@ -171,7 +171,7 @@ struct OrderPaymentView: View {
                         .foregroundStyle(TaleedColor.textPrimary)
                     Text(l10n.string(.appCheckoutSaveAddressBody))
                         .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                 }
                 .accessibilityElement(children: .combine)
                 HStack(spacing: TaleedSpacing.s8) {

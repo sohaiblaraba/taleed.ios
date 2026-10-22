@@ -38,7 +38,7 @@ private struct SettingsHint: View {
     var body: some View {
         Text(text)
             .taleedFont(TaleedFont.bodySmall)
-            .foregroundStyle(TaleedColor.textSecondary)
+            .foregroundStyle(TaleedColor.textSecondarySmall)
             .frame(maxWidth: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
     }
@@ -83,7 +83,7 @@ struct UsernameSettingsView: View {
                         .onSubmit { Task { await model.submit() } }
                         .accessibilityIdentifier("username.field")
                     if fieldError != nil, model.fieldError != .rule {
-                        FieldHelper(text: l10n.string(.settingsUsernameRuleHint), color: TaleedColor.textSecondary)
+                        FieldHelper(text: l10n.string(.settingsUsernameRuleHint), color: TaleedColor.textSecondarySmall)
                             .accessibilityHidden(false)
                     }
                 }

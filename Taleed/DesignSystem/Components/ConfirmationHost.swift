@@ -179,7 +179,7 @@ struct ConfirmationModalCard: View {
             if let footnote {
                 Text(footnote)
                     .taleedFont(Self.messageStyle)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
             }
             Group {
                 if stacksActions {

@@ -180,7 +180,7 @@ struct FilterSheetView: View {
                     .accessibilityIdentifier("filters.minPrice")
                 Text(l10n.string(.appExplorePriceTo))
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .fixedSize()
                     .accessibilityHidden(true)
                 TaleedTextField(text: priceBinding(\.maxPriceText), placeholder: l10n.string(.filtersMaxPrice),

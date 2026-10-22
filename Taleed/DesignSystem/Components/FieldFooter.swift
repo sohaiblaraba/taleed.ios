@@ -17,7 +17,7 @@ struct FieldFooter: View {
                 if let counter {
                     Text(verbatim: counter)
                         .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                         .monospacedDigit()
                         .lineLimit(1)
                         .fixedSize()

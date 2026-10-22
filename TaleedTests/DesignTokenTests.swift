@@ -24,6 +24,22 @@ struct DesignTokenTests {
         #expect(hex("surfaceGrouped") == hex("neutral50"))
     }
 
+    /// D-9 (Saad, 2026-10-22): secondary text below 16 pt uses neutral/700 to pass WCAG AA.
+    @Test func smallSecondaryTextUsesNeutral700() {
+        #expect(TaleedColor.appCatalog.first { $0.name == "textSecondarySmall" }?.hex == hex("neutral700"))
+        for style in [TaleedFont.meta, TaleedFont.bodySmall, TaleedFont.bodyRegular, TaleedFont.caption,
+                      TaleedFont.eyebrow, TaleedFont.descriptionBody, TaleedFont.bodyRegular.with(weight: .semibold)] {
+            #expect(TaleedColor.usesSmallSecondary(style))
+            #expect(TaleedColor.secondaryText(for: style) == TaleedColor.textSecondarySmall)
+        }
+        for style in [TaleedFont.bodyLarge, TaleedFont.buttonLarge, TaleedFont.appBarTitle, TaleedFont.headline] {
+            #expect(!TaleedColor.usesSmallSecondary(style))
+            #expect(TaleedColor.secondaryText(for: style) == TaleedColor.textSecondary)
+        }
+        let names = (TaleedColor.catalog + TaleedColor.appCatalog).map(\.name)
+        #expect(Set(names).count == names.count)
+    }
+
     @Test func everyScaleHasElevenSteps() {
         for scale in ["blue", "mint", "navy", "neutral"] {
             #expect(TaleedColor.catalog.filter { $0.group == scale }.count == 11)

@@ -152,7 +152,7 @@ struct WalletEntryRowView: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text(verbatim: detail)
                 .taleedFont(TaleedFont.bodySmall)
-                .foregroundStyle(TaleedColor.textSecondary)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -214,7 +214,7 @@ struct PayoutRowView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     Text(verbatim: WalletText.payoutDetail(payout, locale: l10n.language.formattingLocale))
                         .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .accessibilityElement(children: .combine)

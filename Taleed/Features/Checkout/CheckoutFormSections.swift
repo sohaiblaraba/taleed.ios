@@ -145,7 +145,7 @@ extension CheckoutFormView {
                         .foregroundStyle(TaleedColor.textPrimary)
                     Text(l10n.format(.checkoutUseWalletHint, PriceFormatter.format(pricing.walletBalance, language: l10n.language)))
                         .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondary)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                 }
             }
             .toggleStyle(.taleed)
@@ -196,7 +196,7 @@ extension CheckoutFormView {
                     .accessibilityHidden(true)
                 Text(buttonHint(action))
                     .taleedFont(TaleedFont.meta)
-                    .foregroundStyle(TaleedColor.textSecondary)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
