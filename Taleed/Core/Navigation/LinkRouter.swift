@@ -11,10 +11,15 @@ enum LinkRouter {
     /// The app's URL scheme in this build (`TaleedURLScheme` in Info.plist): `taleed` in production.
     static let appScheme = (Bundle.main.object(forInfoDictionaryKey: "TaleedURLScheme") as? String)?.lowercased() ?? "taleed"
 
-    /// The website hosts whose links the app opens itself: production and staging, and in Debug the
-    /// local backend (`localhost`, and the API's own host), whose pushes point at `http://localhost:3000/…`.
+    /// The website hosts whose links the app opens itself: production and staging, the build's app-link
+    /// host (`TaleedAppLinkHost` in Info.plist: dev.taleed.app in Staging), and in Debug the local backend
+    /// (`localhost`, and the API's own host), whose pushes point at `http://localhost:3000/…`.
     static let websiteHosts: Set<String> = {
         var hosts: Set<String> = ["taleed.app", "staging.taleed.app"]
+        if let host = (Bundle.main.object(forInfoDictionaryKey: "TaleedAppLinkHost") as? String)?.lowercased(),
+           !host.isEmpty {
+            hosts.insert(host)
+        }
         #if DEBUG
         hosts.formUnion(["localhost", "127.0.0.1"])
         if let base = Bundle.main.object(forInfoDictionaryKey: "TaleedAPIBaseURL") as? String,

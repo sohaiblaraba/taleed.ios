@@ -35,9 +35,9 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Build Debug and Release
+      - name: Build Debug, Release and Staging
         run: |
-          for configuration in Debug Release; do
+          for configuration in Debug Release Staging; do
             xcodebuild build \
               -project Taleed.xcodeproj \
               -scheme Taleed \

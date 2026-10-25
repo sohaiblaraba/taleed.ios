@@ -71,10 +71,36 @@ Links can be tried on the simulator with the app's scheme, which reads like a pa
 |---|---|---|---|
 | Debug | `app.taleed.mobile.debug` | Taleed Dev | `http://localhost:3000/api/v1` (plain HTTP allowed for local hosts only) |
 | Release | `app.taleed.mobile` | Taleed | `https://taleed.app/api/v1` |
+| Staging | `app.taleed.mobile.staging` | Taleed Staging | `https://dev.taleed.app/api/v1` (the hosted test backend, HTTPS only) |
 
-To add a configuration such as Staging: create `Config/Staging.xcconfig` (include
-`Base.xcconfig`, set `TALEED_API_BASE_URL`), add it under `configs` and `configFiles` in
-`project.yml`, then run `xcodegen generate`.
+To add a configuration: create `Config/<Name>.xcconfig` (include `Base.xcconfig`, set
+`TALEED_API_BASE_URL`), add it under `configs` and `configFiles` in `project.yml`, then run
+`xcodegen generate`.
+
+## Staging build (for testers)
+
+Staging is a release build (optimised, no `#if DEBUG` code, so no developer menu and no
+local-networking exception) that talks to `https://dev.taleed.app/api/v1`. Its bundle ID has the
+`.staging` suffix, so it installs next to the Debug and Release apps. The `Taleed Staging` scheme
+runs and archives it. Build it for the simulator:
+
+```bash
+xcodebuild -project Taleed.xcodeproj -scheme "Taleed Staging" -configuration Staging \
+  -destination 'platform=iOS Simulator,name=iPhone 17' build
+```
+
+To give it to testers on devices, archive the `Taleed Staging` scheme (Product > Archive) with a
+development team selected, then distribute it through TestFlight or Ad Hoc. The bundle ID
+`app.taleed.mobile.staging` needs its own App ID (with Associated Domains) in the Apple Developer
+account, and its own App Store Connect record for TestFlight.
+
+- **Links.** Links to `dev.taleed.app` open the app (`TALEED_APP_LINK_HOST`, `TaleedAppLinkHost` in
+  Info.plist). Universal links need `dev.taleed.app` to serve the apple-app-site-association file
+  for `<team>.app.taleed.mobile.staging` (`MOBILE_IOS_APP_IDS` on the server).
+- **Payment return.** It keeps the `taleed://` scheme (the dev backend's `MOBILE_URL_SCHEME` is the
+  default). With the Release app on the same phone, iOS may open either app.
+- **Parcels.** The Staging build has no developer menu, so it cannot call the dev-only
+  `POST /orders/{id}/shipment/simulate`. Move parcels with curl against dev.taleed.app.
 
 ## Run against the local backend
 
@@ -98,7 +124,7 @@ xcodebuild test -project Taleed.xcodeproj -scheme Taleed \
 swiftlint lint --strict
 ```
 
-CI (`.github/workflows/ci.yml`) runs both on every pull request, builds Debug and Release, and
+CI (`.github/workflows/ci.yml`) runs both on every pull request, builds Debug, Release and Staging, and
 checks that `Taleed.xcodeproj` matches `project.yml`.
 
 ## Regenerate the API client

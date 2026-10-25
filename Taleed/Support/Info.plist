@@ -52,6 +52,8 @@
 #endif
 	<key>TaleedURLScheme</key>
 	<string>$(TALEED_URL_SCHEME)</string>
+	<key>TaleedAppLinkHost</key>
+	<string>$(TALEED_APP_LINK_HOST)</string>
 	<key>TaleedAPIBaseURL</key>
 	<string>$(TALEED_API_BASE_URL)</string>
 	<key>TaleedAppStoreID</key>

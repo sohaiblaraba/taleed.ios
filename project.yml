@@ -8,15 +8,16 @@ options:
   createIntermediateGroups: true
   groupSortPosition: top
 
-# One entry per configuration. A Staging configuration is one more line here,
-# plus Config/Staging.xcconfig (with TALEED_APP_LINK_HOST = staging.taleed.app).
+# One entry per configuration. Staging is a release build that talks to dev.taleed.app.
 configs:
   Debug: debug
   Release: release
+  Staging: release
 
 configFiles:
   Debug: Config/Debug.xcconfig
   Release: Config/Release.xcconfig
+  Staging: Config/Staging.xcconfig
 
 packages:
   TaleedAPI:
@@ -79,3 +80,17 @@ schemes:
         - TaleedTests
     archive:
       config: Release
+
+  # Run and archive the Staging configuration (the hosted test backend), for testers.
+  Taleed Staging:
+    build:
+      targets:
+        Taleed: all
+    run:
+      config: Staging
+    profile:
+      config: Staging
+    analyze:
+      config: Staging
+    archive:
+      config: Staging

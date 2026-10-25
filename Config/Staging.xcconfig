@@ -1,0 +1,11 @@
+// Staging: the hosted test backend over HTTPS only, for testers. A release build (optimised, no DEBUG
+// code) that installs next to the Debug and Release apps.
+#include "Base.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = app.taleed.mobile.staging
+APP_DISPLAY_NAME = Taleed Staging
+TALEED_API_BASE_URL = https:/$()/dev.taleed.app/api/v1
+
+// Links to dev.taleed.app open the app (LinkRouter, Associated Domains). The payment return keeps the
+// `taleed` scheme: dev.taleed.app leaves MOBILE_URL_SCHEME at its default.
+TALEED_APP_LINK_HOST = dev.taleed.app
