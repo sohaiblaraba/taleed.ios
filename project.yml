@@ -81,7 +81,7 @@ schemes:
     archive:
       config: Release
 
-  # Run and archive the Staging configuration (the hosted test backend), for testers.
+  # Run and archive the Staging configuration (the hosted test backend, the App Store bundle ID), for TestFlight.
   Taleed Staging:
     build:
       targets:
