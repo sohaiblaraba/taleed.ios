@@ -16,8 +16,11 @@ final class FakeTaleedApi: TaleedApi {
     var onUnauthorized: ((String) -> Void)?
     var onBanned: ((String) -> Void)?
 
-    /// Set to make `me()` behave like the generated client wrapper on a 401.
+    /// Set to make `me()` behave like the generated client wrapper on a 401 or a 403 `banned`.
     var sentToken: () -> String? = { nil }
+    /// Runs once while the next `me()` waits for its answer, after the request left with its token: a
+    /// sign-out or a sign-in that happens during the call.
+    var whileMeIsInFlight: (() async -> Void)?
 
     func config() async throws(ApiError) -> RemoteConfig { try configResult.get() }
 
@@ -28,8 +31,17 @@ final class FakeTaleedApi: TaleedApi {
 
     func me(automatic: Bool) async throws(ApiError) -> User {
         meCalls += 1
-        if case .failure(.unauthorized) = meResult, let token = sentToken() {
-            onUnauthorized?(token)
+        let token = sentToken()
+        if let inFlight = whileMeIsInFlight {
+            whileMeIsInFlight = nil
+            await inFlight()
+        }
+        if let token {
+            switch meResult {
+            case .failure(.unauthorized): onUnauthorized?(token)
+            case .failure(.banned): onBanned?(token)
+            default: break
+            }
         }
         return try meResult.get()
     }

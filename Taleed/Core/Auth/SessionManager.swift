@@ -69,9 +69,13 @@ final class SessionManager {
         }
         apiSession.setToken(token)
         do {
-            state = .signedIn(try await api.me())
+            let user = try await api.me()
+            // A sign-out or another sign-in during the call: that session wins, the answer is dropped.
+            guard isCurrent(token) else { return }
+            state = .signedIn(user)
             onSessionStarted?()
         } catch {
+            guard isCurrent(token) else { return }
             switch error {
             case .unauthorized: clearSession()
             case .banned: suspend()
@@ -83,14 +87,17 @@ final class SessionManager {
     /// Refreshes the member on return to the foreground. Failures other than a lost or
     /// suspended session change nothing. A suspended member who still has a session asks again too:
     /// a `200` means the suspension was lifted and the shell shows again; a `401` signs out.
+    /// An answer that comes after a sign-out or another sign-in is dropped (it belongs to the old session).
     func refresh() async {
-        guard isSignedIn || hasSuspendedSession else { return }
+        guard isSignedIn || hasSuspendedSession, let token = apiSession.token else { return }
         do {
             let user = try await api.me(automatic: true)
+            guard isCurrent(token) else { return }
             let wasSuspended = state == .suspended
             state = .signedIn(user)
             if wasSuspended { onSuspensionLifted?() }
         } catch {
+            guard isCurrent(token) else { return }
             if error == .banned, state != .suspended { suspend() }
             // `.unauthorized` is handled by `handleUnauthorized`.
         }
@@ -162,6 +169,11 @@ final class SessionManager {
     private func handleBanned(sentToken: String) {
         guard apiSession.token == sentToken, isSignedIn else { return }
         suspend()
+    }
+
+    /// Whether `token` is still the session's token: no sign-out or other sign-in happened meanwhile.
+    private func isCurrent(_ token: String) -> Bool {
+        apiSession.token == token
     }
 
     private func suspend() {
