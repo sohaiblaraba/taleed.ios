@@ -101,7 +101,8 @@ extension ListingDetail {
         ListingSummary(
             id: id, title: title, price: price, size: size, brandName: brand?.name, condition: condition,
             status: status, imageURL: photos.first?.thumbURL ?? photos.first?.url, favoritesCount: favoritesCount,
-            isFavorited: isFavorited, isBoosted: isBoosted, shipsFrom: shipsFrom, sellerRating: seller.rating, asOf: asOf
+            isFavorited: isFavorited, isBoosted: isBoosted, shipsFrom: shipsFrom, sellerRating: seller.rating,
+            isOwner: isOwner, asOf: asOf
         )
     }
 }

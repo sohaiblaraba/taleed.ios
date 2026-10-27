@@ -23,6 +23,8 @@ struct ListingSummary: Identifiable, Equatable, Hashable, Sendable {
     let shipsFrom: CatalogWilaya?
     /// Nil until the seller has a review.
     let sellerRating: MemberRating?
+    /// The signed-in member is the seller: the card shows "Your item" (false signed out).
+    var isOwner = false
     /// When the app asked the API for this card: the card shows the server's state as of then. A heart
     /// changed in the app later wins over it (`FavoriteStore`); a card asked for after the change wins.
     var asOf: ContinuousClock.Instant = .now

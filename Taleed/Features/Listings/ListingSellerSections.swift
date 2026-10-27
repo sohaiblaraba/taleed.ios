@@ -117,7 +117,7 @@ struct ListingMemberItemsSection: View {
                 LazyHStack(alignment: .top, spacing: TaleedLayout.productGridGap) {
                     // Two cards per screen width, as the grid below (Figma: one 200 pt card per column).
                     ForEach(visibleItems) {
-                        ListingCardView(listing: $0, showsSellerRating: false)
+                        ListingCardView(listing: $0, showsSellerRating: false, showsOwnerTag: false)
                             .containerRelativeFrame(.horizontal, count: 2, spacing: TaleedLayout.productGridGap)
                     }
                 }

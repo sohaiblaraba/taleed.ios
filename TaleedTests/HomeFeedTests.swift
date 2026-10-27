@@ -108,10 +108,10 @@ struct ListingSearchParametersTests {
 
 struct ListingSummaryMappingTests {
     private func card(condition: TaleedAPI.ListingCondition = .veryGood, status: TaleedAPI.ListingStatus = .active,
-                      size: String? = "M", rating: Rating? = nil) -> TaleedAPI.ListingCard {
+                      size: String? = "M", rating: Rating? = nil, isOwner: Bool = false) -> TaleedAPI.ListingCard {
         TaleedAPI.ListingCard(id: "l1", title: "Robe", price: 2500, size: size, brandName: nil, condition: condition,
                               status: status, imageUrl: "https://example.com/a.jpg", favoritesCount: 2, isFavorited: true,
-                              isBoosted: true, shipsFrom: Wilaya(id: 31, name: "Oran"), sellerRating: rating)
+                              isOwner: isOwner, isBoosted: true, shipsFrom: Wilaya(id: 31, name: "Oran"), sellerRating: rating)
     }
 
     @Test func aCardKeepsItsFields() {
@@ -122,6 +122,19 @@ struct ListingSummaryMappingTests {
         #expect(listing.shipsFrom == CatalogWilaya(id: 31, name: "Oran"))
         #expect(listing.sellerRating == MemberRating(average: 4.5, count: 3))
         #expect(listing.isFavorited && listing.isBoosted && listing.favoritesCount == 2)
+    }
+
+    @Test func theMembersOwnCardSaysYourItem() {
+        let text: (L10nKey) -> String = { $0 == .listingYourItem ? "Your item" : "" }
+        let favorite = FavoriteState(isFavorited: false, count: 0)
+        let own = ListingSummary(card(isOwner: true))
+        #expect(own.isOwner)
+        #expect(ListingCardContent.product(for: own, favorite: favorite, catalog: nil, text: text).ownerLabel == "Your item")
+        // A wardrobe or "more from this seller": every card is theirs, so no tag.
+        #expect(ListingCardContent.product(for: own, favorite: favorite, catalog: nil, showsOwnerTag: false,
+                                           text: text).ownerLabel == nil)
+        let other = ListingSummary(card())
+        #expect(ListingCardContent.product(for: other, favorite: favorite, catalog: nil, text: text).ownerLabel == nil)
     }
 
     @Test func unknownValuesShowNoTagAndNoBanner() {

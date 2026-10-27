@@ -69,7 +69,7 @@ final class HomeViewModel {
     }
 
     /// The screen appeared, or the member or the language changed: loads the feed once, and again for
-    /// another member (signed in, the feed leaves out their own items) or language.
+    /// another member (signed in, the cards mark their own items and hearts) or language.
     ///
     /// The cards count as loaded for a member only once their first page arrived: when the screen lets
     /// go of the request (a card tapped, the request cancelled) or it fails, the next call loads again.

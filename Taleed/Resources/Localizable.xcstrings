@@ -8545,6 +8545,29 @@
         }
       }
     },
+    "listing_your_item": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غرضك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your item"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre article"
+          }
+        }
+      }
+    },
     "listing_brand": {
       "extractionState": "manual",
       "localizations": {

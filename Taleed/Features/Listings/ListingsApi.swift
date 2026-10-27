@@ -124,6 +124,7 @@ extension ListingSummary {
             isBoosted: card.isBoosted,
             shipsFrom: card.shipsFrom.map { CatalogWilaya(id: $0.id, name: $0.name) },
             sellerRating: card.sellerRating.flatMap { $0.count >= 1 ? MemberRating(average: $0.average, count: $0.count) : nil },
+            isOwner: card.isOwner,
             asOf: asOf
         )
     }

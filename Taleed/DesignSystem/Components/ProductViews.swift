@@ -59,6 +59,8 @@ struct ProductSummary: Identifiable {
     var statusLabel: String?
     /// The label of the boosted tag under the condition tag ("Boosted"); nil when not boosted.
     var boostedLabel: String?
+    /// The label of the owner tag under those ("Your item"); nil when the member is not the seller.
+    var ownerLabel: String?
 }
 
 /// Product card for the two-column grid (design-system §3.1). The whole card opens the item;
@@ -100,6 +102,7 @@ struct ProductCard: View {
                                      catalogShortLabel: product.conditionShortLabel)
                     }
                     if let boosted = product.boostedLabel { BoostedTag(title: boosted) }
+                    if let owner = product.ownerLabel { OwnerTag(title: owner) }
                 }
                 .accessibilityHidden(true)
                 Spacer(minLength: 0)
@@ -158,9 +161,28 @@ struct ProductCard: View {
         }
         let rating = product.rating.map { "★ " + RatingText.average($0) }
         return [product.title, PriceFormatter.format(product.price, language: language), product.statusLabel, condition,
-                product.boostedLabel, rating, product.location, product.sizeLabel]
+                product.boostedLabel, product.ownerLabel, rating, product.location, product.sizeLabel]
             .compactMap { $0 }
             .joined(separator: ", ")
+    }
+}
+
+/// Owner tag on product cards, under the condition and boosted tags ("Your item"): the small tag's
+/// shape, white at 95 % with the primary text and a light shadow, as the website's card (neutral, so it
+/// does not read as the boost).
+struct OwnerTag: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .taleedFont(TaleedFont.tagLabel)
+            .foregroundStyle(TaleedColor.textPrimary)
+            .lineLimit(1)
+            .padding(.horizontal, TaleedSize.conditionTagPaddingX)
+            .padding(.vertical, TaleedSize.conditionTagPaddingY)
+            .frame(minHeight: TaleedSize.conditionTagHeight)
+            .background(Capsule().fill(TaleedColor.surfacePrimary.opacity(0.95)))
+            .taleedShadow(TaleedElevation.level1)
     }
 }
 

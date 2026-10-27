@@ -10,6 +10,9 @@ struct ListingCardView: View {
     /// False where every card is the same seller's (a wardrobe, "Articles du membre"): the rating would
     /// repeat on each.
     var showsSellerRating = true
+    /// False where every card is the same seller's: "Your item" would repeat on each when the member
+    /// looks at their own (the website shows it only in the feed and search).
+    var showsOwnerTag = true
     @Environment(CatalogStore.self) private var catalog
     @Environment(FavoriteStore.self) private var favorites
     @Environment(AppRouter.self) private var router
@@ -20,7 +23,7 @@ struct ListingCardView: View {
         ProductCard(
             product: ListingCardContent.product(
                 for: listing, favorite: favorites.state(for: listing), catalog: catalog.catalog,
-                showsSellerRating: showsSellerRating, text: { l10n.string($0) }
+                showsSellerRating: showsSellerRating, showsOwnerTag: showsOwnerTag, text: { l10n.string($0) }
             ),
             onTap: { router.push(.listing(id: listing.id)) },
             onFavorite: favorite
@@ -41,7 +44,8 @@ struct ListingCardView: View {
 /// What a listing card shows, from the API's card, the heart's state and the catalog.
 enum ListingCardContent {
     static func product(for listing: ListingSummary, favorite: FavoriteState, catalog: Catalog?,
-                        showsSellerRating: Bool = true, text: (L10nKey) -> String) -> ProductSummary {
+                        showsSellerRating: Bool = true, showsOwnerTag: Bool = true,
+                        text: (L10nKey) -> String) -> ProductSummary {
         let condition = conditionTag(listing.condition, catalog: catalog)
         return ProductSummary(
             id: listing.id,
@@ -58,7 +62,8 @@ enum ListingCardContent {
             // The count shows only above 0, as on the website.
             favoriteCount: favorite.count >= 1 ? favorite.count : nil,
             statusLabel: statusKey(listing.status).map(text),
-            boostedLabel: listing.isBoosted ? text(.listingBoosted) : nil
+            boostedLabel: listing.isBoosted ? text(.listingBoosted) : nil,
+            ownerLabel: showsOwnerTag && listing.isOwner ? text(.listingYourItem) : nil
         )
     }
 
@@ -99,12 +104,17 @@ struct ListingGrid: View {
     var onFavorite: ((ListingSummary) -> Void)?
     /// See `ListingCardView.showsSellerRating`.
     var showsSellerRating = true
+    /// See `ListingCardView.showsOwnerTag`.
+    var showsOwnerTag = true
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         LazyVGrid(columns: ProductGridColumns.columns(for: dynamicTypeSize, alignment: .top),
                   spacing: TaleedLayout.productGridGap) {
-            ForEach(listings) { ListingCardView(listing: $0, onFavorite: onFavorite, showsSellerRating: showsSellerRating) }
+            ForEach(listings) {
+                ListingCardView(listing: $0, onFavorite: onFavorite, showsSellerRating: showsSellerRating,
+                                showsOwnerTag: showsOwnerTag)
+            }
         }
         .padding(.horizontal, TaleedLayout.screenMargin)
     }

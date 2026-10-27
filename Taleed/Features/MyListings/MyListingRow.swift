@@ -28,7 +28,7 @@ struct MyListingRow: View {
 
     var body: some View {
         let product = ListingCardContent.product(for: listing, favorite: FavoriteState(isFavorited: false, count: 0),
-                                                 catalog: catalog.catalog, text: { l10n.string($0) })
+                                                 catalog: catalog.catalog, showsOwnerTag: false, text: { l10n.string($0) })
         Button { handlers.open(listing) } label: {
             // Accessibility text sizes: the photo above the details, so the text keeps the row's width.
             let layout = dynamicTypeSize.isAccessibilitySize

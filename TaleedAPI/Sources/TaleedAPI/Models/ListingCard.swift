@@ -27,12 +27,14 @@ public struct ListingCard: Sendable, Codable, Hashable {
     public var favoritesCount: Int
     /** Favorited by the signed-in member. Always false when signed out. */
     public var isFavorited: Bool
+    /** The signed-in member is the seller: show the \"Your item\" tag. Always false when signed out. */
+    public var isOwner: Bool
     /** Promoted by the seller: show the boosted badge. */
     public var isBoosted: Bool
     public var shipsFrom: Wilaya?
     public var sellerRating: Rating?
 
-    public init(id: String, title: String, price: Int, size: String?, brandName: String?, condition: ListingCondition, status: ListingStatus, imageUrl: String?, favoritesCount: Int, isFavorited: Bool, isBoosted: Bool, shipsFrom: Wilaya?, sellerRating: Rating?) {
+    public init(id: String, title: String, price: Int, size: String?, brandName: String?, condition: ListingCondition, status: ListingStatus, imageUrl: String?, favoritesCount: Int, isFavorited: Bool, isOwner: Bool, isBoosted: Bool, shipsFrom: Wilaya?, sellerRating: Rating?) {
         self.id = id
         self.title = title
         self.price = price
@@ -43,6 +45,7 @@ public struct ListingCard: Sendable, Codable, Hashable {
         self.imageUrl = imageUrl
         self.favoritesCount = favoritesCount
         self.isFavorited = isFavorited
+        self.isOwner = isOwner
         self.isBoosted = isBoosted
         self.shipsFrom = shipsFrom
         self.sellerRating = sellerRating
@@ -59,6 +62,7 @@ public struct ListingCard: Sendable, Codable, Hashable {
         case imageUrl
         case favoritesCount
         case isFavorited
+        case isOwner
         case isBoosted
         case shipsFrom
         case sellerRating
@@ -78,6 +82,7 @@ public struct ListingCard: Sendable, Codable, Hashable {
         try container.encode(imageUrl, forKey: .imageUrl)
         try container.encode(favoritesCount, forKey: .favoritesCount)
         try container.encode(isFavorited, forKey: .isFavorited)
+        try container.encode(isOwner, forKey: .isOwner)
         try container.encode(isBoosted, forKey: .isBoosted)
         try container.encode(shipsFrom, forKey: .shipsFrom)
         try container.encode(sellerRating, forKey: .sellerRating)

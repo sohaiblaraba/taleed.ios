@@ -92,6 +92,6 @@ extension ListingSummary {
         ListingSummary(id: id, title: change.title, price: change.price, size: change.size, brandName: change.brandName,
                        condition: change.condition, status: change.status, imageURL: change.imageURL,
                        favoritesCount: favoritesCount, isFavorited: isFavorited, isBoosted: change.isBoosted,
-                       shipsFrom: change.shipsFrom, sellerRating: sellerRating, asOf: asOf)
+                       shipsFrom: change.shipsFrom, sellerRating: sellerRating, isOwner: isOwner, asOf: asOf)
     }
 }

@@ -206,6 +206,7 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case homeCtaSell = "home_cta_sell"
     case navAllItems = "nav_all_items"
     case listingBoosted = "listing_boosted"
+    case listingYourItem = "listing_your_item"
     case listingStatusReserved = "listing_status_reserved"
     case listingStatusSold = "listing_status_sold"
     case listingStatusHidden = "listing_status_hidden"
