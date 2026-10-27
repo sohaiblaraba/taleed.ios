@@ -153,13 +153,6 @@ final class HomeViewModel {
         isHeroDismissed = true
         defaults.set(true, forKey: Self.heroDismissedKey)
     }
-
-    /// "Browse near you" (decision 3): the search filtered on the member's wilaya when known; nil to
-    /// open Explore without a filter (signed out, or no wilaya on the profile).
-    static func nearbyQuery(for user: User?) -> ExploreQuery? {
-        guard let wilaya = user?.wilayaId, wilaya > 0 else { return nil }
-        return ExploreQuery(wilaya: wilaya)
-    }
 }
 
 /// A failed refresh, once per failure (the screen shows a toast when it changes).

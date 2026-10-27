@@ -124,7 +124,7 @@ struct TrustStrip: View {
 
 #Preview("Promotions") {
     VStack(spacing: 24) {
-        HeroBanner(title: "Give your things a second life.", ctaLabel: "Browse near you", onCta: {}, onDismiss: {})
+        HeroBanner(title: "Give your things a second life.", ctaLabel: "Sell an item now", onCta: {}, onDismiss: {})
         TrustStrip()
     }
     .padding()

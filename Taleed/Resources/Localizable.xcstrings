@@ -8453,29 +8453,6 @@
         }
       }
     },
-    "home_hero_cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تصفّح بالقرب منك"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Browse near you"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Voir près de chez moi"
-          }
-        }
-      }
-    },
     "home_hero_title": {
       "extractionState": "manual",
       "localizations": {
@@ -8495,6 +8472,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Donnez une seconde vie à vos affaires."
+          }
+        }
+      }
+    },
+    "home_sell_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بع غرضًا الآن"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sell an item now"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vendre un article maintenant"
           }
         }
       }

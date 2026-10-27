@@ -74,8 +74,8 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case favoriteCount = "favorite_count"  // plural
     case favoriteLimitReached = "favorite_limit_reached"
     case favoriteSaved = "favorite_saved"
-    case homeHeroCta = "home_hero_cta"
     case homeHeroTitle = "home_hero_title"
+    case homeSellNow = "home_sell_now"
     case homeSearchHint = "home_search_hint"
     case orderSummaryFeeInfo = "order_summary_fee_info"
     case orderSummaryTitle = "order_summary_title"

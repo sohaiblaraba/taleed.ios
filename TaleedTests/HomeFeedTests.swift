@@ -336,14 +336,6 @@ struct HomeViewModelTests {
         #expect(makeModel().isHeroDismissed)
     }
 
-    @Test func browseNearYouUsesTheMembersWilaya() {
-        var user = User.fixture()
-        #expect(HomeViewModel.nearbyQuery(for: nil) == nil)
-        #expect(HomeViewModel.nearbyQuery(for: user) == nil)
-        user.wilayaId = 31
-        #expect(HomeViewModel.nearbyQuery(for: user) == ExploreQuery(wilaya: 31))
-    }
-
     @Test func categoryChipIcons() {
         #expect(HomeCategoryIcon.icon(forSlug: "kids") == .baby)
         #expect(HomeCategoryIcon.icon(forSlug: "women") == .dress)

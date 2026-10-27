@@ -180,7 +180,7 @@ struct GalleryNavigation: View {
             VStack(spacing: TaleedSpacing.s16) {
                 if showsHero {
                     HeroBanner(title: DesignSystemStrings.string(.homeHeroTitle, locale: locale),
-                               ctaLabel: DesignSystemStrings.string(.homeHeroCta, locale: locale),
+                               ctaLabel: DesignSystemStrings.string(.homeSellNow, locale: locale),
                                onCta: {}, onDismiss: { showsHero = false })
                 } else {
                     TaleedButton(title: "Reset", kind: .hyperlink, size: .medium) { showsHero = true }

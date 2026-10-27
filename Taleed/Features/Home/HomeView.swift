@@ -4,7 +4,7 @@ import OSLog
 #endif
 
 /// Home (Figma Home 58:3131): brand app bar, the search field that opens Explore, the hero banner
-/// "Browse near you", the category chips, then the personalized feed in a two-column grid, with the
+/// "Sell an item now", the category chips, then the personalized feed in a two-column grid, with the
 /// trust strip after the first ten cards. Every state of the feed: skeleton cards while it loads, the
 /// error (offline included) with Retry, the website's empty text, pull-to-refresh, and the next pages
 /// as the member scrolls.
@@ -98,8 +98,8 @@ struct HomeView: View {
     private var hero: some View {
         HeroBanner(
             title: l10n.string(.homeHeroTitle),
-            ctaLabel: l10n.string(.homeHeroCta),
-            onCta: browseNearYou,
+            ctaLabel: l10n.string(.homeSellNow),
+            onCta: sellNow,
             onDismiss: { withAnimation { viewModel.dismissHero() } }
         )
         .padding(.horizontal, TaleedLayout.screenMargin)
@@ -161,13 +161,9 @@ struct HomeView: View {
 
     // MARK: Actions
 
-    /// Decision 3: the results for the member's wilaya; Explore without a filter otherwise.
-    private func browseNearYou() {
-        if let query = HomeViewModel.nearbyQuery(for: session.user) {
-            router.push(.search(query))
-        } else {
-            router.selectedTab = .explore
-        }
+    /// The Sell tab, as the bottom bar's Sell opens it (signed out, the tab shows its sign-in prompt).
+    private func sellNow() {
+        router.tabSelection.wrappedValue = .sell
     }
 }
 
