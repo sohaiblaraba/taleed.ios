@@ -1,7 +1,9 @@
 // Debug: the local backend over plain HTTP (simulator only).
 #include "Base.xcconfig"
 
-PRODUCT_BUNDLE_IDENTIFIER = app.taleed.mobile.debug
+// One bundle ID in every configuration (decision FB-2): the Google iOS client and Sign in with Apple are tied to
+// app.taleed.mobile, so the Debug app replaces the Release and Staging apps on a device or simulator.
+PRODUCT_BUNDLE_IDENTIFIER = app.taleed.mobile
 APP_DISPLAY_NAME = Taleed Dev
 TALEED_API_BASE_URL = http:/$()/localhost:3000/api/v1
 
