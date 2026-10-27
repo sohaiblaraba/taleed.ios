@@ -10,7 +10,7 @@ final class FakeTaleedApi: TaleedApi {
     var openConversationResult: Result<String, ApiError> = .success("conversation-1")
     private(set) var catalogCalls = 0
     private(set) var openedConversations: [(listingId: String, buyerId: String?)] = []
-    var signInResult: Result<(token: String, user: User), ApiError> = .success(("new-token", .fixture()))
+    var signInResult: Result<SignInAnswer, ApiError> = .success(.session(token: "new-token", user: .fixture()))
     private(set) var meCalls = 0
     private(set) var signedOutTokens: [String] = []
     var onUnauthorized: ((String) -> Void)?
@@ -46,7 +46,7 @@ final class FakeTaleedApi: TaleedApi {
         return try meResult.get()
     }
 
-    func signIn(email: String, password: String) async throws(ApiError) -> (token: String, user: User) {
+    func signIn(email: String, password: String) async throws(ApiError) -> SignInAnswer {
         try signInResult.get()
     }
 

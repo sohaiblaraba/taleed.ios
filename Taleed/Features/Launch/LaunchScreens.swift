@@ -62,9 +62,10 @@ struct UpdateRequiredView: View {
     }
 }
 
-/// The account is suspended: support contacts from `GET /config`, and Sign out. A member suspended while
-/// signed in can still open their orders and wallet and delete the account (slice-d.md and slice-e.md,
-/// Suspended members): `showsAccountLinks`. Those screens push on the Profile stack, shown here.
+/// The account is suspended: support contacts from `GET /config`, and Sign out. A member with a session
+/// (suspended while signed in, or a `banned` sign-in that returned a token) can still open their orders
+/// and wallet and delete the account (slice-d.md and slice-e.md, Suspended members): `showsAccountLinks`.
+/// Those screens push on the Profile stack, shown here.
 struct SuspendedView: View {
     let support: SupportContacts
     var showsAccountLinks = false

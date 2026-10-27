@@ -21,7 +21,7 @@ struct SessionRaceTests {
 
     /// While `GET /me` is in flight: `amina` signs out and `karim` signs in with `new-token`.
     private func switchMember(_ session: SessionManager) {
-        api.signInResult = .success(("new-token", .fixture(username: "karim")))
+        api.signInResult = .success(.session(token: "new-token", user: .fixture(username: "karim")))
         api.whileMeIsInFlight = {
             session.signOut()
             try? await session.signIn(email: "karim@example.com", password: "sample-pass-1")

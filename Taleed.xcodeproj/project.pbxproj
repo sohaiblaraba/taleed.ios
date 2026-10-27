@@ -295,6 +295,7 @@
 		E49F966F03F7EC90F6FDBCBE /* ListingSellerSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E8DA64060175AD2311235F6 /* ListingSellerSections.swift */; };
 		E50C6707A1DA366073765685 /* GalleryComposed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FF7EDA4B80B056B415DE6C /* GalleryComposed.swift */; };
 		E55A2A24CC978AA1A99AF9DB /* Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED58230D326290C22B7C32E5 /* Catalog.swift */; };
+		E618C12316DA8EF301D691FD /* SuspendedSignInTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CAE0F68BD134CC377286576 /* SuspendedSignInTests.swift */; };
 		E653E7B76934563C512FD5E3 /* WalletModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB7B149252A37C0E1D7EB38 /* WalletModels.swift */; };
 		E71D69814AF02C33565BC502 /* MemberProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76235C21F6989FC70EB5FBB8 /* MemberProfile.swift */; };
 		E9DABA5686BDC44E21D460F2 /* ReferralsApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CDA92203F6D78C3E5F8BAB /* ReferralsApi.swift */; };
@@ -457,6 +458,7 @@
 		59042B7EA1F22B81378DB802 /* OrdersListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersListViewModel.swift; sourceTree = "<group>"; };
 		5AFD8D2CF8CEBB9E4F11079D /* Alexandria-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Alexandria-Regular.ttf"; sourceTree = "<group>"; };
 		5B1B87574C5041BDC07615E4 /* PlusJakartaSans-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-SemiBold.ttf"; sourceTree = "<group>"; };
+		5CAE0F68BD134CC377286576 /* SuspendedSignInTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspendedSignInTests.swift; sourceTree = "<group>"; };
 		5D3185108F604E1BC6C36000 /* WalletSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletSheets.swift; sourceTree = "<group>"; };
 		5D358D42877C2BAA6C5BB1DA /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		5E12963857320F3AA8F24F17 /* ExploreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreView.swift; sourceTree = "<group>"; };
@@ -763,6 +765,7 @@
 				53E21580CD3FD6E53318D9C0 /* SettingsRulesTests.swift */,
 				036B422B7EA77A406EC79487 /* SettingsViewModelTests.swift */,
 				858F0C11156E2765B075CD38 /* SuspendedLinkTests.swift */,
+				5CAE0F68BD134CC377286576 /* SuspendedSignInTests.swift */,
 				A05B8440C9B49F3B2C234802 /* UsernameRuleTests.swift */,
 				7C7480F23FD208030F6690F0 /* VersionComparatorTests.swift */,
 				7291EDAB7CEFF57EB8948CD4 /* VisualSearchTests.swift */,
@@ -1583,6 +1586,7 @@
 				1B5112FDA68C1CA8B10D415E /* SettingsRulesTests.swift in Sources */,
 				A4737B74614D882E363B3036 /* SettingsViewModelTests.swift in Sources */,
 				87A46E9CED475002ABE1A271 /* SuspendedLinkTests.swift in Sources */,
+				E618C12316DA8EF301D691FD /* SuspendedSignInTests.swift in Sources */,
 				B58C39037792E59D70250BEE /* UsernameRuleTests.swift in Sources */,
 				43CC2A3A457AF6468E0D572D /* VersionComparatorTests.swift in Sources */,
 				F5AB75D7B9A25FFB56648CB4 /* VisualSearchTests.swift in Sources */,

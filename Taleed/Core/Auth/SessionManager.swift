@@ -8,7 +8,8 @@ final class SessionManager {
     enum State: Equatable {
         case signedOut
         case signedIn(User)
-        /// The account is suspended (`403 banned`). Only signing out is offered.
+        /// The account is suspended (`403 banned`). With a session (`hasSuspendedSession`), the orders,
+        /// the wallet, account deletion and signing out are offered; without one, only the support contacts.
         case suspended
     }
 
@@ -21,9 +22,10 @@ final class SessionManager {
 
     var isSignedIn: Bool { user != nil }
 
-    /// Suspended while signed in (`GET /me` or another call answered `403 banned`): the token is kept,
-    /// because orders, the wallet and account deletion still answer (api-guide.md, Suspended accounts).
-    /// False when the suspension came from a sign-in, which creates no session.
+    /// Suspended with a session: the token is kept, because orders, the wallet and account deletion still
+    /// answer (api-guide.md, Suspended accounts). The token is the one the member had when a call answered
+    /// `403 banned`, or the one a `banned` sign-in returned in `error.token` (contract 1.5.1). False only
+    /// when an older server answered a sign-in `banned` without a token.
     var hasSuspendedSession: Bool { state == .suspended && apiSession.token != nil }
 
     /// Called after the member signs out (Profile, the suspended screen): the welcome screen shows again
@@ -127,13 +129,25 @@ final class SessionManager {
         onAccountDeleted?()
     }
 
+    /// A suspended member gets `banned` with a session (contract 1.5.1): the token is stored like any
+    /// session token, then the suspended screen shows with the account links, and `.banned` is thrown so
+    /// that the form closes. A `banned` without a token (an older server) leaves no session.
     func signIn(email: String, password: String) async throws(ApiError) {
+        let answer: SignInAnswer
         do {
-            let (token, user) = try await api.signIn(email: email, password: password)
-            didAuthenticate(token: token, user: user)
+            answer = try await api.signIn(email: email, password: password)
         } catch {
             if error == .banned { suspend() }
             throw error
+        }
+        switch answer {
+        case let .session(token, user):
+            didAuthenticate(token: token, user: user)
+        case let .suspended(token):
+            tokenStore.save(token)
+            apiSession.setToken(token)
+            suspend()
+            throw .banned
         }
     }
 

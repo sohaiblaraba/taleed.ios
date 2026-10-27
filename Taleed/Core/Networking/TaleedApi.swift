@@ -17,7 +17,7 @@ protocol TaleedApi: AnyObject {
     func catalog() async throws(ApiError) -> Catalog
     /// `automatic`: a refresh the member did not ask for (return to the foreground).
     func me(automatic: Bool) async throws(ApiError) -> User
-    func signIn(email: String, password: String) async throws(ApiError) -> (token: String, user: User)
+    func signIn(email: String, password: String) async throws(ApiError) -> SignInAnswer
     /// Revokes the session of `token` on the server. The caller deletes the token whatever the answer.
     func signOut(token: String) async throws(ApiError)
     /// `POST /conversations` for a `/listings/{id}/chat` link: the conversation's id. `buyerId` (`?with=`)
@@ -34,6 +34,23 @@ protocol TaleedApi: AnyObject {
 
 extension TaleedApi {
     func me() async throws(ApiError) -> User { try await me(automatic: false) }
+}
+
+/// What `POST /auth/sign-in` gave the member.
+enum SignInAnswer: Equatable, Sendable {
+    /// A session.
+    case session(token: String, user: User)
+    /// `403 banned` with a session (`error.token`, contract 1.5.1): the suspended member keeps access to
+    /// their orders, the wallet and account deletion. A `banned` without a token throws `.banned`.
+    case suspended(token: String)
+
+    /// `.suspended` when the sign-in failed with `403 banned` and a token; nil for any other failure.
+    static func suspended(from error: ErrorResponse) -> SignInAnswer? {
+        guard case let .error(status, body, _, _) = error,
+              let token = ApiError.suspendedSessionToken(status: status, body: body)
+        else { return nil }
+        return .suspended(token: token)
+    }
 }
 
 /// `POST /uploads` (api-guide.md, Uploads). Use `PhotoUploadService`, which prepares the photo.
@@ -89,11 +106,18 @@ final class GeneratedTaleedApi: TaleedApi, UploadsApi, DevelopmentApi {
         User(try await caller.call(.read, automatic: automatic) { try await AccountAPI.getMe(apiConfiguration: $0) })
     }
 
-    func signIn(email: String, password: String) async throws(ApiError) -> (token: String, user: User) {
+    func signIn(email: String, password: String) async throws(ApiError) -> SignInAnswer {
         let request = SignInRequest(email: email, password: password)
         // Repeating a sign-in does no harm (api-guide.md, Retrying), but a wrong password must not.
-        let auth = try await caller.call(.write) { try await AuthAPI.signIn(signInRequest: request, apiConfiguration: $0) }
-        return (auth.token, User(auth.user))
+        return try await caller.call(.write) { configuration -> SignInAnswer in
+            do {
+                let auth = try await AuthAPI.signIn(signInRequest: request, apiConfiguration: configuration)
+                return .session(token: auth.token, user: User(auth.user))
+            } catch let error as ErrorResponse {
+                if let suspended = SignInAnswer.suspended(from: error) { return suspended }
+                throw error
+            }
+        }
     }
 
     func signOut(token: String) async throws(ApiError) {

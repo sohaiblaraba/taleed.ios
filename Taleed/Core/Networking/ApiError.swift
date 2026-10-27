@@ -38,7 +38,8 @@ struct ApiFailure: Equatable, Sendable {
 
 /// A failed API call, by what the app does about it.
 ///
-/// Parsed from the body `{"error":{"code","message","issues","detail","retryAfter","orderId","conversationId"}}`.
+/// Parsed from the body `{"error":{"code","message","issues","detail","retryAfter","orderId","conversationId"}}`
+/// (`token`, of a `banned` sign-in, is read by `suspendedSessionToken`).
 /// A body that is not JSON, or a code the app does not know, falls back to the HTTP status: a 4xx means
 /// "this could not be done", a 5xx "something went wrong, try again" (api-guide.md, Errors).
 enum ApiError: Error, Equatable, Sendable {
@@ -163,6 +164,17 @@ enum ApiError: Error, Equatable, Sendable {
         }
     }
 
+    /// `error.token` of a `403 banned` sign-in (contract 1.5.1): the suspended member's session, to store
+    /// like any session token. Nil for any other answer, and for an older server that sends no token.
+    static func suspendedSessionToken(status: Int, body: Data?) -> String? {
+        guard status == 403, let body,
+              let detail = try? JSONDecoder().decode(Envelope.self, from: body).error,
+              detail.code == ApiErrorCode.banned.rawValue,
+              let token = detail.token, !token.isEmpty
+        else { return nil }
+        return token
+    }
+
     private static func from(code: ApiErrorCode, status: Int, detail: EnvelopeDetail, retryAfterHeader: Int?) -> ApiError {
         switch code {
         case .unauthorized: .unauthorized
@@ -210,6 +222,8 @@ private struct EnvelopeDetail: Decodable {
     let detail: String?
     let orderId: String?
     let conversationId: String?
+    /// `banned` from sign-in only: the suspended member's session (contract 1.5.1).
+    let token: String?
 }
 
 private struct EnvelopeIssue: Decodable {
