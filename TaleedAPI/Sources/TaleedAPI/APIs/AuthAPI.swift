@@ -10,6 +10,43 @@ import Foundation
 open class AuthAPI {
 
     /**
+     Finish a Google or Apple sign-up
+     
+     - parameter socialSignUpRequest: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: AuthSession
+     */
+    open class func completeSocialSignUp(socialSignUpRequest: SocialSignUpRequest, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> AuthSession {
+        return try await completeSocialSignUpWithRequestBuilder(socialSignUpRequest: socialSignUpRequest, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     Finish a Google or Apple sign-up
+     - POST /auth/social/complete
+     - Creates the account of a new member from the finish step, with the same rules as `POST /auth/sign-up`, and signs them in. The email counts as verified: no verification email is sent. Show the terms consent line under the button, as on the email sign-up form. `username_taken` and `invalid_username` keep the token usable: let the member pick another one. `social_signup_expired`: the token was used or is older than 15 minutes; sign in with the provider again (after a lost response, that sign-in finds the account and answers `signed_in`). `email_taken`: an account with this email appeared meanwhile; sign in with the provider again too. `invite_required` and `forbidden` as for `POST /auth/sign-up`.  No authentication.  Rate limit: 30 per 10 minutes per network address, on top of the general limit.
+     - parameter socialSignUpRequest: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<AuthSession> 
+     */
+    open class func completeSocialSignUpWithRequestBuilder(socialSignUpRequest: SocialSignUpRequest, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<AuthSession> {
+        let localVariablePath = "/auth/social/complete"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters = JSONEncodingHelper.encodingParameters(forEncodableObject: socialSignUpRequest, codableHelper: apiConfiguration.codableHelper)
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            "Content-Type": "application/json",
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<AuthSession>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: false, apiConfiguration: apiConfiguration)
+    }
+
+    /**
      Request access during the beta
      
      - parameter accessRequestCreate: (body)  
@@ -191,6 +228,43 @@ open class AuthAPI {
         let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
 
         let localVariableRequestBuilder: RequestBuilder<AuthSession>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: false, apiConfiguration: apiConfiguration)
+    }
+
+    /**
+     Sign in with Google or Apple
+     
+     - parameter socialSignInRequest: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: SocialSignInResult
+     */
+    open class func socialSignIn(socialSignInRequest: SocialSignInRequest, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> SocialSignInResult {
+        return try await socialSignInWithRequestBuilder(socialSignInRequest: socialSignInRequest, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     Sign in with Google or Apple
+     - POST /auth/social
+     - Checks the provider's ID token (signature, issuer, audience, expiry, nonce). A member already linked to this Google or Apple account is signed in. Otherwise the provider must have verified the email (`social_email_unverified`): a member with that email gets the provider linked to their account and is signed in, and their password keeps working. Anyone else is a new member: the same rules as `POST /auth/sign-up` apply (`invite_required` while `betaMode` is on without an approved access request, `forbidden` for an email that may not sign up again), then the answer is `profile_required` with the finish step's token. A suspended member gets `banned` with a `token`, as from `POST /auth/sign-in`. `feature_disabled`: this server does not offer the provider on this platform (see `GET /config`).  No authentication.  Rate limit: 30 per 10 minutes per network address, on top of the general limit.
+     - parameter socialSignInRequest: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<SocialSignInResult> 
+     */
+    open class func socialSignInWithRequestBuilder(socialSignInRequest: SocialSignInRequest, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<SocialSignInResult> {
+        let localVariablePath = "/auth/social"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters = JSONEncodingHelper.encodingParameters(forEncodableObject: socialSignInRequest, codableHelper: apiConfiguration.codableHelper)
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            "Content-Type": "application/json",
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<SocialSignInResult>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
 
         return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: false, apiConfiguration: apiConfiguration)
     }

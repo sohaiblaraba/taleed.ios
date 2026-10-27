@@ -63,7 +63,7 @@ open class AccountAPI {
     /**
      Change the password
      - POST /me/password
-     - Signs the member out everywhere else, on the website and in the apps; this session stays signed in, and keeps its push notifications. A wrong `currentPassword` answers `wrong_password`.  Requires a bearer token.  Rate limit: 5 per 15 minutes per member, on top of the general limit.
+     - Signs the member out everywhere else, on the website and in the apps; this session stays signed in, and keeps its push notifications. A wrong `currentPassword` answers `wrong_password`. An account without a password (`hasPassword` false in `GET /me`) answers `invalid_state`: it gets one through `POST /auth/forgot-password`.  Requires a bearer token.  Rate limit: 5 per 15 minutes per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth
@@ -143,7 +143,7 @@ open class AccountAPI {
     /**
      Delete the account
      - POST /me/delete
-     - Deletes the account for good, as App Store guideline 5.1.1(v) requires the apps to offer. Personal details, the profile photo, listings nobody ordered, saved addresses, favorites, follows and ID documents are erased; orders, reviews and messages stay with the other members, under a deleted account. It is refused while something is in progress: `orders_in_progress`, `dispute_in_progress`, `payout_in_progress`, or `wallet_not_empty` when the balance must be withdrawn first. Admin accounts are deleted by the team (`forbidden`). A suspended member can delete their account too, as on the website. A wrong password answers `wrong_password`; 5 attempts in 15 minutes, `rate_limited`. On success every session ends, this one too: sign out locally. A POST rather than a DELETE because the password travels in the body.  Requires a bearer token.
+     - Deletes the account for good, as App Store guideline 5.1.1(v) requires the apps to offer. Personal details, the profile photo, listings nobody ordered, saved addresses, favorites, follows and ID documents are erased; orders, reviews and messages stay with the other members, under a deleted account. It is refused while something is in progress: `orders_in_progress`, `dispute_in_progress`, `payout_in_progress`, or `wallet_not_empty` when the balance must be withdrawn first. Admin accounts are deleted by the team (`forbidden`). A suspended member can delete their account too, as on the website. A wrong or missing password answers `wrong_password` when the account has one (`hasPassword` in `GET /me`); 5 attempts in 15 minutes, `rate_limited`. A member who only signs in with Google or Apple sends no password. With Apple, the server also revokes the member's Apple token. On success every session ends, this one too: sign out locally. A POST rather than a DELETE because the password travels in the body.  Requires a bearer token.
      - Bearer Token:
        - type: http
        - name: bearerAuth

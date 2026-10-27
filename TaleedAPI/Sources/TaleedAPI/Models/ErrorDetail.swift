@@ -23,7 +23,7 @@ public struct ErrorDetail: Sendable, Codable, Hashable {
     public var orderId: String?
     /** Present on `offer_pending`: the conversation where an offer already waits for an answer. Open it (`GET /conversations/{id}`): its `pendingOffer` is that offer. */
     public var conversationId: String?
-    /** Present on `banned` from `POST /auth/sign-in`: a session for the suspended member, as the website keeps one. Store it like the `AuthSession` token and show the suspended-account screen: it opens only the endpoints that answer no `banned` (sign-out, the orders in progress, the wallet, deleting the account); every other one answers `403 banned`, and `GET /me` too. */
+    /** Present on `banned` from `POST /auth/sign-in` and `POST /auth/social`: a session for the suspended member, as the website keeps one. Store it like the `AuthSession` token and show the suspended-account screen: it opens only the endpoints that answer no `banned` (sign-out, the orders in progress, the wallet, deleting the account); every other one answers `403 banned`, and `GET /me` too. */
     public var token: String?
 
     public init(code: ErrorCode, message: String, issues: [ErrorIssue]? = nil, detail: String? = nil, retryAfter: Int? = nil, orderId: String? = nil, conversationId: String? = nil, token: String? = nil) {

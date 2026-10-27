@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.5.17",
+    "version": "1.6.0",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -337,6 +337,222 @@
             "description": "Error codes: `banned`.",
             "x-error-codes": [
               "banned"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error codes: `rate_limited`.",
+            "x-error-codes": [
+              "rate_limited"
+            ],
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/social": {
+      "post": {
+        "operationId": "socialSignIn",
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sign in with Google or Apple",
+        "description": "Checks the provider's ID token (signature, issuer, audience, expiry, nonce). A member already linked to this Google or Apple account is signed in. Otherwise the provider must have verified the email (`social_email_unverified`): a member with that email gets the provider linked to their account and is signed in, and their password keeps working. Anyone else is a new member: the same rules as `POST /auth/sign-up` apply (`invite_required` while `betaMode` is on without an approved access request, `forbidden` for an email that may not sign up again), then the answer is `profile_required` with the finish step's token. A suspended member gets `banned` with a `token`, as from `POST /auth/sign-in`. `feature_disabled`: this server does not offer the provider on this platform (see `GET /config`).\n\nNo authentication.\n\nRate limit: 30 per 10 minutes per network address, on top of the general limit.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialSignInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialSignInResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error codes: `social_token_invalid`, `invalid_request`.",
+            "x-error-codes": [
+              "social_token_invalid",
+              "invalid_request"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error codes: `social_email_unverified`, `invite_required`, `forbidden`, `banned`.",
+            "x-error-codes": [
+              "social_email_unverified",
+              "invite_required",
+              "forbidden",
+              "banned"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error codes: `rate_limited`.",
+            "x-error-codes": [
+              "rate_limited"
+            ],
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error codes: `feature_disabled`.",
+            "x-error-codes": [
+              "feature_disabled"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/social/complete": {
+      "post": {
+        "operationId": "completeSocialSignUp",
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Finish a Google or Apple sign-up",
+        "description": "Creates the account of a new member from the finish step, with the same rules as `POST /auth/sign-up`, and signs them in. The email counts as verified: no verification email is sent. Show the terms consent line under the button, as on the email sign-up form. `username_taken` and `invalid_username` keep the token usable: let the member pick another one. `social_signup_expired`: the token was used or is older than 15 minutes; sign in with the provider again (after a lost response, that sign-in finds the account and answers `signed_in`). `email_taken`: an account with this email appeared meanwhile; sign in with the provider again too. `invite_required` and `forbidden` as for `POST /auth/sign-up`.\n\nNo authentication.\n\nRate limit: 30 per 10 minutes per network address, on top of the general limit.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialSignUpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error codes: `social_signup_expired`, `invalid_username`, `invalid_request`.",
+            "x-error-codes": [
+              "social_signup_expired",
+              "invalid_username",
+              "invalid_request"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error codes: `invite_required`, `forbidden`.",
+            "x-error-codes": [
+              "invite_required",
+              "forbidden"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error codes: `username_taken`, `email_taken`.",
+            "x-error-codes": [
+              "username_taken",
+              "email_taken"
             ],
             "content": {
               "application/json": {
@@ -1127,7 +1343,7 @@
           "Account"
         ],
         "summary": "Change the password",
-        "description": "Signs the member out everywhere else, on the website and in the apps; this session stays signed in, and keeps its push notifications. A wrong `currentPassword` answers `wrong_password`.\n\nRequires a bearer token.\n\nRate limit: 5 per 15 minutes per member, on top of the general limit.",
+        "description": "Signs the member out everywhere else, on the website and in the apps; this session stays signed in, and keeps its push notifications. A wrong `currentPassword` answers `wrong_password`. An account without a password (`hasPassword` false in `GET /me`) answers `invalid_state`: it gets one through `POST /auth/forgot-password`.\n\nRequires a bearer token.\n\nRate limit: 5 per 15 minutes per member, on top of the general limit.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1173,6 +1389,19 @@
             "description": "Error codes: `banned`.",
             "x-error-codes": [
               "banned"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error codes: `invalid_state`.",
+            "x-error-codes": [
+              "invalid_state"
             ],
             "content": {
               "application/json": {
@@ -1529,7 +1758,7 @@
           "Account"
         ],
         "summary": "Delete the account",
-        "description": "Deletes the account for good, as App Store guideline 5.1.1(v) requires the apps to offer. Personal details, the profile photo, listings nobody ordered, saved addresses, favorites, follows and ID documents are erased; orders, reviews and messages stay with the other members, under a deleted account. It is refused while something is in progress: `orders_in_progress`, `dispute_in_progress`, `payout_in_progress`, or `wallet_not_empty` when the balance must be withdrawn first. Admin accounts are deleted by the team (`forbidden`). A suspended member can delete their account too, as on the website. A wrong password answers `wrong_password`; 5 attempts in 15 minutes, `rate_limited`. On success every session ends, this one too: sign out locally. A POST rather than a DELETE because the password travels in the body.\n\nRequires a bearer token.",
+        "description": "Deletes the account for good, as App Store guideline 5.1.1(v) requires the apps to offer. Personal details, the profile photo, listings nobody ordered, saved addresses, favorites, follows and ID documents are erased; orders, reviews and messages stay with the other members, under a deleted account. It is refused while something is in progress: `orders_in_progress`, `dispute_in_progress`, `payout_in_progress`, or `wallet_not_empty` when the balance must be withdrawn first. Admin accounts are deleted by the team (`forbidden`). A suspended member can delete their account too, as on the website. A wrong or missing password answers `wrong_password` when the account has one (`hasPassword` in `GET /me`); 5 attempts in 15 minutes, `rate_limited`. A member who only signs in with Google or Apple sends no password. With Apple, the server also revokes the member's Apple token. On success every session ends, this one too: sign out locally. A POST rather than a DELETE because the password travels in the body.\n\nRequires a bearer token.",
         "requestBody": {
           "required": true,
           "content": {
@@ -11268,15 +11497,12 @@
         "type": "object",
         "properties": {
           "password": {
+            "description": "The account's password, typed again to confirm. Required when `hasPassword` is true in `GET /me`; leave it out for a member who only signs in with Google or Apple.",
             "type": "string",
             "minLength": 1,
-            "maxLength": 128,
-            "description": "The account's password, typed again to confirm."
+            "maxLength": 128
           }
-        },
-        "required": [
-          "password"
-        ]
+        }
       },
       "Address": {
         "type": "object",
@@ -11475,11 +11701,21 @@
               "push": {
                 "type": "boolean",
                 "description": "This server sends push notifications to the apps: ask for the notification permission and register with `POST /devices`."
+              },
+              "googleSignIn": {
+                "type": "boolean",
+                "description": "Show \"Continue with Google\" (`POST /auth/social`). Depends on the platform sent in `X-App-Platform`: the server needs the iOS client ID for iOS."
+              },
+              "appleSignIn": {
+                "type": "boolean",
+                "description": "Show \"Continue with Apple\" (`POST /auth/social`). Always false on Android, which does not offer Apple sign-in."
               }
             },
             "required": [
               "visualSearch",
-              "push"
+              "push",
+              "googleSignIn",
+              "appleSignIn"
             ]
           },
           "paymentMethods": {
@@ -13214,6 +13450,9 @@
           "invalid_username",
           "password_too_short",
           "password_too_long",
+          "social_token_invalid",
+          "social_email_unverified",
+          "social_signup_expired",
           "account_exists",
           "already_requested",
           "listing_locked",
@@ -13285,7 +13524,7 @@
             "type": "string"
           },
           "token": {
-            "description": "Present on `banned` from `POST /auth/sign-in`: a session for the suspended member, as the website keeps one. Store it like the `AuthSession` token and show the suspended-account screen: it opens only the endpoints that answer no `banned` (sign-out, the orders in progress, the wallet, deleting the account); every other one answers `403 banned`, and `GET /me` too.",
+            "description": "Present on `banned` from `POST /auth/sign-in` and `POST /auth/social`: a session for the suspended member, as the website keeps one. Store it like the `AuthSession` token and show the suspended-account screen: it opens only the endpoints that answer no `banned` (sign-out, the orders in progress, the wallet, deleting the account); every other one answers `403 banned`, and `GET /me` too.",
             "type": "string"
           }
         },
@@ -14003,6 +14242,10 @@
             "type": "boolean",
             "description": "False until the member clicks the link in the verification email."
           },
+          "hasPassword": {
+            "type": "boolean",
+            "description": "The account has a password. False for a member who only ever signed in with Google or Apple: hide the password change (they can set one through `POST /auth/forgot-password`) and do not ask for a password to delete the account."
+          },
           "name": {
             "type": "string",
             "description": "Legal name (first and family name). Private: only ever shown to the member themselves. Frozen once the identity is verified (`isVerified`): it is the name on the ID."
@@ -14063,6 +14306,7 @@
           "isOfficial",
           "email",
           "emailVerified",
+          "hasPassword",
           "name",
           "firstName",
           "lastName",
@@ -16411,6 +16655,187 @@
         "required": [
           "items"
         ]
+      },
+      "SocialProfileRequired": {
+        "type": "object",
+        "properties": {
+          "signupToken": {
+            "type": "string",
+            "description": "Pass it to `POST /auth/social/complete`. Single-use, valid 15 minutes, never stored: once it is used or expired, sign in with the provider again."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When `signupToken` expires. ISO 8601, UTC."
+          },
+          "suggested": {
+            "$ref": "#/components/schemas/SocialSuggestion"
+          }
+        },
+        "required": [
+          "signupToken",
+          "expiresAt",
+          "suggested"
+        ],
+        "description": "A new member: show the finish step."
+      },
+      "SocialProvider": {
+        "type": "string",
+        "enum": [
+          "google",
+          "apple"
+        ],
+        "description": "`google` on iOS and Android, `apple` on iOS only. `GET /config` says which ones this server offers (`features.googleSignIn`, `features.appleSignIn`)."
+      },
+      "SocialSignInRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/SocialProvider"
+          },
+          "idToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "description": "The ID token the native SDK returned: Google's `idToken` (iOS `GIDGoogleUser.idToken.tokenString`, Android `GoogleIdTokenCredential.idToken`), or Apple's `identityToken` decoded as UTF-8."
+          },
+          "nonce": {
+            "description": "The raw nonce the app generated for this sign-in. Apple: required; the app gives Apple its SHA-256 in lowercase hex (`ASAuthorizationAppleIDRequest.nonce`) and sends the raw value here. Google: optional; when the app set a nonce on the request (iOS `GIDSignIn.signIn(…nonce:)`, Android `GetGoogleIdOption.Builder.setNonce`), send that same value.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "authorizationCode": {
+            "description": "Apple only: `ASAuthorizationAppleIDCredential.authorizationCode` decoded as UTF-8. The server exchanges it for the token it revokes when the member deletes the account. Send it with every Apple sign-in.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "firstName": {
+            "description": "Apple only: `fullName.givenName`. Apple gives the name only on the member's first authorization, so forward it whenever it is there: it prefills the finish step.",
+            "type": "string",
+            "maxLength": 100
+          },
+          "lastName": {
+            "description": "Apple only: `fullName.familyName`, as for `firstName`.",
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "provider",
+          "idToken"
+        ]
+      },
+      "SocialSignInResult": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "signed_in",
+              "profile_required"
+            ],
+            "description": "`signed_in`: `session` is set, store its token. `profile_required`: a new member, `profile` is set; show the finish step, then call `POST /auth/social/complete`."
+          },
+          "session": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthSession"
+              }
+            ],
+            "type": "object"
+          },
+          "profile": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SocialProfileRequired"
+              }
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "status",
+          "session",
+          "profile"
+        ],
+        "description": "A Google or Apple sign-in: a session, or the finish step for a new member."
+      },
+      "SocialSignUpRequest": {
+        "type": "object",
+        "properties": {
+          "signupToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "`profile.signupToken` of `POST /auth/social`."
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 30
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 30
+          },
+          "username": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{2,29}$",
+            "description": "3 to 30 characters: letters, digits, `.`, `_` and `-`, starting with a letter or a digit. Case-insensitive."
+          },
+          "referralCode": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "A member's invite code: 8 hexadecimal characters, case-insensitive, spaces around it ignored. A malformed, empty, unknown or ineligible code is ignored, never an error; only a value over 100 characters is `invalid_request`."
+          }
+        },
+        "required": [
+          "signupToken",
+          "firstName",
+          "lastName",
+          "username"
+        ]
+      },
+      "SocialSuggestion": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "A free, valid username made from the email: prefill the field with it."
+          },
+          "firstName": {
+            "nullable": true,
+            "description": "From the provider. Null when it gave none: leave the field empty.",
+            "type": "string"
+          },
+          "lastName": {
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "The email the account will have, as the provider gave it (with Apple, possibly a private relay address). Show it; it cannot be changed here."
+          },
+          "referralCode": {
+            "nullable": true,
+            "description": "The invite code the member's access request came with: prefill the referral field with it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "firstName",
+          "lastName",
+          "email",
+          "referralCode"
+        ],
+        "description": "What to prefill the finish step with."
       },
       "SortOption": {
         "type": "object",

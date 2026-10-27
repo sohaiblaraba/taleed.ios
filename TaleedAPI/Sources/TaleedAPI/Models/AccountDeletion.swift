@@ -10,10 +10,10 @@ import Foundation
 public struct AccountDeletion: Sendable, Codable, Hashable {
 
     public static let passwordRule = StringRule(minLength: 1, maxLength: 128, pattern: nil)
-    /** The account's password, typed again to confirm. */
-    public var password: String
+    /** The account's password, typed again to confirm. Required when `hasPassword` is true in `GET /me`; leave it out for a member who only signs in with Google or Apple. */
+    public var password: String?
 
-    public init(password: String) {
+    public init(password: String? = nil) {
         self.password = password
     }
 
@@ -25,7 +25,7 @@ public struct AccountDeletion: Sendable, Codable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(password, forKey: .password)
+        try container.encodeIfPresent(password, forKey: .password)
     }
 }
 

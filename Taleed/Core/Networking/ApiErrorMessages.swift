@@ -22,7 +22,7 @@ extension ApiError {
     }
 
     // One case per code keeps the table readable.
-    // swiftlint:disable:next cyclomatic_complexity
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
     static func messageKey(for code: ApiErrorCode, status: Int) -> L10nKey {
         switch code {
         case .invalidRequest: .appErrorInvalidRequest
@@ -70,6 +70,9 @@ extension ApiError {
         case .featureDisabled: .appErrorFeatureDisabled
         case .shippingUnavailable: .appErrorShippingUnavailable
         case .paymentUnavailable: .appErrorPaymentUnavailable
+        case .socialTokenInvalid: .authSocialErrorFailed
+        case .socialEmailUnverified: .authSocialErrorEmailUnverified
+        case .socialSignupExpired: .authFinishExpiredBody
         // A code added after this build: by its status.
         case .unknownDefaultOpenApi: status >= 500 ? .commonErrorGeneric : .authErrorGeneric
         }

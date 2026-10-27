@@ -25,6 +25,8 @@ public struct Me: Sendable, Codable, Hashable {
     public var email: String
     /** False until the member clicks the link in the verification email. */
     public var emailVerified: Bool
+    /** The account has a password. False for a member who only ever signed in with Google or Apple: hide the password change (they can set one through `POST /auth/forgot-password`) and do not ask for a password to delete the account. */
+    public var hasPassword: Bool
     /** Legal name (first and family name). Private: only ever shown to the member themselves. Frozen once the identity is verified (`isVerified`): it is the name on the ID. */
     public var name: String
     /** The first word of `name`, as the profile form edits it. */
@@ -43,7 +45,7 @@ public struct Me: Sendable, Codable, Hashable {
     public var createdAt: Date
     public var counts: MeCounts
 
-    public init(id: String, username: String?, displayName: String, avatarUrl: String?, isVerified: Bool, isOfficial: Bool, email: String, emailVerified: Bool, name: String, firstName: String, lastName: String, bio: String?, phone: String?, phoneVerified: Bool, wilaya: Wilaya?, usernameNextChangeAt: Date?, preferences: Preferences, createdAt: Date, counts: MeCounts) {
+    public init(id: String, username: String?, displayName: String, avatarUrl: String?, isVerified: Bool, isOfficial: Bool, email: String, emailVerified: Bool, hasPassword: Bool, name: String, firstName: String, lastName: String, bio: String?, phone: String?, phoneVerified: Bool, wilaya: Wilaya?, usernameNextChangeAt: Date?, preferences: Preferences, createdAt: Date, counts: MeCounts) {
         self.id = id
         self.username = username
         self.displayName = displayName
@@ -52,6 +54,7 @@ public struct Me: Sendable, Codable, Hashable {
         self.isOfficial = isOfficial
         self.email = email
         self.emailVerified = emailVerified
+        self.hasPassword = hasPassword
         self.name = name
         self.firstName = firstName
         self.lastName = lastName
@@ -74,6 +77,7 @@ public struct Me: Sendable, Codable, Hashable {
         case isOfficial
         case email
         case emailVerified
+        case hasPassword
         case name
         case firstName
         case lastName
@@ -99,6 +103,7 @@ public struct Me: Sendable, Codable, Hashable {
         try container.encode(isOfficial, forKey: .isOfficial)
         try container.encode(email, forKey: .email)
         try container.encode(emailVerified, forKey: .emailVerified)
+        try container.encode(hasPassword, forKey: .hasPassword)
         try container.encode(name, forKey: .name)
         try container.encode(firstName, forKey: .firstName)
         try container.encode(lastName, forKey: .lastName)

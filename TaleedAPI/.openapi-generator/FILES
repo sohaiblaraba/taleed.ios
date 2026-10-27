@@ -202,6 +202,12 @@ Sources/TaleedAPI/Models/ShippingLabel.swift
 Sources/TaleedAPI/Models/SignInRequest.swift
 Sources/TaleedAPI/Models/SignUpRequest.swift
 Sources/TaleedAPI/Models/SizeList.swift
+Sources/TaleedAPI/Models/SocialProfileRequired.swift
+Sources/TaleedAPI/Models/SocialProvider.swift
+Sources/TaleedAPI/Models/SocialSignInRequest.swift
+Sources/TaleedAPI/Models/SocialSignInResult.swift
+Sources/TaleedAPI/Models/SocialSignUpRequest.swift
+Sources/TaleedAPI/Models/SocialSuggestion.swift
 Sources/TaleedAPI/Models/SortOption.swift
 Sources/TaleedAPI/Models/Stopdesk.swift
 Sources/TaleedAPI/Models/StopdeskList.swift
@@ -409,6 +415,12 @@ docs/ShippingLabel.md
 docs/SignInRequest.md
 docs/SignUpRequest.md
 docs/SizeList.md
+docs/SocialProfileRequired.md
+docs/SocialProvider.md
+docs/SocialSignInRequest.md
+docs/SocialSignInResult.md
+docs/SocialSignUpRequest.md
+docs/SocialSuggestion.md
 docs/SortOption.md
 docs/Stopdesk.md
 docs/StopdeskList.md
