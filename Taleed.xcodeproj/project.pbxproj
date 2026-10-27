@@ -1941,7 +1941,7 @@
 		783E3900A3142BFEC7FF4C85 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Taleed/Support/Taleed.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1962,7 +1962,7 @@
 		8698F7016961EE3AF7ED5DAC /* Staging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Taleed/Support/Taleed.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -2054,7 +2054,7 @@
 		CF856B7FE1D80A8424B1E385 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Taleed/Support/Taleed.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
