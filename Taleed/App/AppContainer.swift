@@ -34,6 +34,8 @@ final class AppContainer {
     let welcome: WelcomeGate
     /// The push permission and `POST /devices`, after the member's first message or offer.
     let push: PushRegistration
+    /// Sign in with Google (slice G).
+    let google = GoogleSignInSDKClient()
     /// The member's account for the settings screens (G16).
     let account: AccountStore
 
@@ -107,6 +109,8 @@ final class AppContainer {
         launch.willShowScreen = { [router] in router.launchWillShowItsScreen() }
         router.isSuspended = { [session] in session.state == .suspended }
         session.onSuspensionLifted = { [router] in router.suspensionDidLift() }
+        // Each end of a session also signs out of Google (slice G, Signing out).
+        session.signOutOfProviders = { [google] in google.signOut() }
     }
 
     /// No token source until Firebase is set up (plan action 3): nothing is asked or registered meanwhile.

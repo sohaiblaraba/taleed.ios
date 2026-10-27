@@ -1,10 +1,16 @@
 import SwiftUI
 
-/// What the auth sheet needs besides the session: the auth calls and whether Taleed is invite-only.
+/// What the auth sheet needs besides the session: the auth calls, whether Taleed is invite-only, and the
+/// Google and Apple sign-in (slice G).
 struct AuthDependencies {
     let api: any AuthApi
     /// `betaMode` of `GET /config`.
     let isBetaMode: @MainActor () -> Bool
+    var google: (any GoogleSignInClient)?
+    /// The provider buttons to show (`features` of `GET /config`, the build's client ID).
+    var socialAvailability: @MainActor () -> SocialAvailability = { SocialAvailability() }
+    /// `503 feature_disabled`: hide that provider's button and read `GET /config` again.
+    var socialSignInWasDisabled: @MainActor (SocialProviderKind) -> Void = { _ in }
 }
 
 private struct AuthDependenciesKey: EnvironmentKey {
@@ -40,7 +46,15 @@ struct AuthSheetView: View {
         .onAppear {
             guard flow == nil, let dependencies else { return }
             flow = AuthFlowModel(entry: entry ?? .signIn, session: session, api: dependencies.api,
-                                 isBetaMode: dependencies.isBetaMode)
+                                 isBetaMode: dependencies.isBetaMode, google: dependencies.google,
+                                 onSocialFeatureDisabled: dependencies.socialSignInWasDisabled)
+            #if DEBUG
+            if let email = DebugLaunchOptions.socialFinishEmail {
+                flow?.showFinishSignUp(SocialProfile(signupToken: "debug-made-up-token", expiresAt: .now.addingTimeInterval(900),
+                                                     email: email, username: "yasmine.social", firstName: "Yasmine",
+                                                     lastName: nil, referralCode: nil))
+            }
+            #endif
         }
         // A link (`/r/{code}`) or another sign-in request while the sheet is already up.
         .onChange(of: entry) { _, newEntry in
@@ -54,6 +68,7 @@ struct AuthSheetView: View {
         case .signUp: l10n.string(.authRegisterTitle)
         case .forgotPassword: l10n.string(.authForgotTitle)
         case .requestAccess: l10n.string(.authRequestAccessTitle)
+        case .finishSignUp: l10n.string(.authFinishTitle)
         }
     }
 }
@@ -68,6 +83,10 @@ private struct AuthStepView: View {
         case .signUp: SignUpFormView(viewModel: flow.signUp, flow: flow, onDone: onDone)
         case .forgotPassword: ForgotPasswordFormView(viewModel: flow.forgotPassword, flow: flow)
         case .requestAccess: RequestAccessFormView(viewModel: flow.requestAccess, flow: flow)
+        case .finishSignUp:
+            if let finish = flow.finishSignUp {
+                FinishSignUpFormView(viewModel: finish, flow: flow, onDone: onDone)
+            }
         }
     }
 }
@@ -112,12 +131,13 @@ struct AuthFooterLink: View {
 struct AuthFormMessage: View {
     let text: String
     var kind: TaleedFeedbackKind = .error
+    var message: String?
     var actionTitle: String?
     var action: (() -> Void)?
 
     var body: some View {
-        InlineAlert(kind: kind, title: text, actionTitle: actionTitle, action: action)
-            .onAppear { AccessibilityNotification.Announcement(text).post() }
+        InlineAlert(kind: kind, title: text, message: message, actionTitle: actionTitle, action: action)
+            .onAppear { AccessibilityNotification.Announcement([text, message].compactMap { $0 }.joined(separator: " ")).post() }
     }
 }
 

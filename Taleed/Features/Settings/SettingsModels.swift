@@ -22,6 +22,9 @@ struct AccountProfile: Equatable, Sendable {
     let usernameNextChangeAt: Date?
     /// `preferences.newsletter`.
     let newsletter: Bool
+    /// False for a member who only ever signed in with Google or Apple (slice G, Members without a
+    /// password): no password change and no password to delete the account.
+    var hasPassword = true
     var unreadMessages = 0
     var unreadNotifications = 0
 

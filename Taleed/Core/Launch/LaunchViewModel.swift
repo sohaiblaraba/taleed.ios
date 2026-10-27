@@ -59,6 +59,28 @@ final class LaunchViewModel {
         if let fresh = try? await api.config() { config = fresh }
     }
 
+    /// `POST /auth/social` answered `503 feature_disabled`: hide that provider's button at once, then read
+    /// `GET /config` again (slice G, The answer).
+    func socialSignInWasDisabled(_ provider: SocialProviderKind) async {
+        switch provider {
+        case .google: config?.features.googleSignIn = false
+        case .apple: config?.features.appleSignIn = false
+        }
+        if let fresh = try? await api.config() { config = fresh }
+    }
+
+    /// The Google and Apple buttons of the sign-in and sign-up screens. Debug builds may show Google without
+    /// Apple, to test against a local server without Apple's key; other builds follow guideline 4.8.
+    func socialAvailability(googleConfigured: Bool) -> SocialAvailability {
+        #if DEBUG
+        let allowsGoogleWithoutApple = true
+        #else
+        let allowsGoogleWithoutApple = false
+        #endif
+        return SocialAvailability.of(config?.features ?? RemoteFeatures(), googleConfigured: googleConfigured,
+                                     allowsGoogleWithoutApple: allowsGoogleWithoutApple)
+    }
+
     var route: Route {
         switch phase {
         case .loading: .loading

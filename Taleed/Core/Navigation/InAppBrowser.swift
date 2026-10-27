@@ -18,8 +18,8 @@ enum InAppBrowser {
         presenter.present(safari, animated: true)
     }
 
-    /// The view controller on top, so the browser also opens over a sheet.
-    private static func topViewController() -> UIViewController? {
+    /// The view controller on top, so the browser (or Google's sign-in page) also opens over a sheet.
+    static func topViewController() -> UIViewController? {
         let scene = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .first { $0.activationState == .foregroundActive } ?? UIApplication.shared.connectedScenes.first as? UIWindowScene

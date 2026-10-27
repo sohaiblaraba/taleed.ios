@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Sign up (website `register-form.tsx`): first and family name, username with its hint, email,
+/// Sign up (website `register-form.tsx`): "Continue with Apple" and "Continue with Google" with the "or"
+/// divider (slice G), first and family name, username with its hint, email,
 /// password, the optional referral code, "Create my account", the passive terms line, and "Already
 /// have an account? Log in". No terms checkbox and no newsletter opt-in (screens.md §7 G1).
 struct SignUpFormView: View {
@@ -21,7 +22,10 @@ struct SignUpFormView: View {
         VStack(alignment: .leading, spacing: TaleedSize.bottomSheetGap) {
             AuthSubtitle(text: l10n.string(.authRegisterSubtitle))
 
-            fields.disabled(viewModel.isLoading)
+            SocialSignInSection(flow: flow, onDone: onDone)
+                .disabled(viewModel.isLoading)
+
+            fields.disabled(viewModel.isLoading || flow.social.isLoading)
 
             if let message = viewModel.message {
                 AuthFormMessage(text: l10n.text(for: message))

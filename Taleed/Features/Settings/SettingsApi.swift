@@ -22,8 +22,12 @@ protocol AccountApi: AnyObject {
     func changePassword(current: String, new: String) async throws(ApiError)
     /// `PATCH /me/preferences {newsletter}`.
     func setNewsletter(_ isOn: Bool) async throws(ApiError) -> AccountProfile
-    /// `POST /me/delete`. `204`: every session has ended, this one too.
-    func deleteAccount(password: String) async throws(ApiError)
+    /// `POST /me/delete`. `204`: every session has ended, this one too. `password` is nil for a member
+    /// without one (`hasPassword` false): the body is then `{}`.
+    func deleteAccount(password: String?) async throws(ApiError)
+    /// "Set a password" for a member without one: `POST /auth/forgot-password` with the account's email. The
+    /// link opens the website's reset page, which sets the first password (slice G). Always `204`.
+    func sendPasswordSetupLink(email: String) async throws(ApiError)
 }
 
 extension AccountApi {
@@ -59,7 +63,13 @@ extension GeneratedTaleedApi: AccountApi {
         #if DEBUG
         try SettingsDebugFailures.fail(.account)
         #endif
-        return AccountProfile(try await caller.call(.read, automatic: automatic) { try await AccountAPI.getMe(apiConfiguration: $0) })
+        var profile = AccountProfile(try await caller.call(.read, automatic: automatic) {
+            try await AccountAPI.getMe(apiConfiguration: $0)
+        })
+        #if DEBUG
+        if DebugLaunchOptions.forcesNoPassword { profile.hasPassword = false }
+        #endif
+        return profile
     }
 
     func updateProfile(_ changes: ProfileChanges) async throws(ApiError) -> AccountProfile {
@@ -115,7 +125,7 @@ extension GeneratedTaleedApi: AccountApi {
         })
     }
 
-    func deleteAccount(password: String) async throws(ApiError) {
+    func deleteAccount(password: String?) async throws(ApiError) {
         #if DEBUG
         if SettingsDebugFailures.answersDeletionUnauthorized() {
             // As a retry after a lost answer: the server ended the session, so the token is rejected.
@@ -126,6 +136,10 @@ extension GeneratedTaleedApi: AccountApi {
         let body = AccountDeletion(password: password)
         // Password attempts are counted (5 per 15 minutes): the member's tap only.
         try await caller.call(.write) { try await AccountAPI.deleteAccount(accountDeletion: body, apiConfiguration: $0) }
+    }
+
+    func sendPasswordSetupLink(email: String) async throws(ApiError) {
+        try await requestPasswordReset(email: email)
     }
 }
 
@@ -196,6 +210,7 @@ extension AccountProfile {
             wilaya: me.wilaya.map { CatalogWilaya(id: $0.id, name: $0.name) },
             usernameNextChangeAt: me.usernameNextChangeAt,
             newsletter: me.preferences.newsletter,
+            hasPassword: me.hasPassword,
             unreadMessages: me.counts.unreadMessages,
             unreadNotifications: me.counts.unreadNotifications
         )

@@ -39,6 +39,10 @@ struct RemoteConfig: Equatable, Sendable {
 struct RemoteFeatures: Equatable, Sendable {
     var visualSearch = false
     var push = false
+    /// "Continue with Google": the server knows the iOS client ID (slice G).
+    var googleSignIn = false
+    /// "Continue with Apple": the server has Apple's signing key (slice G).
+    var appleSignIn = false
 }
 
 /// `links` of `GET /config`. Open them with `InAppBrowser` (never in an embedded web view).

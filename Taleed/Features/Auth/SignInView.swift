@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Sign in (website `login-form.tsx`): subtitle, email, password with "Forgot password?", the error,
-/// "Log in" (Secondary Large), then "No account yet? Create my account".
+/// Sign in (website `login-form.tsx`): subtitle, "Continue with Apple" and "Continue with Google" with the
+/// "or" divider (slice G), email, password with "Forgot password?", the error, "Log in" (Secondary Large),
+/// then "No account yet? Create my account".
 struct SignInForm: View {
     @Bindable var viewModel: SignInViewModel
     let flow: AuthFlowModel
@@ -15,10 +16,24 @@ struct SignInForm: View {
         VStack(alignment: .leading, spacing: TaleedSize.bottomSheetGap) {
             AuthSubtitle(text: l10n.string(.authLoginSubtitle))
 
+            if let notice = flow.signInNotice {
+                switch notice {
+                case .finishExpired:
+                    AuthFormMessage(text: l10n.string(.authFinishExpiredTitle), kind: .warning,
+                                    message: l10n.string(.authFinishExpiredBody))
+                case .emailTaken:
+                    // The provider now answers `signed_in`: the buttons below sign the member in.
+                    AuthFormMessage(text: l10n.string(.authErrorEmailExists), kind: .info)
+                }
+            }
+
+            SocialSignInSection(flow: flow, onDone: onDone)
+                .disabled(viewModel.isLoading)
+
             fields
                 // The fields lock while signing in; the button stays outside this scope so it keeps
                 // the Default colours with its spinner (it ignores taps while loading).
-                .disabled(viewModel.isLoading)
+                .disabled(viewModel.isLoading || flow.social.isLoading)
 
             if let message = viewModel.message {
                 AuthFormMessage(text: l10n.text(for: message))

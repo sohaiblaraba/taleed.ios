@@ -45,6 +45,10 @@ final class SessionManager {
     /// Called when a session starts: a sign-in, a sign-up, or launch with a stored token that `GET /me`
     /// accepted (the push device registers again, slice C).
     @ObservationIgnored var onSessionStarted: (() -> Void)?
+    /// Called whenever the session ends (sign-out, a rejected token, account deletion): signs out of the
+    /// Google SDK, so the next "Continue with Google" shows the account chooser (slice G, Signing out).
+    /// Apple has no sign-out call.
+    @ObservationIgnored var signOutOfProviders: (() -> Void)?
 
     @ObservationIgnored private let api: TaleedApi
     @ObservationIgnored private let apiSession: ApiSession
@@ -144,11 +148,19 @@ final class SessionManager {
         case let .session(token, user):
             didAuthenticate(token: token, user: user)
         case let .suspended(token):
-            tokenStore.save(token)
-            apiSession.setToken(token)
-            suspend()
+            didSignInSuspended(token: token)
             throw .banned
         }
+    }
+
+    /// A sign-in answered `403 banned` (email, Google or Apple): with a token, it is stored like any session
+    /// token; then the suspended screen shows. Without one (an older server), no session is kept.
+    func didSignInSuspended(token: String?) {
+        if let token {
+            tokenStore.save(token)
+            apiSession.setToken(token)
+        }
+        suspend()
     }
 
     /// Starts the session that a sign-in or a sign-up returned.
@@ -199,5 +211,6 @@ final class SessionManager {
         tokenStore.delete()
         apiSession.setToken(nil)
         state = .signedOut
+        signOutOfProviders?()
     }
 }

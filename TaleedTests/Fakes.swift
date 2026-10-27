@@ -145,4 +145,20 @@ final class FakeAuthApi: AuthApi {
         accessRequests.append(form)
         try accessResult.get()
     }
+
+    var socialResult: Result<SocialSignInAnswer, ApiError> = .success(.session(token: "social-token", user: .fixture()))
+    var completeResults: [Result<(token: String, user: User), ApiError>] = []
+    private(set) var socialCredentials: [SocialCredential] = []
+    private(set) var completions: [SocialSignUpForm] = []
+
+    func socialSignIn(_ credential: SocialCredential) async throws(ApiError) -> SocialSignInAnswer {
+        socialCredentials.append(credential)
+        return try socialResult.get()
+    }
+
+    func completeSocialSignUp(_ form: SocialSignUpForm) async throws(ApiError) -> (token: String, user: User) {
+        completions.append(form)
+        if !completeResults.isEmpty { return try completeResults.removeFirst().get() }
+        return ("finish-token", .fixture(username: form.username))
+    }
 }

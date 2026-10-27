@@ -81,6 +81,14 @@ enum DebugLaunchOptions {
     /// Request access instead of sign-up, as during the invite-only period.
     static var forcesBetaMode: Bool { UserDefaults.standard.bool(forKey: "TaleedDebugBetaMode") }
 
+    /// `-TaleedDebugSocialFinish <email>`: the sign-in sheet opens on the finish step of a Google or Apple
+    /// sign-up for that email, with a made-up token (slice G). Sending it answers `social_signup_expired`.
+    static var socialFinishEmail: String? { UserDefaults.standard.string(forKey: "TaleedDebugSocialFinish") }
+
+    /// `-TaleedDebugNoPassword YES`: `GET /me` reads `hasPassword` false, for the settings of a member who
+    /// signed up with Google or Apple (slice G). The server still knows the real answer.
+    static var forcesNoPassword: Bool { UserDefaults.standard.bool(forKey: "TaleedDebugNoPassword") }
+
     static func apply(to router: AppRouter) {
         guard !applied else { return }
         applied = true

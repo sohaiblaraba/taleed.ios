@@ -15,6 +15,28 @@ final class DeleteAccountViewModel {
         case explain, confirm
     }
 
+    /// Whether the confirmation asks for the password (slice G, Members without a password).
+    enum PasswordRequirement: Equatable {
+        /// `hasPassword` true: the field, and the button waits for it.
+        case required
+        /// `hasPassword` false (Google or Apple only): no field, the body is `{}`.
+        case none
+        /// `GET /me` is not there (the suspended screen, where it answers `banned`, or still loading): the
+        /// field shows but may stay empty. A member with a password who leaves it empty gets `wrong_password`.
+        case optional
+
+        init(hasPassword: Bool?) {
+            switch hasPassword {
+            case true?: self = .required
+            case false?: self = .none
+            case nil: self = .optional
+            }
+        }
+    }
+
+    /// Set by the screen from `GET /me`.
+    var passwordRequirement = PasswordRequirement.required
+
     var step = Step.explain
     var password = "" {
         didSet { if password != oldValue, blocker == .wrongPassword { blocker = nil } }
@@ -31,8 +53,18 @@ final class DeleteAccountViewModel {
         self.onDeleted = onDeleted
     }
 
-    /// "Oui, supprimer mon compte" stays disabled while the password is empty.
-    var canDelete: Bool { !password.isEmpty && !isDeleting }
+    /// "Oui, supprimer mon compte" stays disabled while a required password is empty.
+    var canDelete: Bool {
+        guard !isDeleting else { return false }
+        return passwordRequirement != .required || !password.isEmpty
+    }
+
+    var showsPasswordField: Bool { passwordRequirement != .none }
+
+    /// What `POST /me/delete` sends: nil (`{}`) without a password.
+    var passwordToSend: String? {
+        passwordRequirement == .none || password.isEmpty ? nil : password
+    }
 
     func delete() async {
         guard canDelete else { return }
@@ -40,7 +72,7 @@ final class DeleteAccountViewModel {
         isDeleting = true
         defer { isDeleting = false }
         do {
-            try await api.deleteAccount(password: password)
+            try await api.deleteAccount(password: passwordToSend)
             onDeleted()
         } catch {
             // After a lost answer, `401` means the account is already gone (slice E, Retrying).
@@ -55,12 +87,14 @@ final class DeleteAccountViewModel {
 
 struct DeleteAccountView: View {
     @State private var model: DeleteAccountViewModel
+    let store: AccountStore
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
     @Environment(LaunchViewModel.self) private var launch
     @Environment(\.dismiss) private var dismiss
 
-    init(api: AccountApi, onDeleted: @escaping () -> Void) {
+    init(api: AccountApi, store: AccountStore, onDeleted: @escaping () -> Void) {
+        self.store = store
         _model = State(initialValue: DeleteAccountViewModel(api: api, onDeleted: onDeleted))
     }
 
@@ -79,6 +113,11 @@ struct DeleteAccountView: View {
                 .padding(.vertical, TaleedSpacing.s16)
             }
             .scrollDismissesKeyboard(.interactively)
+        }
+        // `hasPassword` of `GET /me` decides the password field; a suspended member has no `GET /me`.
+        .task { await store.loadIfNeeded() }
+        .onChange(of: store.profile?.hasPassword, initial: true) { _, hasPassword in
+            model.passwordRequirement = .init(hasPassword: hasPassword)
         }
     }
 
@@ -139,11 +178,14 @@ struct DeleteAccountView: View {
             .taleedFont(TaleedFont.bodyRegular)
             .foregroundStyle(TaleedColor.textBody)
             .fixedSize(horizontal: false, vertical: true)
-        TaleedTextField(label: l10n.string(.settingsDeletePasswordLabel), text: $model.password,
-                        error: model.blocker == .wrongPassword ? l10n.string(.settingsDeleteWrongPassword) : nil, isSecure: true)
-            .textContentType(.password)
-            .submitLabel(.done)
-            .accessibilityIdentifier("delete.password")
+        if model.showsPasswordField {
+            TaleedTextField(label: l10n.string(.settingsDeletePasswordLabel), text: $model.password,
+                            error: model.blocker == .wrongPassword ? l10n.string(.settingsDeleteWrongPassword) : nil,
+                            isSecure: true)
+                .textContentType(.password)
+                .submitLabel(.done)
+                .accessibilityIdentifier("delete.password")
+        }
         if let blocker = model.blocker, blocker != .wrongPassword {
             blockerView(blocker)
         }

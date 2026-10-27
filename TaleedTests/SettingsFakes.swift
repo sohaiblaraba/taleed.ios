@@ -9,11 +9,11 @@ extension AccountProfile {
     static func fixture(username: String? = "amina", isVerified: Bool = false, email: String = "amina@example.com",
                         emailVerified: Bool = true, firstName: String = "Amina", lastName: String = "Benali",
                         bio: String? = "Bio", phone: String? = nil, wilaya: CatalogWilaya? = CatalogWilaya(id: 16, name: "Alger"),
-                        usernameNextChangeAt: Date? = nil, newsletter: Bool = true) -> AccountProfile {
+                        usernameNextChangeAt: Date? = nil, newsletter: Bool = true, hasPassword: Bool = true) -> AccountProfile {
         AccountProfile(id: "u1", username: username, displayName: username.map { "@\($0)" } ?? "Membre", avatarURL: nil,
                        isVerified: isVerified, isOfficial: false, email: email, emailVerified: emailVerified,
                        firstName: firstName, lastName: lastName, bio: bio, phone: phone, wilaya: wilaya,
-                       usernameNextChangeAt: usernameNextChangeAt, newsletter: newsletter)
+                       usernameNextChangeAt: usernameNextChangeAt, newsletter: newsletter, hasPassword: hasPassword)
     }
 }
 
@@ -36,7 +36,9 @@ final class FakeAccountApi: AccountApi {
     private(set) var emails: [String] = []
     private(set) var resends = 0
     private(set) var passwordCalls: [(current: String, new: String)] = []
-    private(set) var deletions: [String] = []
+    private(set) var deletions: [String?] = []
+    var setupLinkError: Taleed.ApiError?
+    private(set) var setupLinkEmails: [String] = []
     private(set) var accountCalls = 0
 
     func account(automatic: Bool) async throws(Taleed.ApiError) -> AccountProfile {
@@ -96,9 +98,14 @@ final class FakeAccountApi: AccountApi {
         return profile
     }
 
-    func deleteAccount(password: String) async throws(Taleed.ApiError) {
+    func deleteAccount(password: String?) async throws(Taleed.ApiError) {
         deletions.append(password)
         if let deleteError { throw deleteError }
+    }
+
+    func sendPasswordSetupLink(email: String) async throws(Taleed.ApiError) {
+        setupLinkEmails.append(email)
+        if let setupLinkError { throw setupLinkError }
     }
 }
 

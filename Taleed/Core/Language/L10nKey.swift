@@ -896,4 +896,21 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appHomeEmptyTitle = "app_home_empty_title"
     case appHomeEmptyBody = "app_home_empty_body"
     case appFavoritesCount = "app_favorites_count"  // plural
+    // Slice G: Sign in with Google and Apple.
+    case authContinueWithGoogle = "auth_continue_with_google"
+    case authContinueWithApple = "auth_continue_with_apple"
+    case authSocialDivider = "auth_social_divider"
+    case authFinishTitle = "auth_finish_title"
+    case authFinishSubtitle = "auth_finish_subtitle"
+    case authFinishSignedInAs = "auth_finish_signed_in_as"
+    case authFinishExpiredTitle = "auth_finish_expired_title"
+    case authFinishExpiredBody = "auth_finish_expired_body"
+    case authSocialErrorFailed = "auth_social_error_failed"
+    case authSocialErrorEmailUnverified = "auth_social_error_email_unverified"
+    case authSocialErrorInviteRequired = "auth_social_error_invite_required"
+    case authSocialErrorRefused = "auth_social_error_refused"
+    case authSocialErrorDisabled = "auth_social_error_disabled"
+    case authSocialErrorRateLimited = "auth_social_error_rate_limited"
+    case settingsPasswordNoneHint = "settings_password_none_hint"
+    case settingsPasswordNoneCta = "settings_password_none_cta"
 }

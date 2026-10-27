@@ -28,3 +28,10 @@ TALEED_URL_SCHEME = taleed
 // opens https://apps.apple.com/app/id<ID>. Empty until the App Store record exists: the screen then
 // opens the website (`GET /config` links.website) instead.
 TALEED_APP_STORE_ID =
+
+// Sign in with Google (slice G, The client IDs): the iOS OAuth client of Taleed's Google Cloud project, for the
+// bundle ID app.taleed.mobile, and its reversed form, the URL scheme Google's sign-in page returns to. They are
+// not secrets. The server's GOOGLE_IOS_CLIENT_IDS must list the client ID, or `GET /config` hides the button. A
+// configuration whose environment has another client sets both. Empty: the app shows no Google button.
+GOOGLE_IOS_CLIENT_ID = 406327415556-9o6ic1tk0mtkdkoqpbjphfhno35djdul.apps.googleusercontent.com
+GOOGLE_IOS_URL_SCHEME = com.googleusercontent.apps.406327415556-9o6ic1tk0mtkdkoqpbjphfhno35djdul

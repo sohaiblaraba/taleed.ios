@@ -25,6 +25,10 @@ packages:
   Nuke:
     url: https://github.com/kean/Nuke
     from: "12.8.0"
+  # Sign in with Google (slice G): 7.1 or later for the `nonce:` sign-in.
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: "9.0.0"
 
 targets:
   Taleed:
@@ -38,10 +42,14 @@ targets:
         product: Nuke
       - package: Nuke
         product: NukeUI
+      - package: GoogleSignIn
+        product: GoogleSignIn
+      - sdk: AuthenticationServices.framework
     settings:
       base:
         INFOPLIST_FILE: Taleed/Support/Info.plist
-        # Associated Domains (applinks, webcredentials) for TALEED_APP_LINK_HOST (Config/Base.xcconfig).
+        # Associated Domains (applinks, webcredentials) for TALEED_APP_LINK_HOST (Config/Base.xcconfig), and
+        # Sign in with Apple (slice G).
         CODE_SIGN_ENTITLEMENTS: Taleed/Support/Taleed.entitlements
         INFOPLIST_PREPROCESS: YES
         GENERATE_INFOPLIST_FILE: NO

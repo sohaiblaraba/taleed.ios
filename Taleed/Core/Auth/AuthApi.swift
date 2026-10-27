@@ -32,6 +32,11 @@ protocol AuthApi: AnyObject {
     func requestPasswordReset(email: String) async throws(ApiError)
     /// `POST /access-requests` (invite-only period).
     func requestAccess(_ form: AccessRequestForm) async throws(ApiError)
+    /// `POST /auth/social` with a Google or Apple ID token (slice G). A suspended member's `banned` with a
+    /// token answers `.suspended`; without a token it throws `.banned`.
+    func socialSignIn(_ credential: SocialCredential) async throws(ApiError) -> SocialSignInAnswer
+    /// `POST /auth/social/complete`: the finish step of a new member, the new session.
+    func completeSocialSignUp(_ form: SocialSignUpForm) async throws(ApiError) -> (token: String, user: User)
 }
 
 /// The limits of the auth forms, from the contract (screens.md §0.1: the generated `…Rule`
@@ -76,5 +81,64 @@ extension GeneratedTaleedApi: AuthApi {
         try await caller.call(.write) {
             try await AuthAPI.createAccessRequest(accessRequestCreate: request, apiConfiguration: $0)
         }
+    }
+
+    func socialSignIn(_ credential: SocialCredential) async throws(ApiError) -> SocialSignInAnswer {
+        let provider: SocialProvider = credential.provider == .apple ? .apple : .google
+        let request = SocialSignInRequest(provider: provider, idToken: credential.idToken, nonce: credential.nonce,
+                                          authorizationCode: credential.authorizationCode,
+                                          firstName: credential.firstName, lastName: credential.lastName)
+        // Never repeated on its own: after a lost answer the member signs in with the provider again, for a
+        // fresh token and nonce (slice G, Retrying).
+        return try await caller.call(.write) { configuration -> SocialSignInAnswer in
+            do {
+                let result = try await AuthAPI.socialSignIn(socialSignInRequest: request, apiConfiguration: configuration)
+                return try SocialSignInAnswer(result)
+            } catch let error as ErrorResponse {
+                if case let .suspended(token)? = SignInAnswer.suspended(from: error) { return .suspended(token: token) }
+                throw error
+            }
+        }
+    }
+
+    func completeSocialSignUp(_ form: SocialSignUpForm) async throws(ApiError) -> (token: String, user: User) {
+        let request = SocialSignUpRequest(signupToken: form.signupToken, firstName: form.firstName, lastName: form.lastName,
+                                          username: form.username, referralCode: form.referralCode)
+        // The token is single-use: a repeat answers `social_signup_expired` (slice G, Retrying).
+        let auth = try await caller.call(.write) {
+            try await AuthAPI.completeSocialSignUp(socialSignUpRequest: request, apiConfiguration: $0)
+        }
+        return (auth.token, User(auth.user))
+    }
+}
+
+extension SocialSignInAnswer {
+    /// Decodes `status` tolerantly: an unknown status, or one without its object, is a bug to report, not a
+    /// crash. It throws an `ErrorResponse` that `ApiError` reads as an unknown `200`.
+    init(_ result: SocialSignInResult) throws {
+        switch result.status {
+        case .signedIn:
+            if let session = result.session {
+                self = .session(token: session.token, user: User(session.user))
+                return
+            }
+        case .profileRequired:
+            if let profile = result.profile {
+                self = .profileRequired(SocialProfile(
+                    signupToken: profile.signupToken,
+                    expiresAt: profile.expiresAt,
+                    email: profile.suggested.email,
+                    username: profile.suggested.username,
+                    firstName: profile.suggested.firstName,
+                    lastName: profile.suggested.lastName,
+                    referralCode: profile.suggested.referralCode
+                ))
+                return
+            }
+        case .unknownDefaultOpenApi:
+            break
+        }
+        throw ErrorResponse.error(200, nil, nil, DecodingError.dataCorrupted(
+            .init(codingPath: [], debugDescription: "POST /auth/social answered an unknown status")))
     }
 }

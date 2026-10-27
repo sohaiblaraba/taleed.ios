@@ -261,6 +261,26 @@ final class PasswordSettingsViewModel {
         }
     }
 
+    // MARK: No password yet (slice G, Members without a password)
+
+    /// "Set a password" sent the link: "If an account exists with this email, a link has been sent."
+    private(set) var setupLinkSent = false
+    private(set) var isSendingSetupLink = false
+
+    /// "Set a password": `POST /auth/forgot-password` with the account's email. The website's reset page sets
+    /// the first password.
+    func sendSetupLink(email: String) async {
+        guard !isSendingSetupLink, !setupLinkSent else { return }
+        isSendingSetupLink = true
+        defer { isSendingSetupLink = false }
+        do {
+            try await api.sendPasswordSetupLink(email: email)
+            setupLinkSent = true
+        } catch {
+            notice = .error(error)
+        }
+    }
+
     private func succeeded() {
         unconfirmed = nil
         showsDeviceErrors = false

@@ -59,6 +59,7 @@ What every screen group reuses (screens.md §0 and §1, api-guide.md):
 | Notifications (G15): `.notifications` (the bell of Home and Sell with the unread badge, Profile → Notifications with the same count, `/notifications` links): newest first, 30 a page, an icon by type theme, the unread bar and weight, relative time; once a first page shows (first load, pull-to-refresh, return to the foreground, `NotificationsFeed` arrival) `POST /notifications/read` up to its first row, in its own task, and the badges take the answer (`404`: reload once); an empty first page with a cursor loads on before the empty state. A row's `url` opens through `AppRouter.openFromScreen(_:)` (pushed over the list; `/listings/{id}/chat` resolved first); a link to `/notifications` itself is plain. `NotificationsApi`, `NotificationsDependencies`; `-TaleedDebugNotifications offline|empty|hidden` | `Features/Notifications/` |
 | Identity verification (G17): `.identityVerification` (Settings → Vérification d'identité, "Vérifié" once verified; the VERIFICATION_APPROVED / VERIFICATION_REJECTED notifications; the Referrals gate later): `GET /me/verification` decides — NONE the form, REJECTED the reviewer's note above it, PENDING "en cours d'examen", VERIFIED the success alert and the legal name read-only. The form: the legal name (saved with `PATCH /me` when changed), one ID photo kept in memory (`DocumentPhotoSlot`, camera or library), uploaded with `id_document` just before `POST /me/verification`; `invalid_state` reloads, a refused key is uploaded again once, a 429 shows the wait. Reloads in the foreground. `-TaleedDebugVerification offline,upload,limit` | `Features/Settings/IdentityVerification*.swift`, `DesignSystem/Components/DocumentPhotoSlot.swift` |
 | Referrals (G18): `.referrals` (Profile → "Gagnez 1 500 DA en parrainant", the amount from `program`; `/referrals` links and the REFERRAL_SIGNUP notification): `GET /me/referrals` (program + members invited, 30 a page) — the hero with the website's artwork and copy filled from `program`; verified: the invite link, Copier ("Lien copié !" 2.5 s, toast), Partager (system share sheet) and "Vos filleuls (n)", a sheet with the members (reward badges: done, "Jusqu'au …", "Délai dépassé"; a row opens the profile) and `GET /me/vouchers` (a used one opens its order); not verified: the warning alert that opens identity verification; the three steps and "Bon à savoir"; terms (`program.termsUrl`) in the in-app browser. `ReferralsApi` (`\.referralsApi`); `-TaleedDebugReferrals offline` | `Features/Referrals/` |
+| Sign in with Google and Apple (slice G): "Continue with Apple" (`SignInWithAppleButton`) and "Continue with Google" (GoogleSignIn-iOS) above the email form of sign-in and sign-up, with "or", from `GET /config` `features.appleSignIn` / `googleSignIn` (release builds show Google only with Apple, guideline 4.8; Debug may show Google alone). A nonce per attempt (Apple gets its SHA-256), then `POST /auth/social`; `profile_required` opens the finish step (name, username, referral code, `POST /auth/social/complete`). Settings: no password (`Me.hasPassword` false) shows "Set a password" (the reset link) and deletes without a password. Sign-out also signs out of Google. The client ID and URL scheme are in `Config/Base.xcconfig` (`GOOGLE_IOS_CLIENT_ID`, `GOOGLE_IOS_URL_SCHEME`) | `Core/Auth/Social*.swift`, `Features/Auth/SocialSignIn*.swift`, `Features/Auth/FinishSignUp*.swift` |
 | Push registration: the permission asked after the member's first message or offer, then `POST /devices`, only when `features.push` (`false` locally). **Deferred:** the Firebase token source (SDK and `GoogleService-Info.plist`, plan action 3) comes with G16, with the push switch and the registration after sign-in and a language switch; until then nothing is asked | `Core/Push/PushRegistration.swift` |
 
 Links can be tried on the simulator with the app's scheme, which reads like a path:
@@ -69,7 +70,7 @@ Links can be tried on the simulator with the app's scheme, which reads like a pa
 
 | Configuration | Bundle ID | App name | API |
 |---|---|---|---|
-| Debug | `app.taleed.mobile.debug` | Taleed Dev | `http://localhost:3000/api/v1` (plain HTTP allowed for local hosts only) |
+| Debug | `app.taleed.mobile` | Taleed Dev | `http://localhost:3000/api/v1` (plain HTTP allowed for local hosts only) |
 | Release | `app.taleed.mobile` | Taleed | `https://taleed.app/api/v1` |
 | Staging | `app.taleed.mobile` | Taleed | `https://dev.taleed.app/api/v1` (the hosted test backend, HTTPS only) |
 
@@ -91,8 +92,8 @@ xcodebuild -project Taleed.xcodeproj -scheme "Taleed Staging" -configuration Sta
   -destination 'platform=iOS Simulator,name=iPhone 17' build
 ```
 
-- **Same bundle ID as Release.** Staging and Release replace each other on a device. The Debug app
-  (`app.taleed.mobile.debug`) installs next to them.
+- **One bundle ID.** Debug, Staging and Release all use `app.taleed.mobile` (decision FB-2: the Google
+  iOS client and Sign in with Apple are tied to it), so they replace each other on a device.
 
 ### TestFlight
 

@@ -24,7 +24,8 @@ struct RequestAccessFormView: View {
                 doneView(done)
             } else {
                 if flow.showsInviteRequired {
-                    InlineAlert(kind: .info, title: l10n.string(.appErrorInviteRequired))
+                    InlineAlert(kind: .info, title: l10n.string(flow.inviteReason == .social
+                                                                    ? .authSocialErrorInviteRequired : .appErrorInviteRequired))
                 }
                 fields.disabled(viewModel.isLoading)
 

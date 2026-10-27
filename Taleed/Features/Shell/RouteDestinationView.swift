@@ -127,7 +127,7 @@ struct RouteDestinationView: View {
         case .help: HelpView()
         case .deleteAccount:
             if let settings {
-                DeleteAccountView(api: settings.account) { [toasts, l10n, session] in
+                DeleteAccountView(api: settings.account, store: account) { [toasts, l10n, session] in
                     toasts.show(l10n.string(.settingsDeleteSuccess))
                     session.accountDeleted()
                 }

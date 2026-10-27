@@ -53,12 +53,22 @@ struct AppRootView: View {
                          NotificationsDependencies(api: container.api, feed: container.notificationsFeed))
             .environment(\.memberDependencies,
                          MemberDependencies(members: container.api, reports: container.api, uploads: container.uploads))
-            .environment(\.authDependencies, AuthDependencies(api: container.api, isBetaMode: { [launch = container.launch] in
-                #if DEBUG
-                if DebugLaunchOptions.forcesBetaMode { return true }
-                #endif
-                return launch.config?.betaMode ?? false
-            }))
+            .environment(\.authDependencies, AuthDependencies(
+                api: container.api,
+                isBetaMode: { [launch = container.launch] in
+                    #if DEBUG
+                    if DebugLaunchOptions.forcesBetaMode { return true }
+                    #endif
+                    return launch.config?.betaMode ?? false
+                },
+                google: container.google,
+                socialAvailability: { [launch = container.launch, google = container.google] in
+                    launch.socialAvailability(googleConfigured: google.isConfigured)
+                },
+                socialSignInWasDisabled: { [launch = container.launch] provider in
+                    Task { await launch.socialSignInWasDisabled(provider) }
+                }
+            ))
             #if DEBUG
             .environment(\.developmentApi, container.api)
             #endif
@@ -71,7 +81,11 @@ struct AppRootView: View {
             .task { await container.catalog.refresh() }
             // App links (taleed.app), the payment return (`taleed://payment-return`) and pushes all go
             // through the router; one that comes during launch waits for the launch flow.
-            .onOpenURL { container.router.open(url: $0) }
+            // Google's sign-in page returns to the reversed client ID scheme (slice G); the SDK takes it.
+            .onOpenURL { url in
+                if container.google.handle(url) { return }
+                container.router.open(url: url)
+            }
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                 if let url = activity.webpageURL { container.router.open(url: url) }
             }

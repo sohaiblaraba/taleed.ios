@@ -216,17 +216,12 @@ struct PasswordSettingsView: View {
     }
 
     var body: some View {
-        AccountScreen(title: l10n.string(.settingsPasswordTitle)) { _ in
-            SettingsHint(text: l10n.string(.settingsPasswordHint))
-            field(.current, label: .settingsCurrentPasswordLabel, text: \.current, content: .password)
-            field(.new, label: .settingsNewPasswordLabel, text: \.new, content: .newPassword)
-            field(.confirm, label: .settingsConfirmPasswordLabel, text: \.confirm, content: .newPassword)
-            TaleedButton(title: l10n.string(.settingsPasswordChangeCta), kind: .secondary, size: .large,
-                         isLoading: model.isSending, isFullWidth: true) {
-                Task { await model.submit() }
+        AccountScreen(title: l10n.string(.settingsPasswordTitle)) { profile in
+            if profile.hasPassword {
+                changeForm
+            } else {
+                setPassword(email: profile.email)
             }
-            .disabled(!model.canSubmit)
-            .accessibilityIdentifier("password.submit")
         }
         .onChange(of: model.notice) { _, notice in
             guard let notice else { return }
@@ -235,6 +230,38 @@ struct PasswordSettingsView: View {
             case .changed: toasts.show(l10n.string(.appSettingsPasswordChanged))
             case let .error(error): toasts.show(error: error)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var changeForm: some View {
+        SettingsHint(text: l10n.string(.settingsPasswordHint))
+        field(.current, label: .settingsCurrentPasswordLabel, text: \.current, content: .password)
+        field(.new, label: .settingsNewPasswordLabel, text: \.new, content: .newPassword)
+        field(.confirm, label: .settingsConfirmPasswordLabel, text: \.confirm, content: .newPassword)
+        TaleedButton(title: l10n.string(.settingsPasswordChangeCta), kind: .secondary, size: .large,
+                     isLoading: model.isSending, isFullWidth: true) {
+            Task { await model.submit() }
+        }
+        .disabled(!model.canSubmit)
+        .accessibilityIdentifier("password.submit")
+    }
+
+    /// A member who signed up with Google or Apple has no password (slice G): the website's hint and "Set a
+    /// password", which emails the reset link; then "a link has been sent".
+    @ViewBuilder
+    private func setPassword(email: String) -> some View {
+        SettingsHint(text: l10n.string(.settingsPasswordNoneHint))
+            .accessibilityIdentifier("password.noneHint")
+        if model.setupLinkSent {
+            InlineAlert(kind: .success, title: l10n.string(.authResetSent))
+                .accessibilityIdentifier("password.setupSent")
+        } else {
+            TaleedButton(title: l10n.string(.settingsPasswordNoneCta), kind: .secondary, size: .large,
+                         isLoading: model.isSendingSetupLink, isFullWidth: true) {
+                Task { await model.sendSetupLink(email: email) }
+            }
+            .accessibilityIdentifier("password.setup")
         }
     }
 

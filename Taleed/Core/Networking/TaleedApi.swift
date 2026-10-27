@@ -184,7 +184,8 @@ private extension RemoteConfig {
                 whatsappURL: URL(string: config.support.whatsappUrl)
             ),
             betaMode: config.betaMode,
-            features: RemoteFeatures(visualSearch: config.features.visualSearch, push: config.features.push),
+            features: RemoteFeatures(visualSearch: config.features.visualSearch, push: config.features.push,
+                                     googleSignIn: config.features.googleSignIn, appleSignIn: config.features.appleSignIn),
             // An unknown method is not offered (api-guide.md, Compatibility).
             paymentMethods: config.paymentMethods.filter { $0 != .unknownDefaultOpenApi }.map(\.rawValue),
             links: WebsiteLinks(
