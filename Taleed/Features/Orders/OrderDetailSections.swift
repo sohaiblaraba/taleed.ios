@@ -61,6 +61,9 @@ struct OrderNoticesView: View {
         let locale = l10n.language.formattingLocale
         let price = { (amount: Int) in PriceFormatter.format(amount, language: l10n.language) }
         switch notice {
+        case let .ended(refunded):
+            InlineAlert(kind: .info, title: l10n.string(refunded ? .appOrderRefundedNotice : .ordersCancelled))
+                .accessibilityIdentifier("order.ended")
         case let .payDeadline(date):
             InlineAlert(kind: .warning, title: l10n.format(.ordersPayDeadline, OrderText.dateTime(date, locale: locale)))
         case let .awaitingPayment(date):
@@ -88,8 +91,9 @@ struct OrderNoticesView: View {
     }
 }
 
-/// The dispute on the order: the website's banner (funds frozen), the reason and status from the
-/// server, who must answer and until when while it is open, the resolution, and the thread.
+/// The dispute on the order. Open: the website's banner (funds frozen) with the reason and status from the
+/// server, who must answer and until when. Resolved: how it ended as the title ("Litige résolu —
+/// remboursement"), the reason and the resolution under it. Then the thread.
 struct OrderDisputeCard: View {
     let dispute: OrderDisputeSummary
     let side: OrderSide
@@ -98,8 +102,7 @@ struct OrderDisputeCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            InlineAlert(kind: dispute.status.isResolved ? .info : .error, title: l10n.string(.ordersDisputeBanner),
-                        message: details)
+            InlineAlert(kind: dispute.status.isResolved ? .info : .error, title: title, message: details)
                 .padding(TaleedSpacing.s8)
             Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)
             ListRow(label: l10n.string(.disputesThread), leadingIcon: .chatCircleText, showsChevron: true, showsDivider: false,
@@ -111,9 +114,18 @@ struct OrderDisputeCard: View {
         .accessibilityElement(children: .contain)
     }
 
-    /// "Article endommagé — Ouvert", then the deadline or the resolution.
+    private var title: String {
+        switch dispute.status {
+        case .resolvedRefund: l10n.string(.appOrderDisputeResolvedRefund)
+        case .resolvedRelease: l10n.string(.appOrderDisputeResolvedRelease)
+        case .open, .underReview, .unknown: l10n.string(.ordersDisputeBanner)
+        }
+    }
+
+    /// "Article endommagé — Ouvert", then the deadline; once resolved, the reason (the title says how it
+    /// ended), then the resolution.
     private var details: String {
-        var lines = ["\(dispute.reasonLabel) — \(dispute.statusLabel)"]
+        var lines = [dispute.status.isResolved ? dispute.reasonLabel : "\(dispute.reasonLabel) — \(dispute.statusLabel)"]
         if dispute.status == .open, let deadline = dispute.sellerDeadlineAt {
             let date = OrderText.dateTime(deadline, locale: l10n.language.formattingLocale)
             lines.append(l10n.format(side == .seller ? .disputesAwaitingYou : .disputesAwaitingSeller, date))

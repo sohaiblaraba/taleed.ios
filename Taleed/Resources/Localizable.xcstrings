@@ -22486,6 +22486,75 @@
           }
         }
       }
+    },
+    "app_order_refunded_notice": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم استرجاع مبلغ الطلب."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Order refunded."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commande remboursée."
+          }
+        }
+      }
+    },
+    "app_order_dispute_resolved_refund": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم حلّ النزاع — استرجاع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispute resolved — refund"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Litige résolu — remboursement"
+          }
+        }
+      }
+    },
+    "app_order_dispute_resolved_release": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم حلّ النزاع — دفع للبائع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispute resolved — seller paid"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Litige résolu — paiement au vendeur"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

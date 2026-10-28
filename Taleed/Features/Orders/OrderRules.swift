@@ -6,6 +6,9 @@ import Foundation
 enum OrderRules {
     /// A notice above the order, in the website's order.
     enum Notice: Equatable, Sendable {
+        /// The order ended without going through: "Commande annulée." or "Commande remboursée." (app only:
+        /// the website says it with the badge alone). The API gives no date for it.
+        case ended(refunded: Bool)
         /// Buyer, awaiting payment: "Payez avant {date}, sinon la commande sera annulée."
         case payDeadline(Date)
         /// Seller, awaiting payment: "En attente du paiement — l'acheteur a jusqu'au {date}…"
@@ -26,7 +29,8 @@ enum OrderRules {
     }
 
     static func notices(for order: OrderDetailInfo) -> [Notice] {
-        var notices = [payNotice(order), shipNotice(order)].compactMap { $0 }
+        var notices: [Notice] = [.cancelled, .refunded].contains(order.status) ? [.ended(refunded: order.status == .refunded)] : []
+        notices += [payNotice(order), shipNotice(order)].compactMap { $0 }
         if let cash = order.cashOnDelivery, cash.total > 0, [.paid, .prepared, .shipped].contains(order.status) {
             notices.append(.cashOnDelivery(cash))
         }

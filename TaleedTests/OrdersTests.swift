@@ -23,7 +23,12 @@ struct OrderRulesTests {
         #expect(OrderRules.notices(for: orderDetail(side: .seller, status: .pendingPayment, payDeadline: date))
             == [.awaitingPayment(date)])
         // A stale deadline on another status says nothing.
-        #expect(OrderRules.notices(for: orderDetail(status: .cancelled, payDeadline: date)).isEmpty)
+        #expect(OrderRules.notices(for: orderDetail(status: .cancelled, payDeadline: date)) == [.ended(refunded: false)])
+    }
+
+    @Test func anEndedOrderSaysSoFirst() {
+        #expect(OrderRules.notices(for: orderDetail(status: .cancelled)) == [.ended(refunded: false)])
+        #expect(OrderRules.notices(for: orderDetail(status: .refunded)) == [.ended(refunded: true)])
     }
 
     @Test func theShipDeadlineReadsByRoleAndStatus() {
