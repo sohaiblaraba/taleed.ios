@@ -56,6 +56,9 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: NO
         ENABLE_USER_SCRIPT_SANDBOXING: YES
         CODE_SIGN_STYLE: Automatic
+        # Taleed's Apple Developer team: the App ID app.taleed.mobile has Sign in with Apple, Push Notifications
+        # and Associated Domains. Not a secret.
+        DEVELOPMENT_TEAM: Y6MJ5U685L
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 

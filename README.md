@@ -97,7 +97,7 @@ xcodebuild -project Taleed.xcodeproj -scheme "Taleed Staging" -configuration Sta
 
 ### TestFlight
 
-1. Open `Taleed.xcodeproj`, select the `Taleed` target > Signing & Capabilities, and select the team.
+1. Open `Taleed.xcodeproj`. The `Taleed` target's team is set in `project.yml` (`DEVELOPMENT_TEAM: Y6MJ5U685L`).
    Signing is automatic. The App ID `app.taleed.mobile` needs Associated Domains in the Apple
    Developer account, and an App Store Connect record.
 2. Raise `CURRENT_PROJECT_VERSION` in `Config/Base.xcconfig`. App Store Connect takes each upload of a

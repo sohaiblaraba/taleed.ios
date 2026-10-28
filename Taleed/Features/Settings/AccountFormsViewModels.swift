@@ -188,6 +188,9 @@ final class PasswordSettingsViewModel {
         /// "Mot de passe mis à jour." and the other devices were signed out.
         case changed
         case error(ApiError)
+        /// `invalid_state`: the account has no password (slice G). The screen reloads `GET /me` and shows
+        /// "Set a password".
+        case noPassword
     }
 
     var form = PasswordForm() {
@@ -240,7 +243,11 @@ final class PasswordSettingsViewModel {
                 notice = .error(error)
             default:
                 unconfirmed = nil
-                if error.code == .wrongPassword {
+                if error.code == .invalidState {
+                    form = PasswordForm()
+                    showsDeviceErrors = false
+                    notice = .noPassword
+                } else if error.code == .wrongPassword {
                     apiErrors[.current] = .wrong
                 } else if error.code == .invalidRequest, error.issue(at: "body.newPassword") != nil {
                     apiErrors[.new] = AuthValidation.newPasswordProblem(new) == .tooLong ? .tooLong : .tooShort

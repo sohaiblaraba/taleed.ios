@@ -24,8 +24,10 @@ struct RequestAccessFormView: View {
                 doneView(done)
             } else {
                 if flow.showsInviteRequired {
-                    InlineAlert(kind: .info, title: l10n.string(flow.inviteReason == .social
-                                                                    ? .authSocialErrorInviteRequired : .appErrorInviteRequired))
+                    // A Google or Apple sign-in that was refused warns, as on Android and the website.
+                    InlineAlert(kind: flow.inviteReason == .social ? .warning : .info,
+                                title: l10n.string(flow.inviteReason == .social
+                                                       ? .authSocialErrorInviteRequired : .appErrorInviteRequired))
                 }
                 fields.disabled(viewModel.isLoading)
 

@@ -17,6 +17,18 @@ struct PasswordlessSettingsTests {
         #expect(api.setupLinkEmails.count == 1)
     }
 
+    /// `POST /me/password` answers `invalid_state` for a member without a password: the screen reloads
+    /// `GET /me` (and then shows "Set a password").
+    @Test func invalidStateAsksToReloadTheAccount() async {
+        let api = FakeAccountApi()
+        api.passwordErrors = [failure(.invalidState)]
+        let model = PasswordSettingsViewModel(api: api)
+        model.form = PasswordForm(current: "old-pass-1", new: "new-pass-12", confirm: "new-pass-12")
+        await model.submit()
+        #expect(model.notice == .noPassword)
+        #expect(model.form == PasswordForm())
+    }
+
     @Test func aFailedLinkShowsTheError() async {
         let api = FakeAccountApi()
         api.setupLinkError = .network

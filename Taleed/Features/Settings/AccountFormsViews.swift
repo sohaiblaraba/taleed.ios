@@ -210,6 +210,7 @@ struct PasswordSettingsView: View {
     @State private var model: PasswordSettingsViewModel
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppToasts.self) private var toasts
+    @Environment(AccountStore.self) private var store
 
     init(api: AccountApi) {
         _model = State(initialValue: PasswordSettingsViewModel(api: api))
@@ -229,6 +230,7 @@ struct PasswordSettingsView: View {
             switch notice {
             case .changed: toasts.show(l10n.string(.appSettingsPasswordChanged))
             case let .error(error): toasts.show(error: error)
+            case .noPassword: Task { await store.reload() }
             }
         }
     }

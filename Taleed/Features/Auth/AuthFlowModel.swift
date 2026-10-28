@@ -114,14 +114,17 @@ final class AuthFlowModel {
     }
 
     /// `invite_required` from Google or Apple: the request-access form, with the email and names the
-    /// finish step had, when it was there.
-    func switchToRequestAccessAfterSocialSignIn() {
+    /// finish step had, or else those the provider gave (`prefill`).
+    func switchToRequestAccessAfterSocialSignIn(prefill: SocialPrefill = SocialPrefill()) {
+        var prefill = prefill
         if let finish = finishSignUp {
-            if requestAccess.email.isEmpty { requestAccess.email = finish.profile.email }
-            if requestAccess.firstName.isEmpty { requestAccess.firstName = AuthValidation.trimmed(finish.firstName) }
-            if requestAccess.lastName.isEmpty { requestAccess.lastName = AuthValidation.trimmed(finish.lastName) }
+            prefill = SocialPrefill(email: finish.profile.email, firstName: AuthValidation.trimmed(finish.firstName),
+                                    lastName: AuthValidation.trimmed(finish.lastName))
             if requestAccess.referralCode.isEmpty { requestAccess.referralCode = finish.referralCode }
         }
+        if requestAccess.email.isEmpty, let email = prefill.email { requestAccess.email = email }
+        if requestAccess.firstName.isEmpty, let firstName = prefill.firstName { requestAccess.firstName = firstName }
+        if requestAccess.lastName.isEmpty, let lastName = prefill.lastName { requestAccess.lastName = lastName }
         show(.requestAccess)
         showsInviteRequired = true
         inviteReason = .social

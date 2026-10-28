@@ -14,8 +14,9 @@ final class SocialSignInViewModel {
         case suspended
         /// A new member: the finish step.
         case profileRequired(SocialProfile)
-        /// `invite_required`: the request-access form, as for email sign-up.
-        case inviteRequired
+        /// `invite_required`: the request-access form, as for email sign-up, prefilled with what the
+        /// provider gave.
+        case inviteRequired(SocialPrefill)
         /// The member closed the provider's sheet, or the form shows a message.
         case stayed
     }
@@ -114,7 +115,7 @@ final class SocialSignInViewModel {
                 session.didSignInSuspended(token: nil)
                 return .suspended
             case .inviteRequired:
-                return .inviteRequired
+                return .inviteRequired(credential.prefill)
             case .featureDisabled:
                 onFeatureDisabled(credential.provider)
             default:

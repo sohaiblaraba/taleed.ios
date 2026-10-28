@@ -40,7 +40,9 @@ final class GoogleSignInSDKClient: GoogleSignInClient {
             let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter, hint: nil,
                                                                    additionalScopes: nil, nonce: nonce)
             guard let idToken = result.user.idToken?.tokenString else { return .failed }
-            return .credential(SocialCredential(provider: .google, idToken: idToken, nonce: nonce))
+            let profile = result.user.profile
+            let prefill = SocialPrefill(email: profile?.email, firstName: profile?.givenName, lastName: profile?.familyName)
+            return .credential(SocialCredential(provider: .google, idToken: idToken, nonce: nonce, prefill: prefill))
         } catch {
             return Self.isCancel(error) ? .canceled : .failed
         }
@@ -79,17 +81,21 @@ enum AppleSignIn {
                   let tokenData = apple.identityToken
             else { return .failed }
             return .credential(credential(idToken: tokenData, authorizationCode: apple.authorizationCode,
-                                          fullName: apple.fullName, nonce: nonce))
+                                          fullName: apple.fullName, email: apple.email, nonce: nonce))
         case let .failure(error):
             return isCancel(error) ? .canceled : .failed
         }
     }
 
+    /// `email` comes, like the name, only on the first authorization.
     static func credential(idToken: Data, authorizationCode: Data?, fullName: PersonNameComponents?,
-                           nonce: String) -> SocialCredential {
-        SocialCredential(provider: .apple, idToken: String(bytes: idToken, encoding: .utf8) ?? "", nonce: nonce,
-                         authorizationCode: authorizationCode.flatMap { String(bytes: $0, encoding: .utf8) },
-                         firstName: nonEmpty(fullName?.givenName), lastName: nonEmpty(fullName?.familyName))
+                           email: String? = nil, nonce: String) -> SocialCredential {
+        let firstName = nonEmpty(fullName?.givenName)
+        let lastName = nonEmpty(fullName?.familyName)
+        return SocialCredential(provider: .apple, idToken: String(bytes: idToken, encoding: .utf8) ?? "", nonce: nonce,
+                                authorizationCode: authorizationCode.flatMap { String(bytes: $0, encoding: .utf8) },
+                                firstName: firstName, lastName: lastName,
+                                prefill: SocialPrefill(email: nonEmpty(email), firstName: firstName, lastName: lastName))
     }
 
     /// `ASAuthorizationError.canceled`: the member closed Apple's sheet.

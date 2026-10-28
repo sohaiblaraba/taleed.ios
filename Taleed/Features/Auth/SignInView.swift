@@ -23,7 +23,8 @@ struct SignInForm: View {
                                     message: l10n.string(.authFinishExpiredBody))
                 case .emailTaken:
                     // The provider now answers `signed_in`: the buttons below sign the member in.
-                    AuthFormMessage(text: l10n.string(.authErrorEmailExists), kind: .info)
+                    AuthFormMessage(text: l10n.string(.authErrorEmailExists), kind: .info,
+                                    message: l10n.string(.appAuthSocialEmailTakenBody))
                 }
             }
 

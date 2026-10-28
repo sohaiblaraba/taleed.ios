@@ -913,4 +913,5 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case authSocialErrorRateLimited = "auth_social_error_rate_limited"
     case settingsPasswordNoneHint = "settings_password_none_hint"
     case settingsPasswordNoneCta = "settings_password_none_cta"
+    case appAuthSocialEmailTakenBody = "app_auth_social_email_taken_body"
 }

@@ -143,9 +143,10 @@ struct AppleCredentialTests {
         name.givenName = "Yasmine"
         name.familyName = " "
         let credential = AppleSignIn.credential(idToken: Data("id.token.jwt".utf8), authorizationCode: Data("code-1".utf8),
-                                                fullName: name, nonce: "raw-nonce")
+                                                fullName: name, email: "y@privaterelay.appleid.com", nonce: "raw-nonce")
         #expect(credential == SocialCredential(provider: .apple, idToken: "id.token.jwt", nonce: "raw-nonce",
-                                               authorizationCode: "code-1", firstName: "Yasmine", lastName: nil))
+                                               authorizationCode: "code-1", firstName: "Yasmine", lastName: nil,
+                                               prefill: SocialPrefill(email: "y@privaterelay.appleid.com", firstName: "Yasmine")))
     }
 
     @Test func cancelIsRecognised() {
@@ -230,10 +231,15 @@ struct SocialSignInViewModelTests {
         #expect(!session.hasSuspendedSession)
     }
 
-    @Test func inviteRequiredOpensRequestAccess() async {
+    /// `invite_required` carries what the provider gave, for the request-access form.
+    @Test func inviteRequiredOpensRequestAccessWithTheProvidersProfile() async {
         api.socialResult = .failure(failure(.inviteRequired, status: 403))
+        let prefill = SocialPrefill(email: "yasmine@gmail.com", firstName: "Yasmine", lastName: "Benali")
+        google.answer = { nonce in
+            .credential(SocialCredential(provider: .google, idToken: "t", nonce: nonce, prefill: prefill))
+        }
         let model = SocialSignInViewModel(api: api, session: makeSession().0, google: google)
-        #expect(await model.signInWithGoogle() == .inviteRequired)
+        #expect(await model.signInWithGoogle() == .inviteRequired(prefill))
     }
 
     @Test func featureDisabledHidesTheButton() async {

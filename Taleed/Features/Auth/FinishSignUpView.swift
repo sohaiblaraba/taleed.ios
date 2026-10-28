@@ -43,6 +43,14 @@ struct FinishSignUpFormView: View {
 
             LegalText(text: l10n.string(.authTermsConsent))
                 .frame(maxWidth: .infinity)
+
+            // Back to sign-in; leaving the step drops the signup token (it lives in memory only).
+            TaleedButton(title: l10n.string(.commonBack), kind: .hyperlink, size: .large, leadingIcon: .caretLeft) {
+                flow.show(.signIn)
+            }
+            .frame(maxWidth: .infinity)
+            .disabled(viewModel.isLoading)
+            .accessibilityIdentifier("finish.back")
         }
         .padding(.bottom, TaleedSpacing.s8)
     }

@@ -37,6 +37,28 @@ struct SocialAuthFlowTests {
         #expect(flow.signInNotice == nil)
     }
 
+    /// Straight from `POST /auth/social`: the provider's email and names.
+    @Test func socialInviteRequiredPrefillsFromTheProvider() {
+        let flow = makeFlow()
+        flow.switchToRequestAccessAfterSocialSignIn(prefill: SocialPrefill(email: "y@gmail.com", firstName: "Yasmine",
+                                                                           lastName: nil))
+        #expect(flow.step == .requestAccess)
+        #expect(flow.inviteReason == .social)
+        #expect(flow.requestAccess.email == "y@gmail.com")
+        #expect(flow.requestAccess.firstName == "Yasmine")
+        #expect(flow.requestAccess.lastName.isEmpty)
+    }
+
+    /// The finish step's back action: sign-in, and the token is gone.
+    @Test func backFromTheFinishStepDropsTheToken() {
+        let flow = makeFlow()
+        flow.showFinishSignUp(.fixture())
+        flow.show(.signIn)
+        #expect(flow.step == .signIn)
+        #expect(flow.finishSignUp == nil)
+        #expect(flow.signInNotice == nil)
+    }
+
     @Test func socialInviteRequiredPrefillsRequestAccess() {
         let flow = makeFlow()
         flow.showFinishSignUp(.fixture())

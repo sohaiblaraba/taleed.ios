@@ -2,8 +2,9 @@ import AuthenticationServices
 import SwiftUI
 
 /// "Continue with Apple" and "Continue with Google" above the email form of sign-in and sign-up, then the
-/// "or" divider, as on the website (slice G, Showing the buttons). Nothing shows when `GET /config` offers
-/// neither provider.
+/// "or" divider, as on the website (slice G, Showing the buttons). A failed sign-in's message (a warning, as on
+/// Android and the website) sits above the buttons. Nothing shows when `GET /config` offers neither provider,
+/// except that message: `feature_disabled` can hide the last button and must still say why.
 ///
 /// Apple comes first and has the same size as Google (App Store guideline 4.8: an equivalent option at least
 /// as prominent). Apple's button is the system `SignInWithAppleButton` (black, Human Interface Guidelines);
@@ -21,8 +22,11 @@ struct SocialSignInSection: View {
 
     var body: some View {
         let availability = availability
-        if !availability.isEmpty {
+        if !availability.isEmpty || flow.social.message != nil {
             VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
+                if let message = flow.social.message {
+                    AuthFormMessage(text: l10n.text(for: message), kind: .warning)
+                }
                 if availability.apple {
                     AppleSignInButton(viewModel: flow.social, onOutcome: handle)
                 }
@@ -33,11 +37,10 @@ struct SocialSignInSection: View {
                     }
                     .disabled(flow.social.isLoading)
                 }
-                if let message = flow.social.message {
-                    AuthFormMessage(text: l10n.text(for: message))
+                if !availability.isEmpty {
+                    SocialDivider(text: l10n.string(.authSocialDivider))
+                        .padding(.top, TaleedSpacing.s4)
                 }
-                SocialDivider(text: l10n.string(.authSocialDivider))
-                    .padding(.top, TaleedSpacing.s4)
             }
         }
     }
@@ -46,14 +49,14 @@ struct SocialSignInSection: View {
         switch outcome {
         case .signedIn, .suspended: onDone()
         case let .profileRequired(profile): flow.showFinishSignUp(profile)
-        case .inviteRequired: flow.switchToRequestAccessAfterSocialSignIn()
+        case let .inviteRequired(prefill): flow.switchToRequestAccessAfterSocialSignIn(prefill: prefill)
         case .stayed: break
         }
     }
 }
 
-/// `SignInWithAppleButton` "Continue with Apple", black, at the Large button's size. Apple's label follows
-/// the app language when the system has it.
+/// `SignInWithAppleButton` "Continue with Apple", black, at the Large button's size. Apple draws the label in
+/// the device language, whatever the app language is (FB-11).
 private struct AppleSignInButton: View {
     let viewModel: SocialSignInViewModel
     let onOutcome: (SocialSignInViewModel.Outcome) -> Void
@@ -75,8 +78,7 @@ private struct AppleSignInButton: View {
                     .overlay { ProgressView().tint(.white) }
             }
         }
-        .environment(\.locale, l10n.language.locale)
-        // VoiceOver reads the app language even when Apple's label follows the system's.
+        // VoiceOver reads the app language; the visible label stays in the device language (FB-11).
         .accessibilityLabel(l10n.string(.authContinueWithApple))
         .disabled(viewModel.isLoading)
         .accessibilityIdentifier("auth.apple")

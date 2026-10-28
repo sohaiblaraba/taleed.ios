@@ -1512,6 +1512,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					A6198AA699558A34F22F8412 = {
+						DevelopmentTeam = Y6MJ5U685L;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -2006,6 +2007,7 @@
 				CODE_SIGN_ENTITLEMENTS = Taleed/Support/Taleed.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Y6MJ5U685L;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Taleed/Support/Info.plist;
@@ -2027,6 +2029,7 @@
 				CODE_SIGN_ENTITLEMENTS = Taleed/Support/Taleed.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Y6MJ5U685L;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Taleed/Support/Info.plist;
@@ -2119,6 +2122,7 @@
 				CODE_SIGN_ENTITLEMENTS = Taleed/Support/Taleed.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Y6MJ5U685L;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Taleed/Support/Info.plist;

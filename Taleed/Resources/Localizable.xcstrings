@@ -22141,6 +22141,29 @@
           }
         }
       }
+    },
+    "app_auth_social_email_taken_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تابع مجددًا باستخدام Google أو Apple لتسجيل الدخول إليه."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with Google or Apple again to log in to it."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuez à nouveau avec Google ou Apple pour vous y connecter."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

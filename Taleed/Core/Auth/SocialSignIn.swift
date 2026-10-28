@@ -44,6 +44,16 @@ struct SocialCredential: Equatable, Sendable {
     /// Apple only, and only on the first authorization.
     var firstName: String?
     var lastName: String?
+    /// What the provider said about the person, never sent: it prefills the request-access form after
+    /// `invite_required`.
+    var prefill = SocialPrefill()
+}
+
+/// The email and name a provider gave (Google's `profile`, Apple's `email` and `fullName`).
+struct SocialPrefill: Equatable, Sendable {
+    var email: String?
+    var firstName: String?
+    var lastName: String?
 }
 
 /// `profile` of a `profile_required` answer: the finish step's prefill and its token.
