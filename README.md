@@ -101,7 +101,9 @@ xcodebuild -project Taleed.xcodeproj -scheme "Taleed Staging" -configuration Sta
    Signing is automatic. The App ID `app.taleed.mobile` needs Associated Domains in the Apple
    Developer account, and an App Store Connect record.
 2. Raise `CURRENT_PROJECT_VERSION` in `Config/Base.xcconfig`. App Store Connect takes each upload of a
-   version (`MARKETING_VERSION`) only with a higher build number.
+   version (`MARKETING_VERSION`) only with a higher build number. The build number is `YYYYMMVN`: the year,
+   the month, and this month's build number from `01` (`20261001`, `20261002`, then `20261101` in November).
+   Android uses the same number as its versionCode.
 3. Pick the `Taleed Staging` scheme and "Any iOS Device (arm64)", then Product > Archive. The archive
    opens in the Organizer (`~/Library/Developer/Xcode/Archives/`).
 4. In the Organizer, select Distribute App > App Store Connect (or TestFlight Internal Only), and upload.
