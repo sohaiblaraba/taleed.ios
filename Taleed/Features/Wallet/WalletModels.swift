@@ -32,6 +32,15 @@ struct PayoutAccountInfo: Equatable, Sendable {
     let updatedAt: Date
 }
 
+// The account details are a bank or postal account number: never printed in logs or crash reports.
+extension PayoutAccountInfo: CustomStringConvertible, CustomDebugStringConvertible {
+    var description: String {
+        "PayoutAccountInfo(method: \(method), methodLabel: \(methodLabel), accountDetails: <redacted>, updatedAt: \(updatedAt))"
+    }
+
+    var debugDescription: String { description }
+}
+
 /// The bounds that Earnings shows and checks (`WalletLimits`).
 struct WalletLimitsInfo: Equatable, Sendable {
     /// The weekly run pays `owed` from this amount.

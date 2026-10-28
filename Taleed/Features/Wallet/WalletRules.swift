@@ -21,10 +21,20 @@ enum WalletRules {
         return nil
     }
 
-    /// "Paid with the next weekly payout, on {date}." only while something is owed: nothing to pay at 0, and
-    /// the next run does not pay a negative amount (the website does the same).
+    /// The payout methods this build can send (`PayoutAccountUpdate.method`), in the website's order.
+    static let knownPayoutMethods = ["CCP", "RIB", "BARIDIMOB"]
+
+    /// "Paid with the next weekly payout, on {date}." only while something is owed and no owed note says
+    /// why the next run will not pay it (negative, no payout details, under the minimum), as the website.
     static func showsNextPayoutDate(_ summary: WalletSummary) -> Bool {
-        summary.owed > 0
+        summary.owed > 0 && owedNote(summary) == nil
+    }
+
+    /// The payout methods with the catalog's labels (`GET /catalog → payoutMethods`), only those this build
+    /// can send; the website's labels (`fallback`) while the catalog is not there yet or offers none of them.
+    static func payoutMethods(_ catalog: [CatalogOption]?, fallback: [CatalogOption]) -> [CatalogOption] {
+        let known = (catalog ?? []).filter { knownPayoutMethods.contains($0.value) }
+        return known.isEmpty ? fallback : known
     }
 
     /// The colour of a history amount.
@@ -141,4 +151,13 @@ struct PayoutDetailsInput: Equatable {
 
     /// "Save" is enabled once the details are valid.
     var isValid: Bool { !method.isEmpty && detailsAreValid }
+}
+
+// The account details are a bank or postal account number: never printed in logs or crash reports.
+extension PayoutDetailsInput: CustomStringConvertible, CustomDebugStringConvertible {
+    var description: String {
+        "PayoutDetailsInput(method: \(method), accountDetails: <redacted>, minLength: \(minLength), maxLength: \(maxLength))"
+    }
+
+    var debugDescription: String { description }
 }

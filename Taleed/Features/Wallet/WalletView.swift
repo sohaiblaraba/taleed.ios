@@ -152,13 +152,13 @@ private struct WalletScreen: View {
         .accessibilityIdentifier("wallet.tabs")
     }
 
-    /// The catalog's labels (`GET /catalog`); the website's own while the catalog is not there yet.
+    /// The catalog's labels (`GET /catalog`), only for the methods this build can send; the website's own
+    /// while the catalog is not there yet.
     private var payoutMethods: [CatalogOption] {
-        if let methods = catalog.catalog?.payoutMethods, !methods.isEmpty { return methods }
-        return [
+        WalletRules.payoutMethods(catalog.catalog?.payoutMethods, fallback: [
             CatalogOption(value: "CCP", label: l10n.string(.walletMethodCcp)),
             CatalogOption(value: "RIB", label: l10n.string(.walletMethodRib)),
             CatalogOption(value: "BARIDIMOB", label: l10n.string(.walletMethodBaridimob)),
-        ]
+        ])
     }
 }

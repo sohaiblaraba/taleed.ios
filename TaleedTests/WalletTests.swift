@@ -22,11 +22,29 @@ struct WalletRulesTests {
         #expect(WalletRules.owedNote(walletSummary(owed: 0, account: nil)) == nil)
     }
 
-    @Test func theNextPayoutDateShowsOnlyWhileSomethingIsOwed() {
+    @Test func theNextPayoutDateShowsOnlyWhenTheNextRunPaysTheAmount() {
         #expect(WalletRules.showsNextPayoutDate(walletSummary(owed: 4200)))
-        #expect(WalletRules.showsNextPayoutDate(walletSummary(owed: 50)))
+        #expect(WalletRules.showsNextPayoutDate(walletSummary(owed: 100)))
+        // Nothing owed, or negative: nothing to pay.
         #expect(!WalletRules.showsNextPayoutDate(walletSummary(owed: 0)))
         #expect(!WalletRules.showsNextPayoutDate(walletSummary(owed: -1)))
+        // An owed note says why the next run will not pay it: no date then (the website's wallet page).
+        #expect(!WalletRules.showsNextPayoutDate(walletSummary(owed: 50)))
+        #expect(!WalletRules.showsNextPayoutDate(walletSummary(owed: 4200, account: nil)))
+        #expect(!WalletRules.showsNextPayoutDate(walletSummary(owed: 99, account: nil)))
+    }
+
+    @Test func thePayoutSheetOffersOnlyTheMethodsThisBuildCanSend() {
+        let fallback = [CatalogOption(value: "CCP", label: "CCP"), CatalogOption(value: "RIB", label: "Virement bancaire (RIB)"),
+                        CatalogOption(value: "BARIDIMOB", label: "BaridiMob")]
+        let catalog = [CatalogOption(value: "RIB", label: "RIB (catalog)"), CatalogOption(value: "PAYPAL", label: "PayPal"),
+                       CatalogOption(value: "CCP", label: "CCP (catalog)")]
+        #expect(WalletRules.payoutMethods(catalog, fallback: fallback).map(\.value) == ["RIB", "CCP"])
+        #expect(WalletRules.payoutMethods(catalog, fallback: fallback).first?.label == "RIB (catalog)")
+        // No catalog yet, an empty one, or only methods this build does not know: the website's labels.
+        #expect(WalletRules.payoutMethods(nil, fallback: fallback) == fallback)
+        #expect(WalletRules.payoutMethods([], fallback: fallback) == fallback)
+        #expect(WalletRules.payoutMethods([CatalogOption(value: "PAYPAL", label: "PayPal")], fallback: fallback) == fallback)
     }
 
     @Test func amountsAreGreenFromZeroAndVouchersOnlyWhileActive() {
@@ -144,6 +162,19 @@ struct PayoutDetailsFormTests {
         form.accountDetails = "   "
         #expect(!form.isValid)
         #expect(!form.showsLengthError)
+    }
+
+    @Test func theAccountDetailsNeverShowInDescriptions() {
+        let secret = "00799999000123456789"
+        let account = PayoutAccountInfo(method: "RIB", methodLabel: "Virement bancaire (RIB)", accountDetails: secret, updatedAt: Date())
+        let form = PayoutDetailsInput(account: account, methods: methods, limits: limits)
+        for text in [String(describing: account), String(reflecting: account), "\(account)",
+                     String(describing: form), String(reflecting: form), "\(form)",
+                     String(describing: Optional(account)), String(describing: [form])] {
+            #expect(!text.contains(secret))
+            #expect(text.contains("<redacted>"))
+        }
+        #expect(String(describing: account).contains("RIB"))
     }
 
     @Test func theFieldTakesALittleMoreThanTheMaximum() {
