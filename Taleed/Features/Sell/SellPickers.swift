@@ -67,7 +67,7 @@ struct SellChoiceSheet: View {
             }
             .padding(.bottom, TaleedSpacing.s16)
         }
-        .background(TaleedColor.surfacePrimary)
+        .background(TaleedColor.surfaceElevated)
     }
 }
 
@@ -125,11 +125,11 @@ struct SellSearchableChoiceSheet: View {
                 }
             }
         }
-        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        .background(TaleedColor.surfaceElevated.ignoresSafeArea())
         .presentationDetents(isShort ? [.medium, .large] : [.large])
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)
-        .presentationBackground(TaleedColor.surfacePrimary)
+        .presentationBackground(TaleedColor.surfaceElevated)
     }
 }
 
@@ -166,12 +166,12 @@ struct SellBrandSheet: View {
             }
             .scrollDismissesKeyboard(.immediately)
         }
-        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        .background(TaleedColor.surfaceElevated.ignoresSafeArea())
         .task { await references.loadBrands() }
         .presentationDetents([.large])
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)
-        .presentationBackground(TaleedColor.surfacePrimary)
+        .presentationBackground(TaleedColor.surfaceElevated)
     }
 
     private var queryBinding: Binding<String> {

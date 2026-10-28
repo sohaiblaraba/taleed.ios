@@ -87,7 +87,7 @@ private struct ReferralsScreen: View {
                     .presentationDetents(model.isSheetCompact ? [.height(compactSheetHeight)] : [.large])
                     .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
                     .presentationDragIndicator(.hidden)
-                    .presentationBackground(TaleedColor.surfacePrimary)
+                    .presentationBackground(TaleedColor.surfaceElevated)
             }
         }
     }

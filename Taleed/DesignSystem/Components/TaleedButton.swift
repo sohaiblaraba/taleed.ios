@@ -104,10 +104,10 @@ struct TaleedButtonColors: Equatable {
         switch (kind, state) {
         case (.primary, .normal): return .init(fill: Palette.brandPrimary, border: Palette.primaryButtonBorder, content: Palette.primaryButtonContent)
         case (.primary, .pressed): return .init(fill: Palette.primaryButtonPressed, border: Palette.primaryButtonPressed, content: Palette.primaryButtonContent)
-        case (.primary, .disabled): return .init(fill: Palette.primaryButtonDisabled, border: Palette.primaryButtonDisabled, content: Palette.primaryButtonContent)
+        case (.primary, .disabled): return .init(fill: Palette.primaryButtonDisabled, border: Palette.primaryButtonDisabled, content: Palette.primaryButtonDisabledContent)
         case (.secondary, .normal): return .init(fill: Palette.mint400, border: Palette.mint500, content: Palette.mint900)
         case (.secondary, .pressed): return .init(fill: Palette.mint500, border: Palette.mint500, content: Palette.mint900)
-        case (.secondary, .disabled): return .init(fill: Palette.mintTintBorder, border: Palette.mintTintBorderStrong, content: Palette.contentDisabled)
+        case (.secondary, .disabled): return .init(fill: Palette.secondaryButtonDisabled, border: Palette.secondaryButtonDisabledBorder, content: Palette.secondaryButtonDisabledContent)
         case (.tertiary, .normal): return .init(fill: Palette.brandTint, border: Palette.brandTintBorder, content: Palette.brandEmphasis)
         case (.tertiary, .pressed): return .init(fill: Palette.brandTintStrong, border: Palette.brandTintBorder, content: Palette.brandEmphasis)
         case (.tertiary, .disabled): return .init(fill: Palette.brandTint, border: Palette.brandTintBorder, content: Palette.linkDisabled)

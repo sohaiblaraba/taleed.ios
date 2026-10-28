@@ -66,11 +66,11 @@ struct DisputeFormSheet: View {
             }
             .accessibilityIdentifier("dispute.submit")
         }
-        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        .background(TaleedColor.surfaceElevated.ignoresSafeArea())
         .presentationDetents([.large])
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)
-        .presentationBackground(TaleedColor.surfacePrimary)
+        .presentationBackground(TaleedColor.surfaceElevated)
         .interactiveDismissDisabled(model.isSending || model.photos.isUploading)
         .task {
             if reasons.isEmpty { await catalog.refresh() }
@@ -169,12 +169,12 @@ struct ReviewFormSheet: View {
             }
             .accessibilityIdentifier("review.submit")
         }
-        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        .background(TaleedColor.surfaceElevated.ignoresSafeArea())
         // Sized to the stars, the comment and the button; the comment can take the full height.
         .presentationDetents([.medium, .large])
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)
-        .presentationBackground(TaleedColor.surfacePrimary)
+        .presentationBackground(TaleedColor.surfaceElevated)
         .interactiveDismissDisabled(model.isSending)
     }
 }
@@ -378,7 +378,7 @@ struct SheetFooterButton: View {
         .padding(.top, TaleedSpacing.s12)
         // max(16, inset) on the sheet's bottom edge (D-15); 16 above the keyboard.
         .bottomBarPadding(TaleedSpacing.s16)
-        .bottomBarBackground(TaleedColor.surfacePrimary)
+        .bottomBarBackground(TaleedColor.surfaceElevated)
         .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
         .announcesFieldError(error)
     }

@@ -278,7 +278,7 @@ private struct AddressFormSheet: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
-        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        .background(TaleedColor.surfaceElevated.ignoresSafeArea())
         .presentationDetents([.large])
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)

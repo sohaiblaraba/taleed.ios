@@ -44,7 +44,7 @@ struct FilterSheetView: View {
                 .accessibilityIdentifier("filters.scroll")
                 footer
             }
-            .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+            .background(TaleedColor.surfaceElevated.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: FilterPicker.self) { picker in
                 FilterOptionsView(title: title(of: picker), options: options(for: picker), selection: selection(of: picker),
@@ -68,7 +68,7 @@ struct FilterSheetView: View {
         .presentationDetents([Self.partialDetent, .large], selection: $detent)
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)
-        .presentationBackground(TaleedColor.surfacePrimary)
+        .presentationBackground(TaleedColor.surfaceElevated)
         .accessibilityAction(.escape) { dismiss() }
     }
 
@@ -102,7 +102,7 @@ struct FilterSheetView: View {
         .padding(.horizontal, TaleedLayout.screenMargin)
         .padding(.top, TaleedSpacing.s12)
         .bottomBarPadding(TaleedSpacing.s12)
-        .bottomBarBackground(TaleedColor.surfacePrimary)
+        .bottomBarBackground(TaleedColor.surfaceElevated)
         .overlay(alignment: .top) { Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1) }
     }
 

@@ -3,6 +3,16 @@
     {
       "filename": "referral-hero.imageset.jpg",
       "idiom": "universal"
+    },
+    {
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ],
+      "filename": "referral-hero-dark.png",
+      "idiom": "universal"
     }
   ],
   "info": {

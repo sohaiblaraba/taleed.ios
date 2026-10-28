@@ -89,11 +89,11 @@ struct ReportSheetView: View {
             }
             .accessibilityIdentifier("report.submit")
         }
-        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        .background(TaleedColor.surfaceElevated.ignoresSafeArea())
         .presentationDetents([.large])
         .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
         .presentationDragIndicator(.hidden)
-        .presentationBackground(TaleedColor.surfacePrimary)
+        .presentationBackground(TaleedColor.surfaceElevated)
         .interactiveDismissDisabled(model.isSending)
         .task {
             if catalog.catalog?.reportReasons.isEmpty ?? true { await catalog.refresh() }

@@ -71,7 +71,7 @@ struct FilterOptionsView: View {
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        .background(TaleedColor.surfaceElevated.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
     }
 

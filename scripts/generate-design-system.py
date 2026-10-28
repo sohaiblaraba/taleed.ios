@@ -82,6 +82,8 @@ IMAGES = [
 DARK_IMAGES = {
     "taleed-wordmark": ("brand/taleed-wordmark.svg", {"#2455F5": "#EEF1F8"}),
     "empty-state-search": ("illustrations/empty-state-search.svg", {"#E9EEFF": "#1A2550", "#2455F5": "#7C9BFF"}),
+    # The opaque referral hero on a transparent background (the white removed, its grey shadow made black).
+    "referral-hero": ("referrals/referral-hero-dark-ios.png", None),
 }
 
 # iOS Dynamic Type sizes at the default content size, to pick the text style that each token scales with.
@@ -471,6 +473,14 @@ def imageset(path: Path, source: Path, template: bool, scale, dark=None) -> None
         shutil.copy(source, path / filename)
         images = [{"filename": filename, "idiom": "universal"}] if scale == "1x" else [
             {"filename": filename, "idiom": "universal", "scale": scale}]
+        if dark:
+            dark_source = source.parents[1] / dark[0]
+            dark_name = path.stem + "-dark" + dark_source.suffix
+            shutil.copy(dark_source, path / dark_name)
+            entry = {"appearances": [{"appearance": "luminosity", "value": "dark"}], "filename": dark_name, "idiom": "universal"}
+            if scale != "1x":
+                entry["scale"] = scale
+            images.append(entry)
     if template:
         properties["template-rendering-intent"] = "template"
     data = {"images": images, "info": {"author": "xcode", "version": 1}}

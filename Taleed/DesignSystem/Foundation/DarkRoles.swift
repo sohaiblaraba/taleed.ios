@@ -29,8 +29,16 @@ extension TaleedColor {
     static let primaryButtonBorder = blue600.inDark(brandPrimary)
     /// The pressed primary button (`blue/600`). Dark #A3B8FF, a step lighter than the fill.
     static let primaryButtonPressed = blue600.inDark(Color(taleedHex: 0xA3B8FF))
-    /// The disabled primary button (`blue/200`). Dark: `brandSoftBorder`.
-    static let primaryButtonDisabled = blue200.inDark(brandSoftBorder)
+    /// The disabled primary button (`blue/200`). Dark: `surfaceSubtle`, the disabled send button's grey: a
+    /// blue fill read as enabled in dark.
+    static let primaryButtonDisabled = blue200.inDark(surfaceSubtle)
+    /// The disabled primary button's label (`blue/50`). Dark #8A94AC (`onControlDisabledFill`).
+    static let primaryButtonDisabledContent = blue50.inDark(Color(taleedHex: 0x8A94AC))
+    /// The disabled secondary button (`mint/100` fill, `mint/200` border, `navy/300` label). Dark: the
+    /// disabled primary's grey, so every disabled filled button looks the same in dark.
+    static let secondaryButtonDisabled = mint100.inDark(surfaceSubtle)
+    static let secondaryButtonDisabledBorder = mint200.inDark(surfaceSubtle)
+    static let secondaryButtonDisabledContent = navy300.inDark(Color(taleedHex: 0x8A94AC))
     /// A pressed link (`blue/600`). Dark: `brandDark`.
     static let linkPressed = blue600.inDark(brandDark)
     /// The underlined link (`blue/900`). Dark: `textPrimary`.
@@ -42,10 +50,10 @@ extension TaleedColor {
 
     // MARK: Disabled, muted and inverse
 
-    /// Disabled labels (`navy/300`). Dark #5C6785.
-    static let contentDisabled = navy300.inDark(Color(taleedHex: 0x5C6785))
-    /// Disabled icons (`navy/400`). Dark #5C6785.
-    static let iconDisabled = navy400.inDark(Color(taleedHex: 0x5C6785))
+    /// Disabled labels (`navy/300`). Dark #6B7590 (3.8:1 on `surfacePrimary`).
+    static let contentDisabled = navy300.inDark(Color(taleedHex: 0x6B7590))
+    /// Disabled icons (`navy/400`). Dark #6B7590.
+    static let iconDisabled = navy400.inDark(Color(taleedHex: 0x6B7590))
     /// A disabled control's fill (`navy/200`, the send button). Dark: `surfaceSubtle`.
     static let controlDisabledFill = navy200.inDark(surfaceSubtle)
     /// Muted icons (`navy/500`, the views count). Dark: `textSecondary`.
@@ -75,8 +83,6 @@ extension TaleedColor {
     static let mintTint = mint50.inDark(successSoft)
     /// `mint/100` borders and fills on a mint tint. Dark #1D4A3B.
     static let mintTintBorder = mint100.inDark(Color(taleedHex: 0x1D4A3B))
-    /// `mint/200` borders (the disabled secondary button). Dark #1D4A3B.
-    static let mintTintBorderStrong = mint200.inDark(Color(taleedHex: 0x1D4A3B))
     /// `mint/500` icons on a tint. Dark: `feedbackSuccess`.
     static let mintIcon = mint500.inDark(feedbackSuccess)
     /// `mint/600` text on a tint. Dark: `feedbackSuccess`.
@@ -94,10 +100,14 @@ extension TaleedColor {
         ("primaryButtonContent", primaryButtonContent, 0xF1F8FF, 0x0B1120),
         ("primaryButtonBorder", primaryButtonBorder, 0x1B43C3, 0x7C9BFF),
         ("primaryButtonPressed", primaryButtonPressed, 0x1B43C3, 0xA3B8FF),
-        ("primaryButtonDisabled", primaryButtonDisabled, 0xACC8FF, 0x34478F),
+        ("primaryButtonDisabled", primaryButtonDisabled, 0xACC8FF, 0x26304A),
+        ("primaryButtonDisabledContent", primaryButtonDisabledContent, 0xF1F8FF, 0x8A94AC),
         ("linkPressed", linkPressed, 0x1B43C3, 0xB9C7FF), ("linkStrong", linkStrong, 0x05123C, 0xEEF1F8),
         ("linkStrongPressed", linkStrongPressed, 0x133293, 0xC2C8D6), ("linkDisabled", linkDisabled, 0xACC8FF, 0x4A5675),
-        ("contentDisabled", contentDisabled, 0xADB0BA, 0x5C6785), ("iconDisabled", iconDisabled, 0x9095A1, 0x5C6785),
+        ("contentDisabled", contentDisabled, 0xADB0BA, 0x6B7590), ("iconDisabled", iconDisabled, 0x9095A1, 0x6B7590),
+        ("secondaryButtonDisabled", secondaryButtonDisabled, 0xE0F6EC, 0x26304A),
+        ("secondaryButtonDisabledBorder", secondaryButtonDisabledBorder, 0xBCEED8, 0x26304A),
+        ("secondaryButtonDisabledContent", secondaryButtonDisabledContent, 0xADB0BA, 0x8A94AC),
         ("controlDisabledFill", controlDisabledFill, 0xCACDD4, 0x26304A), ("iconMuted", iconMuted, 0x727887, 0x9AA3B8),
         ("infoText", infoText, 0x3E4558, 0xC2C8D6), ("sectionBand", sectionBand, 0xF7F8FA, 0x0B1120),
         ("inverseFill", inverseFill, 0x272E42, 0xEEF1F8), ("onInverseFill", onInverseFill, 0xFFFFFF, 0x0B1120),
@@ -105,7 +115,7 @@ extension TaleedColor {
         ("onControlDisabledFill", onControlDisabledFill, 0xFFFFFF, 0x8A94AC),
         ("toggleThumb", toggleThumb, 0xFFFFFF, 0xEEF1F8), ("toastDark", toastDark, 0x11182D, 0x1E2945),
         ("mintTint", mintTint, 0xF2FAF6, 0x0F2A22), ("mintTintBorder", mintTintBorder, 0xE0F6EC, 0x1D4A3B),
-        ("mintTintBorderStrong", mintTintBorderStrong, 0xBCEED8, 0x1D4A3B), ("mintIcon", mintIcon, 0x4AB08B, 0x4CD39F),
+        ("mintIcon", mintIcon, 0x4AB08B, 0x4CD39F),
         ("mintText", mintText, 0x36896B, 0x4CD39F), ("mintOnTint", mintOnTint, 0x032117, 0x4CD39F),
     ].map { ColorToken(group: "dark role", name: $0.0, color: $0.1, hex: $0.2, opacity: 1, darkHex: $0.3, darkOpacity: 1) }
 }
