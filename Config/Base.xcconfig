@@ -1,9 +1,9 @@
 // Settings shared by every configuration. Each configuration file includes this one.
 
-MARKETING_VERSION = 1.0.0
 // The build number is YYYYMMVN: the year, the month and this month's build number from 01 (20261001, 20261002,
-// then 20261101 in November). Android uses the same number as its versionCode.
-CURRENT_PROJECT_VERSION = 20261001
+// then 20261101 in November). The version is the same number. Android uses it as its versionCode and versionName.
+CURRENT_PROJECT_VERSION = 20261002
+MARKETING_VERSION = $(CURRENT_PROJECT_VERSION)
 
 IPHONEOS_DEPLOYMENT_TARGET = 17.0
 TARGETED_DEVICE_FAMILY = 1

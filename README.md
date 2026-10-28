@@ -103,7 +103,9 @@ xcodebuild -project Taleed.xcodeproj -scheme "Taleed Staging" -configuration Sta
 2. Raise `CURRENT_PROJECT_VERSION` in `Config/Base.xcconfig`. App Store Connect takes each upload of a
    version (`MARKETING_VERSION`) only with a higher build number. The build number is `YYYYMMVN`: the year,
    the month, and this month's build number from `01` (`20261001`, `20261002`, then `20261101` in November).
-   Android uses the same number as its versionCode.
+   `MARKETING_VERSION` is the same number, so each upload is also a new version in App Store Connect. Android
+   uses the same number as its versionCode and versionName. To force an update, set `MOBILE_MIN_VERSION_IOS`
+   on the server to the number with `.0.0` added, for example `20261002.0.0`.
 3. Pick the `Taleed Staging` scheme and "Any iOS Device (arm64)", then Product > Archive. The archive
    opens in the Organizer (`~/Library/Developer/Xcode/Archives/`).
 4. In the Organizer, select Distribute App > App Store Connect (or TestFlight Internal Only), and upload.
