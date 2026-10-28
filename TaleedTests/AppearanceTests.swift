@@ -82,6 +82,14 @@ struct AppearanceTests {
         #expect(dark("textPrimary") == 0xEEF1F8)
         #expect(dark("feedbackError") == 0xFF7A8C)
         #expect(dark("onFeedbackError") == 0x0B1120)
+        #expect(dark("onBrandAccent") == 0x0B1120)
+        #expect(dark("brandAccentPressed") == 0x4CD39F)
+        #expect(dark("linkDisabled") == 0x8A94AC)
+        #expect(dark("imageRemoveScrim") == 0x000000)
+        let light = { (name: String) in (TaleedColor.catalog + TaleedColor.appCatalog).first { $0.name == name }?.hex }
+        #expect(light("onBrandAccent") == 0x032117)
+        #expect(light("brandAccentPressed") == 0x4AB08B)
+        #expect(light("linkDisabled") == 0xACC8FF)
         let pairs: [(String, String)] = [
             ("textPrimary", "surfacePrimary"), ("textBody", "surfacePrimary"), ("textSecondary", "surfacePrimary"),
             ("textSecondary", "surfaceElevated"), ("brandPrimary", "surfacePrimary"), ("feedbackError", "surfacePrimary"),
@@ -89,6 +97,7 @@ struct AppearanceTests {
             ("feedbackSuccess", "successSoft"), ("feedbackError", "errorSoft"), ("textSecondarySmall", "brandSoft"),
             ("onFeedbackError", "feedbackError"), ("brandEmphasis", "brandTint"), ("navInactive", "surfaceElevated"),
             ("mintOnTint", "mintTint"), ("infoText", "brandTintStrong"), ("onInverseFill", "inverseFill"),
+            ("onBrandAccent", "brandAccent"), ("onBrandAccent", "brandAccentPressed"), ("linkDisabled", "brandTint"),
         ]
         for (text, surface) in pairs {
             let ratio = try Self.contrast(#require(dark(text)), #require(dark(surface)))

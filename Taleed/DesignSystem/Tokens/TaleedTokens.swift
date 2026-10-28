@@ -132,22 +132,26 @@ enum TaleedColor {
     static let scrim = Color(taleedLight: 0x11182D, lightOpacity: 0.8, dark: 0x000000, darkOpacity: 0.7)
     /// Home hero banner overlay above the photo
     static let heroOverlay = Color(taleedLight: 0x000000, lightOpacity: 0.4, dark: 0x000000, darkOpacity: 0.5)
-    /// Hero banner close button circle. Same in dark.
-    static let imageRemoveScrim = Color(taleedHex: 0x11182D, opacity: 0.5)
+    /// Hero banner close button circle
+    static let imageRemoveScrim = Color(taleedLight: 0x11182D, lightOpacity: 0.5, dark: 0x000000, darkOpacity: 0.5)
     /// Spec boards only (Navigation patterns, toast specimen, price treatment). Not an app surface.
     static let darkSurface = Color(taleedLight: 0x101A3D, dark: 0x1E2945)
 
     // MARK: Dark-mode roles (dark-mode.md, no Figma variable)
     /// Text and icons on a `brandPrimary` fill.
     static let onBrandPrimary = Color(taleedLight: 0xFFFFFF, dark: 0x0B1120)
-    /// dark-mode.md role.
-    static let onBrandAccent = Color(taleedLight: 0x11182D, dark: 0x0B1120)
+    /// Text on a `brandAccent` fill (secondary button, Cover badge).
+    static let onBrandAccent = Color(taleedLight: 0x032117, dark: 0x0B1120)
     /// Sheets, dialogs, menus, the tab bar.
     static let surfaceElevated = Color(taleedLight: 0xFFFFFF, dark: 0x1A2338)
     /// Text fields, checkboxes, the toggle's off track.
     static let borderField = Color(taleedLight: 0xDDE2EC, dark: 0x4A5675)
     /// Text on a destructive fill.
     static let onFeedbackError = Color(taleedLight: 0xFFFFFF, dark: 0x0B1120)
+    /// Pressed `brandAccent` fill.
+    static let brandAccentPressed = Color(taleedLight: 0x4AB08B, dark: 0x4CD39F)
+    /// Disabled tertiary / link label (2026-10-28 review: #4A5675 was 2:1).
+    static let linkDisabled = Color(taleedLight: 0xACC8FF, dark: 0x8A94AC)
 
     /// Every colour token by group and name, with its light and dark values (for the gallery and token tests).
     static let catalog: [ColorToken] = [
@@ -230,13 +234,15 @@ enum TaleedColor {
         ColorToken(group: "literal", name: "photoTipIcon", color: photoTipIcon, hex: 0x087A59, opacity: 1, darkHex: 0x4CD39F, darkOpacity: 1),
         ColorToken(group: "literal", name: "scrim", color: scrim, hex: 0x11182D, opacity: 0.8, darkHex: 0x000000, darkOpacity: 0.7),
         ColorToken(group: "literal", name: "heroOverlay", color: heroOverlay, hex: 0x000000, opacity: 0.4, darkHex: 0x000000, darkOpacity: 0.5),
-        ColorToken(group: "literal", name: "imageRemoveScrim", color: imageRemoveScrim, hex: 0x11182D, opacity: 0.5, darkHex: 0x11182D, darkOpacity: 0.5),
+        ColorToken(group: "literal", name: "imageRemoveScrim", color: imageRemoveScrim, hex: 0x11182D, opacity: 0.5, darkHex: 0x000000, darkOpacity: 0.5),
         ColorToken(group: "literal", name: "darkSurface", color: darkSurface, hex: 0x101A3D, opacity: 1, darkHex: 0x1E2945, darkOpacity: 1),
         ColorToken(group: "dark", name: "onBrandPrimary", color: onBrandPrimary, hex: 0xFFFFFF, opacity: 1, darkHex: 0x0B1120, darkOpacity: 1),
-        ColorToken(group: "dark", name: "onBrandAccent", color: onBrandAccent, hex: 0x11182D, opacity: 1, darkHex: 0x0B1120, darkOpacity: 1),
+        ColorToken(group: "dark", name: "onBrandAccent", color: onBrandAccent, hex: 0x032117, opacity: 1, darkHex: 0x0B1120, darkOpacity: 1),
         ColorToken(group: "dark", name: "surfaceElevated", color: surfaceElevated, hex: 0xFFFFFF, opacity: 1, darkHex: 0x1A2338, darkOpacity: 1),
         ColorToken(group: "dark", name: "borderField", color: borderField, hex: 0xDDE2EC, opacity: 1, darkHex: 0x4A5675, darkOpacity: 1),
         ColorToken(group: "dark", name: "onFeedbackError", color: onFeedbackError, hex: 0xFFFFFF, opacity: 1, darkHex: 0x0B1120, darkOpacity: 1),
+        ColorToken(group: "dark", name: "brandAccentPressed", color: brandAccentPressed, hex: 0x4AB08B, opacity: 1, darkHex: 0x4CD39F, darkOpacity: 1),
+        ColorToken(group: "dark", name: "linkDisabled", color: linkDisabled, hex: 0xACC8FF, opacity: 1, darkHex: 0x8A94AC, darkOpacity: 1),
     ]
 }
 

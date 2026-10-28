@@ -175,7 +175,11 @@ struct DesignTokenTests {
 
     @Test func buttonColoursFollowTheSpecTable() {
         #expect(TaleedButtonColors.of(.secondary, .normal) ==
-            TaleedButtonColors(fill: TaleedColor.mint400, border: TaleedColor.mint500, content: TaleedColor.mint900))
+            TaleedButtonColors(fill: TaleedColor.brandAccent, border: TaleedColor.brandAccentPressed, content: TaleedColor.onBrandAccent))
+        #expect(TaleedButtonColors.of(.secondary, .pressed) ==
+            TaleedButtonColors(fill: TaleedColor.brandAccentPressed, border: TaleedColor.brandAccentPressed,
+                               content: TaleedColor.onBrandAccent))
+        #expect(TaleedButtonColors.of(.tertiary, .disabled).content == TaleedColor.linkDisabled)
         #expect(TaleedButtonColors.of(.danger, .pressed).fill == TaleedColor.dangerPressed)
         #expect(TaleedButtonColors.of(.hyperlink, .normal).fill == nil)
     }

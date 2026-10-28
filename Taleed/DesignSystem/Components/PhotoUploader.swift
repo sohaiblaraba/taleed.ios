@@ -134,7 +134,7 @@ struct DashedMintBox: ViewModifier {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
         content
             .background(shape.fill(TaleedColor.mintTint))
-            .overlay(shape.strokeBorder(hasError ? TaleedColor.feedbackError : TaleedColor.mint400,
+            .overlay(shape.strokeBorder(hasError ? TaleedColor.feedbackError : TaleedColor.brandAccent,
                                         style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
             .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: hasError)
     }
@@ -290,10 +290,10 @@ private struct PhotoTile: View {
                 Text(DesignSystemStrings.string(.photoUploaderCover, locale: locale))
                     .taleedFont(TaleedFont.buttonSmall)
             }
-            .foregroundStyle(TaleedColor.mint900)
+            .foregroundStyle(TaleedColor.onBrandAccent)
             .padding(.vertical, 6)
             .padding(.horizontal, TaleedSpacing.s8)
-            .taleedCard(fill: TaleedColor.mint400, border: TaleedColor.mint500, radius: TaleedRadius.s)
+            .taleedCard(fill: TaleedColor.brandAccent, border: TaleedColor.brandAccentPressed, radius: TaleedRadius.s)
             // The tile already says "cover".
             .accessibilityHidden(true)
         } else {

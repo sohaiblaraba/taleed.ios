@@ -45,8 +45,7 @@ extension TaleedColor {
     static let linkStrong = blue900.inDark(textPrimary)
     /// The pressed underlined link (`blue/700`). Dark: `textBody`.
     static let linkStrongPressed = blue700.inDark(textBody)
-    /// Disabled links and tertiary labels (`blue/200`). Dark: `borderField`.
-    static let linkDisabled = blue200.inDark(borderField)
+    // `linkDisabled` and `brandAccentPressed` are dark-mode.md rows: generated in TaleedTokens.swift.
 
     // MARK: Disabled, muted and inverse
 
@@ -103,7 +102,7 @@ extension TaleedColor {
         ("primaryButtonDisabled", primaryButtonDisabled, 0xACC8FF, 0x26304A),
         ("primaryButtonDisabledContent", primaryButtonDisabledContent, 0xF1F8FF, 0x8A94AC),
         ("linkPressed", linkPressed, 0x1B43C3, 0xB9C7FF), ("linkStrong", linkStrong, 0x05123C, 0xEEF1F8),
-        ("linkStrongPressed", linkStrongPressed, 0x133293, 0xC2C8D6), ("linkDisabled", linkDisabled, 0xACC8FF, 0x4A5675),
+        ("linkStrongPressed", linkStrongPressed, 0x133293, 0xC2C8D6),
         ("contentDisabled", contentDisabled, 0xADB0BA, 0x6B7590), ("iconDisabled", iconDisabled, 0x9095A1, 0x6B7590),
         ("secondaryButtonDisabled", secondaryButtonDisabled, 0xE0F6EC, 0x26304A),
         ("secondaryButtonDisabledBorder", secondaryButtonDisabledBorder, 0xBCEED8, 0x26304A),
