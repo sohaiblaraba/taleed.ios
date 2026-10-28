@@ -27,26 +27,23 @@ public struct OrderCreate: Sendable, Codable, Hashable {
     public var delivery: CheckoutDelivery
     /** A promo code the member typed. Case and spaces do not matter. */
     public var promoCode: String?
-    /** Pay with the wallet balance first. Default false. */
-    public var useWallet: Bool?
     /** How to pay what is left: one of the quote's `paymentMethods`. Default: the first of them. */
     public var paymentMethod: PaymentMethod?
     /** Who receives the parcel: the name the carrier asks for, 2 to 80 characters. */
     public var recipientName: String
     /** A number the carrier can call: 0, then 8 or 9 digits, such as `0550 12 34 56`. Spaces, dots and dashes are ignored. */
     public var phone: String
-    /** The quote's `amounts.total` the member agreed to. When the total changed since — a fee, a voucher, the wallet balance — nothing is ordered (`price_changed`): quote again and show it. Always send it. */
+    /** The quote's `amounts.total` the member agreed to. When the total changed since — a fee, a voucher — nothing is ordered (`price_changed`): quote again and show it. Always send it. */
     public var expectedTotal: Int?
     /** Your app's id for this order, such as a UUID, made once when the member taps the button. Ordering again with the same `clientId` returns the order already placed (`replayed`) instead of failing on the items it reserved: retry freely. */
     public var clientId: String?
 
-    public init(listingId: String? = nil, bundleId: String? = nil, offerId: String? = nil, delivery: CheckoutDelivery, promoCode: String? = nil, useWallet: Bool? = nil, paymentMethod: PaymentMethod? = nil, recipientName: String, phone: String, expectedTotal: Int? = nil, clientId: String? = nil) {
+    public init(listingId: String? = nil, bundleId: String? = nil, offerId: String? = nil, delivery: CheckoutDelivery, promoCode: String? = nil, paymentMethod: PaymentMethod? = nil, recipientName: String, phone: String, expectedTotal: Int? = nil, clientId: String? = nil) {
         self.listingId = listingId
         self.bundleId = bundleId
         self.offerId = offerId
         self.delivery = delivery
         self.promoCode = promoCode
-        self.useWallet = useWallet
         self.paymentMethod = paymentMethod
         self.recipientName = recipientName
         self.phone = phone
@@ -60,7 +57,6 @@ public struct OrderCreate: Sendable, Codable, Hashable {
         case offerId
         case delivery
         case promoCode
-        case useWallet
         case paymentMethod
         case recipientName
         case phone
@@ -77,7 +73,6 @@ public struct OrderCreate: Sendable, Codable, Hashable {
         try container.encodeIfPresent(offerId, forKey: .offerId)
         try container.encode(delivery, forKey: .delivery)
         try container.encodeIfPresent(promoCode, forKey: .promoCode)
-        try container.encodeIfPresent(useWallet, forKey: .useWallet)
         try container.encodeIfPresent(paymentMethod, forKey: .paymentMethod)
         try container.encode(recipientName, forKey: .recipientName)
         try container.encode(phone, forKey: .phone)

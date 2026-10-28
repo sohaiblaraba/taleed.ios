@@ -149,13 +149,27 @@ struct DeletionBlockerTests {
         #expect(DeletionBlocker(failure(.wrongPassword, status: 400)) == .wrongPassword)
         #expect(DeletionBlocker(failure(.ordersInProgress)).remedy == .orders)
         #expect(DeletionBlocker(failure(.disputeInProgress)).remedy == .orders)
-        #expect(DeletionBlocker(failure(.payoutInProgress)).remedy == .wallet)
-        #expect(DeletionBlocker(failure(.walletNotEmpty)).remedy == .payout)
+        #expect(DeletionBlocker(failure(.payoutInProgress)) == .pendingPayout)
+        #expect(DeletionBlocker(failure(.payoutInProgress)).remedy == .earnings)
+        #expect(DeletionBlocker(failure(.walletNotEmpty)) == .walletNotEmpty)
+        #expect(DeletionBlocker(failure(.walletNotEmpty)).remedy == .earnings)
         #expect(DeletionBlocker(failure(.forbidden, status: 403)).remedy == .support)
         #expect(DeletionBlocker(.rateLimited(retryAfter: 600)) == .tooManyAttempts)
         #expect(DeletionBlocker(.network) == .network)
         #expect(DeletionBlocker(.server(status: 500)) == .generic)
         #expect(DeletionBlocker(.unknown(status: 409, code: "new_code")) == .generic)
+    }
+
+    /// `wallet_not_empty` covers three situations (slice H), told apart from what is owed.
+    @Test func walletNotEmptyFollowsTheOwedAmount() {
+        #expect(DeletionBlocker.walletNotEmpty(owed: 4200) == .walletNotEmpty)
+        #expect(DeletionBlocker.walletNotEmpty(owed: 50) == .walletNotEmpty)
+        #expect(DeletionBlocker.walletNotEmpty(owed: -300) == .owesTaleed)
+        #expect(DeletionBlocker.walletNotEmpty(owed: 0) == .refundToSend)
+        // The amounts did not load: the owed text, never a blank refusal.
+        #expect(DeletionBlocker.walletNotEmpty(owed: nil) == .walletNotEmpty)
+        #expect(DeletionBlocker.refundToSend.remedy == .orders)
+        #expect(DeletionBlocker.owesTaleed.remedy == .support)
     }
 }
 

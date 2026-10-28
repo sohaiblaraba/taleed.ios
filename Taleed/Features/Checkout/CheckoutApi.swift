@@ -119,7 +119,6 @@ private extension CheckoutQuoteRequest {
             offerId: request.offerId,
             delivery: CheckoutDelivery(request.delivery),
             promoCode: request.promoCode,
-            useWallet: request.useWallet,
             paymentMethod: request.paymentMethod.flatMap(PaymentMethod.init(rawValue:))
         )
     }
@@ -134,7 +133,6 @@ private extension OrderCreate {
             offerId: request.offerId,
             delivery: CheckoutDelivery(request.delivery),
             promoCode: request.promoCode,
-            useWallet: request.useWallet,
             paymentMethod: order.paymentMethod.flatMap(PaymentMethod.init(rawValue:)),
             recipientName: order.recipientName,
             phone: order.phone,
@@ -176,12 +174,11 @@ extension CheckoutPricing {
             amounts: CheckoutAmountsInfo(
                 itemPrice: amounts.itemPrice, protectionFee: amounts.protectionFee, shippingFee: amounts.shippingFee,
                 subtotal: amounts.subtotal, promoDiscount: amounts.promoDiscount, voucherDiscount: amounts.voucherDiscount,
-                discount: amounts.discount, total: amounts.total, walletApplied: amounts.walletApplied,
+                discount: amounts.discount, total: amounts.total,
                 amountDue: amounts.amountDue, freeDelivery: amounts.freeDelivery
             ),
             promo: promo,
             promoErrorMessage: quote.promoError?.message,
-            walletBalance: quote.walletBalance,
             // An unknown method is never offered (api-guide.md, Compatibility).
             paymentMethods: quote.paymentMethods.compactMap {
                 $0.value == .unknownDefaultOpenApi ? nil : PaymentChoice(value: $0.value.rawValue, label: $0.label, hint: $0.hint)

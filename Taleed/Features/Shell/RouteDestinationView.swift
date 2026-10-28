@@ -106,8 +106,8 @@ struct RouteDestinationView: View {
             if let orders { DisputeThreadView(disputeId: id, dependencies: orders).id(id) } else { RoutePlaceholderView(route: route) }
         case .wallet:
             if let walletApi { WalletView(api: walletApi) } else { RoutePlaceholderView(route: route) }
-        case .walletPayout:
-            if let walletApi { WalletView(api: walletApi, opensPayout: true) } else { RoutePlaceholderView(route: route) }
+        case .payoutDetails:
+            if let walletApi { WalletView(api: walletApi, opensPayoutDetails: true) } else { RoutePlaceholderView(route: route) }
         case .notifications: NotificationsView()
         case .settings: SettingsView()
         case .profileSettings:
@@ -127,7 +127,7 @@ struct RouteDestinationView: View {
         case .help: HelpView()
         case .deleteAccount:
             if let settings {
-                DeleteAccountView(api: settings.account, store: account) { [toasts, l10n, session] in
+                DeleteAccountView(api: settings.account, walletApi: walletApi, store: account) { [toasts, l10n, session] in
                     toasts.show(l10n.string(.settingsDeleteSuccess))
                     session.accountDeleted()
                 }

@@ -7,34 +7,43 @@
 
 import Foundation
 
-/** The wallet screen&#39;s header. Payout methods come from &#x60;GET /catalog&#x60;. */
+/** The Earnings screen&#39;s header. Payout methods come from &#x60;GET /catalog&#x60;. */
 public struct Wallet: Sendable, Codable, Hashable {
 
+    public static let inPayoutRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
+    public static let inProgressRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let voucherBalanceRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
-    public static let pendingEscrowRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
-    /** What the member can spend at checkout and withdraw: released sales, refunds and top-ups, less purchases and payouts. Payouts being processed are already taken off. Integer DZD, negative after an adjustment by the Taleed team. */
-    public var balance: Int
-    /** Active referral vouchers: they take money off orders on their own, and are never withdrawn. Show the headline balance as `balance` + `voucherBalance`, with \"including … in vouchers\". Integer DZD. */
+    /** Earnings owed to the member and not in a payout yet: completed sales, and refunds of old orders. The weekly run pays it in full once it reaches `limits.minPayout` (100 DZD) and payout details are saved. It is never spent at checkout. Integer DZD, negative after an adjustment by the Taleed team. */
+    public var owed: Int
+    /** Payouts created by the weekly run and not sent yet: see `GET /wallet/payouts`. Integer DZD. */
+    public var inPayout: Int
+    /** The member's sales paid but not completed yet: each one becomes `owed` once its order completes. Integer DZD. */
+    public var inProgress: Int
+    /** Active referral vouchers: each one takes money off an eligible order on its own. Never paid out. Show it in the vouchers section, with the voucher rules. Integer DZD. */
     public var voucherBalance: Int
-    /** The member's sales paid but not completed yet: each one joins `balance` once its order is completed. Integer DZD. */
-    public var pendingEscrow: Int
-    /** The card gateways a top-up can use right now, in display order. Empty: hide \"Top up\". */
-    public var topUpMethods: [PaymentMethodOption]
+    /** The next weekly payout run: every Monday at 08:00, Algiers time. ISO 8601, UTC. */
+    public var nextPayoutAt: Date
+    /** Null until the member saves payout details (`PUT /wallet/payout-account`). When it is null and `owed` ≥ `limits.minPayout`, ask for them: the weekly run cannot pay without them. */
+    public var payoutAccount: PayoutAccount?
     public var limits: WalletLimits
 
-    public init(balance: Int, voucherBalance: Int, pendingEscrow: Int, topUpMethods: [PaymentMethodOption], limits: WalletLimits) {
-        self.balance = balance
+    public init(owed: Int, inPayout: Int, inProgress: Int, voucherBalance: Int, nextPayoutAt: Date, payoutAccount: PayoutAccount?, limits: WalletLimits) {
+        self.owed = owed
+        self.inPayout = inPayout
+        self.inProgress = inProgress
         self.voucherBalance = voucherBalance
-        self.pendingEscrow = pendingEscrow
-        self.topUpMethods = topUpMethods
+        self.nextPayoutAt = nextPayoutAt
+        self.payoutAccount = payoutAccount
         self.limits = limits
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
-        case balance
+        case owed
+        case inPayout
+        case inProgress
         case voucherBalance
-        case pendingEscrow
-        case topUpMethods
+        case nextPayoutAt
+        case payoutAccount
         case limits
     }
 
@@ -42,10 +51,12 @@ public struct Wallet: Sendable, Codable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(balance, forKey: .balance)
+        try container.encode(owed, forKey: .owed)
+        try container.encode(inPayout, forKey: .inPayout)
+        try container.encode(inProgress, forKey: .inProgress)
         try container.encode(voucherBalance, forKey: .voucherBalance)
-        try container.encode(pendingEscrow, forKey: .pendingEscrow)
-        try container.encode(topUpMethods, forKey: .topUpMethods)
+        try container.encode(nextPayoutAt, forKey: .nextPayoutAt)
+        try container.encode(payoutAccount, forKey: .payoutAccount)
         try container.encode(limits, forKey: .limits)
     }
 }

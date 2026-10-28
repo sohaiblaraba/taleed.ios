@@ -45,6 +45,8 @@ public struct OrderDetail: Sendable, Codable, Hashable {
     public var pickupReady: Bool
     public var actions: OrderActions
     public var dispute: DisputeSummary?
+    /** A refunded order with money to give back: shown to the buyer only. Null for the seller, and when nothing was paid (an unpaid order, or cash on delivery refunded before delivery). */
+    public var refund: OrderRefund?
     /** The review the signed-in member left on this order. */
     public var myReview: OrderReview?
     /** The review the other side left about the signed-in member. */
@@ -52,7 +54,7 @@ public struct OrderDetail: Sendable, Codable, Hashable {
     /** The buyer and seller's conversation about the item, where the order's milestones are posted too: \"Message the seller\" or \"Message the buyer\". Null if there is none. */
     public var conversationId: String?
 
-    public init(id: String, number: String, role: OrderRole, status: OrderStatus, statusLabel: String, title: String, imageUrl: String?, counterpart: MemberSummary?, createdAt: Date, items: [OrderItem], amounts: OrderAmounts, cashOnDelivery: CashOnDelivery?, delivery: OrderDelivery, steps: [OrderStep], carrierEvents: [CarrierEvent], payDeadlineAt: Date?, shipDeadlineAt: Date?, autoCompleteAt: Date?, pickupReady: Bool, actions: OrderActions, dispute: DisputeSummary?, myReview: OrderReview?, reviewReceived: OrderReview?, conversationId: String?) {
+    public init(id: String, number: String, role: OrderRole, status: OrderStatus, statusLabel: String, title: String, imageUrl: String?, counterpart: MemberSummary?, createdAt: Date, items: [OrderItem], amounts: OrderAmounts, cashOnDelivery: CashOnDelivery?, delivery: OrderDelivery, steps: [OrderStep], carrierEvents: [CarrierEvent], payDeadlineAt: Date?, shipDeadlineAt: Date?, autoCompleteAt: Date?, pickupReady: Bool, actions: OrderActions, dispute: DisputeSummary?, refund: OrderRefund?, myReview: OrderReview?, reviewReceived: OrderReview?, conversationId: String?) {
         self.id = id
         self.number = number
         self.role = role
@@ -74,6 +76,7 @@ public struct OrderDetail: Sendable, Codable, Hashable {
         self.pickupReady = pickupReady
         self.actions = actions
         self.dispute = dispute
+        self.refund = refund
         self.myReview = myReview
         self.reviewReceived = reviewReceived
         self.conversationId = conversationId
@@ -101,6 +104,7 @@ public struct OrderDetail: Sendable, Codable, Hashable {
         case pickupReady
         case actions
         case dispute
+        case refund
         case myReview
         case reviewReceived
         case conversationId
@@ -131,6 +135,7 @@ public struct OrderDetail: Sendable, Codable, Hashable {
         try container.encode(pickupReady, forKey: .pickupReady)
         try container.encode(actions, forKey: .actions)
         try container.encode(dispute, forKey: .dispute)
+        try container.encode(refund, forKey: .refund)
         try container.encode(myReview, forKey: .myReview)
         try container.encode(reviewReceived, forKey: .reviewReceived)
         try container.encode(conversationId, forKey: .conversationId)

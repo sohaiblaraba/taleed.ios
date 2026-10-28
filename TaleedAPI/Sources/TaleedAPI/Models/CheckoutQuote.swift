@@ -10,7 +10,6 @@ import Foundation
 /** What the checkout costs with these details. Nothing is reserved yet. */
 public struct CheckoutQuote: Sendable, Codable, Hashable {
 
-    public static let walletBalanceRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public var goods: CheckoutGoods
     public var delivery: CheckoutDestination
     public var fees: CheckoutFees
@@ -18,8 +17,6 @@ public struct CheckoutQuote: Sendable, Codable, Hashable {
     public var promo: AppliedPromo?
     /** The promo code sent cannot be used: show `message` under the field. The rest of the quote leaves it out, and ordering with it is `promo_invalid`. */
     public var promoError: PromoError?
-    /** The member's wallet balance, for \"Use my balance\". 0: hide the option. Integer DZD. */
-    public var walletBalance: Int
     /** The ways to pay offered right now, in display order. */
     public var paymentMethods: [PaymentMethodOption]
     /** How `amountDue` would be paid: the `paymentMethod` sent, or the first one offered. Null when nothing is left to pay. */
@@ -27,14 +24,13 @@ public struct CheckoutQuote: Sendable, Codable, Hashable {
     /** Paying cash on delivery: what the carrier will collect. */
     public var cashOnDelivery: CashOnDelivery?
 
-    public init(goods: CheckoutGoods, delivery: CheckoutDestination, fees: CheckoutFees, amounts: CheckoutAmounts, promo: AppliedPromo?, promoError: PromoError?, walletBalance: Int, paymentMethods: [PaymentMethodOption], paymentMethod: PaymentMethod?, cashOnDelivery: CashOnDelivery?) {
+    public init(goods: CheckoutGoods, delivery: CheckoutDestination, fees: CheckoutFees, amounts: CheckoutAmounts, promo: AppliedPromo?, promoError: PromoError?, paymentMethods: [PaymentMethodOption], paymentMethod: PaymentMethod?, cashOnDelivery: CashOnDelivery?) {
         self.goods = goods
         self.delivery = delivery
         self.fees = fees
         self.amounts = amounts
         self.promo = promo
         self.promoError = promoError
-        self.walletBalance = walletBalance
         self.paymentMethods = paymentMethods
         self.paymentMethod = paymentMethod
         self.cashOnDelivery = cashOnDelivery
@@ -47,7 +43,6 @@ public struct CheckoutQuote: Sendable, Codable, Hashable {
         case amounts
         case promo
         case promoError
-        case walletBalance
         case paymentMethods
         case paymentMethod
         case cashOnDelivery
@@ -63,7 +58,6 @@ public struct CheckoutQuote: Sendable, Codable, Hashable {
         try container.encode(amounts, forKey: .amounts)
         try container.encode(promo, forKey: .promo)
         try container.encode(promoError, forKey: .promoError)
-        try container.encode(walletBalance, forKey: .walletBalance)
         try container.encode(paymentMethods, forKey: .paymentMethods)
         try container.encode(paymentMethod, forKey: .paymentMethod)
         try container.encode(cashOnDelivery, forKey: .cashOnDelivery)

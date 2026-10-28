@@ -1,7 +1,7 @@
 import SwiftUI
 
-// The lower half of the checkout form: the server's summary, the promo code, the wallet, the payment
-// method and the button (screens.md §7 G11), then the pickers.
+// The lower half of the checkout form: the server's summary, the promo code, the payment method and the
+// button (screens.md §7 G11), then the pickers.
 extension CheckoutFormView {
     // MARK: Summary
 
@@ -14,10 +14,8 @@ extension CheckoutFormView {
                 }
                 .accessibilityIdentifier("checkout.quoteError")
             }
-            // With the wallet, "Total" sits above it and the last line is what is left to pay.
-            let walletPays = (model.pricing?.amounts.walletApplied ?? 0) > 0
             OrderSummary(title: l10n.string(.checkoutSummary), lines: summaryLines,
-                         totalLabel: l10n.string(walletPays ? .ordersRemainderDue : .checkoutTotal),
+                         totalLabel: l10n.string(.checkoutTotal),
                          total: model.isStale ? nil : model.pricing?.amounts.amountDue)
                 .opacity(model.isQuoting ? 0.6 : 1)
                 .overlay(alignment: .topTrailing) {
@@ -72,10 +70,6 @@ extension CheckoutFormView {
             case .voucher:
                 OrderSummaryLine(id: "voucher", label: l10n.string(.checkoutVoucher), amount: row.amount,
                                  tag: l10n.string(.checkoutVoucherAuto), isDiscount: true)
-            case .total:
-                OrderSummaryLine(id: "total", label: l10n.string(.ordersTotal), amount: row.amount)
-            case .wallet:
-                OrderSummaryLine(id: "wallet", label: l10n.string(.checkoutWalletRow), amount: row.amount, isDiscount: true)
             }
         }
     }
@@ -133,31 +127,6 @@ extension CheckoutFormView {
         }
     }
 
-    // MARK: Wallet
-
-    @ViewBuilder
-    var wallet: some View {
-        if let pricing = model.pricing, pricing.walletBalance > 0 {
-            Toggle(isOn: Binding(get: { model.form.useWallet }, set: { value in Task { await model.setUseWallet(value) } })) {
-                VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
-                    Text(l10n.string(.checkoutUseWallet))
-                        .taleedFont(TaleedFont.buttonMedium)
-                        .foregroundStyle(TaleedColor.textPrimary)
-                    Text(l10n.format(.checkoutUseWalletHint, PriceFormatter.format(pricing.walletBalance, language: l10n.language)))
-                        .taleedFont(TaleedFont.bodySmall)
-                        .foregroundStyle(TaleedColor.textSecondarySmall)
-                }
-            }
-            .toggleStyle(.taleed)
-            .padding(.horizontal, TaleedSpacing.s16)
-            .padding(.vertical, TaleedSpacing.s8)
-            .taleedCard(fill: model.form.useWallet ? TaleedColor.brandTint : TaleedColor.surfacePrimary,
-                        border: model.form.useWallet ? TaleedColor.brandPrimary : TaleedColor.borderSubtle)
-            .disabled(model.isPlacing)
-            .accessibilityIdentifier("checkout.wallet")
-        }
-    }
-
     // MARK: Payment method
 
     @ViewBuilder
@@ -191,15 +160,18 @@ extension CheckoutFormView {
             TaleedButton(title: buttonTitle(action), kind: .secondary, size: .large, isFullWidth: true, action: pay)
                 .disabled(!model.canPlaceOrder || isInBrowser)
                 .accessibilityIdentifier("checkout.pay")
-            HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s4) {
-                TaleedIconView(action.isCashOnDelivery ? .money : .lockKey, size: 14, color: TaleedColor.textSecondary)
-                    .accessibilityHidden(true)
-                Text(buttonHint(action))
-                    .taleedFont(TaleedFont.meta)
-                    .foregroundStyle(TaleedColor.textSecondarySmall)
-                    .multilineTextAlignment(.center)
+            // Nothing left to pay: no hint under the button, as the website.
+            if let hint = buttonHint(action) {
+                HStack(alignment: .firstTextBaseline, spacing: TaleedSpacing.s4) {
+                    TaleedIconView(action.isCashOnDelivery ? .money : .lockKey, size: 14, color: TaleedColor.textSecondary)
+                        .accessibilityHidden(true)
+                    Text(hint)
+                        .taleedFont(TaleedFont.meta)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
         }
     }
 
@@ -214,9 +186,9 @@ extension CheckoutFormView {
         }
     }
 
-    private func buttonHint(_ action: CheckoutAction) -> String {
+    private func buttonHint(_ action: CheckoutAction) -> String? {
         switch action {
-        case .confirm: l10n.string(.checkoutWalletOnlyHint)
+        case .confirm: nil
         case .cashOnDelivery: l10n.string(.checkoutCodHint)
         case .pending, .pay: l10n.string(.checkoutPayHint)
         }

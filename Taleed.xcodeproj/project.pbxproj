@@ -307,6 +307,7 @@
 		E48747967166517E6CFA7169 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = BD1BCDC35B0BB56C8CAE710B /* NukeUI */; };
 		E49F966F03F7EC90F6FDBCBE /* ListingSellerSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E8DA64060175AD2311235F6 /* ListingSellerSections.swift */; };
 		E50C6707A1DA366073765685 /* GalleryComposed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FF7EDA4B80B056B415DE6C /* GalleryComposed.swift */; };
+		E532F449CDEE969A29514925 /* OrderRefundCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D59D5B990086F6D4546B192 /* OrderRefundCard.swift */; };
 		E55A2A24CC978AA1A99AF9DB /* Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED58230D326290C22B7C32E5 /* Catalog.swift */; };
 		E618C12316DA8EF301D691FD /* SuspendedSignInTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CAE0F68BD134CC377286576 /* SuspendedSignInTests.swift */; };
 		E653E7B76934563C512FD5E3 /* WalletModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB7B149252A37C0E1D7EB38 /* WalletModels.swift */; };
@@ -532,6 +533,7 @@
 		8C9C17B567E633CBF91CF06F /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
 		8CD24D132B581E1EAEEEC522 /* ListingDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingDetail.swift; sourceTree = "<group>"; };
 		8CDF5710F2DB7C6EA739AF3F /* ListingDetailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingDetailTests.swift; sourceTree = "<group>"; };
+		8D59D5B990086F6D4546B192 /* OrderRefundCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderRefundCard.swift; sourceTree = "<group>"; };
 		8EB9B26C15615EB5C4ADEAC0 /* WalletTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletTests.swift; sourceTree = "<group>"; };
 		8F41D553B99EEB756D85DB37 /* PlusJakartaSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Regular.ttf"; sourceTree = "<group>"; };
 		927CE9426DE29D3C361465E6 /* SellerOrdersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SellerOrdersTests.swift; sourceTree = "<group>"; };
@@ -972,6 +974,7 @@
 				940739D0084B1E1447441AF4 /* OrderDetailSections.swift */,
 				9C4678A426A6F846DDE562FC /* OrderDetailView.swift */,
 				28C9A23FB68D3A0075D54001 /* OrderDetailViewModel.swift */,
+				8D59D5B990086F6D4546B192 /* OrderRefundCard.swift */,
 				CBD65D32333DA25ECD5067D9 /* OrderRules.swift */,
 				1CE9B00E0F0066E89CE1C64D /* Orders.swift */,
 				08F7BE20CE64B009A6959069 /* OrdersApi.swift */,
@@ -1819,6 +1822,7 @@
 				BAA68DF4DF6BFFDDBDDE7D9F /* OrderDetailViewModel.swift in Sources */,
 				3BD5DC3054BDC67A43C6B027 /* OrderPaymentView.swift in Sources */,
 				B2B8CB363288D7FBC480E1D8 /* OrderPaymentViewModel.swift in Sources */,
+				E532F449CDEE969A29514925 /* OrderRefundCard.swift in Sources */,
 				2D7DB9838FD6CADE231D5243 /* OrderRules.swift in Sources */,
 				5D2E896F1DBC2FF8DE597A77 /* OrderTimelineCard.swift in Sources */,
 				B1E5F716E67D230A00F67B8E /* Orders.swift in Sources */,

@@ -18,7 +18,6 @@ public struct CheckoutAmounts: Sendable, Codable, Hashable {
     public static let voucherDiscountRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let discountRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let totalRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
-    public static let walletAppliedRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let amountDueRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     /** The items, at the offer's price if any. Integer DZD. */
     public var itemPrice: Int
@@ -36,14 +35,12 @@ public struct CheckoutAmounts: Sendable, Codable, Hashable {
     public var discount: Int
     /** What the order costs: `subtotal` − `discount`. Send it back as `expectedTotal`. Integer DZD. */
     public var total: Int
-    /** Paid from the wallet balance, with `useWallet`. Integer DZD. */
-    public var walletApplied: Int
-    /** What is left to pay, online or in cash: `total` − `walletApplied`. 0 when the wallet pays it all. Integer DZD. */
+    /** What is paid, online or in cash: always `total`. Integer DZD. */
     public var amountDue: Int
     /** A free-delivery promo code applies: show the delivery as free. */
     public var freeDelivery: Bool
 
-    public init(itemPrice: Int, protectionFee: Int, shippingFee: Int, subtotal: Int, promoDiscount: Int, voucherDiscount: Int, discount: Int, total: Int, walletApplied: Int, amountDue: Int, freeDelivery: Bool) {
+    public init(itemPrice: Int, protectionFee: Int, shippingFee: Int, subtotal: Int, promoDiscount: Int, voucherDiscount: Int, discount: Int, total: Int, amountDue: Int, freeDelivery: Bool) {
         self.itemPrice = itemPrice
         self.protectionFee = protectionFee
         self.shippingFee = shippingFee
@@ -52,7 +49,6 @@ public struct CheckoutAmounts: Sendable, Codable, Hashable {
         self.voucherDiscount = voucherDiscount
         self.discount = discount
         self.total = total
-        self.walletApplied = walletApplied
         self.amountDue = amountDue
         self.freeDelivery = freeDelivery
     }
@@ -66,7 +62,6 @@ public struct CheckoutAmounts: Sendable, Codable, Hashable {
         case voucherDiscount
         case discount
         case total
-        case walletApplied
         case amountDue
         case freeDelivery
     }
@@ -83,7 +78,6 @@ public struct CheckoutAmounts: Sendable, Codable, Hashable {
         try container.encode(voucherDiscount, forKey: .voucherDiscount)
         try container.encode(discount, forKey: .discount)
         try container.encode(total, forKey: .total)
-        try container.encode(walletApplied, forKey: .walletApplied)
         try container.encode(amountDue, forKey: .amountDue)
         try container.encode(freeDelivery, forKey: .freeDelivery)
     }

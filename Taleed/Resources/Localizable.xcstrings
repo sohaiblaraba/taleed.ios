@@ -6659,52 +6659,6 @@
         }
       }
     },
-    "checkout_use_wallet": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "استخدام رصيد محفظتي"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use my wallet balance"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utiliser mon solde"
-          }
-        }
-      }
-    },
-    "checkout_use_wallet_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرصيد المتاح: %@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Available balance: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solde disponible : %@"
-          }
-        }
-      }
-    },
     "checkout_view_order": {
       "extractionState": "manual",
       "localizations": {
@@ -6770,52 +6724,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "auto"
-          }
-        }
-      }
-    },
-    "checkout_wallet_only_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المبلغ بالكامل مغطى برصيدك."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The full amount is covered by your balance."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le montant est entièrement couvert par votre solde."
-          }
-        }
-      }
-    },
-    "checkout_wallet_row": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المحفظة"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wallet"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Portefeuille"
           }
         }
       }
@@ -10295,19 +10203,19 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Portefeuille"
+            "value": "Revenus"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "المحفظة"
+            "value": "الأرباح"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wallet"
+            "value": "Earnings"
           }
         }
       }
@@ -11343,22 +11251,183 @@
     "orders_wallet_paid": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déjà réglé sur Taleed"
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "مدفوع من المحفظة"
+            "value": "مدفوع مسبقًا على Taleed"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paid from wallet"
+            "value": "Already paid on Taleed"
           }
-        },
+        }
+      }
+    },
+    "orders_refund_title": {
+      "extractionState": "manual",
+      "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Payé avec le portefeuille"
+            "value": "Remboursement"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسترجاع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refund"
+          }
+        }
+      }
+    },
+    "orders_refund_card_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’équipe Taleed le renvoie sur la carte utilisée pour payer. Votre banque peut mettre quelques jours à l’afficher."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعيده فريق Taleed إلى البطاقة التي دفعت بها. قد يستغرق ظهوره لدى بنكك بضعة أيام."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Taleed team sends it back to the card you paid with. Your bank can take a few days to show it."
+          }
+        }
+      }
+    },
+    "orders_refund_bank_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’équipe Taleed l’envoie par virement sur vos coordonnées de versement."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يرسله فريق Taleed بتحويل بنكي إلى بيانات الدفع الخاصة بك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Taleed team sends it by bank transfer to your payout details."
+          }
+        }
+      }
+    },
+    "orders_refund_sent_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyé le %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُرسل في %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent on %@"
+          }
+        }
+      }
+    },
+    "orders_refund_reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence : %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المرجع: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference: %@"
+          }
+        }
+      }
+    },
+    "orders_refund_needs_payout_account": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez vos coordonnées de versement pour recevoir ce remboursement"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف بيانات الدفع لاستلام هذا الاسترجاع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add your payout details to receive this refund"
+          }
+        }
+      }
+    },
+    "orders_refund_add_payout_details": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter mes coordonnées"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة بيانات الدفع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add payout details"
           }
         }
       }
@@ -13125,22 +13194,22 @@
     "settings_delete_blocked_pending_payout": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un versement est en route vers vous. Attendez son arrivée avant de supprimer votre compte."
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هناك تحويل قيد المعالجة. انتظر وصوله قبل حذف حسابك."
+            "value": "هناك دفعة في طريقها إليك. انتظر وصولها قبل حذف حسابك."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A payout is being processed. Wait for it to arrive before deleting your account."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un versement est en cours de traitement. Attendez son arrivée avant de supprimer votre compte."
+            "value": "A payout to you is on its way. Wait for it to arrive before deleting your account."
           }
         }
       }
@@ -13148,22 +13217,68 @@
     "settings_delete_blocked_wallet": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De l’argent vous est encore dû : il part avec le prochain versement hebdomadaire. Ajoutez vos coordonnées de versement si ce n’est pas encore fait."
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا يزال لديك رصيد في محفظتك. اطلب تحويله قبل حذف حسابك."
+            "value": "لا تزال لديك أموال مستحقة: تُرسل مع الدفعة الأسبوعية القادمة. أضف بيانات الدفع إن لم تفعل ذلك بعد."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You still have money in your wallet. Request a payout before deleting your account."
+            "value": "Money is still owed to you: it leaves with the next weekly payout. Add your payout details if you have not."
           }
-        },
+        }
+      }
+    },
+    "settings_delete_blocked_refund": {
+      "extractionState": "manual",
+      "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il reste de l’argent sur votre portefeuille. Demandez un versement avant de supprimer votre compte."
+            "value": "Un remboursement est encore en cours d’envoi vers vous. Attendez son arrivée avant de supprimer votre compte."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يزال استرجاع في طريقه إليك. انتظر وصوله قبل حذف حسابك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A refund to you is still being sent. Wait for it to arrive before deleting your account."
+          }
+        }
+      }
+    },
+    "settings_delete_blocked_owes_taleed": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Après un ajustement, vous devez de l’argent à Taleed. Contactez l’équipe pour le régler avant de supprimer votre compte."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعد تسوية، أنت مدين لـ Taleed بمبلغ. تواصل مع الفريق لتسويته قبل حذف حسابك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After an adjustment, you owe Taleed money. Contact the team to settle it before deleting your account."
           }
         }
       }
@@ -13995,29 +14110,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your photo"
-          }
-        }
-      }
-    },
-    "wallet_error_amount": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المبلغ غير صالح أو أكبر من الرصيد المتاح."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invalid amount or above your available balance."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montant invalide ou supérieur au solde disponible."
           }
         }
       }
@@ -15436,22 +15528,22 @@
     "app_order_cancel_body": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les articles sont remis en vente. Ce que vous avez déjà réglé sur Taleed vous est reversé avec le prochain versement hebdomadaire."
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تُعاد الأغراض إلى البيع ويُعاد إلى محفظتك ما دفعته منها."
+            "value": "تُعاد الأغراض إلى البيع، ويُدفع لك ما سبق أن دفعته على Taleed مع الدفعة الأسبوعية القادمة."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The items go back on sale and what you paid from your wallet is credited back."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les articles sont remis en vente et ce que vous avez payé avec le portefeuille vous est recrédité."
+            "value": "The items go back on sale. What you already paid on Taleed is paid back to you with the next weekly payout."
           }
         }
       }
@@ -15873,45 +15965,528 @@
     "wallet_title": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revenus"
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "المحفظة"
+            "value": "الأرباح"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wallet"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Portefeuille"
+            "value": "Earnings"
           }
         }
       }
     },
-    "wallet_balance": {
+    "wallet_owed": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À vous verser"
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الرصيد المتاح"
+            "value": "مستحق لك"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Available balance"
+            "value": "Owed to you"
           }
-        },
+        }
+      }
+    },
+    "wallet_owed_hint": {
+      "extractionState": "manual",
+      "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solde disponible"
+            "value": "Versé avec le prochain versement hebdomadaire, le %@."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُدفع مع الدفعة الأسبوعية القادمة، يوم %@."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid with the next weekly payout, on %@."
+          }
+        }
+      }
+    },
+    "wallet_owed_below_min": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les versements commencent à %@ : un montant inférieur attend une semaine suivante."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تبدأ الدفعات من %@: المبلغ الأقل ينتظر أسبوعًا لاحقًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payouts start from %@: a smaller amount waits for a later week."
+          }
+        }
+      }
+    },
+    "wallet_owed_needs_details": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez vos coordonnées de versement pour recevoir ce montant."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف بيانات الدفع لاستلام هذا المبلغ."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add your payout details to receive this amount."
+          }
+        }
+      }
+    },
+    "wallet_owed_negative": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous devez ce montant après un ajustement : l’équipe Taleed vous contactera."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت مدين بهذا المبلغ بعد تسوية: سيتواصل معك فريق Taleed."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You owe this amount after an adjustment: the Taleed team will contact you."
+          }
+        }
+      }
+    },
+    "wallet_in_payout": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En cours de versement"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيد الدفع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In payout"
+          }
+        }
+      }
+    },
+    "wallet_in_payout_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versements créés, en cours d’envoi par l’équipe Taleed."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دفعات أُنشئت ويرسلها فريق Taleed."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payouts created and being sent by the Taleed team."
+          }
+        }
+      }
+    },
+    "wallet_weekly_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque lundi, Taleed vous verse tout ce qui vous est dû, sur vos coordonnées de versement."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل يوم اثنين، تدفع Taleed كل ما هو مستحق لك إلى بيانات الدفع الخاصة بك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every Monday, Taleed pays everything owed to you to your payout details."
+          }
+        }
+      }
+    },
+    "wallet_payout_details_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coordonnées de versement"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيانات الدفع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payout details"
+          }
+        }
+      }
+    },
+    "wallet_payout_details_purpose": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisées uniquement pour vous envoyer vos versements et vos remboursements par virement."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُستخدم فقط لإرسال دفعاتك واسترجاعاتك عبر التحويل البنكي."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used only to send your payouts and bank refunds."
+          }
+        }
+      }
+    },
+    "wallet_payout_details_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune coordonnée de versement pour le moment."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد بيانات دفع بعد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No payout details yet."
+          }
+        }
+      }
+    },
+    "wallet_payout_details_add": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter mes coordonnées"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة بيانات الدفع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add payout details"
+          }
+        }
+      }
+    },
+    "wallet_payout_details_edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change"
+          }
+        }
+      }
+    },
+    "wallet_payout_details_save": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "wallet_payout_details_saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coordonnées de versement enregistrées."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم حفظ بيانات الدفع."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payout details saved."
+          }
+        }
+      }
+    },
+    "wallet_payout_details_invalid": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez entre %1$d et %2$d caractères."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدخل من %1$d إلى %2$d حرفًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter %1$d to %2$d characters."
+          }
+        }
+      }
+    },
+    "wallet_payout_details_updated": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifiées le %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حُدّثت في %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated %@"
+          }
+        }
+      }
+    },
+    "wallet_vouchers_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bons d’achat"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قسائم الشراء"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vouchers"
+          }
+        }
+      }
+    },
+    "wallet_vouchers_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ en bons d’achat actifs"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ في قسائم شراء نشطة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ in active vouchers"
+          }
+        }
+      }
+    },
+    "wallet_vouchers_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun bon d’achat actif."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد قسائم شراء نشطة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No active vouchers."
+          }
+        }
+      }
+    },
+    "wallet_voucher_rules_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Règles des bons d’achat"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قواعد قسائم الشراء"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voucher rules"
+          }
+        }
+      }
+    },
+    "wallet_voucher_rules": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque bon d’achat a une valeur fixe en DZD (%1$@ chacun). Il est déduit tout seul d’une commande dont les articles valent %2$@ ou plus : un bon par commande, hors livraison. Il est valable %3$d jours à partir du jour où vous le recevez. Les bons d’achat ne s’achètent pas, ne sont jamais versés en argent et ne se transfèrent pas à un autre membre."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لكل قسيمة شراء قيمة ثابتة بالدينار (%1$@ لكل قسيمة). تُخصم تلقائيًا من طلب واحد قيمة سلعه %2$@ أو أكثر: قسيمة واحدة لكل طلب، دون احتساب التوصيل. صالحة لمدة %3$d يومًا من يوم حصولك عليها. لا تُشترى قسائم الشراء، ولا تُصرف نقدًا أبدًا، ولا تُنقل إلى عضو آخر."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each voucher has a fixed value in DZD (%1$@ each). It comes off one order with items of %2$@ or more, on its own: one voucher per order, delivery not included. It is valid %3$d days from the day you get it. Vouchers are never bought, never paid out in money and never transferred to another member."
           }
         }
       }
@@ -15919,22 +16494,22 @@
     "wallet_pending_escrow": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En cours"
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "قيد الانتظار (طلبات جارية)"
+            "value": "قيد التنفيذ"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pending (orders in progress)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En attente (commandes en cours)"
+            "value": "In progress"
           }
         }
       }
@@ -15942,68 +16517,22 @@
     "wallet_pending_hint": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos ventes payées et pas encore finalisées : à vous verser dès que chaque commande est finalisée."
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "مبلغ مبيعاتك المدفوعة، يُحرَّر عند تأكيد الاستلام."
+            "value": "من مبيعاتك المدفوعة وغير المكتملة بعد: تصبح مستحقة لك عند اكتمال كل طلب."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Amount from your paid sales, released once delivery is confirmed."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montant de vos ventes payées, libéré à la confirmation de réception."
-          }
-        }
-      }
-    },
-    "wallet_request_payout": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "طلب تحويل"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Request a payout"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Demander un virement"
-          }
-        }
-      }
-    },
-    "wallet_payout_amount": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المبلغ (دج)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount (DZD)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montant (DA)"
+            "value": "From your sales paid and not completed yet: owed to you once each order completes."
           }
         }
       }
@@ -16146,52 +16675,6 @@
         }
       }
     },
-    "wallet_submit_payout": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إرسال الطلب"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Submit request"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Envoyer la demande"
-          }
-        }
-      }
-    },
-    "wallet_payout_requested": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أُرسل الطلب. المعالجة خلال 48 ساعة عمل."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Request sent. Processed within 48 business hours."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Demande envoyée. Traitement sous 48 h ouvrées."
-          }
-        }
-      }
-    },
     "wallet_history": {
       "extractionState": "manual",
       "localizations": {
@@ -16221,7 +16704,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "التحويلات"
+            "value": "الدفعات"
           }
         },
         "en": {
@@ -16233,7 +16716,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Virements"
+            "value": "Versements"
           }
         }
       }
@@ -16241,22 +16724,22 @@
     "wallet_no_entries": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien pour le moment."
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا عمليات حتى الآن."
+            "value": "لا شيء حتى الآن."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No transactions yet."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucune opération pour le moment."
+            "value": "Nothing yet."
           }
         }
       }
@@ -16284,236 +16767,6 @@
         }
       }
     },
-    "wallet_voucher_part": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "منها %@ قسائم شراء (غير قابلة للسحب)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "including %@ in vouchers (not withdrawable)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "dont %@ en bons d’achat (non retirables)"
-          }
-        }
-      }
-    },
-    "wallet_top_up": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "شحن الرصيد"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Top up"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recharger"
-          }
-        }
-      }
-    },
-    "wallet_top_up_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "شحن رصيدك"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Top up your balance"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recharger le solde"
-          }
-        }
-      }
-    },
-    "wallet_top_up_body": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أضف أموالاً إلى محفظتك بالبطاقة البنكية."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add funds to your wallet by bank card."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ajoutez des fonds à votre portefeuille par carte bancaire."
-          }
-        }
-      }
-    },
-    "wallet_top_up_amount": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المبلغ (دج)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount (DZD)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montant (DA)"
-          }
-        }
-      }
-    },
-    "wallet_top_up_submit": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المتابعة إلى الدفع"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Proceed to payment"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Procéder au paiement"
-          }
-        }
-      }
-    },
-    "wallet_topped_up": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم تأكيد الدفع — أُضيف إلى رصيدك."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Payment confirmed — your balance has been credited."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paiement confirmé — votre solde a été crédité."
-          }
-        }
-      }
-    },
-    "wallet_top_up_failed": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "فشل الدفع أو أُلغي. لم يُخصم أي مبلغ."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The payment failed or was cancelled. No amount was charged."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le paiement a échoué ou a été annulé. Aucun montant n’a été débité."
-          }
-        }
-      }
-    },
-    "wallet_top_up_pending": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لم يتم تأكيد الدفع. إذا كنت قد دفعت فعلًا، سيُضاف الرصيد فور تأكيد مزوّد الدفع — أعد تحميل الصفحة بعد لحظات."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Payment not confirmed. If you did pay, the top-up will be credited as soon as the provider confirms — refresh the page in a moment."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paiement non confirmé. Si vous avez bien payé, la recharge sera créditée dès confirmation du prestataire — rechargez la page dans un instant."
-          }
-        }
-      }
-    },
-    "wallet_min_payout": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الحد الأدنى: %@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Minimum: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Minimum : %@"
-          }
-        }
-      }
-    },
     "referrals_voucher_expires": {
       "extractionState": "manual",
       "localizations": {
@@ -16533,29 +16786,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Expire le %@"
-          }
-        }
-      }
-    },
-    "app_wallet_amount_range": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يجب أن يكون المبلغ بين %1$@ و%2$@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The amount must be between %1$@ and %2$@."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le montant doit être compris entre %1$@ et %2$@."
           }
         }
       }
@@ -21452,29 +21682,6 @@
         }
       }
     },
-    "app_wallet_balance_line": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرصيد المتاح: %@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Available balance: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solde disponible : %@"
-          }
-        }
-      }
-    },
     "app_notifications_empty_body": {
       "extractionState": "manual",
       "localizations": {
@@ -21524,22 +21731,22 @@
     "app_wallet_signed_out_title": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos revenus"
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "محفظتك"
+            "value": "أرباحك"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your wallet"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre portefeuille"
+            "value": "Your earnings"
           }
         }
       }
@@ -21774,25 +21981,25 @@
         }
       }
     },
-    "app_settings_delete_view_wallet": {
+    "app_settings_delete_view_earnings": {
       "extractionState": "manual",
       "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir mes revenus"
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "عرض محفظتي"
+            "value": "عرض أرباحي"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "View my wallet"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Voir mon portefeuille"
+            "value": "View my earnings"
           }
         }
       }

@@ -319,9 +319,13 @@ struct TaleedTextArea: View {
     /// "n / max" on the trailing side of the helper line.
     var counter: String?
     var forcedState: TaleedFieldState?
+    /// The text's direction when it differs from the interface's: an account number reads left to right
+    /// in Arabic too (the website's `dir="ltr"`). The label and the helper keep the interface's.
+    var textDirection: LayoutDirection?
 
     @FocusState private var isFocused: Bool
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.layoutDirection) private var layoutDirection
 
     private var state: TaleedFieldState {
         if let forcedState { return forcedState }
@@ -336,6 +340,7 @@ struct TaleedTextArea: View {
                 FieldLabel(text: label, color: state == .error ? TaleedColor.feedbackError : TaleedColor.textBody)
             }
             TextField("", text: $text, prompt: Text(placeholder).foregroundStyle(TaleedColor.textSecondary), axis: .vertical)
+                .environment(\.layoutDirection, textDirection ?? layoutDirection)
                 .lineLimit(5...10)
                 .taleedFont(TaleedFont.bodyRegular)
                 .foregroundStyle(TaleedColor.textPrimary)

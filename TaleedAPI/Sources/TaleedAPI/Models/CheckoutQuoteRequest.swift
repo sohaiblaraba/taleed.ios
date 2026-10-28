@@ -23,18 +23,15 @@ public struct CheckoutQuoteRequest: Sendable, Codable, Hashable {
     public var delivery: CheckoutDelivery
     /** A promo code the member typed. Case and spaces do not matter. */
     public var promoCode: String?
-    /** Pay with the wallet balance first. Default false. */
-    public var useWallet: Bool?
     /** How to pay what is left: one of the quote's `paymentMethods`. Default: the first of them. */
     public var paymentMethod: PaymentMethod?
 
-    public init(listingId: String? = nil, bundleId: String? = nil, offerId: String? = nil, delivery: CheckoutDelivery, promoCode: String? = nil, useWallet: Bool? = nil, paymentMethod: PaymentMethod? = nil) {
+    public init(listingId: String? = nil, bundleId: String? = nil, offerId: String? = nil, delivery: CheckoutDelivery, promoCode: String? = nil, paymentMethod: PaymentMethod? = nil) {
         self.listingId = listingId
         self.bundleId = bundleId
         self.offerId = offerId
         self.delivery = delivery
         self.promoCode = promoCode
-        self.useWallet = useWallet
         self.paymentMethod = paymentMethod
     }
 
@@ -44,7 +41,6 @@ public struct CheckoutQuoteRequest: Sendable, Codable, Hashable {
         case offerId
         case delivery
         case promoCode
-        case useWallet
         case paymentMethod
     }
 
@@ -57,7 +53,6 @@ public struct CheckoutQuoteRequest: Sendable, Codable, Hashable {
         try container.encodeIfPresent(offerId, forKey: .offerId)
         try container.encode(delivery, forKey: .delivery)
         try container.encodeIfPresent(promoCode, forKey: .promoCode)
-        try container.encodeIfPresent(useWallet, forKey: .useWallet)
         try container.encodeIfPresent(paymentMethod, forKey: .paymentMethod)
     }
 }

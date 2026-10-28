@@ -7,7 +7,7 @@
 
 import Foundation
 
-/** &#x60;SALE_RELEASE&#x60;: a completed sale. &#x60;PAYOUT&#x60;: a payout sent. &#x60;ADJUSTMENT&#x60;: a correction by the Taleed team. &#x60;REFUND_DEBIT&#x60;: a sale refunded to its buyer. &#x60;TOP_UP&#x60;: a top-up by card. &#x60;PURCHASE&#x60;: the wallet paid part of an order. &#x60;PURCHASE_REFUND&#x60;: that part came back, the order being cancelled or refunded. &#x60;VOUCHER&#x60;: a referral voucher was granted (see &#x60;voucher&#x60;). Each entry carries its localized &#x60;label&#x60;. */
+/** &#x60;SALE_RELEASE&#x60;: a completed sale. &#x60;PAYOUT&#x60;: a payout sent. &#x60;ADJUSTMENT&#x60;: a correction by the Taleed team. &#x60;REFUND_DEBIT&#x60;: a sale refunded to its buyer (old entries). &#x60;TOP_UP&#x60;: money paid in by card before slice H (old entries only). &#x60;PURCHASE&#x60;: an old order paid partly with that money (old entries only). &#x60;PURCHASE_REFUND&#x60;: that part came back as owed, the order being cancelled or refunded. &#x60;VOUCHER&#x60;: a referral voucher was granted (see &#x60;voucher&#x60;). Every value stays: old history still has them. Each entry carries its localized &#x60;label&#x60;. */
 public enum WalletEntryType: String, Sendable, Codable, CaseIterable, CaseIterableDefaultsLast {
     case saleRelease = "SALE_RELEASE"
     case payout = "PAYOUT"

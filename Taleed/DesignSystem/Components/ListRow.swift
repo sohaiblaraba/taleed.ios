@@ -15,7 +15,7 @@ struct ListRow: View {
     var trailingText: String?
     /// A status after the label ("Vérifié"), drawn as the compact badge.
     var trailingBadge: TaleedBadge?
-    /// A placeholder bar where the trailing value will show (the wallet's figure while it loads).
+    /// A placeholder bar where the trailing value will show (a figure while it loads).
     var isTrailingLoading = false
     /// An unread count before the chevron (hidden at 0, "9+" above 9), with its VoiceOver text.
     var badgeCount = 0

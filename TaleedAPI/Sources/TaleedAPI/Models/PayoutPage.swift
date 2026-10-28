@@ -7,7 +7,7 @@
 
 import Foundation
 
-/** A page of payout requests, newest first. */
+/** A page of payouts, newest first. */
 public struct PayoutPage: Sendable, Codable, Hashable {
 
     public static let totalRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)

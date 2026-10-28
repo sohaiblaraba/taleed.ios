@@ -11,7 +11,7 @@ import Foundation
 public struct OrderPlaced: Sendable, Codable, Hashable {
 
     public var order: OrderDetail
-    /** The gateway's payment page: open it in an in-app browser tab (ASWebAuthenticationSession, Custom Tabs), never a web view. It hands back to the app through `taleed://payment-return`; then call `POST /orders/{id}/payment/sync`. Null when nothing is paid online — cash on delivery, or the wallet paid it all — or when the page could not be opened: the order then waits for payment (`actions.canPay`). In development, the simulated payment page opens in the request's language (`Accept-Language`). */
+    /** The gateway's payment page: open it in an in-app browser tab (ASWebAuthenticationSession, Custom Tabs), never a web view. It hands back to the app through `taleed://payment-return`; then call `POST /orders/{id}/payment/sync`. Null when nothing is paid online — cash on delivery, or a total of 0 — or when the page could not be opened: the order then waits for payment (`actions.canPay`). In development, the simulated payment page opens in the request's language (`Accept-Language`). */
     public var paymentUrl: String?
     /** A retry with a `clientId` already used: the order placed the first time, with its payment page if it still waits for payment. */
     public var replayed: Bool

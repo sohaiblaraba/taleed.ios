@@ -1,32 +1,58 @@
 import Foundation
 
-// The app models of the wallet (screens.md §2 G14 and §7 G14, slice D "Wallet", slice F "Top-ups").
-// Amounts, labels and limits come from the server (screens.md §0.1): the app only adds the balance and
-// the vouchers for the headline, as the API asks.
+// The app models of Earnings (slice H; the website's `/wallet` page). There is no stored balance: what is
+// owed is paid by the weekly payout run to the payout details, never spent or withdrawn in the app.
+// Amounts, labels, limits and dates come from the server (screens.md §0.1).
 
-/// `GET /wallet`: the header of the wallet screen.
+/// `GET /wallet`: the header of Earnings.
 struct WalletSummary: Equatable, Sendable {
-    /// What can be spent and withdrawn. Negative after an adjustment by the Taleed team.
-    let balance: Int
-    /// Active vouchers: spent on orders on their own, never withdrawn.
+    /// Owed to the member and not in a payout yet. Negative after an adjustment by the Taleed team.
+    let owed: Int
+    /// Payouts created by the weekly run and not sent yet.
+    let inPayout: Int
+    /// Sales paid and not completed yet: owed once each order completes.
+    let inProgress: Int
+    /// Active vouchers: each takes money off one order on its own, never paid out.
     let voucherBalance: Int
-    /// The member's sales paid but not completed yet.
-    let pendingEscrow: Int
-    /// The card gateways a top-up can use, in display order. Empty: no "Recharger".
-    let topUpMethods: [PaymentChoice]
+    /// The next weekly payout run (Monday 08:00, Algiers).
+    let nextPayoutAt: Date
+    /// Nil until the member saves payout details.
+    var payoutAccount: PayoutAccountInfo?
     let limits: WalletLimitsInfo
-
-    /// The headline: "balance + voucherBalance" (slice D).
-    var headline: Int { balance + voucherBalance }
 }
 
-/// The bounds of the wallet forms.
-struct WalletLimitsInfo: Equatable, Sendable {
-    let minPayout: Int
-    let minTopUp: Int
-    let maxTopUp: Int
+/// Where the weekly run sends the payouts and where bank refunds go (`PayoutAccount`).
+struct PayoutAccountInfo: Equatable, Sendable {
+    /// `CCP`, `RIB`, `BARIDIMOB`.
+    let method: String
+    /// "CCP", "Bank transfer (RIB)", from the server.
+    let methodLabel: String
+    /// As the member wrote it.
+    let accountDetails: String
+    let updatedAt: Date
+}
 
-    static let `default` = WalletLimitsInfo(minPayout: 100, minTopUp: 100, maxTopUp: 1_000_000)
+/// The bounds that Earnings shows and checks (`WalletLimits`).
+struct WalletLimitsInfo: Equatable, Sendable {
+    /// The weekly run pays `owed` from this amount.
+    let minPayout: Int
+    /// The account details' length once trimmed.
+    let payoutDetailsMin: Int
+    let payoutDetailsMax: Int
+    /// Vouchers apply to orders from this item price.
+    let voucherMinItemPrice: Int
+
+    static let `default` = WalletLimitsInfo(minPayout: 100, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500)
+}
+
+/// The numbers of the voucher rules text (`program` of `GET /me/referrals`).
+struct VoucherRulesInfo: Equatable, Sendable {
+    /// The value of one voucher.
+    let voucherAmount: Int
+    /// The item price from which a voucher applies.
+    let minItemPrice: Int
+    /// Days a voucher stays usable once granted.
+    let validityDays: Int
 }
 
 /// What a history line is about; picks the icon only (the server writes the label).
@@ -54,11 +80,11 @@ struct WalletVoucherInfo: Equatable, Sendable {
 struct WalletEntryRow: Identifiable, Equatable, Sendable {
     let id: String
     let kind: WalletEntryKind
-    /// "Vente — fonds libérés", "Bon d’achat — parrainage"…, from the server.
+    /// "Sale completed", "Payout sent", "Referral voucher"…, from the server.
     let label: String
     /// Signed: a credit is positive, a debit negative.
     let amount: Int
-    /// The order number, a transfer reference, the gateway.
+    /// The order number, a transfer reference.
     let note: String?
     /// The order it is about: the line opens it.
     let orderId: String?
@@ -66,55 +92,25 @@ struct WalletEntryRow: Identifiable, Equatable, Sendable {
     let createdAt: Date
 }
 
-/// Where a payout request stands.
+/// Where a payout stands.
 enum PayoutState: Equatable, Sendable {
     case requested, processing, paid, rejected, unknown
 }
 
-/// A line of `GET /wallet/payouts`, or the request just made.
+/// A line of `GET /wallet/payouts`: a payout the weekly run created.
 struct PayoutRow: Identifiable, Equatable, Sendable {
     let id: String
     let amount: Int
-    /// "CCP", "Virement bancaire (RIB)", from the server.
+    /// "CCP", "Bank transfer (RIB)", from the server.
     let methodLabel: String
-    let accountDetails: String
     let status: PayoutState
-    /// "Demandé", "Versé"…, from the server.
+    /// "Created", "Being sent", "Sent", "Rejected", from the server.
     let statusLabel: String
     /// `PAID`: the transfer's reference.
     let reference: String?
     /// `PAID`: the receipt the Taleed team attached (an image or a PDF), opened in the browser.
     let proofURL: URL?
+    /// When the weekly run created it.
     let requestedAt: Date
     let processedAt: Date?
-}
-
-/// Where a top-up stands after a sync.
-enum TopUpState: Equatable, Sendable {
-    case pending, paid, failed, unknown
-}
-
-/// A top-up (`TopUp`).
-struct TopUpInfo: Identifiable, Equatable, Sendable {
-    let id: String
-    let amount: Int
-    let status: TopUpState
-}
-
-/// `POST /wallet/top-ups`: the top-up waiting for its payment and the gateway's page.
-struct StartedTopUp: Equatable, Sendable {
-    let topUp: TopUpInfo
-    /// Nil when the server gave an address the app cannot open.
-    let paymentURL: URL?
-}
-
-/// `POST /wallet/payouts`.
-struct PayoutRequest: Equatable, Sendable {
-    let amount: Int
-    /// `CCP`, `RIB`, `BARIDIMOB`.
-    let method: String
-    /// Trimmed.
-    let accountDetails: String
-    /// The id of this submission: the same on a retry of the same request, a new one for another.
-    let clientId: String
 }

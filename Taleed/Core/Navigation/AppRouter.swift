@@ -39,9 +39,6 @@ final class AppRouter {
     var paths: [AppTab: [AppRoute]] { navigation.paths }
     /// The sign-in (or sign-up) sheet.
     var authEntry: AuthEntry?
-    /// The last top-up's payment return, for the wallet screen to sync (then `consumePaymentReturn`). An
-    /// order's return opens its payment screen, which syncs it.
-    private(set) var pendingPaymentReturn: PaymentReturn?
     /// True while a `/listings/{id}/chat` link opens its conversation.
     private(set) var isResolvingLink = false
 
@@ -178,15 +175,9 @@ final class AppRouter {
         case let .signUp(referralCode):
             if isSignedIn() { show(.home, stack: []) } else { authEntry = .signUp(referralCode: referralCode) }
         case let .paymentReturn(paymentReturn):
-            switch paymentReturn.kind {
-            case .order:
-                // The payment screen syncs the order whatever `result` says.
-                let attempt: PaymentAttempt = paymentReturn.succeeded ? .returnedSuccess : .returnedFailure
-                open(.screen(.orderPayment(OrderPaymentTarget(orderId: paymentReturn.id, attempt: attempt))))
-            case .topUp:
-                pendingPaymentReturn = paymentReturn
-                open(.screen(.wallet))
-            }
+            // The payment screen syncs the order whatever `result` says.
+            let attempt: PaymentAttempt = paymentReturn.succeeded ? .returnedSuccess : .returnedFailure
+            open(.screen(.orderPayment(OrderPaymentTarget(orderId: paymentReturn.id, attempt: attempt))))
         case let .web(url):
             openInBrowser(url)
         }
@@ -236,7 +227,7 @@ final class AppRouter {
                 (.home, [.listing(id: target.listingId), route])
             }
         case .order, .orderPayment, .dispute: (.profile, [.orders, route])
-        case .favorites, .orders, .wallet, .walletPayout, .notifications, .settings, .referrals, .myListings: (.profile, [route])
+        case .favorites, .orders, .wallet, .payoutDetails, .notifications, .settings, .referrals, .myListings: (.profile, [route])
         case .deleteAccount, .profileSettings, .usernameSettings, .emailSettings, .passwordSettings, .addresses, .blockedMembers,
              .identityVerification, .help:
             (.profile, [.settings, route])
@@ -244,21 +235,6 @@ final class AppRouter {
         case .designSystem, .developerMenu: (.profile, [.settings, route])
         #endif
         }
-    }
-
-    /// The payment return the order or wallet screen should sync, once.
-    func consumePaymentReturn(kind: PaymentReturn.Kind, id: String) -> PaymentReturn? {
-        guard let pending = pendingPaymentReturn, pending.kind == kind, pending.id == id else { return nil }
-        pendingPaymentReturn = nil
-        return pending
-    }
-
-    /// The pending payment return of a kind, whatever its id, once: the wallet screen syncs the top-up a
-    /// return link named, which may not be the one it started (the app was closed during the payment).
-    func consumePaymentReturn(kind: PaymentReturn.Kind) -> PaymentReturn? {
-        guard let pending = pendingPaymentReturn, pending.kind == kind else { return nil }
-        pendingPaymentReturn = nil
-        return pending
     }
 
     /// Called by the launch flow once it knows the session, just before its screen (the shell) shows:

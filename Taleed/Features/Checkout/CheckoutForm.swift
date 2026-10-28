@@ -102,8 +102,6 @@ struct CheckoutFormState: Equatable, Sendable {
     var promoInput = ""
     /// The code the quotes carry, once "Appliquer" found it valid.
     var appliedPromoCode: String?
-    /// On by default; the switch shows only when there is a balance (the website's default).
-    var useWallet = true
     /// The member's pick in the payment list; nil: the server's first method.
     var paymentMethod: String?
 
@@ -140,7 +138,6 @@ struct CheckoutFormState: Equatable, Sendable {
             offerId: target.offerId,
             delivery: delivery,
             promoCode: appliedPromoCode,
-            useWallet: useWallet,
             paymentMethod: paymentMethod
         )
     }
@@ -213,9 +210,6 @@ struct CheckoutSummaryRow: Equatable, Sendable {
         case shipping(estimate: Bool)
         case promo(kind: PromoKindValue, code: String)
         case voucher
-        /// "Total", shown above the wallet line when the wallet pays part of it.
-        case total
-        case wallet
     }
 
     let kind: Kind
@@ -238,10 +232,6 @@ enum CheckoutSummary {
         if amounts.voucherDiscount > 0 {
             rows.append(CheckoutSummaryRow(kind: .voucher, amount: -amounts.voucherDiscount))
         }
-        if amounts.walletApplied > 0 {
-            rows.append(CheckoutSummaryRow(kind: .total, amount: amounts.total))
-            rows.append(CheckoutSummaryRow(kind: .wallet, amount: -amounts.walletApplied))
-        }
         return rows
     }
 
@@ -255,7 +245,7 @@ enum CheckoutSummary {
 enum CheckoutAction: Equatable, Sendable {
     /// No quote yet, or the form is not complete: "Payer …", disabled.
     case pending
-    /// The wallet pays it all: "Confirmer la commande".
+    /// Nothing is left to pay: "Confirmer la commande".
     case confirm
     /// "Commander — 1 910 DA à la livraison".
     case cashOnDelivery(amount: Int)
@@ -285,7 +275,7 @@ enum PaymentAttempt: Hashable, Sendable {
     case returnedFailure
     /// The member closed the payment page without coming back through it.
     case closed
-    /// No payment page: cash on delivery, the wallet, an order opened again.
+    /// No payment page: cash on delivery, nothing to pay, an order opened again.
     case none
 }
 
@@ -293,7 +283,8 @@ enum PaymentAttempt: Hashable, Sendable {
 enum PaymentOutcome: Equatable, Sendable {
     /// Paid online: "Paiement confirmé !".
     case paid
-    /// Confirmed without a payment page: cash on delivery (`cash`) or the wallet.
+    /// Confirmed without a payment page: cash on delivery (`cash`), or an order placed before slice H that
+    /// the old stored balance paid in full.
     case confirmed(cash: CashCollection?)
     /// Back with success, but the gateway has not settled yet: a late confirmation still lands.
     case awaitingConfirmation

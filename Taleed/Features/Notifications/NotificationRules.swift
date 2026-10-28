@@ -60,6 +60,9 @@ enum NotificationTheme: Equatable, Sendable {
     private static let byType: [String: NotificationTheme] = [
         "NEW_OFFER": .offers,
         "TOPUP_PAID": .money, "REFERRAL_REWARD": .money, "VERIFICATION_VOUCHER": .money,
+        // Slice H: a refund sent to the buyer, a late card payment to refund (admins). `PAYOUT_CREATED` and
+        // `PAYOUT_DETAILS_MISSING` take the `PAYOUT_` prefix.
+        "REFUND_SENT": .money, "REFUND_LATE_PAYMENT": .money,
         "NEW_FAVORITE": .community, "NEW_FOLLOWER": .community, "FOLLOWED_MEMBER_LISTED": .community,
         "REVIEW_RECEIVED": .community, "REFERRAL_SIGNUP": .community,
         "VERIFICATION_APPROVED": .account, "REPORT_RESOLVED": .account,

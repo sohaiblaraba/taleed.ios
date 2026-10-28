@@ -7,33 +7,33 @@
 
 import Foundation
 
-/** The bounds of the wallet forms: check them before sending. */
+/** The bounds of the Earnings screen&#39;s forms: check them before sending. */
 public struct WalletLimits: Sendable, Codable, Hashable {
 
     public static let minPayoutRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
-    public static let minTopUpRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
-    public static let maxTopUpRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
+    public static let payoutDetailsMinRule = NumericRule<Int>(minimum: 1, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
+    public static let payoutDetailsMaxRule = NumericRule<Int>(minimum: 1, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let voucherMinItemPriceRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
-    /** Smallest payout. Integer DZD. */
+    /** The weekly payout run pays `owed` once it reaches this amount. Integer DZD. */
     public var minPayout: Int
-    /** Smallest top-up. Integer DZD. */
-    public var minTopUp: Int
-    /** Largest top-up. Integer DZD. */
-    public var maxTopUp: Int
+    /** Fewest characters of `accountDetails`, once trimmed. */
+    public var payoutDetailsMin: Int
+    /** Most characters of `accountDetails`, once trimmed. */
+    public var payoutDetailsMax: Int
     /** Referral vouchers apply to orders from this item price. Integer DZD. */
     public var voucherMinItemPrice: Int
 
-    public init(minPayout: Int, minTopUp: Int, maxTopUp: Int, voucherMinItemPrice: Int) {
+    public init(minPayout: Int, payoutDetailsMin: Int, payoutDetailsMax: Int, voucherMinItemPrice: Int) {
         self.minPayout = minPayout
-        self.minTopUp = minTopUp
-        self.maxTopUp = maxTopUp
+        self.payoutDetailsMin = payoutDetailsMin
+        self.payoutDetailsMax = payoutDetailsMax
         self.voucherMinItemPrice = voucherMinItemPrice
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
         case minPayout
-        case minTopUp
-        case maxTopUp
+        case payoutDetailsMin
+        case payoutDetailsMax
         case voucherMinItemPrice
     }
 
@@ -42,8 +42,8 @@ public struct WalletLimits: Sendable, Codable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(minPayout, forKey: .minPayout)
-        try container.encode(minTopUp, forKey: .minTopUp)
-        try container.encode(maxTopUp, forKey: .maxTopUp)
+        try container.encode(payoutDetailsMin, forKey: .payoutDetailsMin)
+        try container.encode(payoutDetailsMax, forKey: .payoutDetailsMax)
         try container.encode(voucherMinItemPrice, forKey: .voucherMinItemPrice)
     }
 }

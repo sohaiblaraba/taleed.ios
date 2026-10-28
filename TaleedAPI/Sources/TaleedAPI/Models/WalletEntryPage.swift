@@ -7,7 +7,7 @@
 
 import Foundation
 
-/** A page of the wallet history, newest first. */
+/** A page of the Earnings history, newest first. */
 public struct WalletEntryPage: Sendable, Codable, Hashable {
 
     public static let totalRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)

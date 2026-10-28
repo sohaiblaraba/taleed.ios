@@ -23,7 +23,7 @@ open class OrdersAPI {
     /**
      Cancel an order
      - POST /orders/{id}/cancel
-     - The buyer, when `actions.canCancel`: the items go back on sale, and what the wallet paid is credited back. Ask for confirmation first. A cancel repeated after it went through answers the cancelled order.  Requires a bearer token.
+     - The buyer, when `actions.canCancel`: the items go back on sale. On old orders, what money held on Taleed paid is owed back and leaves with the weekly payout. Ask for confirmation first. A cancel repeated after it went through answers the cancelled order.  Requires a bearer token.
      - Bearer Token:
        - type: http
        - name: bearerAuth
@@ -242,7 +242,7 @@ open class OrdersAPI {
     /**
      Open a new payment page
      - POST /orders/{id}/payment
-     - The buyer, while the order awaits payment (`actions.canPay`): a new page from the gateway used before, or the first one offered, for what the wallet did not pay. Never cash on delivery: an order placed to be paid online stays so.  Requires a bearer token.  Rate limit: 30 per hour per member, on top of the general limit.
+     - The buyer, while the order awaits payment (`actions.canPay`): a new page from the gateway used before, or the first one offered, for the order total (less what money held on Taleed paid, on old orders). Never cash on delivery: an order placed to be paid online stays so.  Requires a bearer token.  Rate limit: 30 per hour per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth

@@ -56,7 +56,6 @@ extension ApiError {
         case .paymentMethodUnavailable: .checkoutErrorMethodUnavailable
         case .disputeExists: .appErrorDisputeExists
         case .alreadyReviewed: .appErrorAlreadyReviewed
-        case .insufficientBalance: .walletErrorAmount
         case .addressLimit: .appErrorAddressLimit
         case .ordersInProgress: .settingsDeleteBlockedActiveOrders
         case .disputeInProgress: .settingsDeleteBlockedOpenDisputes

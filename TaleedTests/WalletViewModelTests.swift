@@ -7,14 +7,17 @@ import Testing
 
 @MainActor
 struct WalletViewModelTests {
-    @Test func loadingShowsTheHeaderAndBothLists() async {
+    @Test func loadingShowsTheAmountsBothListsAndTheVoucherRules() async {
         let api = FakeWalletApi()
         let model = WalletViewModel(api: api)
         await model.loadIfNeeded()
-        #expect(model.summary?.headline == 7500)
+        #expect(model.summary?.owed == 4200)
+        #expect(model.summary?.inPayout == 1500)
+        #expect(model.summary?.inProgress == 3000)
         #expect(model.history.items.map(\.id) == ["e1", "e2"])
         #expect(model.payoutCount == 1)
-        #expect(model.banner == nil)
+        #expect(model.voucherRules == VoucherRulesInfo(voucherAmount: 500, minItemPrice: 1500, validityDays: 365))
+        #expect(api.programCalls == 1)
     }
 
     @Test func aFailedHeaderShowsTheErrorThenRetries() async {
@@ -24,153 +27,98 @@ struct WalletViewModelTests {
         await model.loadIfNeeded()
         #expect(model.loadError == .network)
         #expect(model.summary == nil)
+        #expect(model.voucherRules == nil)
         await model.retry()
         #expect(model.loadError == nil)
         #expect(model.summary != nil)
     }
 
-    @Test func openingSyncsPendingTopUpsAndSaysWhenOneIsCredited() async {
+    /// A suspended member gets no program (`GET /me/referrals` answers `banned`): the rules still show.
+    @Test func withoutTheProgramTheRulesUseTheServersValues() async {
         let api = FakeWalletApi()
-        api.recent = [TopUpInfo(id: "t9", amount: 5000, status: .pending), TopUpInfo(id: "t8", amount: 300, status: .paid)]
-        api.syncResults["t9"] = [.success(TopUpInfo(id: "t9", amount: 5000, status: .paid))]
-        let model = WalletViewModel(api: api)
+        let model = WalletViewModel(api: api, loadsVoucherProgram: false)
         await model.loadIfNeeded()
-        #expect(api.syncCalls == ["t9"])
-        #expect(model.banner == .paid)
-        // The header again after the credit.
-        #expect(api.summaryCalls == 2)
+        #expect(api.programCalls == 0)
+        #expect(model.voucherRules == VoucherRulesInfo(voucherAmount: 500, minItemPrice: 1500, validityDays: 365))
+
+        let failing = FakeWalletApi()
+        failing.program = .failure(.network)
+        let other = WalletViewModel(api: failing)
+        await other.loadIfNeeded()
+        #expect(other.voucherRules?.minItemPrice == 1500)
+        #expect(other.notice == nil)
     }
 
-    @Test func aPendingTopUpThatStaysPendingChangesNothing() async {
+    @Test func savedDetailsShowAtOnceWithTheToast() async {
         let api = FakeWalletApi()
-        api.recent = [TopUpInfo(id: "t9", amount: 5000, status: .pending)]
+        api.defaultSummary = walletSummary(owed: 4200, account: nil)
         let model = WalletViewModel(api: api)
         await model.loadIfNeeded()
-        #expect(api.syncCalls == ["t9"])
-        #expect(model.banner == nil)
-        #expect(api.summaryCalls == 1)
+        #expect(WalletRules.owedNote(model.summary!) == .needsDetails)
+        let outcome = await model.savePayoutDetails(method: "RIB", accountDetails: "00799999000123456789")
+        #expect(outcome == .saved)
+        #expect(api.saved.map(\.method) == ["RIB"])
+        #expect(api.saved.map(\.accountDetails) == ["00799999000123456789"])
+        #expect(model.summary?.payoutAccount?.accountDetails == "00799999000123456789")
+        #expect(model.notice == .payoutDetailsSaved)
+        #expect(WalletRules.owedNote(model.summary!) == nil)
     }
 
-    @Test func aPayoutIsListedAndTheHeaderReloads() async {
+    @Test func refusedDetailsPointAtTheField() async {
         let api = FakeWalletApi()
+        api.saveResults = [.failure(walletFailure(.invalidRequest, status: 400,
+                                                  issues: [ApiFieldIssue(path: "body.accountDetails", message: "Too short")]))]
         let model = WalletViewModel(api: api)
         await model.loadIfNeeded()
-        api.defaultSummary = walletSummary(balance: 6500)
-        let outcome = await model.requestPayout(amount: 1000, method: "CCP", accountDetails: "0012345678 clé 90")
-        #expect(outcome == .sent)
-        #expect(model.notice == .payoutRequested)
-        #expect(model.tab == .payouts)
-        #expect(model.payouts.items.first?.amount == 1000)
-        await model.reloadAfterPayout()
-        #expect(model.summary?.balance == 6500)
-        #expect(model.payouts.items.map(\.id) == ["new1", "p1"])
-        #expect(api.payoutRequests.first?.accountDetails == "0012345678 clé 90")
-    }
-
-    @Test func insufficientBalanceRefusesTheAmountAndReloads() async {
-        let api = FakeWalletApi()
-        let model = WalletViewModel(api: api, makeClientId: { UUID().uuidString })
-        await model.loadIfNeeded()
-        api.payoutResults = [.failure(walletFailure(.insufficientBalance))]
-        api.defaultSummary = walletSummary(balance: 500)
-        let outcome = await model.requestPayout(amount: 9000, method: "CCP", accountDetails: "0012345678 clé 90")
-        #expect(outcome == .amountRefused)
-        #expect(model.summary?.balance == 500)
+        let outcome = await model.savePayoutDetails(method: "CCP", accountDetails: "1234")
+        #expect(outcome == .detailsRefused)
         #expect(model.notice == nil)
+        #expect(model.summary?.payoutAccount == walletAccount)
     }
 
-    @Test func noAnswerKeepsTheClientIdForTheRetry() async {
+    @Test func otherFailuresKeepTheSheetWithAToast() async {
         let api = FakeWalletApi()
-        var count = 0
-        let model = WalletViewModel(api: api, makeClientId: { count += 1; return "c\(count)" })
+        api.saveResults = [.failure(.network)]
+        let model = WalletViewModel(api: api)
         await model.loadIfNeeded()
-        api.payoutResults = [.failure(.network)]
-        #expect(await model.requestPayout(amount: 1000, method: "CCP", accountDetails: "0012345678 clé 90") == .failed)
+        let outcome = await model.savePayoutDetails(method: "CCP", accountDetails: "0012345678 clé 90")
+        #expect(outcome == .failed)
         #expect(model.notice == .error(.network))
-        #expect(await model.requestPayout(amount: 1000, method: "CCP", accountDetails: "0012345678 clé 90") == .sent)
-        #expect(api.payoutRequests.map(\.clientId) == ["c1", "c1"])
+        #expect(!model.isSavingDetails)
     }
 
-    @Test func fieldIssuesPointAtTheirField() async {
+    @Test func pullToRefreshReloadsTheHeaderAndTheLists() async {
         let api = FakeWalletApi()
         let model = WalletViewModel(api: api)
         await model.loadIfNeeded()
-        let issue = ApiFieldIssue(path: "body.accountDetails", message: "Too short")
-        api.payoutResults = [.failure(walletFailure(.invalidRequest, status: 400, issues: [issue]))]
-        #expect(await model.requestPayout(amount: 1000, method: "CCP", accountDetails: "12345") == .detailsRefused)
+        api.defaultSummary = walletSummary(owed: 0, inPayout: 4200)
+        await model.refresh()
+        #expect(model.summary?.owed == 0)
+        #expect(model.summary?.inPayout == 4200)
+        #expect(api.historyCalls == 2)
     }
 
-    @Test func aGatewayTurnedOffReloadsTheHeader() async {
+    @Test func aShortAbsenceKeepsTheScreen() async {
         let api = FakeWalletApi()
         let model = WalletViewModel(api: api)
         await model.loadIfNeeded()
-        api.startResult = .failure(walletFailure(.paymentMethodUnavailable))
-        api.defaultSummary = walletSummary(methods: [])
-        #expect(await model.startTopUp(amount: 5000, method: "mock") == nil)
-        #expect(model.notice == .error(walletFailure(.paymentMethodUnavailable)))
-        #expect(model.summary?.topUpMethods.isEmpty == true)
-    }
-
-    @Test func aStartedTopUpOpensItsPage() async {
-        let api = FakeWalletApi()
-        let model = WalletViewModel(api: api)
-        await model.loadIfNeeded()
-        let started = await model.startTopUp(amount: 5000, method: "mock")
-        #expect(started?.topUp.id == "t1")
-        #expect(started?.paymentURL != nil)
-    }
-
-    @Test func backFromThePagePaidCreditsTheBalance() async {
-        let api = FakeWalletApi()
-        let model = WalletViewModel(api: api, followUpDelay: .zero)
-        await model.loadIfNeeded()
-        api.syncResults["t1"] = [.success(TopUpInfo(id: "t1", amount: 5000, status: .pending)),
-                                 .success(TopUpInfo(id: "t1", amount: 5000, status: .paid))]
-        api.defaultSummary = walletSummary(balance: 12500)
-        model.tab = .payouts
-        await model.topUpPageClosed(id: "t1")
-        #expect(model.banner == .paid)
-        #expect(model.summary?.balance == 12500)
-        // The new "Rechargement" line shows: the history is selected.
-        #expect(model.tab == .history)
-        #expect(api.syncCalls == ["t1", "t1"])
-    }
-
-    @Test func aFailedPaymentChangesNothing() async {
-        let api = FakeWalletApi()
-        let model = WalletViewModel(api: api, followUpDelay: .zero)
-        await model.loadIfNeeded()
-        let calls = api.summaryCalls
-        api.syncResults["t1"] = [.success(TopUpInfo(id: "t1", amount: 5000, status: .failed))]
-        await model.topUpPageClosed(id: "t1")
-        #expect(model.banner == .failed)
-        #expect(api.summaryCalls == calls)
-    }
-
-    @Test func aTopUpStillPendingStopsAfterTheFollowUps() async {
-        let api = FakeWalletApi()
-        let model = WalletViewModel(api: api, followUpDelay: .zero)
-        await model.loadIfNeeded()
-        await model.paymentReturned(PaymentReturn(kind: .topUp, id: "t2", succeeded: true))
-        #expect(model.banner == .pending)
-        #expect(api.syncCalls == Array(repeating: "t2", count: 1 + WalletViewModel.followUps))
-        model.dismissBanner()
-        #expect(model.banner == nil)
+        let start = ContinuousClock.now
+        model.wentToBackground(at: start)
+        await model.returnedToForeground(at: start + .seconds(5))
+        #expect(api.summaryCalls == 1)
+        model.wentToBackground(at: start)
+        await model.returnedToForeground(at: start + .seconds(31))
+        #expect(api.summaryCalls == 2)
     }
 }
 
-// MARK: - Router
+// MARK: - Routing
 
 @MainActor
 struct WalletRouterTests {
-    @Test func aTopUpReturnWaitsForTheWalletWhateverItsId() {
-        let router = AppRouter()
-        router.isSignedIn = { true }
-        router.launchWillShowItsScreen()
-        router.open(url: URL(string: "taleed://payment-return?kind=top_up&id=t5&result=success")!)
-        #expect(router.path(.profile) == [.wallet])
-        #expect(router.consumePaymentReturn(kind: .order) == nil)
-        #expect(router.consumePaymentReturn(kind: .topUp) == PaymentReturn(kind: .topUp, id: "t5", succeeded: true))
-        #expect(router.consumePaymentReturn(kind: .topUp) == nil)
+    /// A top-up return link (top-ups ended with slice H) opens Earnings.
+    @Test func anOldTopUpReturnOpensEarnings() {
+        #expect(LinkRouter.destination(for: URL(string: "taleed://payment-return?kind=top_up&id=t5&result=success")!)
+            == .screen(.wallet))
     }
 }

@@ -169,13 +169,15 @@ enum LinkRouter {
     private static func paymentReturn(_ url: URL) -> AppDestination? {
         let query = queryItems(url)
         guard let id = query["id"] else { return nil }
-        let kind: PaymentReturn.Kind
         switch query["kind"] {
-        case "order": kind = .order
-        case "top_up": kind = .topUp
-        default: return nil
+        case "order":
+            return .paymentReturn(PaymentReturn(kind: .order, id: id, succeeded: query["result"] == "success"))
+        case "top_up":
+            // A top-up started before slice H: paid ones become owed, shown on Earnings.
+            return .screen(.wallet)
+        default:
+            return nil
         }
-        return .paymentReturn(PaymentReturn(kind: kind, id: id, succeeded: query["result"] == "success"))
     }
 
     // MARK: Parsing

@@ -6,13 +6,6 @@ struct ProfileView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
     @Environment(AppRouter.self) private var router
-    @Environment(\.walletApi) private var walletApi
-    /// The website menu's figure next to "Portefeuille": `balance + voucherBalance` of `GET /wallet`
-    /// (`GET /me` does not carry it).
-    @State private var walletHeadline: Int?
-    /// The first wallet answer (or its failure) came back: until then the row holds a placeholder
-    /// where the figure goes, so it does not pop in after the first paint.
-    @State private var walletLoaded = false
     @Environment(\.referralsApi) private var referralsApi
     /// What each side of a referral can earn (`program` of `GET /me/referrals`), for the website menu's
     /// "Gagnez 1 500 DA en parrainant"; "Parrainage" until it is known (screens.md §7 G18).
@@ -62,9 +55,8 @@ struct ProfileView: View {
                                 router.push(.orders)
                             }
                             .accessibilityIdentifier("profile.orders")
-                            ListRow(label: l10n.string(.navWallet), leadingIcon: .money,
-                                    trailingText: walletHeadline.map { PriceFormatter.format($0, language: l10n.language) },
-                                    isTrailingLoading: walletHeadline == nil && !walletLoaded, showsChevron: true) {
+                            // "Earnings", with no amount (slice H: the website's menu shows none).
+                            ListRow(label: l10n.string(.navWallet), leadingIcon: .money, showsChevron: true) {
                                 router.push(.wallet)
                             }
                             .accessibilityIdentifier("profile.wallet")
@@ -106,10 +98,7 @@ struct ProfileView: View {
                 .padding(.bottom, TaleedSpacing.s24)
             }
         }
-        // Again each time the hub shows (back from the wallet, a checkout, an order) and after sign-in.
-        .task(id: session.user?.id) { await loadWalletHeadline() }
         .task(id: session.user?.id) { await loadReferralTotal() }
-        .onAppear { Task { await loadWalletHeadline() } }
     }
 
     private var referralsLabel: String {
@@ -124,17 +113,6 @@ struct ProfileView: View {
             return
         }
         if let page = try? await referralsApi.referrals(cursor: nil, automatic: true) { referralTotal = page.program.totalPerSide }
-    }
-
-    /// Quiet: without an answer the row shows no figure.
-    private func loadWalletHeadline() async {
-        guard session.isSignedIn, let walletApi else {
-            walletHeadline = nil
-            walletLoaded = false
-            return
-        }
-        if let summary = try? await walletApi.wallet(automatic: true) { walletHeadline = summary.headline }
-        walletLoaded = true
     }
 }
 

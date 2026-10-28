@@ -10,8 +10,8 @@ import Foundation
 /** Oldest supported app version per platform. An app below it must show a blocking \&quot;update the app\&quot; screen linking to its store page. */
 public struct AppConfigMinimumVersion: Sendable, Codable, Hashable {
 
-    public static let iosRule = StringRule(minLength: nil, maxLength: nil, pattern: "^\\d+\\.\\d+\\.\\d+$")
-    public static let androidRule = StringRule(minLength: nil, maxLength: nil, pattern: "^\\d+\\.\\d+\\.\\d+$")
+    public static let iosRule = StringRule(minLength: nil, maxLength: nil, pattern: "^\\d+(\\.\\d+){0,2}$")
+    public static let androidRule = StringRule(minLength: nil, maxLength: nil, pattern: "^\\d+(\\.\\d+){0,2}$")
     public var ios: String
     public var android: String
 

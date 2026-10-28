@@ -10,7 +10,7 @@ import Foundation
 open class WalletAPI {
 
     /**
-     The wallet
+     Earnings
      
      - parameter apiConfiguration: The configuration for the http request.
      - returns: Wallet
@@ -20,9 +20,9 @@ open class WalletAPI {
     }
 
     /**
-     The wallet
+     Earnings
      - GET /wallet
-     - Balance, vouchers and the money of sales in progress, with the top-up methods and the forms' bounds.  Requires a bearer token.
+     - What is owed to the member, in a payout and in sales in progress, the next weekly payout, the payout details, the vouchers, and the forms' bounds. Open to suspended members: what is owed to them is theirs.  Requires a bearer token.
      - Bearer Token:
        - type: http
        - name: bearerAuth
@@ -48,7 +48,7 @@ open class WalletAPI {
     }
 
     /**
-     Payout requests
+     Payouts
      
      - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
      - parameter apiConfiguration: The configuration for the http request.
@@ -59,9 +59,9 @@ open class WalletAPI {
     }
 
     /**
-     Payout requests
+     Payouts
      - GET /wallet/payouts
-     - Newest first. 20 per page.  Requires a bearer token.
+     - The payouts the weekly run created, and older payout requests, newest first. 20 per page.  Requires a bearer token.
      - Bearer Token:
        - type: http
        - name: bearerAuth
@@ -92,51 +92,7 @@ open class WalletAPI {
     }
 
     /**
-     Top-ups
-     
-     - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
-     - parameter apiConfiguration: The configuration for the http request.
-     - returns: TopUpPage
-     */
-    open class func listTopUps(cursor: String? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> TopUpPage {
-        return try await listTopUpsWithRequestBuilder(cursor: cursor, apiConfiguration: apiConfiguration).execute().body
-    }
-
-    /**
-     Top-ups
-     - GET /wallet/top-ups
-     - The member's top-ups, newest first, 20 per page, the ones started on the website included. It reads what is stored and asks no gateway: to settle a `PENDING` one, call `POST /wallet/top-ups/{id}/sync`. This is how the app recovers a top-up whose id it lost (reinstalled during the payment, for example): when the wallet opens, sync the `PENDING` top-ups of the first page, as the website's wallet page checks the latest top-up on every visit.  Requires a bearer token.
-     - Bearer Token:
-       - type: http
-       - name: bearerAuth
-     - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
-     - parameter apiConfiguration: The configuration for the http request.
-     - returns: RequestBuilder<TopUpPage> 
-     */
-    open class func listTopUpsWithRequestBuilder(cursor: String? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<TopUpPage> {
-        let localVariablePath = "/wallet/top-ups"
-        let localVariableURLString = apiConfiguration.basePath + localVariablePath
-        let localVariableParameters: [String: any Sendable]? = nil
-
-        var localVariableUrlComponents = URLComponents(string: localVariableURLString)
-        let localVariableQueryParameters: [String: (wrappedValue: (any Sendable)?, isExplode: Bool)] = [
-            "cursor": (wrappedValue: cursor?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
-        ]
-        localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems(localVariableQueryParameters)
-
-        let localVariableNillableHeaders: [String: (any Sendable)?] = [
-            :
-        ]
-
-        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
-
-        let localVariableRequestBuilder: RequestBuilder<TopUpPage>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
-
-        return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
-    }
-
-    /**
-     The wallet history
+     Earnings history
      
      - parameter cursor: (query) &#x60;nextCursor&#x60; from the previous page. (optional)
      - parameter apiConfiguration: The configuration for the http request.
@@ -147,9 +103,9 @@ open class WalletAPI {
     }
 
     /**
-     The wallet history
+     Earnings history
      - GET /wallet/history
-     - Every movement of the balance, and the referral vouchers granted, newest first. 20 per page.  Requires a bearer token.
+     - Every movement of the member's earnings (a `PAYOUT` entry is a payout sent), and the referral vouchers granted, newest first. 20 per page.  Requires a bearer token.
      - Bearer Token:
        - type: http
        - name: bearerAuth
@@ -180,31 +136,31 @@ open class WalletAPI {
     }
 
     /**
-     Request a payout
+     Save payout details
      
-     - parameter payoutCreate: (body)  
+     - parameter payoutAccountUpdate: (body)  
      - parameter apiConfiguration: The configuration for the http request.
-     - returns: Payout
+     - returns: PayoutAccount
      */
-    open class func requestPayout(payoutCreate: PayoutCreate, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> Payout {
-        return try await requestPayoutWithRequestBuilder(payoutCreate: payoutCreate, apiConfiguration: apiConfiguration).execute().body
+    open class func savePayoutAccount(payoutAccountUpdate: PayoutAccountUpdate, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> PayoutAccount {
+        return try await savePayoutAccountWithRequestBuilder(payoutAccountUpdate: payoutAccountUpdate, apiConfiguration: apiConfiguration).execute().body
     }
 
     /**
-     Request a payout
-     - POST /wallet/payouts
-     - Sets the amount aside from the balance at once, for a transfer the Taleed team makes by hand. More than the balance is `insufficient_balance`. The member is told when it is paid. A suspended member can request one too, to withdraw the balance before deleting the account (`wallet_not_empty` on `POST /me/delete`); the team checks it as any other.  Requires a bearer token.  Rate limit: 20 per hour per member, on top of the general limit.
+     Save payout details
+     - PUT /wallet/payout-account
+     - Creates or replaces the member's payout details. The weekly run sends every payout to them, and bank refunds go there too. A change never alters a payout already created. Idempotent. Open to suspended members, so they can still be paid.  Requires a bearer token.  Rate limit: 20 per hour per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth
-     - parameter payoutCreate: (body)  
+     - parameter payoutAccountUpdate: (body)  
      - parameter apiConfiguration: The configuration for the http request.
-     - returns: RequestBuilder<Payout> 
+     - returns: RequestBuilder<PayoutAccount> 
      */
-    open class func requestPayoutWithRequestBuilder(payoutCreate: PayoutCreate, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<Payout> {
-        let localVariablePath = "/wallet/payouts"
+    open class func savePayoutAccountWithRequestBuilder(payoutAccountUpdate: PayoutAccountUpdate, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<PayoutAccount> {
+        let localVariablePath = "/wallet/payout-account"
         let localVariableURLString = apiConfiguration.basePath + localVariablePath
-        let localVariableParameters = JSONEncodingHelper.encodingParameters(forEncodableObject: payoutCreate, codableHelper: apiConfiguration.codableHelper)
+        let localVariableParameters = JSONEncodingHelper.encodingParameters(forEncodableObject: payoutAccountUpdate, codableHelper: apiConfiguration.codableHelper)
 
         let localVariableUrlComponents = URLComponents(string: localVariableURLString)
 
@@ -214,91 +170,8 @@ open class WalletAPI {
 
         let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
 
-        let localVariableRequestBuilder: RequestBuilder<Payout>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+        let localVariableRequestBuilder: RequestBuilder<PayoutAccount>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
 
-        return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
-    }
-
-    /**
-     Top up the wallet
-     
-     - parameter topUpCreate: (body)  
-     - parameter apiConfiguration: The configuration for the http request.
-     - returns: TopUpStarted
-     */
-    open class func startTopUp(topUpCreate: TopUpCreate, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> TopUpStarted {
-        return try await startTopUpWithRequestBuilder(topUpCreate: topUpCreate, apiConfiguration: apiConfiguration).execute().body
-    }
-
-    /**
-     Top up the wallet
-     - POST /wallet/top-ups
-     - Opens the gateway's payment page for the amount. The balance is credited once the gateway confirms the payment. A method that is not one of `topUpMethods` is `payment_method_unavailable`; a payment page the gateway could not open is `payment_unavailable` (retry).  Requires a bearer token.  Rate limit: 30 per hour per member, on top of the general limit.
-     - Bearer Token:
-       - type: http
-       - name: bearerAuth
-     - parameter topUpCreate: (body)  
-     - parameter apiConfiguration: The configuration for the http request.
-     - returns: RequestBuilder<TopUpStarted> 
-     */
-    open class func startTopUpWithRequestBuilder(topUpCreate: TopUpCreate, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<TopUpStarted> {
-        let localVariablePath = "/wallet/top-ups"
-        let localVariableURLString = apiConfiguration.basePath + localVariablePath
-        let localVariableParameters = JSONEncodingHelper.encodingParameters(forEncodableObject: topUpCreate, codableHelper: apiConfiguration.codableHelper)
-
-        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
-
-        let localVariableNillableHeaders: [String: (any Sendable)?] = [
-            "Content-Type": "application/json",
-        ]
-
-        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
-
-        let localVariableRequestBuilder: RequestBuilder<TopUpStarted>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
-
-        return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
-    }
-
-    /**
-     Check a top-up
-     
-     - parameter id: (path)  
-     - parameter apiConfiguration: The configuration for the http request.
-     - returns: TopUp
-     */
-    open class func syncTopUp(id: String, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> TopUp {
-        return try await syncTopUpWithRequestBuilder(id: id, apiConfiguration: apiConfiguration).execute().body
-    }
-
-    /**
-     Check a top-up
-     - POST /wallet/top-ups/{id}/sync
-     - Call it when the payment page hands back to the app, whatever result it reports: this asks the gateway and credits the balance when the top-up is paid. Still `PENDING` afterwards: the gateway has not settled it yet — reload in a moment; the balance is credited as soon as it does.  Requires a bearer token.
-     - Bearer Token:
-       - type: http
-       - name: bearerAuth
-     - parameter id: (path)  
-     - parameter apiConfiguration: The configuration for the http request.
-     - returns: RequestBuilder<TopUp> 
-     */
-    open class func syncTopUpWithRequestBuilder(id: String, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<TopUp> {
-        var localVariablePath = "/wallet/top-ups/{id}/sync"
-        let idPreEscape = "\(APIHelper.mapValueToPathItem(id))"
-        let idPostEscape = idPreEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
-        localVariablePath = localVariablePath.replacingOccurrences(of: "{id}", with: idPostEscape, options: .literal, range: nil)
-        let localVariableURLString = apiConfiguration.basePath + localVariablePath
-        let localVariableParameters: [String: any Sendable]? = nil
-
-        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
-
-        let localVariableNillableHeaders: [String: (any Sendable)?] = [
-            :
-        ]
-
-        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
-
-        let localVariableRequestBuilder: RequestBuilder<TopUp>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
-
-        return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+        return localVariableRequestBuilder.init(method: "PUT", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
     }
 }

@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.6.1",
+    "version": "1.7.0",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -94,7 +94,7 @@
     },
     {
       "name": "Wallet",
-      "description": "Balance, history, payouts and top-ups."
+      "description": "Earnings: what is owed, payout details, weekly payouts and history. Shown to members as \"Earnings\"."
     },
     {
       "name": "Notifications",
@@ -285,7 +285,7 @@
           "Auth"
         ],
         "summary": "Sign in with email and password",
-        "description": "A suspended account gets `banned`, with a `token` for the suspended-account screen: store it as usual. It opens only what a suspended member keeps (sign-out, the orders in progress, the wallet, deleting the account); every other endpoint, `GET /me` included, answers `banned`.\n\nNo authentication.",
+        "description": "A suspended account gets `banned`, with a `token` for the suspended-account screen: store it as usual. It opens only what a suspended member keeps (sign-out, the orders in progress, earnings and payout details, deleting the account); every other endpoint, `GET /me` included, answers `banned`.\n\nNo authentication.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1772,7 +1772,7 @@
           "Account"
         ],
         "summary": "Delete the account",
-        "description": "Deletes the account for good, as App Store guideline 5.1.1(v) requires the apps to offer. Personal details, the profile photo, listings nobody ordered, saved addresses, favorites, follows and ID documents are erased; orders, reviews and messages stay with the other members, under a deleted account. It is refused while something is in progress: `orders_in_progress`, `dispute_in_progress`, `payout_in_progress`, or `wallet_not_empty` when the balance must be withdrawn first. Admin accounts are deleted by the team (`forbidden`). A suspended member can delete their account too, as on the website. A wrong or missing password answers `wrong_password` when the account has one (`hasPassword` in `GET /me`); 5 attempts in 15 minutes, `rate_limited`. A member who only signs in with Google or Apple sends no password. With Apple, the server also revokes the member's Apple token. On success every session ends, this one too: sign out locally. A POST rather than a DELETE because the password travels in the body.\n\nRequires a bearer token.",
+        "description": "Deletes the account for good, as App Store guideline 5.1.1(v) requires the apps to offer. Personal details, the profile photo, listings nobody ordered, saved addresses, favorites, follows and ID documents are erased; orders, reviews and messages stay with the other members, under a deleted account. It is refused while something is in progress: `orders_in_progress`, `dispute_in_progress`, `payout_in_progress` while a payout is on its way, or `wallet_not_empty` while money is still owed to the member (it leaves with the next weekly payout: tell them to add payout details if they have not), while a refund to them is still being sent, or while they owe Taleed money after an adjustment (`message` says which). Show: \"Money is still owed to you: it leaves with the next weekly payout. Add your payout details if you have not.\" Less than the weekly minimum (`limits.minPayout` of `GET /wallet`) would never leave on its own: when the member has payout details, this call pays it out at once (a `PAYOUT_CREATED` notification follows) and answers `payout_in_progress`; without them it answers `wallet_not_empty`. Admin accounts are deleted by the team (`forbidden`). A suspended member can delete their account too, as on the website. A wrong or missing password answers `wrong_password` when the account has one (`hasPassword` in `GET /me`); 5 attempts in 15 minutes, `rate_limited`. A member who only signs in with Google or Apple sends no password. With Apple, the server also revokes the member's Apple token. On success every session ends, this one too: sign out locally. A POST rather than a DELETE because the password travels in the body.\n\nRequires a bearer token.",
         "requestBody": {
           "required": true,
           "content": {
@@ -7485,7 +7485,7 @@
           "Checkout"
         ],
         "summary": "Price a checkout",
-        "description": "Everything the checkout screen shows: the delivery fees of both types, every amount, the payment methods. Quote again whenever the member changes a detail: the delivery, the commune, the promo code, the wallet switch, the payment method. A promo code that cannot be used is reported in `promoError`, the rest of the quote still stands. Your own listing is `forbidden`; goods no longer for sale are `listing_unavailable`, with `orderId` when they are reserved by the member's own order awaiting payment (open it instead); no delivery quote from the carrier is `shipping_unavailable` (retry); a payment method not offered is `payment_method_unavailable`, and none offered at all is `payment_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 120 per 10 minutes per member, on top of the general limit.",
+        "description": "Everything the checkout screen shows: the delivery fees of both types, every amount, the payment methods. Quote again whenever the member changes a detail: the delivery, the commune, the promo code, the payment method. A promo code that cannot be used is reported in `promoError`, the rest of the quote still stands. Your own listing is `forbidden`; goods no longer for sale are `listing_unavailable`, with `orderId` when they are reserved by the member's own order awaiting payment (open it instead); no delivery quote from the carrier is `shipping_unavailable` (retry); a payment method not offered is `payment_method_unavailable`, and none offered at all is `payment_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 120 per 10 minutes per member, on top of the general limit.",
         "requestBody": {
           "required": true,
           "content": {
@@ -7636,7 +7636,7 @@
           "Checkout"
         ],
         "summary": "Place an order",
-        "description": "Prices the order again, reserves the items and takes what `useWallet` puts down from the wallet. Cash on delivery, or a wallet that paid it all, confirms the order at once (`PAID`): the seller ships. Otherwise it waits for payment (`PENDING_PAYMENT`) until `payDeadlineAt`: open `paymentUrl`. A promo code that cannot be used is `promo_invalid` here, and a total that changed since the quote is `price_changed`. Your own listing is `forbidden`; goods no longer for sale are `listing_unavailable`, with `orderId` when they are reserved by the member's own order awaiting payment (open it instead); no delivery quote from the carrier is `shipping_unavailable` (retry); a payment method not offered is `payment_method_unavailable`, and none offered at all is `payment_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 30 per hour per member, on top of the general limit.",
+        "description": "Prices the order again and reserves the items. Cash on delivery, or a total of 0, confirms the order at once (`PAID`): the seller ships. Otherwise it waits for payment (`PENDING_PAYMENT`) until `payDeadlineAt`: open `paymentUrl`. A promo code that cannot be used is `promo_invalid` here, and a total that changed since the quote is `price_changed`. Your own listing is `forbidden`; goods no longer for sale are `listing_unavailable`, with `orderId` when they are reserved by the member's own order awaiting payment (open it instead); no delivery quote from the carrier is `shipping_unavailable` (retry); a payment method not offered is `payment_method_unavailable`, and none offered at all is `payment_unavailable`.\n\nRequires a bearer token.\n\nRate limit: 30 per hour per member, on top of the general limit.",
         "requestBody": {
           "required": true,
           "content": {
@@ -8003,7 +8003,7 @@
           "Orders"
         ],
         "summary": "Open a new payment page",
-        "description": "The buyer, while the order awaits payment (`actions.canPay`): a new page from the gateway used before, or the first one offered, for what the wallet did not pay. Never cash on delivery: an order placed to be paid online stays so.\n\nRequires a bearer token.\n\nRate limit: 30 per hour per member, on top of the general limit.",
+        "description": "The buyer, while the order awaits payment (`actions.canPay`): a new page from the gateway used before, or the first one offered, for the order total (less what money held on Taleed paid, on old orders). Never cash on delivery: an order placed to be paid online stays so.\n\nRequires a bearer token.\n\nRate limit: 30 per hour per member, on top of the general limit.",
         "parameters": [
           {
             "name": "id",
@@ -8262,7 +8262,7 @@
           "Orders"
         ],
         "summary": "Cancel an order",
-        "description": "The buyer, when `actions.canCancel`: the items go back on sale, and what the wallet paid is credited back. Ask for confirmation first. A cancel repeated after it went through answers the cancelled order.\n\nRequires a bearer token.",
+        "description": "The buyer, when `actions.canCancel`: the items go back on sale. On old orders, what money held on Taleed paid is owed back and leaves with the weekly payout. Ask for confirmation first. A cancel repeated after it went through answers the cancelled order.\n\nRequires a bearer token.",
         "parameters": [
           {
             "name": "id",
@@ -9967,8 +9967,8 @@
         "tags": [
           "Wallet"
         ],
-        "summary": "The wallet",
-        "description": "Balance, vouchers and the money of sales in progress, with the top-up methods and the forms' bounds.\n\nRequires a bearer token.",
+        "summary": "Earnings",
+        "description": "What is owed to the member, in a payout and in sales in progress, the next weekly payout, the payout details, the vouchers, and the forms' bounds. Open to suspended members: what is owed to them is theirs.\n\nRequires a bearer token.",
         "responses": {
           "200": {
             "description": "Success.",
@@ -10039,8 +10039,8 @@
         "tags": [
           "Wallet"
         ],
-        "summary": "The wallet history",
-        "description": "Every movement of the balance, and the referral vouchers granted, newest first. 20 per page.\n\nRequires a bearer token.",
+        "summary": "Earnings history",
+        "description": "Every movement of the member's earnings (a `PAYOUT` entry is a payout sent), and the referral vouchers granted, newest first. 20 per page.\n\nRequires a bearer token.",
         "parameters": [
           {
             "name": "cursor",
@@ -10136,8 +10136,8 @@
         "tags": [
           "Wallet"
         ],
-        "summary": "Payout requests",
-        "description": "Newest first. 20 per page.\n\nRequires a bearer token.",
+        "summary": "Payouts",
+        "description": "The payouts the weekly run created, and older payout requests, newest first. 20 per page.\n\nRequires a bearer token.",
         "parameters": [
           {
             "name": "cursor",
@@ -10225,141 +10225,33 @@
             "bearerAuth": []
           }
         ]
-      },
-      "post": {
-        "operationId": "requestPayout",
+      }
+    },
+    "/wallet/payout-account": {
+      "put": {
+        "operationId": "savePayoutAccount",
         "tags": [
           "Wallet"
         ],
-        "summary": "Request a payout",
-        "description": "Sets the amount aside from the balance at once, for a transfer the Taleed team makes by hand. More than the balance is `insufficient_balance`. The member is told when it is paid. A suspended member can request one too, to withdraw the balance before deleting the account (`wallet_not_empty` on `POST /me/delete`); the team checks it as any other.\n\nRequires a bearer token.\n\nRate limit: 20 per hour per member, on top of the general limit.",
+        "summary": "Save payout details",
+        "description": "Creates or replaces the member's payout details. The weekly run sends every payout to them, and bank refunds go there too. A change never alters a payout already created. Idempotent. Open to suspended members, so they can still be paid.\n\nRequires a bearer token.\n\nRate limit: 20 per hour per member, on top of the general limit.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PayoutCreate"
+                "$ref": "#/components/schemas/PayoutAccountUpdate"
               }
             }
           }
         },
-        "responses": {
-          "201": {
-            "description": "Success.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Payout"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error codes: `invalid_request`.",
-            "x-error-codes": [
-              "invalid_request"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error codes: `unauthorized`.",
-            "x-error-codes": [
-              "unauthorized"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error codes: `insufficient_balance`.",
-            "x-error-codes": [
-              "insufficient_balance"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Error codes: `rate_limited`.",
-            "x-error-codes": [
-              "rate_limited"
-            ],
-            "headers": {
-              "Retry-After": {
-                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
-                "schema": {
-                  "type": "integer",
-                  "minimum": 1
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/wallet/top-ups": {
-      "get": {
-        "operationId": "listTopUps",
-        "tags": [
-          "Wallet"
-        ],
-        "summary": "Top-ups",
-        "description": "The member's top-ups, newest first, 20 per page, the ones started on the website included. It reads what is stored and asks no gateway: to settle a `PENDING` one, call `POST /wallet/top-ups/{id}/sync`. This is how the app recovers a top-up whose id it lost (reinstalled during the payment, for example): when the wallet opens, sync the `PENDING` top-ups of the first page, as the website's wallet page checks the latest top-up on every visit.\n\nRequires a bearer token.",
-        "parameters": [
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "description": "`nextCursor` from the previous page.",
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Success.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TopUpPage"
+                  "$ref": "#/components/schemas/PayoutAccount"
                 }
               }
             }
@@ -10381,248 +10273,6 @@
             "description": "Error codes: `unauthorized`.",
             "x-error-codes": [
               "unauthorized"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Error codes: `rate_limited`.",
-            "x-error-codes": [
-              "rate_limited"
-            ],
-            "headers": {
-              "Retry-After": {
-                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
-                "schema": {
-                  "type": "integer",
-                  "minimum": 1
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "post": {
-        "operationId": "startTopUp",
-        "tags": [
-          "Wallet"
-        ],
-        "summary": "Top up the wallet",
-        "description": "Opens the gateway's payment page for the amount. The balance is credited once the gateway confirms the payment. A method that is not one of `topUpMethods` is `payment_method_unavailable`; a payment page the gateway could not open is `payment_unavailable` (retry).\n\nRequires a bearer token.\n\nRate limit: 30 per hour per member, on top of the general limit.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TopUpCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Success.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TopUpStarted"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error codes: `invalid_request`.",
-            "x-error-codes": [
-              "invalid_request"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error codes: `unauthorized`.",
-            "x-error-codes": [
-              "unauthorized"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error codes: `banned`.",
-            "x-error-codes": [
-              "banned"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error codes: `payment_method_unavailable`.",
-            "x-error-codes": [
-              "payment_method_unavailable"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Error codes: `rate_limited`.",
-            "x-error-codes": [
-              "rate_limited"
-            ],
-            "headers": {
-              "Retry-After": {
-                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
-                "schema": {
-                  "type": "integer",
-                  "minimum": 1
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Error codes: `payment_unavailable`.",
-            "x-error-codes": [
-              "payment_unavailable"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/wallet/top-ups/{id}/sync": {
-      "post": {
-        "operationId": "syncTopUp",
-        "tags": [
-          "Wallet"
-        ],
-        "summary": "Check a top-up",
-        "description": "Call it when the payment page hands back to the app, whatever result it reports: this asks the gateway and credits the balance when the top-up is paid. Still `PENDING` afterwards: the gateway has not settled it yet — reload in a moment; the balance is credited as soon as it does.\n\nRequires a bearer token.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TopUp"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error codes: `invalid_request`.",
-            "x-error-codes": [
-              "invalid_request"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error codes: `unauthorized`.",
-            "x-error-codes": [
-              "unauthorized"
-            ],
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error codes: `not_found`.",
-            "x-error-codes": [
-              "not_found"
             ],
             "content": {
               "application/json": {
@@ -11688,11 +11338,11 @@
             "properties": {
               "ios": {
                 "type": "string",
-                "pattern": "^\\d+\\.\\d+\\.\\d+$"
+                "pattern": "^\\d+(\\.\\d+){0,2}$"
               },
               "android": {
                 "type": "string",
-                "pattern": "^\\d+\\.\\d+\\.\\d+$"
+                "pattern": "^\\d+(\\.\\d+){0,2}$"
               }
             },
             "required": [
@@ -12263,7 +11913,7 @@
           "total": {
             "type": "integer",
             "minimum": 0,
-            "description": "Everything the recipient hands the carrier: the order total, less what the wallet paid. Integer Algerian dinars (DZD)."
+            "description": "Everything the recipient hands the carrier: the order total (less what money held on Taleed paid, on old orders). Integer Algerian dinars (DZD)."
           },
           "deliveryFee": {
             "type": "integer",
@@ -12433,15 +12083,10 @@
             "minimum": 0,
             "description": "What the order costs: `subtotal` − `discount`. Send it back as `expectedTotal`. Integer DZD."
           },
-          "walletApplied": {
-            "type": "integer",
-            "minimum": 0,
-            "description": "Paid from the wallet balance, with `useWallet`. Integer DZD."
-          },
           "amountDue": {
             "type": "integer",
             "minimum": 0,
-            "description": "What is left to pay, online or in cash: `total` − `walletApplied`. 0 when the wallet pays it all. Integer DZD."
+            "description": "What is paid, online or in cash: always `total`. Integer DZD."
           },
           "freeDelivery": {
             "type": "boolean",
@@ -12457,7 +12102,6 @@
           "voucherDiscount",
           "discount",
           "total",
-          "walletApplied",
           "amountDue",
           "freeDelivery"
         ],
@@ -12648,11 +12292,6 @@
             ],
             "type": "object"
           },
-          "walletBalance": {
-            "type": "integer",
-            "minimum": 0,
-            "description": "The member's wallet balance, for \"Use my balance\". 0: hide the option. Integer DZD."
-          },
           "paymentMethods": {
             "type": "array",
             "items": {
@@ -12688,7 +12327,6 @@
           "amounts",
           "promo",
           "promoError",
-          "walletBalance",
           "paymentMethods",
           "paymentMethod",
           "cashOnDelivery"
@@ -12723,10 +12361,6 @@
             "description": "A promo code the member typed. Case and spaces do not matter.",
             "type": "string",
             "maxLength": 40
-          },
-          "useWallet": {
-            "description": "Pay with the wallet balance first. Default false.",
-            "type": "boolean"
           },
           "paymentMethod": {
             "description": "How to pay what is left: one of the quote's `paymentMethods`. Default: the first of them.",
@@ -13487,7 +13121,6 @@
           "carrier_error",
           "dispute_exists",
           "already_reviewed",
-          "insufficient_balance",
           "address_limit",
           "wrong_password",
           "name_locked",
@@ -13539,7 +13172,7 @@
             "type": "string"
           },
           "token": {
-            "description": "Present on `banned` from `POST /auth/sign-in` and `POST /auth/social`: a session for the suspended member, as the website keeps one. Store it like the `AuthSession` token and show the suspended-account screen: it opens only the endpoints that answer no `banned` (sign-out, the orders in progress, the wallet, deleting the account); every other one answers `403 banned`, and `GET /me` too.",
+            "description": "Present on `banned` from `POST /auth/sign-in` and `POST /auth/social`: a session for the suspended member, as the website keeps one. Store it like the `AuthSession` token and show the suspended-account screen: it opens only the endpoints that answer no `banned` (sign-out, the orders in progress, earnings and payout details, deleting the account); every other one answers `403 banned`, and `GET /me` too.",
             "type": "string"
           }
         },
@@ -15214,12 +14847,12 @@
           "walletApplied": {
             "type": "integer",
             "minimum": 0,
-            "description": "Part of `total` the buyer paid from their wallet. Integer DZD."
+            "description": "Old orders only (placed before 1.7.0): the part of `total` paid with money held on Taleed. 0 on every new order: show the row only when above 0. Integer DZD."
           },
           "amountDue": {
             "type": "integer",
             "minimum": 0,
-            "description": "The rest, paid online or in cash: `total` − `walletApplied`. Integer DZD."
+            "description": "What was paid online or in cash: `total` − `walletApplied`, so `total` on every new order. Integer DZD."
           },
           "sellerEarns": {
             "type": "integer",
@@ -15288,10 +14921,6 @@
             "type": "string",
             "maxLength": 40
           },
-          "useWallet": {
-            "description": "Pay with the wallet balance first. Default false.",
-            "type": "boolean"
-          },
           "paymentMethod": {
             "description": "How to pay what is left: one of the quote's `paymentMethods`. Default: the first of them.",
             "allOf": [
@@ -15313,7 +14942,7 @@
             "description": "A number the carrier can call: 0, then 8 or 9 digits, such as `0550 12 34 56`. Spaces, dots and dashes are ignored."
           },
           "expectedTotal": {
-            "description": "The quote's `amounts.total` the member agreed to. When the total changed since — a fee, a voucher, the wallet balance — nothing is ordered (`price_changed`): quote again and show it. Always send it.",
+            "description": "The quote's `amounts.total` the member agreed to. When the total changed since — a fee, a voucher — nothing is ordered (`price_changed`): quote again and show it. Always send it.",
             "type": "integer",
             "minimum": 0
           },
@@ -15493,6 +15122,16 @@
             ],
             "type": "object"
           },
+          "refund": {
+            "nullable": true,
+            "description": "A refunded order with money to give back: shown to the buyer only. Null for the seller, and when nothing was paid (an unpaid order, or cash on delivery refunded before delivery).",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderRefund"
+              }
+            ],
+            "type": "object"
+          },
           "myReview": {
             "nullable": true,
             "description": "The review the signed-in member left on this order.",
@@ -15541,6 +15180,7 @@
           "pickupReady",
           "actions",
           "dispute",
+          "refund",
           "myReview",
           "reviewReceived",
           "conversationId"
@@ -15611,7 +15251,7 @@
           },
           "paymentUrl": {
             "nullable": true,
-            "description": "The gateway's payment page: open it in an in-app browser tab (ASWebAuthenticationSession, Custom Tabs), never a web view. It hands back to the app through `taleed://payment-return`; then call `POST /orders/{id}/payment/sync`. Null when nothing is paid online — cash on delivery, or the wallet paid it all — or when the page could not be opened: the order then waits for payment (`actions.canPay`). In development, the simulated payment page opens in the request's language (`Accept-Language`).",
+            "description": "The gateway's payment page: open it in an in-app browser tab (ASWebAuthenticationSession, Custom Tabs), never a web view. It hands back to the app through `taleed://payment-return`; then call `POST /orders/{id}/payment/sync`. Null when nothing is paid online — cash on delivery, or a total of 0 — or when the page could not be opened: the order then waits for payment (`actions.canPay`). In development, the simulated payment page opens in the request's language (`Accept-Language`).",
             "type": "string",
             "format": "uri"
           },
@@ -15626,6 +15266,56 @@
           "replayed"
         ],
         "description": "The order placed: the items are reserved for the buyer."
+      },
+      "OrderRefund": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "What is refunded: what the buyer paid online or in cash. Integer DZD."
+          },
+          "method": {
+            "$ref": "#/components/schemas/RefundMethod"
+          },
+          "methodLabel": {
+            "type": "string",
+            "description": "`method`, in the response language, such as \"To your card\"."
+          },
+          "status": {
+            "$ref": "#/components/schemas/RefundStatus"
+          },
+          "statusLabel": {
+            "type": "string",
+            "description": "`status`, in the response language, such as \"Being sent\"."
+          },
+          "reference": {
+            "nullable": true,
+            "description": "`SENT`: the gateway's or the bank transfer's reference.",
+            "type": "string"
+          },
+          "sentAt": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time",
+            "description": "`SENT`: when the Taleed team sent it. ISO 8601, UTC."
+          },
+          "needsPayoutAccount": {
+            "type": "boolean",
+            "description": "A `BANK` refund still `TO_SEND` while the buyer has no payout details: show \"Add your payout details to receive this refund\" with a link to the Earnings screen."
+          }
+        },
+        "required": [
+          "amount",
+          "method",
+          "methodLabel",
+          "status",
+          "statusLabel",
+          "reference",
+          "sentAt",
+          "needsPayoutAccount"
+        ],
+        "description": "The refund of a refunded order, as the buyer sees it. The Taleed team sends it by hand."
       },
       "OrderReview": {
         "type": "object",
@@ -15893,7 +15583,7 @@
           "amount": {
             "type": "integer",
             "minimum": 0,
-            "description": "Requested. Integer DZD."
+            "description": "Everything owed when the weekly run created it. Integer DZD."
           },
           "method": {
             "$ref": "#/components/schemas/PayoutMethod"
@@ -15904,7 +15594,7 @@
           },
           "accountDetails": {
             "type": "string",
-            "description": "Where the money goes, as the member wrote it."
+            "description": "Where the money goes: the payout details saved when the weekly run created it."
           },
           "status": {
             "$ref": "#/components/schemas/PayoutStatus"
@@ -15927,7 +15617,7 @@
           "requestedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When the member asked for it. ISO 8601, UTC."
+            "description": "When the weekly run created it (for old payouts: when the member asked for it). ISO 8601, UTC."
           },
           "processedAt": {
             "nullable": true,
@@ -15949,16 +15639,39 @@
           "requestedAt",
           "processedAt"
         ],
-        "description": "A payout request: the Taleed team sends the money by hand, usually within 48 business hours."
+        "description": "A payout: the weekly run creates it, the Taleed team sends the money by hand, usually within 48 business hours."
       },
-      "PayoutCreate": {
+      "PayoutAccount": {
         "type": "object",
         "properties": {
-          "amount": {
-            "type": "integer",
-            "minimum": 100,
-            "description": "Integer DZD, from 100 up to the balance."
+          "method": {
+            "$ref": "#/components/schemas/PayoutMethod"
           },
+          "methodLabel": {
+            "type": "string",
+            "description": "`method`, in the response language."
+          },
+          "accountDetails": {
+            "type": "string",
+            "description": "The CCP number and key, the full RIB, or the BaridiMob account, as the member wrote it."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the member last saved it. ISO 8601, UTC."
+          }
+        },
+        "required": [
+          "method",
+          "methodLabel",
+          "accountDetails",
+          "updatedAt"
+        ],
+        "description": "Where the member's payouts and bank refunds are sent. Used only for that. Changing it never alters a payout already created."
+      },
+      "PayoutAccountUpdate": {
+        "type": "object",
+        "properties": {
           "method": {
             "$ref": "#/components/schemas/PayoutMethod"
           },
@@ -15966,20 +15679,14 @@
             "type": "string",
             "minLength": 5,
             "maxLength": 300,
-            "description": "The CCP number and key, the full RIB, or the BaridiMob account: 5 to 300 characters."
-          },
-          "clientId": {
-            "description": "Your app's id for this request, such as a UUID, made once when the member taps the button. Sending it again with the same `clientId` returns the request already made instead of setting the amount aside twice: retry freely.",
-            "type": "string",
-            "pattern": "^[\\w-]{1,64}$"
+            "description": "The CCP number and key, the full RIB, or the BaridiMob account: 5 to 300 characters once trimmed."
           }
         },
         "required": [
-          "amount",
           "method",
           "accountDetails"
         ],
-        "description": "A payout to request."
+        "description": "The member's payout details. The method picker lists `GET /catalog`'s payout methods. Under the form, say: \"Used only to send your payouts and bank refunds.\""
       },
       "PayoutMethod": {
         "type": "string",
@@ -16030,7 +15737,7 @@
           "nextCursor",
           "total"
         ],
-        "description": "A page of payout requests, newest first."
+        "description": "A page of payouts, newest first."
       },
       "PayoutStatus": {
         "type": "string",
@@ -16040,7 +15747,7 @@
           "PAID",
           "REJECTED"
         ],
-        "description": "`REQUESTED`: waiting for the Taleed team, the amount set aside. `PROCESSING`: the transfer is under way. `PAID`: sent, see `reference` and `proofUrl`. `REJECTED`: refused: the amount is back in the balance."
+        "description": "`REQUESTED`: created by the weekly run, waiting for the Taleed team. `PROCESSING`: the transfer is under way. `PAID`: sent, see `reference` and `proofUrl`. `REJECTED`: refused: the amount is owed again and joins the next run; ask the member to check the payout details."
       },
       "Photo": {
         "type": "object",
@@ -16364,6 +16071,22 @@
           "termsUrl"
         ],
         "description": "The referral program: the member's invite link, and its rules."
+      },
+      "RefundMethod": {
+        "type": "string",
+        "enum": [
+          "CARD",
+          "BANK"
+        ],
+        "description": "`CARD`: back to the card the order was paid with. `BANK`: cash paid at the door, sent back by bank transfer to the buyer's payout details."
+      },
+      "RefundStatus": {
+        "type": "string",
+        "enum": [
+          "TO_SEND",
+          "SENT"
+        ],
+        "description": "`TO_SEND`: the Taleed team is sending it. `SENT`: sent, see `reference`."
       },
       "ReplyDisabledReason": {
         "type": "string",
@@ -16914,123 +16637,6 @@
           "items"
         ]
       },
-      "TopUp": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "integer",
-            "minimum": 0,
-            "description": "Paid by card, credited to the balance once paid. Integer DZD."
-          },
-          "method": {
-            "$ref": "#/components/schemas/PaymentMethod"
-          },
-          "status": {
-            "$ref": "#/components/schemas/TopUpStatus"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When it was started. ISO 8601, UTC."
-          },
-          "paidAt": {
-            "nullable": true,
-            "type": "string",
-            "format": "date-time",
-            "description": "When it was credited. ISO 8601, UTC."
-          }
-        },
-        "required": [
-          "id",
-          "amount",
-          "method",
-          "status",
-          "createdAt",
-          "paidAt"
-        ],
-        "description": "A top-up of the wallet by card."
-      },
-      "TopUpCreate": {
-        "type": "object",
-        "properties": {
-          "amount": {
-            "type": "integer",
-            "minimum": 100,
-            "maximum": 1000000,
-            "description": "Integer DZD, from 100 to 1000000."
-          },
-          "method": {
-            "description": "One of the wallet's `topUpMethods`: a card gateway, never cash on delivery.",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaymentMethod"
-              }
-            ]
-          }
-        },
-        "required": [
-          "amount",
-          "method"
-        ],
-        "description": "A top-up to start."
-      },
-      "TopUpPage": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TopUp"
-            }
-          },
-          "nextCursor": {
-            "nullable": true,
-            "description": "Pass as `cursor` to get the next page. Null on the last page.",
-            "type": "string"
-          },
-          "total": {
-            "type": "integer",
-            "minimum": 0,
-            "description": "Number of items across all pages."
-          }
-        },
-        "required": [
-          "items",
-          "nextCursor",
-          "total"
-        ],
-        "description": "A page of top-ups, newest first."
-      },
-      "TopUpStarted": {
-        "type": "object",
-        "properties": {
-          "topUp": {
-            "$ref": "#/components/schemas/TopUp"
-          },
-          "paymentUrl": {
-            "type": "string",
-            "format": "uri",
-            "description": "The gateway's payment page. Open it in an in-app browser tab (ASWebAuthenticationSession, Custom Tabs), never a web view. It hands back to the app through `taleed://payment-return`: then call `POST /wallet/top-ups/{id}/sync`. In development, the simulated payment page opens in the request's language (`Accept-Language`)."
-          }
-        },
-        "required": [
-          "topUp",
-          "paymentUrl"
-        ],
-        "description": "A top-up waiting for its payment."
-      },
-      "TopUpStatus": {
-        "type": "string",
-        "enum": [
-          "PENDING",
-          "PAID",
-          "FAILED"
-        ],
-        "description": "`PENDING`: waiting for the payment. `PAID`: credited to the balance. `FAILED`: not paid, or abandoned: nothing was charged."
-      },
       "Upload": {
         "type": "object",
         "properties": {
@@ -17273,39 +16879,54 @@
       "Wallet": {
         "type": "object",
         "properties": {
-          "balance": {
+          "owed": {
             "type": "integer",
-            "description": "What the member can spend at checkout and withdraw: released sales, refunds and top-ups, less purchases and payouts. Payouts being processed are already taken off. Integer DZD, negative after an adjustment by the Taleed team."
+            "description": "Earnings owed to the member and not in a payout yet: completed sales, and refunds of old orders. The weekly run pays it in full once it reaches `limits.minPayout` (100 DZD) and payout details are saved. It is never spent at checkout. Integer DZD, negative after an adjustment by the Taleed team."
+          },
+          "inPayout": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Payouts created by the weekly run and not sent yet: see `GET /wallet/payouts`. Integer DZD."
+          },
+          "inProgress": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The member's sales paid but not completed yet: each one becomes `owed` once its order completes. Integer DZD."
           },
           "voucherBalance": {
             "type": "integer",
             "minimum": 0,
-            "description": "Active referral vouchers: they take money off orders on their own, and are never withdrawn. Show the headline balance as `balance` + `voucherBalance`, with \"including … in vouchers\". Integer DZD."
+            "description": "Active referral vouchers: each one takes money off an eligible order on its own. Never paid out. Show it in the vouchers section, with the voucher rules. Integer DZD."
           },
-          "pendingEscrow": {
-            "type": "integer",
-            "minimum": 0,
-            "description": "The member's sales paid but not completed yet: each one joins `balance` once its order is completed. Integer DZD."
+          "nextPayoutAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The next weekly payout run: every Monday at 08:00, Algiers time. ISO 8601, UTC."
           },
-          "topUpMethods": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PaymentMethodOption"
-            },
-            "description": "The card gateways a top-up can use right now, in display order. Empty: hide \"Top up\"."
+          "payoutAccount": {
+            "nullable": true,
+            "description": "Null until the member saves payout details (`PUT /wallet/payout-account`). When it is null and `owed` ≥ `limits.minPayout`, ask for them: the weekly run cannot pay without them.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PayoutAccount"
+              }
+            ],
+            "type": "object"
           },
           "limits": {
             "$ref": "#/components/schemas/WalletLimits"
           }
         },
         "required": [
-          "balance",
+          "owed",
+          "inPayout",
+          "inProgress",
           "voucherBalance",
-          "pendingEscrow",
-          "topUpMethods",
+          "nextPayoutAt",
+          "payoutAccount",
           "limits"
         ],
-        "description": "The wallet screen's header. Payout methods come from `GET /catalog`."
+        "description": "The Earnings screen's header. Payout methods come from `GET /catalog`."
       },
       "WalletEntry": {
         "type": "object",
@@ -17318,7 +16939,7 @@
           },
           "label": {
             "type": "string",
-            "description": "In the response language, such as \"Sale — funds released\"."
+            "description": "In the response language, such as \"Sale completed\"."
           },
           "amount": {
             "type": "integer",
@@ -17360,7 +16981,7 @@
           "voucher",
           "createdAt"
         ],
-        "description": "A line of the wallet history."
+        "description": "A line of the Earnings history."
       },
       "WalletEntryPage": {
         "type": "object",
@@ -17387,7 +17008,7 @@
           "nextCursor",
           "total"
         ],
-        "description": "A page of the wallet history, newest first."
+        "description": "A page of the Earnings history, newest first."
       },
       "WalletEntryType": {
         "type": "string",
@@ -17401,7 +17022,7 @@
           "PURCHASE_REFUND",
           "VOUCHER"
         ],
-        "description": "`SALE_RELEASE`: a completed sale. `PAYOUT`: a payout sent. `ADJUSTMENT`: a correction by the Taleed team. `REFUND_DEBIT`: a sale refunded to its buyer. `TOP_UP`: a top-up by card. `PURCHASE`: the wallet paid part of an order. `PURCHASE_REFUND`: that part came back, the order being cancelled or refunded. `VOUCHER`: a referral voucher was granted (see `voucher`). Each entry carries its localized `label`."
+        "description": "`SALE_RELEASE`: a completed sale. `PAYOUT`: a payout sent. `ADJUSTMENT`: a correction by the Taleed team. `REFUND_DEBIT`: a sale refunded to its buyer (old entries). `TOP_UP`: money paid in by card before slice H (old entries only). `PURCHASE`: an old order paid partly with that money (old entries only). `PURCHASE_REFUND`: that part came back as owed, the order being cancelled or refunded. `VOUCHER`: a referral voucher was granted (see `voucher`). Every value stays: old history still has them. Each entry carries its localized `label`."
       },
       "WalletLimits": {
         "type": "object",
@@ -17409,17 +17030,17 @@
           "minPayout": {
             "type": "integer",
             "minimum": 0,
-            "description": "Smallest payout. Integer DZD."
+            "description": "The weekly payout run pays `owed` once it reaches this amount. Integer DZD."
           },
-          "minTopUp": {
+          "payoutDetailsMin": {
             "type": "integer",
-            "minimum": 0,
-            "description": "Smallest top-up. Integer DZD."
+            "minimum": 1,
+            "description": "Fewest characters of `accountDetails`, once trimmed."
           },
-          "maxTopUp": {
+          "payoutDetailsMax": {
             "type": "integer",
-            "minimum": 0,
-            "description": "Largest top-up. Integer DZD."
+            "minimum": 1,
+            "description": "Most characters of `accountDetails`, once trimmed."
           },
           "voucherMinItemPrice": {
             "type": "integer",
@@ -17429,11 +17050,11 @@
         },
         "required": [
           "minPayout",
-          "minTopUp",
-          "maxTopUp",
+          "payoutDetailsMin",
+          "payoutDetailsMax",
           "voucherMinItemPrice"
         ],
-        "description": "The bounds of the wallet forms: check them before sending."
+        "description": "The bounds of the Earnings screen's forms: check them before sending."
       },
       "WardrobeCategory": {
         "type": "object",

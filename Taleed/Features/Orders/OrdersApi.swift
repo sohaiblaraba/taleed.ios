@@ -209,10 +209,29 @@ extension OrderDetailInfo {
                                     reasonLabel: $0.reasonLabel, sellerDeadlineAt: $0.sellerDeadlineAt,
                                     resolution: $0.resolution?.nilIfBlank)
             },
+            refund: order.refund.map(OrderRefundInfo.init),
             myReview: order.myReview.map(OrderReviewInfo.init),
             reviewReceived: order.reviewReceived.map(OrderReviewInfo.init),
             conversationId: order.conversationId
         )
+    }
+}
+
+private extension OrderRefundInfo {
+    init(_ refund: OrderRefund) {
+        let method: RefundRoute = switch refund.method {
+        case .card: .card
+        case .bank: .bank
+        case .unknownDefaultOpenApi: .unknown
+        }
+        let status: RefundProgress = switch refund.status {
+        case .toSend: .toSend
+        case .sent: .sent
+        case .unknownDefaultOpenApi: .unknown
+        }
+        self.init(amount: refund.amount, method: method, methodLabel: refund.methodLabel, status: status,
+                  statusLabel: refund.statusLabel, reference: refund.reference?.nilIfBlank, sentAt: refund.sentAt,
+                  needsPayoutAccount: refund.needsPayoutAccount)
     }
 }
 

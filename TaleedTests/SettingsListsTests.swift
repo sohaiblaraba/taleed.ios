@@ -139,6 +139,30 @@ struct DeleteAccountViewModelTests {
         #expect(model.blocker == nil)
     }
 
+    @Test func walletNotEmptyReadsTheOwedAmount() async {
+        let api = FakeAccountApi()
+        api.deleteError = failure(.walletNotEmpty)
+        let wallet = FakeWalletApi()
+        let model = DeleteAccountViewModel(api: api, walletApi: wallet) {}
+        model.password = "sample-pass-2"
+
+        wallet.defaultSummary = walletSummary(owed: 80, account: nil)
+        await model.delete()
+        #expect(model.blocker == .walletNotEmpty)
+
+        wallet.defaultSummary = walletSummary(owed: -250)
+        await model.delete()
+        #expect(model.blocker == .owesTaleed)
+
+        wallet.defaultSummary = walletSummary(owed: 0, inPayout: 0)
+        await model.delete()
+        #expect(model.blocker == .refundToSend)
+
+        wallet.summaries = [.failure(.network)]
+        await model.delete()
+        #expect(model.blocker == .walletNotEmpty)
+    }
+
     @Test func aLostAnswerThenUnauthorizedMeansDeleted() async {
         let api = FakeAccountApi()
         api.deleteError = .unauthorized

@@ -7,7 +7,7 @@ import SwiftUI
 /// - the status badge with the server's label and the date;
 /// - the notices: pay before, the seller ships before, cash on delivery, the parcel waits at the
 ///   pick-up point, funds released on;
-/// - the dispute summary and its thread;
+/// - the dispute summary and its thread; the buyer's refund (slice H), with "Add payout details";
 /// - the goods (one item, or each item of a bundle) and the other member;
 /// - the member's buttons, only from `actions`. The buyer's: "Payer maintenant", "Confirmer la
 ///   réception" (after a confirmation; disabled with its hint while the parcel travels), "Laisser une
@@ -17,11 +17,9 @@ import SwiftUI
 ///   bordereau" (a fresh link on each tap, in the same sheet), "Générer le vrai bordereau" (test
 ///   servers), "Accepter la réclamation" (after a confirmation) and "Contester", "Laisser une
 ///   évaluation". A carrier refusal stays under the buttons with the carrier's own words. Then "Envoyer un message";
-/// - the amounts, the delivery with its tracking number, the timeline with the carrier's scans folded
-///   under it, and the reviews.
-///
-/// States: loading, error with Retry (offline included), "no longer available" (`404`), pull-to-refresh,
-/// reload on return to the foreground and when shown again.
+/// - the amounts, the delivery with its tracking number, the timeline with the carrier's scans folded under it, and the reviews.
+/// States: loading, error with Retry (offline included), "no longer available" (`404`), pull-to-refresh, reload on
+/// return to the foreground and when shown again.
 struct OrderDetailView: View {
     @State private var model: OrderDetailViewModel
     @State private var confirmation: Confirmation?
@@ -109,6 +107,9 @@ struct OrderDetailView: View {
                     OrderNoticesView(order: order)
                     if let dispute = order.dispute {
                         OrderDisputeCard(dispute: dispute, side: order.side) { router.push(.dispute(id: dispute.id)) }
+                    }
+                    if let refund = OrderRules.refundBlock(for: order) {
+                        OrderRefundCard(block: refund) { router.push(.payoutDetails) }
                     }
                     OrderGoodsCard(order: order)
                     actions(order)

@@ -3,7 +3,7 @@ import Observation
 
 /// The payment screen of an order (screens.md §2 G11 steps 9–11, slice D "After the sync" and "Paying
 /// again"): `POST /orders/{id}/payment/sync` when it opens, whatever the payment page said, then the
-/// result: paid, confirmed (cash on delivery, the wallet), still waiting with "Payer maintenant", or
+/// result: paid, confirmed (cash on delivery), still waiting with "Payer maintenant", or
 /// cancelled. After a home delivery to a new address it offers to save the address.
 @MainActor
 @Observable

@@ -1,27 +1,30 @@
 import Foundation
 import TaleedAPI
 
-/// What the wallet screen shows, decided from the server's numbers and flags (screens.md §7 G14).
+/// What Earnings shows, decided from the server's numbers and flags (slice H; the website's `/wallet`).
 enum WalletRules {
-    /// "Demander un virement" is disabled while the balance is under the minimum (screens.md §7 G14
-    /// correction); "Minimum : 100 DA" then shows under it. Vouchers never count: they cannot be withdrawn.
-    static func canRequestPayout(_ summary: WalletSummary) -> Bool {
-        summary.balance >= summary.limits.minPayout
+    /// The sentence under "Owed to you" that says why the next run will not pay it (the website's
+    /// `owedNote`, in its order).
+    enum OwedNote: Equatable, Sendable {
+        /// Negative after an adjustment: "You owe this amount after an adjustment…"
+        case negative
+        /// Enough for the next run but no payout details: "Add your payout details to receive this amount."
+        case needsDetails
+        /// Under the minimum: "Payouts start from 100 DA: a smaller amount waits for a later week."
+        case belowMinimum(Int)
     }
 
-    /// "Recharger" only when a card gateway can take a top-up (slice D: empty hides it).
-    static func showsTopUp(_ summary: WalletSummary) -> Bool {
-        !summary.topUpMethods.isEmpty
+    static func owedNote(_ summary: WalletSummary) -> OwedNote? {
+        if summary.owed < 0 { return .negative }
+        if summary.owed >= summary.limits.minPayout, summary.payoutAccount == nil { return .needsDetails }
+        if summary.owed > 0, summary.owed < summary.limits.minPayout { return .belowMinimum(summary.limits.minPayout) }
+        return nil
     }
 
-    /// The top-up form picks a method only when there is more than one (the website's dialog).
-    static func showsTopUpMethodPicker(_ summary: WalletSummary) -> Bool {
-        summary.topUpMethods.count > 1
-    }
-
-    /// "dont 500 DA en bons d’achat (non retirables)" under the headline.
-    static func showsVoucherPart(_ summary: WalletSummary) -> Bool {
-        summary.voucherBalance > 0
+    /// "Paid with the next weekly payout, on {date}." The website shows it always; the app leaves it out
+    /// for a negative amount, which the next run does not pay.
+    static func showsNextPayoutDate(_ summary: WalletSummary) -> Bool {
+        summary.owed >= 0
     }
 
     /// The colour of a history amount.
@@ -44,7 +47,8 @@ enum WalletRules {
     }
 
     /// The badge of a payout's status, after the website's variants (outline, secondary, success,
-    /// destructive): the design-system badge has no outline, so a request waiting reads in the brand tone.
+    /// destructive): the design-system badge has no outline, so a payout just created reads in the brand
+    /// tone.
     static func payoutTone(_ status: PayoutState) -> TaleedTone {
         switch status {
         case .requested: .brand
@@ -53,9 +57,23 @@ enum WalletRules {
         case .rejected: .error
         }
     }
+
+    /// The voucher rules' numbers: the program's when it is known, otherwise the server's current values
+    /// with the minimum item price of `GET /wallet` (a suspended member gets no program).
+    static func voucherRules(program: VoucherRulesInfo?, limits: WalletLimitsInfo) -> VoucherRulesInfo {
+        program ?? VoucherRulesInfo(voucherAmount: VoucherRulesInfo.fallbackAmount, minItemPrice: limits.voucherMinItemPrice,
+                                    validityDays: VoucherRulesInfo.fallbackValidityDays)
+    }
 }
 
-/// Text of the wallet lines.
+extension VoucherRulesInfo {
+    /// The server's `REFERRAL_VOUCHER_AMOUNT` and `VOUCHER_EXPIRY_DAYS` (slice H), used only while the
+    /// program of `GET /me/referrals` is not there.
+    static let fallbackAmount = 500
+    static let fallbackValidityDays = 365
+}
+
+/// Text of the Earnings lines.
 enum WalletText {
     private static let rightToLeftMark = "\u{200F}"
     private static let leftToRightMark = "\u{200E}"
@@ -72,11 +90,9 @@ enum WalletText {
     }
 
     /// A history line's second line: "T-000104 · 4 oct. 2026" (a date, not a relative time). Vouchers:
-    /// "Utilisable dès 1500 DA d’achat · 4 oct. 2026 · Expire le 4 oct. 2027". A top-up's note is its
-    /// method's id ("mock"): the line shows the method's label from `topUpMethods` ("Paiement simulé"),
-    /// or no note for a method the wallet no longer offers.
-    static func entryDetail(_ entry: WalletEntryRow, locale: Locale, topUpMethods: [PaymentChoice] = [],
-                            expires: (String) -> String) -> String {
+    /// "Utilisable dès 1500 DA d’achat · 4 oct. 2026 · Expire le 4 oct. 2027". A card payment line (an
+    /// old top-up) carries the gateway's id as its note: no note then, as it means nothing to the member.
+    static func entryDetail(_ entry: WalletEntryRow, locale: Locale, expires: (String) -> String) -> String {
         let date = OrderText.date(entry.createdAt, locale: locale)
         if let voucher = entry.voucher {
             var parts = [voucher.statusLabel, date]
@@ -85,14 +101,11 @@ enum WalletText {
             }
             return parts.joined(separator: separator)
         }
-        let note = entry.kind == .topUp
-            ? entry.note.flatMap { id in topUpMethods.first { $0.value == id }?.label }
-            : entry.note?.isolatedLeftToRight
+        let note = entry.kind == .topUp ? nil : entry.note?.isolatedLeftToRight
         return [note, date].compactMap { $0 }.joined(separator: separator)
     }
 
-    /// A payout's second line: "CCP · 4 oct. 2026, 14:32 · VIR-2026-0042" (the time tells apart requests
-    /// of the same amount made the same day).
+    /// A payout's second line: "CCP · 4 oct. 2026, 14:32 · VIR-2026-0042".
     static func payoutDetail(_ payout: PayoutRow, locale: Locale) -> String {
         [payout.methodLabel, OrderText.dateTime(payout.requestedAt, locale: locale), payout.reference?.isolatedLeftToRight]
             .compactMap { $0 }
@@ -100,141 +113,46 @@ enum WalletText {
     }
 }
 
-/// An amount typed in a wallet form, checked against its bounds before sending. The API decides in
-/// the end (`insufficient_balance`, `invalid_request`).
-enum WalletAmountInput: Equatable {
-    case empty
-    case invalid
-    case valid(Int)
-
-    /// `range` nil: no amount can be valid (a balance under the minimum payout).
-    init(text: String, range: ClosedRange<Int>?) {
-        let digits = OfferAmountInput.normalizedDigits(text)
-        guard !digits.isEmpty else {
-            self = .empty
-            return
-        }
-        guard let amount = Int(digits), let range, range.contains(amount) else {
-            self = .invalid
-            return
-        }
-        self = .valid(amount)
-    }
-
-    var amount: Int? {
-        if case let .valid(amount) = self { return amount }
-        return nil
-    }
-}
-
-/// The payout form (screens.md §7 G14 "Payout dialog"): the amount from the minimum up to the balance,
-/// a method, and the account details, 5 to 300 characters once trimmed. No per-method format check
-/// (neither the website nor the API has one).
-struct PayoutFormInput: Equatable {
-    var amountText: String
+/// The payout details form (slice H; the website's `PayoutAccountForm`): a method and the account details,
+/// `payoutDetailsMin` to `payoutDetailsMax` characters once trimmed. No per-method format check (neither
+/// the website nor the API has one). The API decides in the end.
+struct PayoutDetailsInput: Equatable {
     var method: String
     var accountDetails: String
-    /// Follows the header: a refused amount reloads it.
-    var balance: Int
-    let minPayout: Int
+    let minLength: Int
+    let maxLength: Int
 
-    static let detailsMinLength = PayoutCreate.accountDetailsRule.minLength ?? 5
-    static let detailsMaxLength = PayoutCreate.accountDetailsRule.maxLength ?? 300
     /// The website's first method.
     static let defaultMethod = "CCP"
+    /// The field takes a little more than the maximum, as the website's (`maxLength + 20`), so that a text
+    /// pasted too long shows the error rather than being cut without a word.
+    static let overflowAllowance = 20
 
-    /// Prefilled with the whole balance, as the website.
-    init(balance: Int, minPayout: Int, method: String = PayoutFormInput.defaultMethod) {
-        self.balance = balance
-        self.minPayout = minPayout
-        self.method = method
-        amountText = balance > 0 ? String(balance) : ""
-        accountDetails = ""
+    /// Prefilled with the saved details, else the default method (or the first one offered) and nothing.
+    init(account: PayoutAccountInfo?, methods: [String], limits: WalletLimitsInfo) {
+        let fallback = methods.contains(Self.defaultMethod) ? Self.defaultMethod : (methods.first ?? Self.defaultMethod)
+        method = account.map(\.method).flatMap { methods.isEmpty || methods.contains($0) ? $0 : nil } ?? fallback
+        accountDetails = account?.accountDetails ?? ""
+        minLength = limits.payoutDetailsMin
+        maxLength = limits.payoutDetailsMax
     }
-
-    var amountRange: ClosedRange<Int>? {
-        minPayout <= balance ? minPayout...balance : nil
-    }
-
-    var amount: WalletAmountInput { WalletAmountInput(text: amountText, range: amountRange) }
 
     var trimmedDetails: String { accountDetails.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     var detailsAreValid: Bool {
-        (Self.detailsMinLength...Self.detailsMaxLength).contains(trimmedDetails.count)
+        guard minLength <= maxLength else { return false }
+        return (minLength...maxLength).contains(trimmedDetails.count)
     }
 
-    /// "Envoyer la demande" is enabled once the three are valid.
-    var isValid: Bool { amount.amount != nil && !method.isEmpty && detailsAreValid }
-}
+    /// What the field accepts while typing.
+    var inputLimit: Int { maxLength + Self.overflowAllowance }
 
-/// The `clientId` of payout requests: the same for a retry of the same request (an answer that never
-/// came), a new one for any other request. A reused `clientId` with another body is refused
-/// (`400 invalid_request` on `body.clientId`, screens.md §7 G14).
-struct PayoutSubmission {
-    private var last: PayoutRequest?
-    private let makeId: () -> String
-
-    init(makeId: @escaping () -> String = { UUID().uuidString }) {
-        self.makeId = makeId
+    /// "Enter 5 to 300 characters." turns red under the field once something is typed and the length is
+    /// out of bounds, as the website's form; an empty field is not an error (the button waits).
+    var showsLengthError: Bool {
+        !trimmedDetails.isEmpty && !detailsAreValid
     }
 
-    mutating func request(amount: Int, method: String, accountDetails: String) -> PayoutRequest {
-        if let last, last.amount == amount, last.method == method, last.accountDetails == accountDetails {
-            return last
-        }
-        let request = PayoutRequest(amount: amount, method: method, accountDetails: accountDetails, clientId: makeId())
-        last = request
-        return request
-    }
-
-    /// The request went through or was refused: the next one is new.
-    mutating func reset() {
-        last = nil
-    }
-}
-
-/// The top-up form (screens.md §7 G14 "Top-up dialog"): 1 000 DA prefilled, any whole amount between the
-/// limits (the website's step of 50 is HTML only), and the first method unless the member picks another.
-struct TopUpFormInput: Equatable {
-    var amountText: String
-    var method: String?
-    let limits: WalletLimitsInfo
-
-    static let defaultAmount = 1000
-
-    init(limits: WalletLimitsInfo, methods: [PaymentChoice]) {
-        self.limits = limits
-        amountText = String(Self.defaultAmount)
-        method = methods.first?.value
-    }
-
-    var amountRange: ClosedRange<Int>? {
-        limits.minTopUp <= limits.maxTopUp ? limits.minTopUp...limits.maxTopUp : nil
-    }
-
-    var amount: WalletAmountInput { WalletAmountInput(text: amountText, range: amountRange) }
-
-    var isValid: Bool { amount.amount != nil && method != nil }
-}
-
-/// The result banner after a top-up's sync (the website's wallet banners).
-enum TopUpBanner: Equatable {
-    /// "Vérification du paiement…" while the sync runs.
-    case checking
-    /// "Paiement confirmé — votre solde a été crédité."
-    case paid
-    /// "Paiement non confirmé…": the gateway has not settled it yet.
-    case pending
-    /// "Le paiement a échoué ou a été annulé. Aucun montant n’a été débité."
-    case failed
-
-    init(_ state: TopUpState) {
-        switch state {
-        case .paid: self = .paid
-        case .failed: self = .failed
-        // A status added after this build: as not settled yet.
-        case .pending, .unknown: self = .pending
-        }
-    }
+    /// "Save" is enabled once the details are valid.
+    var isValid: Bool { !method.isEmpty && detailsAreValid }
 }

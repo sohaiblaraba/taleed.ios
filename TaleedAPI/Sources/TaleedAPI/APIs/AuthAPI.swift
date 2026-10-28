@@ -134,7 +134,7 @@ open class AuthAPI {
     /**
      Sign in with email and password
      - POST /auth/sign-in
-     - A suspended account gets `banned`, with a `token` for the suspended-account screen: store it as usual. It opens only what a suspended member keeps (sign-out, the orders in progress, the wallet, deleting the account); every other endpoint, `GET /me` included, answers `banned`.  No authentication.
+     - A suspended account gets `banned`, with a `token` for the suspended-account screen: store it as usual. It opens only what a suspended member keeps (sign-out, the orders in progress, earnings and payout details, deleting the account); every other endpoint, `GET /me` included, answers `banned`.  No authentication.
      - parameter signInRequest: (body)  
      - parameter apiConfiguration: The configuration for the http request.
      - returns: RequestBuilder<AuthSession> 

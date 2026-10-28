@@ -136,7 +136,7 @@ enum OrderRules {
         case voucher
         /// "Total", as a line when the wallet paid part of it.
         case total
-        /// "Payé avec le portefeuille", as a negative amount.
+        /// "Déjà réglé sur Taleed" (orders placed before slice H), as a negative amount.
         case walletPaid
     }
 
@@ -187,6 +187,52 @@ enum OrderRules {
     /// The amount next to the order's goods: the total for the buyer, what the seller receives.
     static func headlineAmount(for order: OrderDetailInfo) -> Int {
         order.side == .seller ? order.amounts.sellerEarns : order.amounts.total
+    }
+
+    /// The refund block (slice H; the website's refund notice): what is refunded, how and where it stands.
+    /// How a refund being sent travels, for its hint.
+    enum RefundHint: Equatable, Sendable {
+        /// "The Taleed team sends it back to the card you paid with…"
+        case card
+        /// "The Taleed team sends it by bank transfer to your payout details."
+        case bank
+    }
+
+    struct RefundBlock: Equatable, Sendable {
+        /// Green once sent, blue while being sent.
+        let isSent: Bool
+        let amount: Int
+        /// "To your card — Being sent", the server's labels.
+        let summary: String
+        /// Sent: "Sent on {date}".
+        let sentAt: Date?
+        /// Sent: "Reference: {reference}".
+        let reference: String?
+        /// While being sent: how it travels. None for a method this build does not know.
+        let hint: RefundHint?
+        /// "Add your payout details to receive this refund" and "Add payout details" (opens Earnings).
+        let asksPayoutDetails: Bool
+    }
+
+    /// Buyer only (the API gives the seller no refund); nil when nothing is to be refunded.
+    static func refundBlock(for order: OrderDetailInfo) -> RefundBlock? {
+        guard order.side == .buyer, let refund = order.refund else { return nil }
+        let isSent = refund.status == .sent
+        let hint: RefundHint? = switch refund.method {
+        case .card: .card
+        case .bank: .bank
+        case .unknown: nil
+        }
+        return RefundBlock(
+            isSent: isSent,
+            amount: refund.amount,
+            summary: "\(refund.methodLabel) — \(refund.statusLabel)",
+            sentAt: isSent ? refund.sentAt : nil,
+            reference: isSent ? refund.reference : nil,
+            hint: isSent ? nil : hint,
+            // The server decides (a bank refund to send, no payout details yet); never once sent.
+            asksPayoutDetails: refund.needsPayoutAccount && !isSent
+        )
     }
 }
 

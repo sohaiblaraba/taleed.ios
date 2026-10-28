@@ -1,65 +1,26 @@
 import SwiftUI
 
-// The wallet screen's header (screens.md §7 G14): the top-up result, the tiles, the actions, and the
-// skeleton of all three with the tabs while the wallet loads.
+// The top of Earnings (slice H; the website's `/wallet` page): the weekly note, the three amounts, the
+// payout details card, the vouchers with their rules, and the skeleton of all of them with the tabs
+// while the summary loads. No button here adds, spends or withdraws money.
 
-/// "Recharger" (mint, the website's CTA) and "Demander un virement" (blue), side by side when they fit,
-/// stacked otherwise; "Minimum : 100 DA" right under the payout button, centred, while the balance is
-/// under the minimum (the reason that button is off). Without a summary (loading): placeholders of the
-/// same size, side by side or stacked as the buttons will be.
-struct WalletActions: View {
-    let summary: WalletSummary?
-    var onTopUp: () -> Void = {}
-    var onPayout: () -> Void = {}
+/// "Every Monday, Taleed pays everything owed to you to your payout details." under the title.
+struct EarningsWeeklyNote: View {
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: TaleedSpacing.s12) { buttons }
-            VStack(spacing: TaleedSpacing.s12) { buttons }
-        }
-    }
-
-    private var showsTopUp: Bool { summary.map(WalletRules.showsTopUp) ?? true }
-
-    private var canRequestPayout: Bool { summary.map(WalletRules.canRequestPayout) ?? true }
-
-    private var minimumText: String? {
-        guard let summary, !canRequestPayout else { return nil }
-        return l10n.format(.walletMinPayout, PriceFormatter.format(summary.limits.minPayout, language: l10n.language))
-    }
-
-    @ViewBuilder
-    private var buttons: some View {
-        if showsTopUp {
-            TaleedButton(title: l10n.string(.walletTopUp), kind: .secondary, size: .large, leadingIcon: .plusCircle,
-                         isFullWidth: true, action: onTopUp)
-                .skeletonPlaceholder(summary == nil)
-                .accessibilityIdentifier("wallet.topUp")
-        }
-        VStack(spacing: TaleedSpacing.s4) {
-            TaleedButton(title: l10n.string(.walletRequestPayout), kind: .primary, size: .large, leadingIcon: .money,
-                         isFullWidth: true, action: onPayout)
-                .disabled(!canRequestPayout)
-                .accessibilityHint(minimumText ?? "")
-                .skeletonPlaceholder(summary == nil)
-                .accessibilityIdentifier("wallet.requestPayout")
-            if let minimumText {
-                Text(minimumText)
-                    .taleedFont(TaleedFont.bodySmall)
-                    .foregroundStyle(TaleedColor.textSecondarySmall)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("wallet.minPayout")
-            }
-        }
+        Text(l10n.string(.walletWeeklyNote))
+            .taleedFont(TaleedFont.bodyRegular)
+            .foregroundStyle(TaleedColor.textBody)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("wallet.weeklyNote")
     }
 }
 
-/// The two tiles of the website, in one bordered card: "Solde disponible" (balance plus vouchers, with
-/// the voucher part) and "En attente (commandes en cours)", muted, with its hint. Without a summary
-/// (loading): the same card with placeholders for the amounts.
+/// The website's three tiles, in one bordered card: "Owed to you" (red when negative) with the next
+/// payout's date and the note that says why it waits, "In payout", and "In progress", muted. Without a
+/// summary (loading): the same card with placeholders for the amounts.
 struct WalletTiles: View {
     let summary: WalletSummary?
     @Environment(LanguageManager.self) private var l10n
@@ -71,24 +32,48 @@ struct WalletTiles: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            tile(icon: .money, title: l10n.string(.walletBalance), amount: summary?.headline, color: TaleedColor.textPrimary,
-                 note: voucherNote)
-                .accessibilityIdentifier("wallet.balance")
-            Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)
-            tile(icon: .lockKey, title: l10n.string(.walletPendingEscrow), amount: summary?.pendingEscrow,
-                 color: TaleedColor.textSecondary, note: (.info, l10n.string(.walletPendingHint)))
-                .accessibilityIdentifier("wallet.pending")
+            tile(icon: .money, title: l10n.string(.walletOwed), amount: summary?.owed, color: owedColor,
+                 notes: owedNotes, emphasis: owedEmphasis)
+                .accessibilityIdentifier("wallet.owed")
+            divider
+            tile(icon: .arrowUpRight, title: l10n.string(.walletInPayout), amount: summary?.inPayout, color: TaleedColor.textPrimary,
+                 notes: [(.info, l10n.string(.walletInPayoutHint))])
+                .accessibilityIdentifier("wallet.inPayout")
+            divider
+            tile(icon: .lockKey, title: l10n.string(.walletPendingEscrow), amount: summary?.inProgress,
+                 color: TaleedColor.textSecondary, notes: [(.info, l10n.string(.walletPendingHint))])
+                .accessibilityIdentifier("wallet.inProgress")
         }
         .taleedCard(radius: TaleedRadius.l)
     }
 
-    /// "dont 500 DA en bons d'achat (non retirables)".
-    private var voucherNote: (TaleedIcon, String)? {
-        guard let summary, WalletRules.showsVoucherPart(summary) else { return nil }
-        return (.ticket, l10n.format(.walletVoucherPart, PriceFormatter.format(summary.voucherBalance, language: l10n.language)))
+    private var divider: some View {
+        Rectangle().fill(TaleedColor.borderSubtle).frame(height: 1).accessibilityHidden(true)
     }
 
-    private func tile(icon: TaleedIcon, title: String, amount: Int?, color: Color, note: (TaleedIcon, String)?) -> some View {
+    private var owedColor: Color {
+        (summary?.owed ?? 0) < 0 ? TaleedColor.feedbackError : TaleedColor.textPrimary
+    }
+
+    /// "Paid with the next weekly payout, on 2 Nov 2026."
+    private var owedNotes: [(TaleedIcon, String)] {
+        guard let summary, WalletRules.showsNextPayoutDate(summary) else { return [] }
+        let date = OrderText.date(summary.nextPayoutAt, locale: l10n.language.formattingLocale)
+        return [(.clock, l10n.format(.walletOwedHint, date))]
+    }
+
+    /// Why the next run will not pay it: in the body colour, a little bolder, as the website's.
+    private var owedEmphasis: String? {
+        guard let summary, let note = WalletRules.owedNote(summary) else { return nil }
+        return switch note {
+        case .negative: l10n.string(.walletOwedNegative)
+        case .needsDetails: l10n.string(.walletOwedNeedsDetails)
+        case let .belowMinimum(minimum): l10n.format(.walletOwedBelowMin, PriceFormatter.format(minimum, language: l10n.language))
+        }
+    }
+
+    private func tile(icon: TaleedIcon, title: String, amount: Int?, color: Color, notes: [(TaleedIcon, String)],
+                      emphasis: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
             HStack(alignment: .top, spacing: 6) {
                 FirstLineIcon(icon: icon, size: min(eyebrowIconSize, 24), textStyle: TaleedFont.eyebrow)
@@ -103,7 +88,7 @@ struct WalletTiles: View {
             .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             PriceText(amount: amount ?? 88_888, style: Self.headlineStyle, color: color)
                 .skeletonPlaceholder(amount == nil)
-            if let note {
+            ForEach(Array(notes.enumerated()), id: \.offset) { _, note in
                 HStack(alignment: .top, spacing: TaleedSpacing.s4) {
                     FirstLineIcon(icon: note.0, size: min(noteIconSize, 24), textStyle: TaleedFont.bodySmall)
                     Text(note.1)
@@ -112,6 +97,13 @@ struct WalletTiles: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            if let emphasis {
+                Text(emphasis)
+                    .taleedFont(TaleedFont.bodySmall.with(weight: .semibold))
+                    .foregroundStyle(TaleedColor.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("wallet.owedNote")
+            }
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -119,56 +111,131 @@ struct WalletTiles: View {
     }
 }
 
-/// The top-up's result, as the website's banners; "Vérification du paiement…" while the sync runs.
-struct TopUpBannerView: View {
-    let banner: TopUpBanner
-    let onDismiss: () -> Void
+/// "Payout details": the saved method and account details (left to right, as a number reads) with
+/// "Updated {date}", or "No payout details yet."; the purpose line; then "Add payout details" (blue) or
+/// "Change" (outline), which opens the sheet.
+struct PayoutDetailsCard: View {
+    let account: PayoutAccountInfo?
+    let onEdit: () -> Void
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
-        Group {
-            switch banner {
-            case .checking:
-                HStack(spacing: TaleedSpacing.s12) {
-                    ProgressView().tint(TaleedColor.brandPrimary)
-                    Text(l10n.string(.appCheckoutVerifying))
-                        .taleedFont(TaleedFont.bodyLarge)
+        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+            Text(l10n.string(.walletPayoutDetailsTitle))
+                .taleedFont(TaleedFont.bodyRegular.with(weight: .semibold))
+                .foregroundStyle(TaleedColor.textPrimary)
+                .accessibilityAddTraits(.isHeader)
+            if let account {
+                VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
+                    Text(verbatim: account.methodLabel)
+                        .taleedFont(TaleedFont.bodyRegular)
                         .foregroundStyle(TaleedColor.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(verbatim: account.accountDetails.isolatedLeftToRight)
+                        .taleedFont(TaleedFont.bodySmall)
+                        .monospaced()
+                        .foregroundStyle(TaleedColor.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+                    Text(l10n.format(.walletPayoutDetailsUpdated,
+                                     OrderText.date(account.updatedAt, locale: l10n.language.formattingLocale)))
+                        .taleedFont(TaleedFont.bodySmall)
+                        .foregroundStyle(TaleedColor.textSecondarySmall)
                 }
-                .padding(TaleedSize.alertPadding)
-                .background(TaleedColor.brandTintStrong, in: RoundedRectangle(cornerRadius: TaleedSize.alertRadius, style: .continuous))
                 .accessibilityElement(children: .combine)
-            case .paid:
-                InlineAlert(kind: .success, title: l10n.string(.walletToppedUp), actionTitle: l10n.string(.commonDismiss),
-                            action: onDismiss)
-            case .pending:
-                InlineAlert(kind: .info, title: l10n.string(.walletTopUpPending), actionTitle: l10n.string(.commonDismiss),
-                            action: onDismiss)
-            case .failed:
-                InlineAlert(kind: .error, title: l10n.string(.walletTopUpFailed), actionTitle: l10n.string(.commonDismiss),
-                            action: onDismiss)
+                .accessibilityIdentifier("wallet.payoutAccount")
+            } else {
+                Text(l10n.string(.walletPayoutDetailsEmpty))
+                    .taleedFont(TaleedFont.bodyRegular)
+                    .foregroundStyle(TaleedColor.textSecondarySmall)
+                    .accessibilityIdentifier("wallet.payoutAccountEmpty")
             }
+            PayoutDetailsPurpose()
+            TaleedButton(title: l10n.string(account == nil ? .walletPayoutDetailsAdd : .walletPayoutDetailsEdit),
+                         kind: account == nil ? .primary : .outline, size: .medium, leadingIcon: .money, action: onEdit)
+                .padding(.top, TaleedSpacing.s4)
+                .accessibilityIdentifier("wallet.editPayoutDetails")
         }
-        .accessibilityIdentifier("wallet.banner")
-        .onAppear { announce() }
-        .onChange(of: banner) { _, _ in announce() }
-    }
-
-    private func announce() {
-        let text: String = switch banner {
-        case .checking: l10n.string(.appCheckoutVerifying)
-        case .paid: l10n.string(.walletToppedUp)
-        case .pending: l10n.string(.walletTopUpPending)
-        case .failed: l10n.string(.walletTopUpFailed)
-        }
-        AccessibilityNotification.Announcement(text).post()
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .taleedCard(radius: TaleedRadius.l)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("wallet.payoutDetails")
     }
 }
 
-/// The header's shape while it loads (design-system §3.6 "Preserve layout · avoid jump"): the tiles'
-/// card with placeholders for the two amounts, the buttons' placeholders laid out as the buttons will be
-/// (side by side or stacked), and the tabs, so nothing moves when the wallet arrives.
+/// "Used only to send your payouts and bank refunds." with the shield (Apple 5.1.1(i): what the data is for).
+struct PayoutDetailsPurpose: View {
+    @Environment(LanguageManager.self) private var l10n
+    @ScaledMetric(relativeTo: .footnote) private var iconSize: CGFloat = 12
+
+    var body: some View {
+        HStack(alignment: .top, spacing: TaleedSpacing.s4) {
+            FirstLineIcon(icon: .shieldCheck, size: min(iconSize, 24), textStyle: TaleedFont.bodySmall)
+            Text(l10n.string(.walletPayoutDetailsPurpose))
+                .taleedFont(TaleedFont.bodySmall)
+                .foregroundStyle(TaleedColor.textSecondarySmall)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("payoutDetails.purpose")
+    }
+}
+
+/// "Vouchers": the active total or "No active vouchers.", then "Voucher rules" (Google Play's rule for
+/// loyalty programs: the rules are published in the app) on a grouped panel.
+struct VouchersCard: View {
+    let voucherBalance: Int
+    let rules: VoucherRulesInfo
+    @Environment(LanguageManager.self) private var l10n
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
+            HStack(alignment: .center, spacing: 6) {
+                TaleedIconView(.ticket, size: 16, color: TaleedColor.brandPrimary)
+                    .accessibilityHidden(true)
+                Text(l10n.string(.walletVouchersTitle))
+                    .taleedFont(TaleedFont.bodyRegular.with(weight: .semibold))
+                    .foregroundStyle(TaleedColor.textPrimary)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            Text(voucherBalance > 0
+                 ? l10n.format(.walletVouchersActive, PriceFormatter.format(voucherBalance, language: l10n.language))
+                 : l10n.string(.walletVouchersEmpty))
+                .taleedFont(TaleedFont.bodyRegular)
+                .foregroundStyle(TaleedColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("wallet.vouchersActive")
+            VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
+                Text(l10n.string(.walletVoucherRulesTitle))
+                    .taleedFont(TaleedFont.bodySmall.with(weight: .semibold))
+                    .foregroundStyle(TaleedColor.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
+                Text(rulesText)
+                    .taleedFont(TaleedFont.bodySmall)
+                    .foregroundStyle(TaleedColor.textBody)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(TaleedSpacing.s12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(TaleedColor.surfaceGrouped, in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("wallet.voucherRules")
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .taleedCard(radius: TaleedRadius.l)
+        .accessibilityIdentifier("wallet.vouchers")
+    }
+
+    private var rulesText: String {
+        l10n.format(.walletVoucherRules, PriceFormatter.format(rules.voucherAmount, language: l10n.language),
+                    PriceFormatter.format(rules.minItemPrice, language: l10n.language), rules.validityDays)
+    }
+}
+
+/// The top's shape while it loads (design-system §3.6 "Preserve layout · avoid jump"): the note, the
+/// tiles' card with placeholders for the amounts, and the tabs, so nothing moves when the summary arrives.
 struct WalletSkeleton: View {
     @Environment(LanguageManager.self) private var l10n
 
@@ -176,14 +243,12 @@ struct WalletSkeleton: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
+                    EarningsWeeklyNote()
                     WalletTiles(summary: nil)
-                    WalletActions(summary: nil)
                 }
                 .padding(.horizontal, TaleedLayout.screenMargin)
                 .padding(.top, TaleedSpacing.s16)
                 .padding(.bottom, TaleedSpacing.s24)
-                TaleedTabs(titles: [l10n.string(.walletHistory), l10n.string(.walletPayouts)], selection: .constant(0))
-                    .allowsHitTesting(false)
             }
         }
         .scrollDisabled(true)

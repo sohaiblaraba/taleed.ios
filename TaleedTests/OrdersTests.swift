@@ -90,6 +90,71 @@ struct OrderRulesTests {
     }
 
     /// The cash-on-delivery notice as a short title and the amounts under it, in every language.
+    @Test func aCardRefundBeingSentSaysHowItTravels() throws {
+        let refund = OrderRefundInfo(amount: 5200, method: .card, methodLabel: "To your card", status: .toSend,
+                                     statusLabel: "Being sent", reference: nil, sentAt: nil, needsPayoutAccount: false)
+        let block = try #require(OrderRules.refundBlock(for: orderDetail(status: .refunded, refund: refund)))
+        #expect(!block.isSent)
+        #expect(block.amount == 5200)
+        #expect(block.summary == "To your card — Being sent")
+        #expect(block.hint == .card)
+        #expect(block.sentAt == nil)
+        #expect(block.reference == nil)
+        #expect(!block.asksPayoutDetails)
+    }
+
+    @Test func aSentRefundShowsItsDateAndReference() throws {
+        let sent = Date(timeIntervalSince1970: 1_760_000_000)
+        let refund = OrderRefundInfo(amount: 5200, method: .card, methodLabel: "To your card", status: .sent, statusLabel: "Sent",
+                                     reference: "CHG-123", sentAt: sent, needsPayoutAccount: false)
+        let block = try #require(OrderRules.refundBlock(for: orderDetail(status: .refunded, refund: refund)))
+        #expect(block.isSent)
+        #expect(block.sentAt == sent)
+        #expect(block.reference == "CHG-123")
+        #expect(block.hint == nil)
+    }
+
+    @Test func aBankRefundAsksForThePayoutDetailsUntilTheyAreSaved() throws {
+        let waiting = OrderRefundInfo(amount: 3100, method: .bank, methodLabel: "By bank transfer", status: .toSend,
+                                      statusLabel: "Being sent", reference: nil, sentAt: nil, needsPayoutAccount: true)
+        let block = try #require(OrderRules.refundBlock(for: orderDetail(status: .refunded, refund: waiting)))
+        #expect(block.hint == .bank)
+        #expect(block.asksPayoutDetails)
+        let saved = OrderRefundInfo(amount: 3100, method: .bank, methodLabel: "By bank transfer", status: .toSend,
+                                    statusLabel: "Being sent", reference: nil, sentAt: nil, needsPayoutAccount: false)
+        #expect(OrderRules.refundBlock(for: orderDetail(status: .refunded, refund: saved))?.asksPayoutDetails == false)
+        // Once sent, never asked again.
+        let sent = OrderRefundInfo(amount: 3100, method: .bank, methodLabel: "By bank transfer", status: .sent, statusLabel: "Sent",
+                                   reference: "VIR-9", sentAt: Date(), needsPayoutAccount: true)
+        #expect(OrderRules.refundBlock(for: orderDetail(status: .refunded, refund: sent))?.asksPayoutDetails == false)
+    }
+
+    @Test func noRefundBlockWithoutARefundOrForTheSeller() {
+        #expect(OrderRules.refundBlock(for: orderDetail(status: .cancelled)) == nil)
+        let refund = OrderRefundInfo(amount: 5200, method: .card, methodLabel: "To your card", status: .toSend,
+                                     statusLabel: "Being sent", reference: nil, sentAt: nil, needsPayoutAccount: false)
+        #expect(OrderRules.refundBlock(for: orderDetail(side: .seller, status: .refunded, refund: refund)) == nil)
+        // A method this build does not know: the server's labels, no hint.
+        let unknown = OrderRefundInfo(amount: 5200, method: .unknown, methodLabel: "Voucher", status: .unknown,
+                                      statusLabel: "Pending", reference: nil, sentAt: nil, needsPayoutAccount: false)
+        let block = OrderRules.refundBlock(for: orderDetail(status: .refunded, refund: unknown))
+        #expect(block?.summary == "Voucher — Pending")
+        #expect(block?.hint == nil)
+    }
+
+    /// Orders placed before slice H keep the part paid from the old balance, as "Already paid on Taleed".
+    @Test func anOldOrderShowsWhatWasAlreadyPaid() {
+        let old = OrderMoney(itemPrice: 2000, protectionFee: 150, shippingFee: 400, promoDiscount: 0, voucherDiscount: 0,
+                             total: 2550, walletApplied: 1000, amountDue: 1550, sellerEarns: 2000)
+        let amounts = OrderRules.amounts(for: orderDetail(money: old))
+        #expect(amounts.lines.map(\.0).suffix(2) == [.total, .walletPaid])
+        #expect(amounts.total == .remainderDue)
+        #expect(amounts.totalAmount == 1550)
+        let current = OrderRules.amounts(for: orderDetail())
+        #expect(!current.lines.map(\.0).contains(.walletPaid))
+        #expect(current.total == .total)
+    }
+
     @Test func codNoticeSplitsIntoTitleAndBody() {
         let french = OrderText.titled("Paiement à la livraison — le transporteur encaisse 2 255 DA auprès du destinataire.")
         #expect(french.title == "Paiement à la livraison")

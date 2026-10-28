@@ -6,29 +6,34 @@ import Testing
 // MARK: - Rules
 
 struct WalletRulesTests {
-    @Test func theHeadlineAddsTheVouchers() {
-        #expect(walletSummary(balance: 3000, vouchers: 500).headline == 3500)
-        #expect(WalletRules.showsVoucherPart(walletSummary(vouchers: 500)))
-        #expect(!WalletRules.showsVoucherPart(walletSummary(vouchers: 0)))
-        // A negative balance after an adjustment shows as it is.
-        #expect(walletSummary(balance: -400, vouchers: 0).headline == -400)
+    @Test func theOwedNoteFollowsTheWebsitesOrder() {
+        // Negative after an adjustment, whatever the details.
+        #expect(WalletRules.owedNote(walletSummary(owed: -400)) == .negative)
+        #expect(WalletRules.owedNote(walletSummary(owed: -400, account: nil)) == .negative)
+        // Enough for the run, no details: ask for them.
+        #expect(WalletRules.owedNote(walletSummary(owed: 100, account: nil)) == .needsDetails)
+        #expect(WalletRules.owedNote(walletSummary(owed: 4200, account: nil)) == .needsDetails)
+        // Under the minimum: it waits, with or without details.
+        #expect(WalletRules.owedNote(walletSummary(owed: 99)) == .belowMinimum(100))
+        #expect(WalletRules.owedNote(walletSummary(owed: 50, account: nil)) == .belowMinimum(100))
+        // Paid by the next run, or nothing owed: no note.
+        #expect(WalletRules.owedNote(walletSummary(owed: 100)) == nil)
+        #expect(WalletRules.owedNote(walletSummary(owed: 0)) == nil)
+        #expect(WalletRules.owedNote(walletSummary(owed: 0, account: nil)) == nil)
     }
 
-    @Test func thePayoutButtonNeedsTheMinimum() {
-        #expect(WalletRules.canRequestPayout(walletSummary(balance: 100)))
-        #expect(!WalletRules.canRequestPayout(walletSummary(balance: 99)))
-        #expect(!WalletRules.canRequestPayout(walletSummary(balance: 0)))
-        #expect(!WalletRules.canRequestPayout(walletSummary(balance: -50)))
-        // Vouchers are never withdrawable.
-        #expect(!WalletRules.canRequestPayout(walletSummary(balance: 0, vouchers: 500)))
+    @Test func theNextPayoutDateShowsUnlessTheAmountIsNegative() {
+        #expect(WalletRules.showsNextPayoutDate(walletSummary(owed: 4200)))
+        #expect(WalletRules.showsNextPayoutDate(walletSummary(owed: 0)))
+        #expect(!WalletRules.showsNextPayoutDate(walletSummary(owed: -1)))
     }
 
-    @Test func topUpShowsOnlyWithAGateway() {
-        #expect(WalletRules.showsTopUp(walletSummary()))
-        #expect(!WalletRules.showsTopUp(walletSummary(methods: [])))
-        #expect(!WalletRules.showsTopUpMethodPicker(walletSummary()))
-        let chargily = PaymentChoice(value: "chargily", label: "Chargily Pay", hint: "CIB")
-        #expect(WalletRules.showsTopUpMethodPicker(walletSummary(methods: [chargily, walletMockMethod])))
+    @Test func voucherRulesUseTheProgramElseTheServersValues() {
+        let limits = walletSummary().limits
+        let program = VoucherRulesInfo(voucherAmount: 700, minItemPrice: 2000, validityDays: 180)
+        #expect(WalletRules.voucherRules(program: program, limits: limits) == program)
+        #expect(WalletRules.voucherRules(program: nil, limits: limits)
+            == VoucherRulesInfo(voucherAmount: 500, minItemPrice: 1500, validityDays: 365))
     }
 
     @Test func amountsAreGreenFromZeroAndVouchersOnlyWhileActive() {
@@ -47,13 +52,6 @@ struct WalletRulesTests {
         #expect(WalletRules.payoutTone(.paid) == .success)
         #expect(WalletRules.payoutTone(.rejected) == .error)
         #expect(WalletRules.payoutTone(.unknown) == .neutral)
-    }
-
-    @Test func topUpBannersFromTheSync() {
-        #expect(TopUpBanner(.paid) == .paid)
-        #expect(TopUpBanner(.failed) == .failed)
-        #expect(TopUpBanner(.pending) == .pending)
-        #expect(TopUpBanner(.unknown) == .pending)
     }
 }
 
@@ -77,14 +75,11 @@ struct WalletTextTests {
         #expect(WalletText.entryDetail(walletEntry("b", kind: .saleRelease, note: nil), locale: locale) { $0 } == date)
     }
 
-    /// A top-up's note is its method's id: the line shows the method's label, never "mock".
-    @Test func topUpLinesShowTheMethodLabel() {
+    /// An old top-up line ("Card payment") carries the gateway's id: never shown.
+    @Test func cardPaymentLinesShowTheDateOnly() {
         let locale = Locale(identifier: "fr_FR")
         let date = OrderText.date(Date(timeIntervalSince1970: 1_760_000_000), locale: locale)
-        let methods = [PaymentChoice(value: "mock", label: "Paiement simulé", hint: "")]
-        let detail = WalletText.entryDetail(walletEntry("t", note: "mock"), locale: locale, topUpMethods: methods) { $0 }
-        #expect(detail == "Paiement simulé\u{00A0}·\u{00A0}\(date)")
-        #expect(WalletText.entryDetail(walletEntry("u", note: "mock"), locale: locale) { $0 } == date)
+        #expect(WalletText.entryDetail(walletEntry("t", kind: .topUp, note: "mock"), locale: locale) { $0 } == date)
     }
 
     @Test func voucherLinesShowTheirStatusAndExpiryWhileActive() {
@@ -113,72 +108,56 @@ struct WalletTextTests {
     }
 }
 
-// MARK: - Forms
+// MARK: - Payout details form
 
-struct WalletFormTests {
-    @Test func amountsAreWholeNumbersInRange() {
-        #expect(WalletAmountInput(text: "", range: 100...7500) == .empty)
-        #expect(WalletAmountInput(text: "50", range: 100...7500) == .invalid)
-        #expect(WalletAmountInput(text: "7501", range: 100...7500) == .invalid)
-        #expect(WalletAmountInput(text: "1 000", range: 100...7500) == .valid(1000))
-        #expect(WalletAmountInput(text: "١٠٠٠", range: 100...7500) == .valid(1000))
-        #expect(WalletAmountInput(text: "100", range: nil) == .invalid)
+struct PayoutDetailsFormTests {
+    private let limits = walletSummary().limits
+    private let methods = ["CCP", "RIB", "BARIDIMOB"]
+
+    @Test func aNewFormStartsWithCcpAndNoDetails() {
+        let form = PayoutDetailsInput(account: nil, methods: methods, limits: limits)
+        #expect(form.method == "CCP")
+        #expect(form.accountDetails.isEmpty)
+        #expect(!form.isValid)
+        #expect(!form.showsLengthError)
+        // Without CCP among the methods: the first one offered.
+        #expect(PayoutDetailsInput(account: nil, methods: ["RIB", "BARIDIMOB"], limits: limits).method == "RIB")
     }
 
-    @Test func thePayoutFormIsPrefilledWithTheBalance() {
-        var form = PayoutFormInput(balance: 7500, minPayout: 100)
-        #expect(form.amountText == "7500")
-        #expect(form.method == "CCP")
-        #expect(!form.isValid)
-        form.accountDetails = "  0012345678 clé 90 \n"
-        #expect(form.trimmedDetails == "0012345678 clé 90")
+    @Test func savedDetailsArePrefilled() {
+        let account = PayoutAccountInfo(method: "RIB", methodLabel: "Virement bancaire (RIB)", accountDetails: "00799999000123456789",
+                                        updatedAt: Date())
+        let form = PayoutDetailsInput(account: account, methods: methods, limits: limits)
+        #expect(form.method == "RIB")
+        #expect(form.accountDetails == "00799999000123456789")
         #expect(form.isValid)
-        form.amountText = "1000"
-        #expect(form.amount == .valid(1000))
-        form.amountText = "8000"
-        #expect(form.amount == .invalid)
-        #expect(!form.isValid)
-        #expect(PayoutFormInput(balance: 0, minPayout: 100).amountText.isEmpty)
-        #expect(PayoutFormInput(balance: 50, minPayout: 100).amountRange == nil)
     }
 
     @Test func accountDetailsNeedFiveToThreeHundredCharactersOnceTrimmed() {
-        var form = PayoutFormInput(balance: 7500, minPayout: 100)
-        form.accountDetails = "  1234 "
+        var form = PayoutDetailsInput(account: nil, methods: methods, limits: limits)
+        form.accountDetails = "  1234 \n"
+        #expect(form.trimmedDetails == "1234")
         #expect(!form.detailsAreValid)
+        #expect(form.showsLengthError)
         form.accountDetails = "12345"
         #expect(form.detailsAreValid)
-        form.accountDetails = String(repeating: "1", count: 301)
-        #expect(!form.detailsAreValid)
-        #expect(PayoutFormInput.detailsMinLength == 5)
-        #expect(PayoutFormInput.detailsMaxLength == 300)
-    }
-
-    @Test func aRetryOfTheSameRequestKeepsItsClientId() {
-        var ids = ["id1", "id2", "id3"]
-        var submission = PayoutSubmission { ids.removeFirst() }
-        let first = submission.request(amount: 1000, method: "CCP", accountDetails: "0012345678 clé 90")
-        #expect(first.clientId == "id1")
-        #expect(submission.request(amount: 1000, method: "CCP", accountDetails: "0012345678 clé 90").clientId == "id1")
-        // Another body with the same id would be refused (`body.clientId`): a new id.
-        #expect(submission.request(amount: 900, method: "CCP", accountDetails: "0012345678 clé 90").clientId == "id2")
-        submission.reset()
-        #expect(submission.request(amount: 900, method: "CCP", accountDetails: "0012345678 clé 90").clientId == "id3")
-    }
-
-    @Test func theTopUpFormStartsAtOneThousand() {
-        var form = TopUpFormInput(limits: .default, methods: [walletMockMethod])
-        #expect(form.amountText == "1000")
-        #expect(form.method == "mock")
+        #expect(!form.showsLengthError)
+        form.accountDetails = String(repeating: "1", count: 300)
         #expect(form.isValid)
-        form.amountText = "50"
-        #expect(form.amount == .invalid)
+        form.accountDetails = String(repeating: "1", count: 301)
         #expect(!form.isValid)
-        form.amountText = "1000001"
+        #expect(form.showsLengthError)
+        // Blank is not an error: the button waits.
+        form.accountDetails = "   "
         #expect(!form.isValid)
-        form.amountText = "5025"
-        #expect(form.amount == .valid(5025))
-        #expect(!TopUpFormInput(limits: .default, methods: []).isValid)
+        #expect(!form.showsLengthError)
+    }
+
+    @Test func theFieldTakesALittleMoreThanTheMaximum() {
+        let form = PayoutDetailsInput(account: nil, methods: methods, limits: limits)
+        #expect(form.inputLimit == 320)
+        #expect(form.minLength == 5)
+        #expect(form.maxLength == 300)
     }
 }
 
@@ -206,13 +185,33 @@ struct WalletMappingTests {
         #expect(row.orderId == "o9")
     }
 
-    @Test func gatewaysUnknownToThisBuildAreLeftOut() {
-        let wallet = Wallet(balance: 3000, voucherBalance: 500, pendingEscrow: 2500,
-                            topUpMethods: [PaymentMethodOption(value: .unknownDefaultOpenApi, label: "New", hint: ""),
-                                           PaymentMethodOption(value: .chargily, label: "Chargily Pay", hint: "CIB")],
-                            limits: WalletLimits(minPayout: 100, minTopUp: 100, maxTopUp: 1_000_000, voucherMinItemPrice: 1500))
+    @Test func theSummaryKeepsTheServersAmountsAndDetails() {
+        let updated = Date(timeIntervalSince1970: 1_760_000_000)
+        let wallet = Wallet(owed: -400, inPayout: 1500, inProgress: 3000, voucherBalance: 500, nextPayoutAt: walletNextRun,
+                            payoutAccount: PayoutAccount(method: .ccp, methodLabel: "CCP", accountDetails: "0012345678 clé 90",
+                                                         updatedAt: updated),
+                            limits: WalletLimits(minPayout: 100, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500))
         let mapped = WalletSummary(wallet)
-        #expect(mapped.topUpMethods.map(\.value) == ["chargily"])
-        #expect(mapped.headline == 3500)
+        #expect(mapped.owed == -400)
+        #expect(mapped.inPayout == 1500)
+        #expect(mapped.inProgress == 3000)
+        #expect(mapped.voucherBalance == 500)
+        #expect(mapped.nextPayoutAt == walletNextRun)
+        #expect(mapped.payoutAccount == PayoutAccountInfo(method: "CCP", methodLabel: "CCP", accountDetails: "0012345678 clé 90",
+                                                          updatedAt: updated))
+        #expect(mapped.limits == WalletLimitsInfo(minPayout: 100, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500))
+        let empty = Wallet(owed: 0, inPayout: 0, inProgress: 0, voucherBalance: 0, nextPayoutAt: walletNextRun, payoutAccount: nil,
+                           limits: wallet.limits)
+        #expect(WalletSummary(empty).payoutAccount == nil)
+    }
+
+    /// No stored balance (slice H): the generated client has no top-up, payout request or balance left.
+    @Test func theContractHasNoStoredBalance() {
+        let walletKeys = Set(Wallet.CodingKeys.allCases.map(\.rawValue))
+        #expect(walletKeys == ["owed", "inPayout", "inProgress", "voucherBalance", "nextPayoutAt", "payoutAccount", "limits"])
+        #expect(!CheckoutAmounts.CodingKeys.allCases.map(\.rawValue).contains("walletApplied"))
+        #expect(!CheckoutQuote.CodingKeys.allCases.map(\.rawValue).contains("walletBalance"))
+        #expect(!CheckoutQuoteRequest.CodingKeys.allCases.map(\.rawValue).contains("useWallet"))
+        #expect(!OrderCreate.CodingKeys.allCases.map(\.rawValue).contains("useWallet"))
     }
 }

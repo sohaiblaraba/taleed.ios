@@ -7,17 +7,17 @@
 
 import Foundation
 
-/** A payout request: the Taleed team sends the money by hand, usually within 48 business hours. */
+/** A payout: the weekly run creates it, the Taleed team sends the money by hand, usually within 48 business hours. */
 public struct Payout: Sendable, Codable, Hashable {
 
     public static let amountRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public var id: String
-    /** Requested. Integer DZD. */
+    /** Everything owed when the weekly run created it. Integer DZD. */
     public var amount: Int
     public var method: PayoutMethod
     /** `method`, in the response language. */
     public var methodLabel: String
-    /** Where the money goes, as the member wrote it. */
+    /** Where the money goes: the payout details saved when the weekly run created it. */
     public var accountDetails: String
     public var status: PayoutStatus
     /** `status`, in the response language. */
@@ -26,7 +26,7 @@ public struct Payout: Sendable, Codable, Hashable {
     public var reference: String?
     /** `PAID`: the transfer receipt the Taleed team attached, an image or a PDF. */
     public var proofUrl: String?
-    /** When the member asked for it. ISO 8601, UTC. */
+    /** When the weekly run created it (for old payouts: when the member asked for it). ISO 8601, UTC. */
     public var requestedAt: Date
     /** When it was paid. ISO 8601, UTC. */
     public var processedAt: Date?

@@ -155,8 +155,8 @@ struct LinkRouterTests {
     @Test func paymentReturn() {
         #expect(destination("taleed://payment-return?kind=order&id=o1&result=success")
             == .paymentReturn(PaymentReturn(kind: .order, id: "o1", succeeded: true)))
-        #expect(destination("taleed://payment-return?kind=top_up&id=t1&result=failure")
-            == .paymentReturn(PaymentReturn(kind: .topUp, id: "t1", succeeded: false)))
+        // Top-ups ended with slice H: an old return link opens Earnings.
+        #expect(destination("taleed://payment-return?kind=top_up&id=t1&result=failure") == .screen(.wallet))
         #expect(destination("taleed://payment-return?kind=boost&id=x&result=success") == .home)
         #expect(destination("taleed://payment-return?kind=order&result=success") == .home)
     }

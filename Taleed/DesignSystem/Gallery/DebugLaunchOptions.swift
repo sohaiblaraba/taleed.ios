@@ -44,7 +44,7 @@ import Foundation
 ///                                              by the carrier (`502 carrier_error` with a `detail`)
 ///     -TaleedDebugOrders offline               the orders list's first page fails offline (then works);
 ///                                              `empty` answers no orders
-///     -TaleedDebugWallet offline               the wallet's first load fails offline (then works)
+///     -TaleedDebugWallet offline               Earnings' first load fails offline (then works)
 ///     -TaleedDebugNotifications offline        the notifications' first page fails offline (then works);
 ///                                              `empty` answers no notifications; `hidden`: a first page
 ///                                              without rows that has a next page (the real first page)

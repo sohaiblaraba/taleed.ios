@@ -229,13 +229,9 @@ struct AppRouterTests {
         signedIn.value = true
         router.open(url: URL(string: "taleed://payment-return?kind=order&id=o1&result=success")!)
         #expect(router.path(.profile) == [.orders, .orderPayment(OrderPaymentTarget(orderId: "o1", attempt: .returnedSuccess))])
-        #expect(router.consumePaymentReturn(kind: .order, id: "o1") == nil)
 
         router.open(url: URL(string: "taleed://payment-return?kind=top_up&id=t1&result=failure")!)
         #expect(router.path(.profile) == [.wallet])
-        #expect(router.consumePaymentReturn(kind: .topUp, id: "other") == nil)
-        #expect(router.consumePaymentReturn(kind: .topUp, id: "t1") == PaymentReturn(kind: .topUp, id: "t1", succeeded: false))
-        #expect(router.consumePaymentReturn(kind: .topUp, id: "t1") == nil)
     }
 
     @Test func checkoutIsReplacedByItsOrdersPaymentScreen() {

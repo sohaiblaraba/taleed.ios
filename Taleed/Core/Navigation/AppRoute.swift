@@ -42,9 +42,10 @@ enum AppRoute: Hashable, Sendable {
     case order(id: String)
     /// The thread of an order's dispute (G12): from the order screen, or once a dispute is opened.
     case dispute(id: String)
+    /// Earnings (slice H; the website's `/wallet`).
     case wallet
-    /// The wallet with its payout form open: deleting an account that still holds money (G16).
-    case walletPayout
+    /// Earnings with its payout details sheet open: a bank refund that waits for them (slice H).
+    case payoutDetails
     case notifications
     case settings
     // The settings screens (G16).
@@ -75,7 +76,7 @@ enum AppRoute: Hashable, Sendable {
     var requiresSignIn: Bool {
         switch self {
         case .conversation, .bundle, .checkout, .orderPayment, .favorites, .orders, .order, .dispute, .wallet, .notifications, .referrals,
-             .deleteAccount, .editListing, .bundleBuilder, .myListings, .walletPayout, .profileSettings, .usernameSettings,
+             .deleteAccount, .editListing, .bundleBuilder, .myListings, .payoutDetails, .profileSettings, .usernameSettings,
              .emailSettings, .passwordSettings, .addresses, .blockedMembers, .identityVerification:
             true
         case .listing, .member, .search, .visualSearch, .settings, .help:
@@ -150,12 +151,12 @@ struct OrderPaymentTarget: Hashable, Sendable {
     var addressToSave: AddressDraft?
 }
 
-/// `taleed://payment-return?kind=order|top_up&id=…&result=success|failure` (slice D, Paying online).
+/// `taleed://payment-return?kind=order&id=…&result=success|failure` (slice D, Paying online).
+/// `kind=top_up` (top-ups, removed in slice H) opens Earnings.
 /// Never trust `result`: the screen asks the API how the payment went.
 struct PaymentReturn: Hashable, Sendable {
     enum Kind: Hashable, Sendable {
         case order
-        case topUp
     }
 
     let kind: Kind

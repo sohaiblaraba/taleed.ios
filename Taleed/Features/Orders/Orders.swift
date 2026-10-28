@@ -73,6 +73,8 @@ struct OrderMoney: Equatable, Sendable {
     /// The referral voucher's part of the discount (`voucherDiscount`).
     let voucherDiscount: Int
     let total: Int
+    /// Orders placed before slice H only: the part paid from the old stored balance ("Déjà réglé sur
+    /// Taleed"). 0 on every new order.
     let walletApplied: Int
     let amountDue: Int
     /// What the seller receives: discounts are paid by Taleed.
@@ -150,6 +152,35 @@ struct OrderDisputeSummary: Equatable, Sendable {
     let resolution: String?
 }
 
+/// How a refund reaches the buyer (`RefundMethod`): back to the card of an online payment, or by bank
+/// transfer to the buyer's payout details for cash already paid at the door.
+enum RefundRoute: Equatable, Sendable {
+    case card, bank, unknown
+}
+
+/// Where a refund stands (`RefundStatus`): the Taleed team sends it by hand, then marks it sent.
+enum RefundProgress: Equatable, Sendable {
+    case toSend, sent, unknown
+}
+
+/// The refund the Taleed team owes the buyer (`OrderDetail.refund`, slice H). Buyer only: the seller gets
+/// none. Labels come from the server.
+struct OrderRefundInfo: Equatable, Sendable {
+    let amount: Int
+    let method: RefundRoute
+    /// "To your card", "By bank transfer".
+    let methodLabel: String
+    let status: RefundProgress
+    /// "Being sent", "Sent".
+    let statusLabel: String
+    /// `SENT`: the gateway's or the bank transfer's reference.
+    let reference: String?
+    /// `SENT`: when the team sent it.
+    let sentAt: Date?
+    /// A bank refund waiting for the buyer's payout details: "Add payout details" opens Earnings.
+    let needsPayoutAccount: Bool
+}
+
 /// A review of the order: the member's own, or the one the other side left about them.
 struct OrderReviewInfo: Equatable, Sendable {
     let rating: Int
@@ -181,6 +212,8 @@ struct OrderDetailInfo: Identifiable, Equatable, Sendable {
     let pickupReady: Bool
     let actions: OrderActionFlags
     let dispute: OrderDisputeSummary?
+    /// Nil while nothing is to be refunded, and always for the seller.
+    var refund: OrderRefundInfo?
     let myReview: OrderReviewInfo?
     let reviewReceived: OrderReviewInfo?
     let conversationId: String?

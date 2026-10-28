@@ -55,6 +55,8 @@ struct NotificationRulesTests {
             ("DISPUTE_OPENED", .disputes), ("DISPUTE_RESOLVED", .disputes),
             ("PAYOUT_PAID", .money), ("PAYOUT_REJECTED", .money), ("TOPUP_PAID", .money), ("REFERRAL_REWARD", .money),
             ("VERIFICATION_VOUCHER", .money),
+            // Slice H.
+            ("PAYOUT_CREATED", .money), ("PAYOUT_DETAILS_MISSING", .money), ("REFUND_SENT", .money), ("REFUND_LATE_PAYMENT", .money),
             ("NEW_FAVORITE", .community), ("NEW_FOLLOWER", .community), ("FOLLOWED_MEMBER_LISTED", .community),
             ("REVIEW_RECEIVED", .community), ("REFERRAL_SIGNUP", .community),
             ("VERIFICATION_APPROVED", .account), ("VERIFICATION_REJECTED", .accountIssue), ("REPORT_RESOLVED", .account),
@@ -64,6 +66,13 @@ struct NotificationRulesTests {
         for (type, theme) in expectations {
             #expect(NotificationTheme(type: type) == theme, "\(type)")
         }
+    }
+
+    /// Slice H's notifications open Earnings (`/wallet`) or the order, through their `url`.
+    @Test func earningsAndRefundLinksOpenTheirScreens() {
+        #expect(LinkRouter.destination(for: "/wallet") == .screen(.wallet))
+        #expect(LinkRouter.destination(for: "/ar/wallet") == .screen(.wallet))
+        #expect(LinkRouter.destination(for: "/orders/o1") == .screen(.order(id: "o1")))
     }
 
     @Test func anUnknownTypeGetsTheGenericBell() {

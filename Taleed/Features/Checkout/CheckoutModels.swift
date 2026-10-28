@@ -28,7 +28,6 @@ struct CheckoutRequest: Equatable, Hashable, Sendable {
     var offerId: String?
     var delivery: CheckoutDeliveryInput
     var promoCode: String?
-    var useWallet: Bool
     /// The member's pick; nil lets the server take the first method offered.
     var paymentMethod: String?
 }
@@ -89,7 +88,7 @@ struct CheckoutAmountsInfo: Equatable, Sendable {
     let voucherDiscount: Int
     let discount: Int
     let total: Int
-    let walletApplied: Int
+    /// What is left to pay: the total (no stored balance, slice H).
     let amountDue: Int
     let freeDelivery: Bool
 }
@@ -134,10 +133,9 @@ struct CheckoutPricing: Equatable, Sendable {
     let promo: CheckoutPromo?
     /// The code could not be used: the server's localized reason, shown under the field.
     let promoErrorMessage: String?
-    let walletBalance: Int
     /// In display order; values this build does not know are left out (never offered).
     let paymentMethods: [PaymentChoice]
-    /// The method the quote assumes; nil when the wallet pays it all.
+    /// The method the quote assumes; nil when nothing is left to pay.
     let paymentMethod: String?
     let cashOnDelivery: CashCollection?
 
@@ -219,6 +217,7 @@ struct OrderAmountsInfo: Equatable, Sendable {
     /// The referral voucher's part of the discount.
     let voucherDiscount: Int
     let total: Int
+    /// Orders placed before slice H only: the part paid from the old stored balance.
     let walletApplied: Int
     let amountDue: Int
 }
@@ -248,8 +247,8 @@ struct OrderPaymentInfo: Identifiable, Equatable, Sendable {
 /// `POST /orders`'s answer.
 struct PlacedOrder: Equatable, Sendable {
     let order: OrderPaymentInfo
-    /// The gateway's page; nil for cash on delivery, a wallet that paid it all, or a gateway that could
-    /// not open a page (the order then waits with "Pay now").
+    /// The gateway's page; nil for cash on delivery, nothing left to pay, or a gateway that could not
+    /// open a page (the order then waits with "Pay now").
     let paymentURL: URL?
     let replayed: Bool
 }

@@ -101,10 +101,16 @@ enum DeletionBlocker: Equatable, Sendable {
     case activeOrders
     /// `dispute_in_progress`: open the orders.
     case openDispute
-    /// `payout_in_progress`: open the wallet.
+    /// `payout_in_progress`: a payout to the member is on its way (also the answer when a small amount
+    /// owed was just put in a payout, slice H): open Earnings.
     case pendingPayout
-    /// `wallet_not_empty`: open the payout form.
+    /// `wallet_not_empty` with money owed to the member: it leaves with the next weekly payout; open
+    /// Earnings (where the payout details are added).
     case walletNotEmpty
+    /// `wallet_not_empty` with a refund to the member still being sent: open the orders.
+    case refundToSend
+    /// `wallet_not_empty` with a negative amount after an adjustment: the support contacts.
+    case owesTaleed
     /// `403 forbidden`: an admin account; show the support contacts.
     case admin
     /// `429`: 5 password attempts per 15 minutes.
@@ -127,17 +133,44 @@ enum DeletionBlocker: Equatable, Sendable {
         }
     }
 
+    /// `wallet_not_empty` covers three situations (slice H): its `message` is for developers, so the app
+    /// tells them apart from what is owed (`GET /wallet`), in the server's order: owed above 0, below 0,
+    /// otherwise a refund still to send. `owed` nil (the wallet did not load): the owed text, the most
+    /// common case.
+    static func walletNotEmpty(owed: Int?) -> DeletionBlocker {
+        guard let owed else { return .walletNotEmpty }
+        if owed > 0 { return .walletNotEmpty }
+        if owed < 0 { return .owesTaleed }
+        return .refundToSend
+    }
+
+    /// The refusal's text, inside the form.
+    var messageKey: L10nKey {
+        switch self {
+        case .wrongPassword: .settingsDeleteWrongPassword
+        case .activeOrders: .settingsDeleteBlockedActiveOrders
+        case .openDispute: .settingsDeleteBlockedOpenDisputes
+        case .pendingPayout: .settingsDeleteBlockedPendingPayout
+        case .walletNotEmpty: .settingsDeleteBlockedWallet
+        case .refundToSend: .settingsDeleteBlockedRefund
+        case .owesTaleed: .settingsDeleteBlockedOwesTaleed
+        case .admin: .settingsDeleteBlockedAdmin
+        case .tooManyAttempts: .settingsDeleteTooManyAttempts
+        case .network: .commonErrorNetwork
+        case .generic: .settingsDeleteBlockedGeneric
+        }
+    }
+
     /// Where the member goes to solve it.
     enum Remedy: Equatable, Sendable {
-        case orders, wallet, payout, support
+        case orders, earnings, support
     }
 
     var remedy: Remedy? {
         switch self {
-        case .activeOrders, .openDispute: .orders
-        case .pendingPayout: .wallet
-        case .walletNotEmpty: .payout
-        case .admin: .support
+        case .activeOrders, .openDispute, .refundToSend: .orders
+        case .pendingPayout, .walletNotEmpty: .earnings
+        case .admin, .owesTaleed: .support
         case .wrongPassword, .tooManyAttempts, .network, .generic: nil
         }
     }

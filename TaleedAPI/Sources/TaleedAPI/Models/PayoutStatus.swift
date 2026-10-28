@@ -7,7 +7,7 @@
 
 import Foundation
 
-/** &#x60;REQUESTED&#x60;: waiting for the Taleed team, the amount set aside. &#x60;PROCESSING&#x60;: the transfer is under way. &#x60;PAID&#x60;: sent, see &#x60;reference&#x60; and &#x60;proofUrl&#x60;. &#x60;REJECTED&#x60;: refused: the amount is back in the balance. */
+/** &#x60;REQUESTED&#x60;: created by the weekly run, waiting for the Taleed team. &#x60;PROCESSING&#x60;: the transfer is under way. &#x60;PAID&#x60;: sent, see &#x60;reference&#x60; and &#x60;proofUrl&#x60;. &#x60;REJECTED&#x60;: refused: the amount is owed again and joins the next run; ask the member to check the payout details. */
 public enum PayoutStatus: String, Sendable, Codable, CaseIterable, CaseIterableDefaultsLast {
     case requested = "REQUESTED"
     case processing = "PROCESSING"

@@ -44,7 +44,6 @@ public enum ErrorCode: String, Sendable, Codable, CaseIterable, CaseIterableDefa
     case carrierError = "carrier_error"
     case disputeExists = "dispute_exists"
     case alreadyReviewed = "already_reviewed"
-    case insufficientBalance = "insufficient_balance"
     case addressLimit = "address_limit"
     case wrongPassword = "wrong_password"
     case nameLocked = "name_locked"

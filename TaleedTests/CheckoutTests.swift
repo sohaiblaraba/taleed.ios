@@ -6,11 +6,11 @@ import Testing
 
 func fixturePricing(
     itemPrice: Int = 3000, fee: Int = 200, shipping: Int = 600, promoDiscount: Int = 0, voucherDiscount: Int = 0,
-    walletApplied: Int = 0, walletBalance: Int = 0, exact: Bool = true, promo: CheckoutPromo? = nil,
+    exact: Bool = true, promo: CheckoutPromo? = nil,
     promoError: String? = nil, methods: [String] = ["mock", "cod"], method: String? = "mock",
     cash: CashCollection? = nil, bundleId: String? = nil, items: Int = 1
 ) -> CheckoutPricing {
-    let total = itemPrice + fee + shipping - promoDiscount - voucherDiscount
+    let total = max(0, itemPrice + fee + shipping - promoDiscount - voucherDiscount)
     return CheckoutPricing(
         goods: CheckoutGoodsInfo(
             listingId: "l1", bundleId: bundleId, title: "Veste",
@@ -22,9 +22,9 @@ func fixturePricing(
         amounts: CheckoutAmountsInfo(
             itemPrice: itemPrice, protectionFee: fee, shippingFee: shipping, subtotal: itemPrice + fee + shipping,
             promoDiscount: promoDiscount, voucherDiscount: voucherDiscount, discount: promoDiscount + voucherDiscount,
-            total: total, walletApplied: walletApplied, amountDue: total - walletApplied, freeDelivery: false
+            total: total, amountDue: total, freeDelivery: false
         ),
-        promo: promo, promoErrorMessage: promoError, walletBalance: walletBalance,
+        promo: promo, promoErrorMessage: promoError,
         paymentMethods: methods.map { PaymentChoice(value: $0, label: $0, hint: "") },
         paymentMethod: method, cashOnDelivery: cash
     )
@@ -194,7 +194,6 @@ struct CheckoutFormTests {
         #expect(listing.offerId == "o1")
         #expect(listing.delivery.addressLine == "12 rue des Oliviers")
         #expect(listing.delivery.stopdeskId == nil)
-        #expect(listing.useWallet)
 
         form.kind = .stopdesk
         let bundle = try #require(form.request(for: CheckoutTarget(listingId: "l1", bundleId: "b1")))
@@ -250,26 +249,28 @@ struct CheckoutSummaryTests {
         let plain = CheckoutSummary.rows(for: fixturePricing(exact: false))
         #expect(plain.map(\.kind) == [.item(bundleCount: nil), .protectionFee, .shipping(estimate: true)])
 
-        let full = CheckoutSummary.rows(for: fixturePricing(promoDiscount: 380, voucherDiscount: 500, walletApplied: 1000,
+        let full = CheckoutSummary.rows(for: fixturePricing(promoDiscount: 380, voucherDiscount: 500,
                                                             promo: CheckoutPromo(code: "WELCOME", kind: .percent, value: 10),
                                                             bundleId: "b1", items: 2))
+        // No stored balance (slice H): the voucher is the last line, the total is what is paid.
         #expect(full.map(\.kind) == [.item(bundleCount: 2), .protectionFee, .shipping(estimate: false),
-                                     .promo(kind: .percent, code: "WELCOME"), .voucher, .total, .wallet])
+                                     .promo(kind: .percent, code: "WELCOME"), .voucher])
         #expect(full.first { $0.kind == .voucher }?.amount == -500)
-        #expect(full.first { $0.kind == .wallet }?.amount == -1000)
-        #expect(full.first { $0.kind == .total }?.amount == 2920)
+        #expect(fixturePricing(promoDiscount: 380, voucherDiscount: 500).amounts.amountDue == 2920)
     }
 
     @Test func thePaymentListShowsOnlyWithAChoiceAndSomethingToPay() {
         #expect(CheckoutSummary.showsPaymentMethods(fixturePricing()))
         #expect(!CheckoutSummary.showsPaymentMethods(fixturePricing(methods: ["mock"])))
-        #expect(!CheckoutSummary.showsPaymentMethods(fixturePricing(walletApplied: 3800, method: nil)))
+        // Nothing to pay (a promo that covers it all): no list.
+        #expect(!CheckoutSummary.showsPaymentMethods(fixturePricing(promoDiscount: 3800, method: nil)))
     }
 
     @Test func theButtonFollowsTheQuote() {
         #expect(CheckoutAction.of(nil) == .pending)
         #expect(CheckoutAction.of(fixturePricing()) == .pay(amount: 3800))
-        #expect(CheckoutAction.of(fixturePricing(walletApplied: 3800, method: nil)) == .confirm)
+        #expect(CheckoutAction.of(fixturePricing(promoDiscount: 3800, method: nil)) == .confirm)
+        #expect(CheckoutAction.of(fixturePricing(voucherDiscount: 500)) == .pay(amount: 3300))
         #expect(CheckoutAction.of(fixturePricing(method: "cod", cash: CashCollection(total: 3800, deliveryFee: 600)))
             == .cashOnDelivery(amount: 3800))
     }
@@ -288,6 +289,7 @@ struct PaymentOutcomeTests {
         #expect(PaymentOutcome.of(fixtureOrder(status: .unknown), attempt: .none) == .other)
         let cash = CashCollection(total: 1910, deliveryFee: 600)
         #expect(PaymentOutcome.of(fixtureOrder(cash: cash), attempt: .none) == .confirmed(cash: cash))
+        // An order placed before slice H that the old stored balance paid in full.
         #expect(PaymentOutcome.of(fixtureOrder(walletApplied: 3800), attempt: .none) == .confirmed(cash: nil))
     }
 

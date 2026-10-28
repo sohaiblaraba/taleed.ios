@@ -7,12 +7,12 @@
 
 import Foundation
 
-/** A line of the wallet history. */
+/** A line of the Earnings history. */
 public struct WalletEntry: Sendable, Codable, Hashable {
 
     public var id: String
     public var type: WalletEntryType
-    /** In the response language, such as \"Sale — funds released\". */
+    /** In the response language, such as \"Sale completed\". */
     public var label: String
     /** Integer DZD, signed: a credit is positive, a debit negative. A voucher's value is positive. */
     public var amount: Int

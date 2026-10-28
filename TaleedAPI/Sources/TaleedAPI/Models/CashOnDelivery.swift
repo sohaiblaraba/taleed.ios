@@ -12,7 +12,7 @@ public struct CashOnDelivery: Sendable, Codable, Hashable {
 
     public static let totalRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let deliveryFeeRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
-    /** Everything the recipient hands the carrier: the order total, less what the wallet paid. Integer Algerian dinars (DZD). */
+    /** Everything the recipient hands the carrier: the order total (less what money held on Taleed paid, on old orders). Integer Algerian dinars (DZD). */
     public var total: Int
     /** The carrier's delivery fee inside `total`, which the carrier keeps. 0 when the platform pays the carrier instead (a free-delivery code, or a discount that covered part of the delivery). Integer Algerian dinars (DZD). */
     public var deliveryFee: Int

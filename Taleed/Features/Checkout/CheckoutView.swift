@@ -4,7 +4,7 @@ import SwiftUI
 /// The checkout screen (screens.md §2 G11 and §7 G11; Figma Buy Now 184:2383; website
 /// `checkout/[listingId]`): the app bar with the trust shield (buyer protection), "Récapitulatif · Finaliser l'achat", the
 /// goods, the delivery method with both fees, the delivery address, the server's summary, the promo
-/// code, the wallet, the payment method and the button, without the tab bar.
+/// code, the payment method and the button, without the tab bar.
 ///
 /// States: loading, error with Retry (offline included), "no longer available" (`404`), no longer for
 /// sale, blocked, the member's own item; the member's own order awaiting payment opens instead.

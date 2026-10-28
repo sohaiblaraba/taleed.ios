@@ -4,10 +4,10 @@ import Foundation
 import Observation
 
 /// The checkout screen (screens.md §2 G11 and §7 G11, slice D "Checkout"; website `checkout/[listingId]`):
-/// the goods, the delivery, the recipient, the server's summary, the promo code, the wallet, the payment
+/// the goods, the delivery, the recipient, the server's summary, the promo code, the payment
 /// method, then `POST /orders`.
 ///
-/// Every change the price depends on (delivery kind, wilaya, commune, desk, promo, wallet, method) quotes
+/// Every change the price depends on (delivery kind, wilaya, commune, desk, promo, method) quotes
 /// again; the street and the recipient do not. The order is placed once per tap with a `clientId`, and
 /// sent again as it is when the member retries after a lost answer.
 @MainActor
@@ -41,7 +41,7 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
     enum OrderOutcome: Equatable {
         /// Open the gateway's page, then the payment screen.
         case payOnline(url: URL, orderId: String, address: AddressDraft?)
-        /// Confirmed at once (cash on delivery, the wallet) or waiting with "Pay now": the payment screen.
+        /// Confirmed at once (cash on delivery) or waiting with "Pay now": the payment screen.
         case placed(orderId: String, address: AddressDraft?)
         /// Nothing to do: the screen stays (a notice or a field error says why).
         case stay
@@ -315,12 +315,6 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
         promoError = nil
     }
 
-    func setUseWallet(_ useWallet: Bool) async {
-        guard useWallet != form.useWallet else { return }
-        form.useWallet = useWallet
-        await quote()
-    }
-
     func selectPaymentMethod(_ value: String) async {
         guard value != (form.paymentMethod ?? pricing?.paymentMethod) else { return }
         form.paymentMethod = value
@@ -332,7 +326,7 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
         fieldErrors[field] = nil
     }
 
-    /// Back on screen or in the foreground: the same quote again (a fee or the wallet may have changed).
+    /// Back on screen or in the foreground: the same quote again (a fee or a voucher may have changed).
     func refresh() async {
         guard phase == .form, !hasPlacedOrder, !isPlacing else { return }
         await quote()

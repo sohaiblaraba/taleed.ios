@@ -3,20 +3,17 @@ import SwiftUI
 /// The "Historique" tab: its states, then the lines in one bordered card, as the website's list.
 struct WalletHistorySection: View {
     let list: PagedList<WalletEntryRow>
-    /// The labels of the top-up lines' methods.
-    var topUpMethods: [PaymentChoice] = []
-    @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
 
     var body: some View {
         WalletListSection(list: list, emptyIcon: .money) { entry in
-            WalletEntryRowView(entry: entry, topUpMethods: topUpMethods,
+            WalletEntryRowView(entry: entry,
                                onOpenOrder: entry.orderId.map { id in { router.push(.order(id: id)) } })
         }
     }
 }
 
-/// The "Virements" tab.
+/// The "Payouts" tab: the payouts the weekly run created.
 struct WalletPayoutsSection: View {
     let list: PagedList<PayoutRow>
     @Environment(AppRouter.self) private var router
@@ -29,7 +26,7 @@ struct WalletPayoutsSection: View {
 }
 
 /// A tab's list: a spinner while the first page loads, the error with Retry, the design-system empty
-/// state ("Aucune opération pour le moment." under the tab's icon, as the notifications') when empty,
+/// state ("Nothing yet." under the tab's icon, as the notifications') when empty,
 /// otherwise the rows with dividers, then the pagination footer as a sibling in the screen's lazy stack.
 private struct WalletListSection<Item: Identifiable & Sendable, Row: View>: View where Item.ID: Sendable {
     let list: PagedList<Item>
@@ -82,7 +79,6 @@ private struct WalletListSection<Item: Identifiable & Sendable, Row: View>: View
 /// sizes the line stacks (icon, label, detail, then the amount), so the label keeps the width.
 struct WalletEntryRowView: View {
     let entry: WalletEntryRow
-    var topUpMethods: [PaymentChoice] = []
     let onOpenOrder: (() -> Void)?
     @Environment(LanguageManager.self) private var l10n
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -165,7 +161,7 @@ struct WalletEntryRowView: View {
     }
 
     private var detail: String {
-        WalletText.entryDetail(entry, locale: l10n.language.formattingLocale, topUpMethods: topUpMethods) { date in
+        WalletText.entryDetail(entry, locale: l10n.language.formattingLocale) { date in
             l10n.format(.referralsVoucherExpires, date)
         }
     }
@@ -178,14 +174,15 @@ struct WalletEntryRowView: View {
         }
     }
 
-    /// The icon of a line's type (the design system has no wallet glyph: the nearest ones; vouchers the ticket, as on Referrals).
+    /// The icon of a line's type (the nearest glyphs of the design system; vouchers the ticket, as on Referrals).
     static func icon(_ kind: WalletEntryKind) -> TaleedIcon {
         switch kind {
         case .saleRelease: .storefront
         case .payout: .money
         case .adjustment: .slidersHorizontal
         case .refundDebit: .arrowRight
-        case .topUp: .plusCircle
+        // An old top-up, now "Card payment": never a plus that reads as adding money.
+        case .topUp: .lockKey
         case .purchase: .tShirt
         case .purchaseRefund: .arrowLeft
         case .voucher: .ticket

@@ -6,8 +6,8 @@ import SwiftUI
 ///
 /// Screen 1 explains what is erased, what stays, and that it cannot be undone. Screen 2 is the website's
 /// dialog: its title and text, the password, then `POST /me/delete`. What stops the deletion shows inside
-/// the form with the way to the screen that solves it (the orders, the wallet, the payout form, the
-/// support contacts for an admin account).
+/// the form with the way to the screen that solves it (the orders, Earnings, the support contacts for an
+/// admin account or an amount owed to Taleed).
 @MainActor
 @Observable
 final class DeleteAccountViewModel {
@@ -46,10 +46,13 @@ final class DeleteAccountViewModel {
     private(set) var isDeleting = false
 
     @ObservationIgnored private let api: AccountApi
+    /// Tells the three `wallet_not_empty` situations apart (slice H).
+    @ObservationIgnored private let walletApi: WalletApi?
     @ObservationIgnored private let onDeleted: () -> Void
 
-    init(api: AccountApi, onDeleted: @escaping () -> Void) {
+    init(api: AccountApi, walletApi: WalletApi? = nil, onDeleted: @escaping () -> Void) {
         self.api = api
+        self.walletApi = walletApi
         self.onDeleted = onDeleted
     }
 
@@ -78,6 +81,10 @@ final class DeleteAccountViewModel {
             // After a lost answer, `401` means the account is already gone (slice E, Retrying).
             if error == .unauthorized {
                 onDeleted()
+            } else if error.code == .walletNotEmpty {
+                // Open to suspended members, like the deletion itself.
+                let owed = try? await walletApi?.wallet(automatic: true).owed
+                blocker = .walletNotEmpty(owed: owed)
             } else {
                 blocker = DeletionBlocker(error)
             }
@@ -93,9 +100,9 @@ struct DeleteAccountView: View {
     @Environment(LaunchViewModel.self) private var launch
     @Environment(\.dismiss) private var dismiss
 
-    init(api: AccountApi, store: AccountStore, onDeleted: @escaping () -> Void) {
+    init(api: AccountApi, walletApi: WalletApi?, store: AccountStore, onDeleted: @escaping () -> Void) {
         self.store = store
-        _model = State(initialValue: DeleteAccountViewModel(api: api, onDeleted: onDeleted))
+        _model = State(initialValue: DeleteAccountViewModel(api: api, walletApi: walletApi, onDeleted: onDeleted))
     }
 
     var body: some View {
@@ -207,7 +214,7 @@ struct DeleteAccountView: View {
         .padding(.top, TaleedSpacing.s8)
     }
 
-    /// A blocker the member solves on another screen (orders, wallet, payout, support), not by retrying.
+    /// A blocker the member solves on another screen (orders, Earnings, support), not by retrying.
     private var isBlockedElsewhere: Bool { model.blocker?.remedy != nil }
 
     @ViewBuilder
@@ -228,24 +235,13 @@ struct DeleteAccountView: View {
     }
 
     private func message(_ blocker: DeletionBlocker) -> String {
-        switch blocker {
-        case .wrongPassword: l10n.string(.settingsDeleteWrongPassword)
-        case .activeOrders: l10n.string(.settingsDeleteBlockedActiveOrders)
-        case .openDispute: l10n.string(.settingsDeleteBlockedOpenDisputes)
-        case .pendingPayout: l10n.string(.settingsDeleteBlockedPendingPayout)
-        case .walletNotEmpty: l10n.string(.settingsDeleteBlockedWallet)
-        case .admin: l10n.string(.settingsDeleteBlockedAdmin)
-        case .tooManyAttempts: l10n.string(.settingsDeleteTooManyAttempts)
-        case .network: l10n.string(.commonErrorNetwork)
-        case .generic: l10n.string(.settingsDeleteBlockedGeneric)
-        }
+        l10n.string(blocker.messageKey)
     }
 
     private func remedyTitle(_ remedy: DeletionBlocker.Remedy?) -> String? {
         switch remedy {
         case .orders?: l10n.string(.appSettingsDeleteViewOrders)
-        case .wallet?: l10n.string(.appSettingsDeleteViewWallet)
-        case .payout?: l10n.string(.walletRequestPayout)
+        case .earnings?: l10n.string(.appSettingsDeleteViewEarnings)
         case .support?, nil: nil
         }
     }
@@ -253,8 +249,7 @@ struct DeleteAccountView: View {
     private func remedyAction(_ remedy: DeletionBlocker.Remedy?) -> (() -> Void)? {
         switch remedy {
         case .orders?: { router.push(.orders) }
-        case .wallet?: { router.push(.wallet) }
-        case .payout?: { router.push(.walletPayout) }
+        case .earnings?: { router.push(.wallet) }
         case .support?, nil: nil
         }
     }

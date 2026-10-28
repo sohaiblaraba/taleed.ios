@@ -27,7 +27,8 @@ func orderDetail(
     autoComplete: Date? = nil,
     pickupReady: Bool = false,
     actions: OrderActionFlags = OrderActionFlags(),
-    dispute: OrderDisputeSummary? = nil
+    dispute: OrderDisputeSummary? = nil,
+    refund: OrderRefundInfo? = nil
 ) -> OrderDetailInfo {
     OrderDetailInfo(
         id: id, number: "T-000031", side: side, status: status, statusLabel: label, title: "Article", imageURL: nil,
@@ -37,7 +38,8 @@ func orderDetail(
         delivery: OrderDeliveryInfo(kind: stopdesk == nil ? .home : .stopdesk, recipientName: "Yasmine B", phone: "0550123456",
                                     wilaya: "Alger", commune: "Hydra", addressLine: nil, stopdeskName: stopdesk, tracking: nil),
         steps: [], carrierScans: [], payDeadlineAt: payDeadline, shipDeadlineAt: shipDeadline, autoCompleteAt: autoComplete,
-        pickupReady: pickupReady, actions: actions, dispute: dispute, myReview: nil, reviewReceived: nil, conversationId: "c1"
+        pickupReady: pickupReady, actions: actions, dispute: dispute, refund: refund, myReview: nil, reviewReceived: nil,
+        conversationId: "c1"
     )
 }
 

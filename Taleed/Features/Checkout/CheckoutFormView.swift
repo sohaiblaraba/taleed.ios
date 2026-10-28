@@ -10,7 +10,7 @@ enum CheckoutPicker: String, Identifiable, Hashable {
 }
 
 /// The checkout form (Figma Buy Now, wireframes.md §3): heading, goods, delivery method, delivery
-/// address, summary, promo code, wallet, payment method and the button. Padding 24 / 16 / 48, 24
+/// address, summary, promo code, payment method and the button. Padding 24 / 16 / 48, 24
 /// between groups, 8 between the delivery options and 16 between the address fields.
 struct CheckoutFormView: View {
     @Bindable var model: CheckoutViewModel
@@ -36,7 +36,6 @@ struct CheckoutFormView: View {
                     deliveryAddress
                     summary
                     promo
-                    wallet
                     paymentMethods
                     payButton
                 }

@@ -159,6 +159,7 @@ Sources/TaleedAPI/Models/OrderItem.swift
 Sources/TaleedAPI/Models/OrderMilestone.swift
 Sources/TaleedAPI/Models/OrderPayment.swift
 Sources/TaleedAPI/Models/OrderPlaced.swift
+Sources/TaleedAPI/Models/OrderRefund.swift
 Sources/TaleedAPI/Models/OrderReview.swift
 Sources/TaleedAPI/Models/OrderRole.swift
 Sources/TaleedAPI/Models/OrderStatus.swift
@@ -171,7 +172,8 @@ Sources/TaleedAPI/Models/PasswordResetRequest.swift
 Sources/TaleedAPI/Models/PaymentMethod.swift
 Sources/TaleedAPI/Models/PaymentMethodOption.swift
 Sources/TaleedAPI/Models/Payout.swift
-Sources/TaleedAPI/Models/PayoutCreate.swift
+Sources/TaleedAPI/Models/PayoutAccount.swift
+Sources/TaleedAPI/Models/PayoutAccountUpdate.swift
 Sources/TaleedAPI/Models/PayoutMethod.swift
 Sources/TaleedAPI/Models/PayoutMethodOption.swift
 Sources/TaleedAPI/Models/PayoutPage.swift
@@ -188,6 +190,8 @@ Sources/TaleedAPI/Models/Rating.swift
 Sources/TaleedAPI/Models/Referral.swift
 Sources/TaleedAPI/Models/ReferralPage.swift
 Sources/TaleedAPI/Models/ReferralProgram.swift
+Sources/TaleedAPI/Models/RefundMethod.swift
+Sources/TaleedAPI/Models/RefundStatus.swift
 Sources/TaleedAPI/Models/ReplyDisabledReason.swift
 Sources/TaleedAPI/Models/ReportCreate.swift
 Sources/TaleedAPI/Models/ReportReason.swift
@@ -211,11 +215,6 @@ Sources/TaleedAPI/Models/SocialSuggestion.swift
 Sources/TaleedAPI/Models/SortOption.swift
 Sources/TaleedAPI/Models/Stopdesk.swift
 Sources/TaleedAPI/Models/StopdeskList.swift
-Sources/TaleedAPI/Models/TopUp.swift
-Sources/TaleedAPI/Models/TopUpCreate.swift
-Sources/TaleedAPI/Models/TopUpPage.swift
-Sources/TaleedAPI/Models/TopUpStarted.swift
-Sources/TaleedAPI/Models/TopUpStatus.swift
 Sources/TaleedAPI/Models/Upload.swift
 Sources/TaleedAPI/Models/UploadPurpose.swift
 Sources/TaleedAPI/Models/UsernameChange.swift
@@ -365,6 +364,7 @@ docs/OrderItem.md
 docs/OrderMilestone.md
 docs/OrderPayment.md
 docs/OrderPlaced.md
+docs/OrderRefund.md
 docs/OrderReview.md
 docs/OrderRole.md
 docs/OrderStatus.md
@@ -378,7 +378,8 @@ docs/PasswordResetRequest.md
 docs/PaymentMethod.md
 docs/PaymentMethodOption.md
 docs/Payout.md
-docs/PayoutCreate.md
+docs/PayoutAccount.md
+docs/PayoutAccountUpdate.md
 docs/PayoutMethod.md
 docs/PayoutMethodOption.md
 docs/PayoutPage.md
@@ -398,6 +399,8 @@ docs/Referral.md
 docs/ReferralPage.md
 docs/ReferralProgram.md
 docs/ReferralsAPI.md
+docs/RefundMethod.md
+docs/RefundStatus.md
 docs/ReplyDisabledReason.md
 docs/ReportCreate.md
 docs/ReportReason.md
@@ -424,11 +427,6 @@ docs/SocialSuggestion.md
 docs/SortOption.md
 docs/Stopdesk.md
 docs/StopdeskList.md
-docs/TopUp.md
-docs/TopUpCreate.md
-docs/TopUpPage.md
-docs/TopUpStarted.md
-docs/TopUpStatus.md
 docs/Upload.md
 docs/UploadPurpose.md
 docs/UploadsAPI.md

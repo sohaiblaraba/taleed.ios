@@ -34,9 +34,9 @@ public struct OrderAmounts: Sendable, Codable, Hashable {
     public var voucherDiscount: Int
     /** What the buyer pays: `itemPrice` + `protectionFee` + `shippingFee` − `discount`. Integer DZD. */
     public var total: Int
-    /** Part of `total` the buyer paid from their wallet. Integer DZD. */
+    /** Old orders only (placed before 1.7.0): the part of `total` paid with money held on Taleed. 0 on every new order: show the row only when above 0. Integer DZD. */
     public var walletApplied: Int
-    /** The rest, paid online or in cash: `total` − `walletApplied`. Integer DZD. */
+    /** What was paid online or in cash: `total` − `walletApplied`, so `total` on every new order. Integer DZD. */
     public var amountDue: Int
     /** What the seller receives once the order is completed: `itemPrice`. Integer DZD. */
     public var sellerEarns: Int

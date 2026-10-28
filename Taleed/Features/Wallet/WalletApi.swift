@@ -1,24 +1,21 @@
 import SwiftUI
 import TaleedAPI
 
-/// The calls of the wallet screens (screens.md §2 G14, slice D "Wallet", slice F "Top-ups").
+/// The calls of Earnings (slice H; the API paths keep `/wallet`). All of `/wallet` is open to suspended
+/// members.
 @MainActor
 protocol WalletApi: AnyObject {
     /// `GET /wallet`. `automatic`: a refresh the member did not ask for (back in the foreground).
     func wallet(automatic: Bool) async throws(ApiError) -> WalletSummary
     /// `GET /wallet/history`: newest first, 20 a page; vouchers granted are lines too.
     func history(cursor: String?, automatic: Bool) async throws(ApiError) -> Page<WalletEntryRow>
-    /// `GET /wallet/payouts`: newest first, 20 a page.
+    /// `GET /wallet/payouts`: the payouts the weekly run created, newest first, 20 a page.
     func payouts(cursor: String?, automatic: Bool) async throws(ApiError) -> Page<PayoutRow>
-    /// `POST /wallet/payouts`. A repeat with the same `clientId` and body answers the request already
-    /// made; another body with that `clientId` is `400 invalid_request` on `body.clientId`.
-    func requestPayout(_ request: PayoutRequest) async throws(ApiError) -> PayoutRow
-    /// `POST /wallet/top-ups`: a top-up waiting for its payment, and the gateway's page.
-    func startTopUp(amount: Int, method: String) async throws(ApiError) -> StartedTopUp
-    /// `POST /wallet/top-ups/{id}/sync`: asks the gateway; repeated freely.
-    func syncTopUp(id: String) async throws(ApiError) -> TopUpInfo
-    /// `GET /wallet/top-ups`, the first page: the member's latest top-ups, website ones included.
-    func recentTopUps() async throws(ApiError) -> [TopUpInfo]
+    /// `PUT /wallet/payout-account`: saves the payout details (trimmed by the caller). A change never
+    /// alters the payouts already created.
+    func savePayoutAccount(method: String, accountDetails: String) async throws(ApiError) -> PayoutAccountInfo
+    /// The voucher rules' numbers, from `program` of `GET /me/referrals` (not open to suspended members).
+    func voucherRules(automatic: Bool) async throws(ApiError) -> VoucherRulesInfo
 }
 
 extension WalletApi {
@@ -44,28 +41,18 @@ extension GeneratedTaleedApi: WalletApi {
         return Page(items: page.items.map(PayoutRow.init), nextCursor: page.nextCursor, total: page.total)
     }
 
-    func requestPayout(_ request: PayoutRequest) async throws(ApiError) -> PayoutRow {
-        let body = PayoutCreate(amount: request.amount, method: PayoutMethod(rawValue: request.method) ?? .unknownDefaultOpenApi,
-                                accountDetails: request.accountDetails, clientId: request.clientId)
-        // The `clientId` makes a repeat answer the request already made (slice D): safe to repeat
-        // after no answer, like the other `clientId` actions.
-        return PayoutRow(try await caller.call(.read) { try await WalletAPI.requestPayout(payoutCreate: body, apiConfiguration: $0) })
+    func savePayoutAccount(method: String, accountDetails: String) async throws(ApiError) -> PayoutAccountInfo {
+        let body = PayoutAccountUpdate(method: PayoutMethod(rawValue: method) ?? .unknownDefaultOpenApi, accountDetails: accountDetails)
+        // A `PUT` of the same body gives the same result: safe to repeat after no answer.
+        return PayoutAccountInfo(try await caller.call(.read) {
+            try await WalletAPI.savePayoutAccount(payoutAccountUpdate: body, apiConfiguration: $0)
+        })
     }
 
-    func startTopUp(amount: Int, method: String) async throws(ApiError) -> StartedTopUp {
-        let body = TopUpCreate(amount: amount, method: PaymentMethod(rawValue: method) ?? .unknownDefaultOpenApi)
-        // Each call starts another top-up: the member's tap only.
-        let started = try await caller.call(.write) { try await WalletAPI.startTopUp(topUpCreate: body, apiConfiguration: $0) }
-        return StartedTopUp(topUp: TopUpInfo(started.topUp), paymentURL: URL(apiString: started.paymentUrl))
-    }
-
-    func syncTopUp(id: String) async throws(ApiError) -> TopUpInfo {
-        TopUpInfo(try await caller.call(.read) { try await WalletAPI.syncTopUp(id: id, apiConfiguration: $0) })
-    }
-
-    func recentTopUps() async throws(ApiError) -> [TopUpInfo] {
-        let page = try await caller.call(.read, automatic: true) { try await WalletAPI.listTopUps(apiConfiguration: $0) }
-        return page.items.map(TopUpInfo.init)
+    func voucherRules(automatic: Bool) async throws(ApiError) -> VoucherRulesInfo {
+        let program = try await referrals(cursor: nil, automatic: automatic).program
+        return VoucherRulesInfo(voucherAmount: program.voucherAmount, minItemPrice: program.minItemPrice,
+                                validityDays: program.voucherValidityDays)
     }
 }
 
@@ -74,16 +61,23 @@ extension GeneratedTaleedApi: WalletApi {
 extension WalletSummary {
     init(_ wallet: Wallet) {
         self.init(
-            balance: wallet.balance,
+            owed: wallet.owed,
+            inPayout: wallet.inPayout,
+            inProgress: wallet.inProgress,
             voucherBalance: wallet.voucherBalance,
-            pendingEscrow: wallet.pendingEscrow,
-            // A gateway added after this build cannot be sent back: left out.
-            topUpMethods: wallet.topUpMethods.compactMap {
-                $0.value == .unknownDefaultOpenApi ? nil : PaymentChoice(value: $0.value.rawValue, label: $0.label, hint: $0.hint)
-            },
-            limits: WalletLimitsInfo(minPayout: wallet.limits.minPayout, minTopUp: wallet.limits.minTopUp,
-                                     maxTopUp: wallet.limits.maxTopUp)
+            nextPayoutAt: wallet.nextPayoutAt,
+            payoutAccount: wallet.payoutAccount.map(PayoutAccountInfo.init),
+            limits: WalletLimitsInfo(minPayout: wallet.limits.minPayout, payoutDetailsMin: wallet.limits.payoutDetailsMin,
+                                     payoutDetailsMax: wallet.limits.payoutDetailsMax,
+                                     voucherMinItemPrice: wallet.limits.voucherMinItemPrice)
         )
+    }
+}
+
+extension PayoutAccountInfo {
+    init(_ account: PayoutAccount) {
+        self.init(method: account.method.rawValue, methodLabel: account.methodLabel, accountDetails: account.accountDetails,
+                  updatedAt: account.updatedAt)
     }
 }
 
@@ -127,22 +121,10 @@ extension PayoutRow {
         case .rejected: .rejected
         case .unknownDefaultOpenApi: .unknown
         }
-        self.init(id: payout.id, amount: payout.amount, methodLabel: payout.methodLabel, accountDetails: payout.accountDetails,
+        self.init(id: payout.id, amount: payout.amount, methodLabel: payout.methodLabel,
                   status: status, statusLabel: payout.statusLabel,
                   reference: payout.reference?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
                   proofURL: URL(apiString: payout.proofUrl), requestedAt: payout.requestedAt, processedAt: payout.processedAt)
-    }
-}
-
-extension TopUpInfo {
-    init(_ topUp: TopUp) {
-        let status: TopUpState = switch topUp.status {
-        case .pending: .pending
-        case .paid: .paid
-        case .failed: .failed
-        case .unknownDefaultOpenApi: .unknown
-        }
-        self.init(id: topUp.id, amount: topUp.amount, status: status)
     }
 }
 
@@ -152,7 +134,7 @@ private extension String {
 
 // MARK: Dependencies
 
-/// The wallet's API, set once at the root (`AppRootView`).
+/// The Earnings API, set once at the root (`AppRootView`).
 private struct WalletApiKey: EnvironmentKey {
     static var defaultValue: (any WalletApi)? { nil }
 }
