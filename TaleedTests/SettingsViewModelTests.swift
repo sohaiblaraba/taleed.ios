@@ -199,6 +199,21 @@ struct AccountFormViewModelTests {
         #expect(model.typed.isEmpty)
     }
 
+    /// 1.6.1: an unverified current email answers `invalid_state`; verify it first.
+    @Test func emailChangeWithAnUnverifiedEmailAsksToVerifyFirst() async {
+        let api = FakeAccountApi()
+        let (store, _) = await signedInStore(api)
+        let model = EmailSettingsViewModel(api: api, store: store)
+        api.emailError = failure(.invalidState)
+        api.profile = .fixture(emailVerified: false)
+        model.typed = "new@example.com"
+        await model.submit()
+        #expect(model.fieldError == .verifyFirst)
+        #expect(model.sentTo == nil)
+        #expect(model.notice == nil)
+        #expect(store.profile?.emailVerified == false)
+    }
+
     @Test func resendAlreadyVerifiedReloadsTheAccount() async {
         let api = FakeAccountApi()
         api.profile = .fixture(emailVerified: false)

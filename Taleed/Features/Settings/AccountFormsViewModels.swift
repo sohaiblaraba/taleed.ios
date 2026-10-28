@@ -98,6 +98,8 @@ final class EmailSettingsViewModel {
         case invalid
         /// `emailSameError`.
         case same
+        /// `409 invalid_state` (1.6.1): the current email is not verified yet; verify it first.
+        case verifyFirst
     }
 
     var typed = "" {
@@ -149,6 +151,11 @@ final class EmailSettingsViewModel {
             if error.code == .invalidRequest, error.issue(at: "body.newEmail") != nil {
                 // The API refuses the current address on `body.newEmail`.
                 fieldError = email == current.lowercased() ? .same : .invalid
+            } else if error.code == .invalidState {
+                // The current email is not verified: say so, and reload so that the badge and the
+                // "send the link again" button show.
+                fieldError = .verifyFirst
+                await store.reload()
             } else {
                 notice = error
             }

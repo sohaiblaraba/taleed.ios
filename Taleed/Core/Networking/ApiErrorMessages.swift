@@ -72,6 +72,7 @@ extension ApiError {
         case .paymentUnavailable: .appErrorPaymentUnavailable
         case .socialTokenInvalid: .authSocialErrorFailed
         case .socialEmailUnverified: .authSocialErrorEmailUnverified
+        case .socialLinkForbidden: .authSocialErrorLinkForbidden
         case .socialSignupExpired: .authFinishExpiredBody
         // A code added after this build: by its status.
         case .unknownDefaultOpenApi: status >= 500 ? .commonErrorGeneric : .authErrorGeneric

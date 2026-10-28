@@ -197,6 +197,7 @@ struct EmailSettingsView: View {
         switch model.fieldError {
         case .invalid?: l10n.string(.appAuthEmailInvalid)
         case .same?: l10n.string(.settingsEmailSameError)
+        case .verifyFirst?: l10n.string(.settingsEmailVerifyFirstError)
         case nil: nil
         }
     }

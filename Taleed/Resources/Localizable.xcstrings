@@ -22164,6 +22164,52 @@
           }
         }
       }
+    },
+    "auth_social_error_link_forbidden": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يسجّل هذا الحساب الدخول بكلمة المرور فقط. سجّل الدخول ببريدك الإلكتروني وكلمة المرور."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This account logs in with its password only. Log in with your email and password."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce compte se connecte uniquement avec son mot de passe. Connectez-vous avec votre email et votre mot de passe."
+          }
+        }
+      }
+    },
+    "settings_email_verify_first_error": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحقّق أولًا من بريدك الإلكتروني الحالي: افتح الرابط الذي أرسلناه إليك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify your current email address first: open the link we sent you."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez d’abord votre adresse email actuelle : ouvrez le lien que nous vous avons envoyé."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

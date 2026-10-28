@@ -132,6 +132,8 @@ final class SocialSignInViewModel {
         switch error.code {
         case .banned: return nil
         case .socialEmailUnverified: return .authSocialErrorEmailUnverified
+        // Staff and the official account are never linked by email: they use the email form (1.6.1).
+        case .socialLinkForbidden: return .authSocialErrorLinkForbidden
         case .inviteRequired: return .authSocialErrorInviteRequired
         case .forbidden: return .authSocialErrorRefused
         case .featureDisabled: return .authSocialErrorDisabled

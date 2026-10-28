@@ -23,7 +23,7 @@ open class AccountAPI {
     /**
      Change the email address
      - POST /me/email
-     - Sends a link to the new address. The email changes once the member opens it, which happens on the website; until then the current address keeps working, for signing in too. Tell the member to check the new inbox. When another account already uses the new address, nothing is sent and the answer is the same, so the endpoint cannot reveal who is a member. The current address is an `invalid_request` on `body.newEmail`.  Requires a bearer token.  Rate limit: 5 per hour per member, on top of the general limit.
+     - Sends a link to the new address. The email changes once the member opens it, which happens on the website; until then the current address keeps working, for signing in too. Tell the member to check the new inbox. When another account already uses the new address, nothing is sent and the answer is the same, so the endpoint cannot reveal who is a member. The current address is an `invalid_request` on `body.newEmail`. Since 1.6.1, a member whose current email is not verified (`emailVerified` false) gets `invalid_state`: they verify it first (`POST /me/email/verification`).  Requires a bearer token.  Rate limit: 5 per hour per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth

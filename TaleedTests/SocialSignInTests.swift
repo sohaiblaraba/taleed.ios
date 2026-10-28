@@ -254,6 +254,7 @@ struct SocialSignInViewModelTests {
     @Test(arguments: [
         (Taleed.ApiError.failed(ApiFailure(status: 400, code: .socialTokenInvalid)), L10nKey.authSocialErrorFailed),
         (.failed(ApiFailure(status: 403, code: .socialEmailUnverified)), .authSocialErrorEmailUnverified),
+        (.failed(ApiFailure(status: 403, code: .socialLinkForbidden)), .authSocialErrorLinkForbidden),
         (.failed(ApiFailure(status: 403, code: .forbidden)), .authSocialErrorRefused),
         (.failed(ApiFailure(status: 503, code: .featureDisabled)), .authSocialErrorDisabled),
         (.failed(ApiFailure(status: 403, code: .inviteRequired)), .authSocialErrorInviteRequired),

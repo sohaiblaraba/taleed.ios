@@ -23,6 +23,7 @@ public enum ErrorCode: String, Sendable, Codable, CaseIterable, CaseIterableDefa
     case passwordTooLong = "password_too_long"
     case socialTokenInvalid = "social_token_invalid"
     case socialEmailUnverified = "social_email_unverified"
+    case socialLinkForbidden = "social_link_forbidden"
     case socialSignupExpired = "social_signup_expired"
     case accountExists = "account_exists"
     case alreadyRequested = "already_requested"

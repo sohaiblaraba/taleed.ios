@@ -17,8 +17,8 @@ public struct SocialSignInRequest: Sendable, Codable, Hashable {
     public var provider: SocialProvider
     /** The ID token the native SDK returned: Google's `idToken` (iOS `GIDGoogleUser.idToken.tokenString`, Android `GoogleIdTokenCredential.idToken`), or Apple's `identityToken` decoded as UTF-8. */
     public var idToken: String
-    /** The raw nonce the app generated for this sign-in. Apple: required; the app gives Apple its SHA-256 in lowercase hex (`ASAuthorizationAppleIDRequest.nonce`) and sends the raw value here. Google: optional; when the app set a nonce on the request (iOS `GIDSignIn.signIn(…nonce:)`, Android `GetGoogleIdOption.Builder.setNonce`), send that same value. */
-    public var nonce: String?
+    /** The raw nonce the app generated for this sign-in, required for both providers since 1.6.1. Apple: the app gives Apple its SHA-256 in lowercase hex (`ASAuthorizationAppleIDRequest.nonce`). Google: the app gives Google the value as is (iOS `GIDSignIn.signIn(…nonce:)`, Android `setNonce`). Send the raw value here; a token without the matching nonce is `social_token_invalid`. */
+    public var nonce: String
     /** Apple only: `ASAuthorizationAppleIDCredential.authorizationCode` decoded as UTF-8. The server exchanges it for the token it revokes when the member deletes the account. Send it with every Apple sign-in. */
     public var authorizationCode: String?
     /** Apple only: `fullName.givenName`. Apple gives the name only on the member's first authorization, so forward it whenever it is there: it prefills the finish step. */
@@ -26,7 +26,7 @@ public struct SocialSignInRequest: Sendable, Codable, Hashable {
     /** Apple only: `fullName.familyName`, as for `firstName`. */
     public var lastName: String?
 
-    public init(provider: SocialProvider, idToken: String, nonce: String? = nil, authorizationCode: String? = nil, firstName: String? = nil, lastName: String? = nil) {
+    public init(provider: SocialProvider, idToken: String, nonce: String, authorizationCode: String? = nil, firstName: String? = nil, lastName: String? = nil) {
         self.provider = provider
         self.idToken = idToken
         self.nonce = nonce
@@ -50,7 +50,7 @@ public struct SocialSignInRequest: Sendable, Codable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(provider, forKey: .provider)
         try container.encode(idToken, forKey: .idToken)
-        try container.encodeIfPresent(nonce, forKey: .nonce)
+        try container.encode(nonce, forKey: .nonce)
         try container.encodeIfPresent(authorizationCode, forKey: .authorizationCode)
         try container.encodeIfPresent(firstName, forKey: .firstName)
         try container.encodeIfPresent(lastName, forKey: .lastName)

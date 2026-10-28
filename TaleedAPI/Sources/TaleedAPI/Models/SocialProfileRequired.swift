@@ -10,7 +10,7 @@ import Foundation
 /** A new member: show the finish step. */
 public struct SocialProfileRequired: Sendable, Codable, Hashable {
 
-    /** Pass it to `POST /auth/social/complete`. Single-use, valid 15 minutes, never stored: once it is used or expired, sign in with the provider again. */
+    /** Pass it to `POST /auth/social/complete`. Single-use and valid 15 minutes. Keep it in memory only; do not persist it. Once it is used or expired, sign in with the provider again. */
     public var signupToken: String
     /** When `signupToken` expires. ISO 8601, UTC. */
     public var expiresAt: Date
