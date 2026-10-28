@@ -151,8 +151,8 @@ struct ChatOrderPill: View {
 /// The bubble's colours: the member's own in brand blue, the other member's on the grouped surface.
 enum ChatBubbleStyle {
     static func fill(isMine: Bool) -> Color { isMine ? TaleedColor.brandPrimary : TaleedColor.surfaceGrouped }
-    static func text(isMine: Bool) -> Color { isMine ? TaleedColor.textInverse : TaleedColor.textPrimary }
-    static func meta(isMine: Bool) -> Color { isMine ? TaleedColor.textInverse.opacity(0.8) : TaleedColor.textSecondarySmall }
+    static func text(isMine: Bool) -> Color { isMine ? TaleedColor.onBrandPrimary : TaleedColor.textPrimary }
+    static func meta(isMine: Bool) -> Color { isMine ? TaleedColor.onBrandPrimary.opacity(0.8) : TaleedColor.textSecondarySmall }
     static let shape = RoundedRectangle(cornerRadius: TaleedRadius.l, style: .continuous)
 }
 

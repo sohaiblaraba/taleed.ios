@@ -100,36 +100,38 @@ struct TaleedButtonColors: Equatable {
     // swiftlint:disable:next cyclomatic_complexity
     static func of(_ kind: TaleedButtonKind, _ state: TaleedButtonState) -> TaleedButtonColors {
         typealias Palette = TaleedColor
+        // swiftlint:disable line_length
         switch (kind, state) {
-        case (.primary, .normal): return .init(fill: Palette.blue500, border: Palette.blue600, content: Palette.blue50)
-        case (.primary, .pressed): return .init(fill: Palette.blue600, border: Palette.blue600, content: Palette.blue50)
-        case (.primary, .disabled): return .init(fill: Palette.blue200, border: Palette.blue200, content: Palette.blue50)
+        case (.primary, .normal): return .init(fill: Palette.brandPrimary, border: Palette.primaryButtonBorder, content: Palette.primaryButtonContent)
+        case (.primary, .pressed): return .init(fill: Palette.primaryButtonPressed, border: Palette.primaryButtonPressed, content: Palette.primaryButtonContent)
+        case (.primary, .disabled): return .init(fill: Palette.primaryButtonDisabled, border: Palette.primaryButtonDisabled, content: Palette.primaryButtonContent)
         case (.secondary, .normal): return .init(fill: Palette.mint400, border: Palette.mint500, content: Palette.mint900)
         case (.secondary, .pressed): return .init(fill: Palette.mint500, border: Palette.mint500, content: Palette.mint900)
-        case (.secondary, .disabled): return .init(fill: Palette.mint100, border: Palette.mint200, content: Palette.navy300)
-        case (.tertiary, .normal): return .init(fill: Palette.blue50, border: Palette.blue100, content: Palette.blue600)
-        case (.tertiary, .pressed): return .init(fill: Palette.blue100, border: Palette.blue100, content: Palette.blue600)
-        case (.tertiary, .disabled): return .init(fill: Palette.blue50, border: Palette.blue100, content: Palette.blue200)
-        case (.hyperlink, .normal): return .init(fill: nil, border: nil, content: Palette.blue500)
-        case (.hyperlink, .pressed): return .init(fill: nil, border: nil, content: Palette.blue600)
-        case (.hyperlink, .disabled): return .init(fill: nil, border: nil, content: Palette.blue200)
-        case (.hyperlinkUnderlined, .normal): return .init(fill: nil, border: nil, content: Palette.blue900)
-        case (.hyperlinkUnderlined, .pressed): return .init(fill: nil, border: nil, content: Palette.blue700)
-        case (.hyperlinkUnderlined, .disabled): return .init(fill: nil, border: nil, content: Palette.blue200)
+        case (.secondary, .disabled): return .init(fill: Palette.mintTintBorder, border: Palette.mintTintBorderStrong, content: Palette.contentDisabled)
+        case (.tertiary, .normal): return .init(fill: Palette.brandTint, border: Palette.brandTintBorder, content: Palette.brandEmphasis)
+        case (.tertiary, .pressed): return .init(fill: Palette.brandTintStrong, border: Palette.brandTintBorder, content: Palette.brandEmphasis)
+        case (.tertiary, .disabled): return .init(fill: Palette.brandTint, border: Palette.brandTintBorder, content: Palette.linkDisabled)
+        case (.hyperlink, .normal): return .init(fill: nil, border: nil, content: Palette.brandPrimary)
+        case (.hyperlink, .pressed): return .init(fill: nil, border: nil, content: Palette.linkPressed)
+        case (.hyperlink, .disabled): return .init(fill: nil, border: nil, content: Palette.linkDisabled)
+        case (.hyperlinkUnderlined, .normal): return .init(fill: nil, border: nil, content: Palette.linkStrong)
+        case (.hyperlinkUnderlined, .pressed): return .init(fill: nil, border: nil, content: Palette.linkStrongPressed)
+        case (.hyperlinkUnderlined, .disabled): return .init(fill: nil, border: nil, content: Palette.linkDisabled)
         case (.hyperlinkDanger, .normal): return .init(fill: nil, border: nil, content: Palette.feedbackError)
         case (.hyperlinkDanger, .pressed): return .init(fill: nil, border: nil, content: Palette.dangerPressed)
-        case (.hyperlinkDanger, .disabled): return .init(fill: nil, border: nil, content: Palette.navy300)
-        case (.danger, .normal): return .init(fill: Palette.feedbackError, border: Palette.feedbackError, content: Palette.textInverse)
-        case (.danger, .pressed): return .init(fill: Palette.dangerPressed, border: Palette.dangerPressed, content: Palette.textInverse)
-        case (.danger, .disabled): return .init(fill: Palette.dangerDisabled, border: Palette.dangerDisabled, content: Palette.navy400)
+        case (.hyperlinkDanger, .disabled): return .init(fill: nil, border: nil, content: Palette.contentDisabled)
+        case (.danger, .normal): return .init(fill: Palette.feedbackError, border: Palette.feedbackError, content: Palette.onFeedbackError)
+        case (.danger, .pressed): return .init(fill: Palette.dangerPressed, border: Palette.dangerPressed, content: Palette.onFeedbackError)
+        case (.danger, .disabled): return .init(fill: Palette.dangerDisabled, border: Palette.dangerDisabled, content: Palette.iconDisabled)
         // Pressed changes only the fill, never the label contrast.
         case (.outline, .normal): return .init(fill: Palette.surfacePrimary, border: Palette.borderSubtle, content: Palette.textPrimary)
         case (.outline, .pressed): return .init(fill: Palette.surfaceGrouped, border: Palette.borderSubtle, content: Palette.textPrimary)
-        case (.outline, .disabled): return .init(fill: Palette.surfacePrimary, border: Palette.borderSubtle, content: Palette.navy300)
-        case (.mintSoft, .normal): return .init(fill: Palette.mint50, border: Palette.mint100, content: Palette.mint900)
-        case (.mintSoft, .pressed): return .init(fill: Palette.mint100, border: Palette.mint100, content: Palette.mint900)
-        case (.mintSoft, .disabled): return .init(fill: Palette.mint50, border: Palette.mint100, content: Palette.navy300)
+        case (.outline, .disabled): return .init(fill: Palette.surfacePrimary, border: Palette.borderSubtle, content: Palette.contentDisabled)
+        case (.mintSoft, .normal): return .init(fill: Palette.mintTint, border: Palette.mintTintBorder, content: Palette.mintOnTint)
+        case (.mintSoft, .pressed): return .init(fill: Palette.mintTintBorder, border: Palette.mintTintBorder, content: Palette.mintOnTint)
+        case (.mintSoft, .disabled): return .init(fill: Palette.mintTint, border: Palette.mintTintBorder, content: Palette.contentDisabled)
         }
+        // swiftlint:enable line_length
     }
 }
 

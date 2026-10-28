@@ -14,6 +14,7 @@ struct AppRootView: View {
             // The tab and the navigation paths live in AppRouter, so they survive.
             .id(language)
             .environment(container.languageManager)
+            .environment(container.appearance)
             .environment(container.session)
             .environment(container.router)
             .environment(container.catalog)
@@ -75,7 +76,9 @@ struct AppRootView: View {
             .environment(\.appEnvironment, container.environment)
             .appLanguage(language)
             .tint(Theme.primary)
-            .preferredColorScheme(.light)
+            // The Appearance setting: SwiftUI's views and sheets, then the windows for what UIKit presents.
+            .preferredColorScheme(colorScheme)
+            .onAppear { container.appearance.apply() }
             .task { await container.launch.start() }
             // The disk copy shows at once; the launch fetches the catalog again (api-guide.md, Caching).
             .task { await container.catalog.refresh() }
@@ -131,6 +134,14 @@ struct AppRootView: View {
         }
     }
     #endif
+
+    /// The Appearance setting, except under the welcome screen's sky artwork, which is drawn for light
+    /// (dark text, dark status bar) in both appearances; its sign-in sheet follows the setting.
+    private var colorScheme: ColorScheme {
+        let showsWelcome = container.launch.route == .main && container.welcome.isVisible
+            && !container.session.isSignedIn && container.router.authEntry == nil
+        return showsWelcome ? .light : container.appearance.colorScheme
+    }
 
     /// The App Store page, or the website until the app has an App Store ID (`TALEED_APP_STORE_ID`).
     private var storeURL: URL? {

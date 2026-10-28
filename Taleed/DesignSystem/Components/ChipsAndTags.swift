@@ -31,13 +31,13 @@ struct CategoryChip: View {
 
     var body: some View {
         Button(action: action) {
-            Pill(fill: isSelected ? TaleedColor.navy800 : TaleedColor.blue50) {
+            Pill(fill: isSelected ? TaleedColor.inverseFill : TaleedColor.brandTint) {
                 HStack(spacing: TaleedSize.chipGap) {
                     Text(title)
                         .taleedFont(TaleedFont.caption)
-                        .foregroundStyle(isSelected ? TaleedColor.textInverse : TaleedColor.textBody)
+                        .foregroundStyle(isSelected ? TaleedColor.onInverseFill : TaleedColor.textBody)
                     if let icon {
-                        TaleedIconView(icon, size: iconSize, color: isSelected ? TaleedColor.textInverse : TaleedColor.blue800)
+                        TaleedIconView(icon, size: iconSize, color: isSelected ? TaleedColor.onInverseFill : TaleedColor.brandOnTintStrong)
                     }
                 }
             }
@@ -153,11 +153,11 @@ struct ChoiceChip: View {
     var body: some View {
         Button(action: action) {
             Pill(fill: isSelected ? TaleedColor.brandSoft : TaleedColor.surfaceGrouped,
-                 border: isSelected ? TaleedColor.blue200 : nil,
+                 border: isSelected ? TaleedColor.brandTintBorderStrong : nil,
                  height: Self.height, paddingX: TaleedSpacing.s16) {
                 Text(title)
                     .taleedFont(TaleedFont.bodyRegular)
-                    .foregroundStyle(isSelected ? TaleedColor.brandDark : TaleedColor.navy600)
+                    .foregroundStyle(isSelected ? TaleedColor.brandDark : TaleedColor.navInactive)
                     .lineLimit(1)
                     .fixedSize()
             }
@@ -246,7 +246,7 @@ struct CountBadge: View {
         let diameter = size == .regular ? TaleedSize.countBadge : 18
         Text(verbatim: (count > maxCount ? "\(maxCount)+" : "\(count)").isolatedLeftToRight)
             .taleedFont(TaleedFont.countBadge)
-            .foregroundStyle(TaleedColor.textInverse)
+            .foregroundStyle(TaleedColor.onFeedbackError)
             .monospacedDigit()
             .lineLimit(1)
             // Its own width, whatever the parent offers: an overlay on the 20 pt tab icon would
@@ -336,10 +336,10 @@ struct BoostedTag: View {
 
     var body: some View {
         HStack(spacing: TaleedSpacing.s4) {
-            TaleedIconView(.sparkle, size: 12, color: TaleedColor.textInverse)
+            TaleedIconView(.sparkle, size: 12, color: TaleedColor.onBrandPrimary)
             Text(title)
                 .taleedFont(TaleedFont.tagLabel)
-                .foregroundStyle(TaleedColor.textInverse)
+                .foregroundStyle(TaleedColor.onBrandPrimary)
                 .lineLimit(1)
         }
         .padding(.horizontal, TaleedSize.conditionTagPaddingX)

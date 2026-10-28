@@ -31,7 +31,7 @@ struct ConversationAppBar: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             if !menu.isEmpty {
                 TaleedOverflowMenu(items: menu, accessibilityLabel: l10n.string(.commonMore)) {
-                    TaleedIconView(.dotsThree, size: 20, color: TaleedColor.blue600)
+                    TaleedIconView(.dotsThree, size: 20, color: TaleedColor.brandEmphasis)
                         .frame(width: 40, height: 40)
                         .minimumHitArea()
                 }
@@ -134,10 +134,10 @@ struct ChatComposer: View {
                 Button(action: onSend) {
                     Image(systemName: "paperplane.fill")
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(TaleedColor.textInverse)
+                        .foregroundStyle(canSend ? TaleedColor.onBrandPrimary : TaleedColor.onControlDisabledFill)
                         .flipsForRightToLeftLayoutDirection(true)
                         .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
-                        .background(Circle().fill(canSend ? TaleedColor.brandPrimary : TaleedColor.navy200))
+                        .background(Circle().fill(canSend ? TaleedColor.brandPrimary : TaleedColor.controlDisabledFill))
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)

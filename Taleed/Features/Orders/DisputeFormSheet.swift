@@ -307,7 +307,7 @@ private struct EvidenceThumbnailView: View {
                 TaleedColor.surfaceSubtle
             }
             if item.isUploading {
-                TaleedColor.textPrimary.opacity(0.35)
+                TaleedColor.photoBusyOverlay
                 ProgressView().tint(TaleedColor.textInverse)
             } else if item.error != nil {
                 TaleedColor.errorSoft.opacity(0.85)

@@ -42,7 +42,7 @@ struct TaleedRangeSlider: View {
                     .frame(width: width, height: Self.trackHeight)
                     .position(x: width / 2, y: midY)
                 Capsule()
-                    .fill(isEnabled ? TaleedColor.brandAccent : TaleedColor.navy300)
+                    .fill(isEnabled ? TaleedColor.brandAccent : TaleedColor.contentDisabled)
                     .frame(width: abs(highX - lowX), height: Self.trackHeight)
                     .position(x: (lowX + highX) / 2, y: midY)
                 thumb(.lower).position(x: lowX, y: midY)
@@ -60,7 +60,7 @@ struct TaleedRangeSlider: View {
     private func thumb(_ which: Thumb) -> some View {
         let value = which == .lower ? lower : upper
         return Circle()
-            .fill(isEnabled ? TaleedColor.brandAccent : TaleedColor.navy300)
+            .fill(isEnabled ? TaleedColor.brandAccent : TaleedColor.contentDisabled)
             .overlay { Circle().strokeBorder(TaleedColor.surfacePrimary, lineWidth: 1) }
             .frame(width: Self.thumbSize, height: Self.thumbSize)
             .scaleEffect(dragging == which ? 1.15 : 1)

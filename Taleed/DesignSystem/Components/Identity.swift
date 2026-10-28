@@ -20,13 +20,13 @@ struct TaleedAvatar: View {
 
     var body: some View {
         Circle()
-            .fill(style == .soft ? TaleedColor.brandSoft : TaleedColor.blue100)
+            .fill(style == .soft ? TaleedColor.brandSoft : TaleedColor.brandTintStrong)
             .overlay {
                 Text(verbatim: initials)
                     // Fixed size (the circle does not grow with Dynamic Type), with the brand cascade so
                     // Arabic initials render in Alexandria.
                     .font(Font(initialsStyle.uiFont()))
-                    .foregroundStyle(style == .soft ? TaleedColor.brandDark : TaleedColor.blue700)
+                    .foregroundStyle(style == .soft ? TaleedColor.brandDark : TaleedColor.brandOnTint)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
             }

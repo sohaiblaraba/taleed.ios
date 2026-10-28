@@ -12,7 +12,11 @@ enum InAppBrowser {
         configuration.entersReaderIfAvailable = false
         configuration.barCollapsingEnabled = true
         let safari = SFSafariViewController(url: url, configuration: configuration)
-        safari.preferredControlTintColor = UIColor(TaleedColor.brandPrimary)
+        // The Appearance setting: the presenter carries the window's style (AppearanceManager).
+        let traits = presenter.traitCollection
+        safari.overrideUserInterfaceStyle = traits.userInterfaceStyle
+        safari.preferredControlTintColor = UIColor(TaleedColor.brandPrimary).resolvedColor(with: traits)
+        safari.preferredBarTintColor = UIColor(TaleedColor.surfaceElevated).resolvedColor(with: traits)
         safari.dismissButtonStyle = .close
         safari.modalPresentationStyle = .pageSheet
         presenter.present(safari, animated: true)

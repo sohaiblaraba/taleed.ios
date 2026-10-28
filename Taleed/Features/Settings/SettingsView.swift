@@ -6,12 +6,14 @@ import SwiftUI
 /// Signed in, in the website's order: the account (profile and billing, username, email, password,
 /// identity verification), the newsletter switch, then the app-only sections: the language, the push switch (only with
 /// `features.push`), saved addresses, blocked members, help and the version, "Se déconnecter" and, at
-/// the bottom, "Supprimer mon compte". Signed out: the language, help and the version.
+/// the bottom, "Supprimer mon compte". Signed out: the language, help and the version. The appearance
+/// (Light or Dark) follows the language, signed in or not.
 ///
 /// The account rows wait for `GET /me` (skeleton rows, or the error with Retry, offline included); the
 /// language, help and sign-out work without it.
 struct SettingsView: View {
     @Environment(LanguageManager.self) private var l10n
+    @Environment(AppearanceManager.self) private var appearance
     @Environment(AppRouter.self) private var router
     @Environment(SessionManager.self) private var session
     @Environment(AccountStore.self) private var account
@@ -31,6 +33,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     if session.isSignedIn { accountSection }
                     languageSection
+                    appearanceSection
                     if session.isSignedIn, push.canBeSwitched { pushSection }
                     moreSection
                     if session.isSignedIn { signOutAndDelete }
@@ -140,6 +143,21 @@ struct SettingsView: View {
                 }
                 .environment(\.locale, language.locale)
                 .accessibilityIdentifier("settings.language.\(language.rawValue)")
+            }
+        }
+        .padding(.horizontal, TaleedLayout.screenMargin)
+    }
+
+    /// Light (the default) or Dark, kept on the device and applied at once (design/dark-mode.md).
+    @ViewBuilder
+    private var appearanceSection: some View {
+        SettingsEyebrow(text: l10n.string(.appSettingsAppearance))
+        VStack(spacing: 0) {
+            ForEach(AppAppearance.allCases) { choice in
+                TaleedRadio(title: l10n.string(choice.titleKey), isSelected: choice == appearance.appearance) {
+                    appearance.select(choice)
+                }
+                .accessibilityIdentifier("settings.appearance.\(choice.rawValue)")
             }
         }
         .padding(.horizontal, TaleedLayout.screenMargin)

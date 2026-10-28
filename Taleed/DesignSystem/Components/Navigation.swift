@@ -113,7 +113,7 @@ struct TaleedBottomNavigation<ID: Hashable>: View {
                 let shape = UnevenRoundedRectangle(topLeadingRadius: TaleedRadius.l, topTrailingRadius: TaleedRadius.l,
                                                    style: .continuous)
                 shape
-                    .fill(TaleedColor.surfacePrimary)
+                    .fill(TaleedColor.surfaceElevated)
                     .overlay(shape.stroke(TaleedColor.borderSubtle, lineWidth: 1))
                     .taleedShadow(TaleedElevation.navTop)
                     .ignoresSafeArea(edges: .bottom)
@@ -150,7 +150,7 @@ private struct BottomNavButton<ID: Hashable>: View {
     let action: () -> Void
 
     var body: some View {
-        let color = isActive ? TaleedColor.blue600 : TaleedColor.navInactive
+        let color = isActive ? TaleedColor.brandEmphasis : TaleedColor.navInactive
         let style = isActive ? TaleedFont.navLabelActive : TaleedFont.navLabel
         Button(action: action) {
             VStack(spacing: TaleedSpacing.s4) {
@@ -174,7 +174,7 @@ private struct BottomNavButton<ID: Hashable>: View {
             .frame(maxWidth: .infinity, minHeight: TaleedSize.bottomNavItemHeight)
             .background {
                 if isActive {
-                    RoundedRectangle(cornerRadius: TaleedRadius.l, style: .continuous).fill(TaleedColor.blue50)
+                    RoundedRectangle(cornerRadius: TaleedRadius.l, style: .continuous).fill(TaleedColor.brandTint)
                 }
             }
             .contentShape(Rectangle())
@@ -266,7 +266,7 @@ struct TaleedBottomSheet<Content: View>: View {
         .padding(.horizontal, TaleedSize.bottomSheetPaddingX)
         .padding(.bottom, TaleedSize.bottomSheetPaddingBottom)
         .frame(maxWidth: .infinity)
-        .background(TaleedColor.surfacePrimary)
+        .background(TaleedColor.surfaceElevated)
     }
 }
 
@@ -371,7 +371,7 @@ private struct TaleedSheetPresenter<Sheet: View>: ViewModifier {
             .presentationDetents([.height(height)])
             .presentationCornerRadius(TaleedSize.bottomSheetTopRadius)
             .presentationDragIndicator(.hidden)
-            .presentationBackground(TaleedColor.surfacePrimary)
+            .presentationBackground(TaleedColor.surfaceElevated)
             .environment(\.locale, locale)
             .environment(\.layoutDirection, layoutDirection)
             // A confirmation asked from the sheet draws over the sheet, not under it in the window.

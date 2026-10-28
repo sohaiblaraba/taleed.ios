@@ -6,7 +6,7 @@ struct AppBarAction: Identifiable {
     let accessibilityLabel: String
     /// Draws the 40 pt `blue/50` circle behind the icon (Item Detail trust icon).
     var isCircled = false
-    var color: Color = TaleedColor.blue600
+    var color: Color = TaleedColor.brandEmphasis
     /// Nil draws a non-interactive indicator.
     var action: (() -> Void)?
     /// An overflow menu instead of `action` (screens.md §2 G4: Report listing): `TaleedOverflowMenu`.
@@ -106,9 +106,9 @@ struct BrandAppBar: View {
                     }
                 } else if let onSignIn {
                     Button(action: onSignIn) {
-                        TaleedIconView(.user, size: 20, color: TaleedColor.blue600)
+                        TaleedIconView(.user, size: 20, color: TaleedColor.brandEmphasis)
                             .frame(width: 36, height: 36)
-                            .background(Circle().fill(TaleedColor.blue100))
+                            .background(Circle().fill(TaleedColor.brandTintStrong))
                             .minimumHitArea()
                     }
                     .buttonStyle(.plain)
@@ -187,7 +187,7 @@ private struct AppBarActionView: View {
         let icon = TaleedIconView(action.icon, size: 20, color: action.color)
             .frame(width: box, height: box)
             .background {
-                if action.isCircled { Circle().fill(TaleedColor.blue50) }
+                if action.isCircled { Circle().fill(TaleedColor.brandTint) }
             }
         if !action.menu.isEmpty {
             TaleedOverflowMenu(items: action.menu, accessibilityLabel: action.accessibilityLabel) {
@@ -316,6 +316,6 @@ struct SectionTitle: View {
 /// The 8 pt `navy/50` band between detail sections.
 struct SectionBand: View {
     var body: some View {
-        Rectangle().fill(TaleedColor.navy50).frame(height: 8).accessibilityHidden(true)
+        Rectangle().fill(TaleedColor.sectionBand).frame(height: 8).accessibilityHidden(true)
     }
 }

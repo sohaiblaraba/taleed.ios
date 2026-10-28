@@ -68,7 +68,7 @@ private struct FieldBox: ViewModifier {
         let border: Color = switch state {
         case .active: TaleedColor.brandPrimary
         case .error: TaleedColor.feedbackError
-        case .normal, .disabled: TaleedColor.borderSubtle
+        case .normal, .disabled: TaleedColor.borderField
         }
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
         content

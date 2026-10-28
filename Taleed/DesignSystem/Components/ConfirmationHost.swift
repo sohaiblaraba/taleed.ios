@@ -74,7 +74,7 @@ private struct ConfirmationScrim: View {
 
     var body: some View {
         ZStack {
-            TaleedColor.textPrimary.opacity(0.5)
+            TaleedColor.modalDim
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture {}
@@ -199,7 +199,7 @@ struct ConfirmationModalCard: View {
         }
         .padding(TaleedSize.modalPadding)
         .frame(maxWidth: TaleedSize.modalWidth)
-        .background(TaleedColor.surfacePrimary, in: RoundedRectangle(cornerRadius: TaleedSize.modalRadius, style: .continuous))
+        .background(TaleedColor.surfaceElevated, in: RoundedRectangle(cornerRadius: TaleedSize.modalRadius, style: .continuous))
         .taleedShadow(TaleedElevation.level2)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)

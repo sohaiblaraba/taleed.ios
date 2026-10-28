@@ -151,7 +151,7 @@ extension CheckoutFormView {
             .toggleStyle(.taleed)
             .padding(.horizontal, TaleedSpacing.s16)
             .padding(.vertical, TaleedSpacing.s8)
-            .taleedCard(fill: model.form.useWallet ? TaleedColor.blue50 : TaleedColor.surfacePrimary,
+            .taleedCard(fill: model.form.useWallet ? TaleedColor.brandTint : TaleedColor.surfacePrimary,
                         border: model.form.useWallet ? TaleedColor.brandPrimary : TaleedColor.borderSubtle)
             .disabled(model.isPlacing)
             .accessibilityIdentifier("checkout.wallet")

@@ -72,6 +72,8 @@ struct MainShellView: View {
         .overlay {
             if showsWelcome {
                 WelcomeView(onContinueWithEmail: { router.presentSignIn() }, onBrowse: { welcome.complete() })
+                    // The sky artwork with its dark text stays light in the dark appearance too.
+                    .environment(\.colorScheme, .light)
                     .transition(.opacity)
             }
         }

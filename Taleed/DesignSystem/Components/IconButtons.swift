@@ -26,7 +26,7 @@ private struct IconButtonFace: View {
     @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
-        let iconColor = !isEnabled ? TaleedColor.navy400 : isActive ? TaleedColor.brandPrimary : TaleedColor.textPrimary
+        let iconColor = !isEnabled ? TaleedColor.iconDisabled : isActive ? TaleedColor.brandPrimary : TaleedColor.textPrimary
         TaleedIconView(icon, size: TaleedSize.iconButtonIconSize, color: iconColor)
             .frame(width: TaleedSize.iconButtonSize, height: TaleedSize.iconButtonSize)
             .taleedCard(
@@ -59,7 +59,7 @@ struct FavoriteButton: View {
                 if let count {
                     Text(verbatim: "\(count)")
                         .taleedFont(TaleedFont.buttonSmall)
-                        .foregroundStyle(TaleedColor.blue600)
+                        .foregroundStyle(TaleedColor.brandEmphasis)
                         .monospacedDigit()
                 }
             }
@@ -75,8 +75,8 @@ struct FavoriteButton: View {
 private struct FavoriteButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .taleedCard(fill: configuration.isPressed ? TaleedColor.blue100 : TaleedColor.blue50, border: TaleedColor.blue100,
-                        radius: TaleedSize.favoriteButtonRadius)
+            .taleedCard(fill: configuration.isPressed ? TaleedColor.brandTintStrong : TaleedColor.brandTint,
+                        border: TaleedColor.brandTintBorder, radius: TaleedSize.favoriteButtonRadius)
             .contentShape(Rectangle())
             .minimumHitArea()
     }

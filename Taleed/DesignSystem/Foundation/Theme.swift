@@ -24,7 +24,7 @@ extension TaleedColor {
     /// Small secondary text (below 16 pt, any weight: 11–12 pt semibold labels fail AA too): `neutral/700`
     /// #46506A, 8.0:1 on white and 7.6:1 on `surfaceGrouped` / `navy/50`. Secondary text from 16 pt,
     /// placeholders, disabled text and decorative icons keep `textSecondary`.
-    static let textSecondarySmall = neutral700
+    static let textSecondarySmall = neutral700.inDark(textSecondary)
 
     /// The secondary colour for text set in `style`: `textSecondarySmall` below 16 pt, otherwise
     /// Figma's `textSecondary` (the Android app's `secondaryText(style)`).
@@ -38,22 +38,43 @@ extension TaleedColor {
 
     /// Helper text under a field (D-9b, Saad 2026-10-22): `neutral/700` #46506A, 8.0:1 on white.
     /// Figma's `navy/500` #727887 reads 4.4:1 on white and 4.2:1 on `surfaceGrouped`.
-    static let fieldHelper = neutral700
+    static let fieldHelper = neutral700.inDark(textSecondary)
 
     /// Label and icon of an inactive bottom-navigation tab (D-9b): `navy/600` #575E6F, 6.5:1 on white,
     /// still lighter than the active tab's `blue/600` on its `blue/50` pill. Figma's `navy/400` #9095A1
     /// reads 3.0:1.
-    static let navInactive = navy600
+    static let navInactive = navy600.inDark(textSecondary)
 
     /// Colours the app adds to tokens.json, for the design-system gallery.
     static let appCatalog: [ColorToken] = [
-        ColorToken(group: "app", name: "textSecondarySmall", color: textSecondarySmall, hex: 0x46506A, opacity: 1),
-        ColorToken(group: "app", name: "fieldHelper", color: fieldHelper, hex: 0x46506A, opacity: 1),
-        ColorToken(group: "app", name: "navInactive", color: navInactive, hex: 0x575E6F, opacity: 1),
-    ]
+        ColorToken(group: "app", name: "textSecondarySmall", color: textSecondarySmall, hex: 0x46506A, opacity: 1,
+                   darkHex: 0x9AA3B8, darkOpacity: 1),
+        ColorToken(group: "app", name: "fieldHelper", color: fieldHelper, hex: 0x46506A, opacity: 1,
+                   darkHex: 0x9AA3B8, darkOpacity: 1),
+        ColorToken(group: "app", name: "navInactive", color: navInactive, hex: 0x575E6F, opacity: 1,
+                   darkHex: 0x9AA3B8, darkOpacity: 1),
+    ] + darkRoleCatalog
 }
 
 extension Color {
+    /// A colour with a light and a dark value (24-bit sRGB), that follows the colour scheme of the view
+    /// (or the trait collection) that resolves it.
+    init(taleedLight light: UInt32, lightOpacity: Double = 1, dark: UInt32, darkOpacity: Double = 1) {
+        let lightColor = UIColor(taleedHex: light, alpha: lightOpacity)
+        let darkColor = UIColor(taleedHex: dark, alpha: darkOpacity)
+        self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark ? darkColor : lightColor })
+    }
+
+    /// This colour in light and `dark` in dark (resolved in dark, so a token keeps its dark value).
+    /// For the scale values that screens draw: the scales themselves are fixed.
+    func inDark(_ dark: Color) -> Color {
+        let lightColor = UIColor(self)
+        let darkColor = UIColor(dark)
+        return Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark ? darkColor.resolvedColor(with: traits) : lightColor.resolvedColor(with: traits)
+        })
+    }
+
     /// A colour from a 24-bit sRGB hex value such as `0x2455F5`.
     init(taleedHex hex: UInt32, opacity: Double = 1) {
         self.init(
@@ -63,6 +84,13 @@ extension Color {
             blue: Double(hex & 0xFF) / 255,
             opacity: opacity
         )
+    }
+}
+
+extension UIColor {
+    convenience init(taleedHex hex: UInt32, alpha: Double = 1) {
+        self.init(red: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
+                  blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
     }
 }
 

@@ -9,6 +9,8 @@ import SwiftUI
 final class AppContainer {
     let environment: AppEnvironment
     let languageManager: LanguageManager
+    /// The Appearance setting (Light or Dark), kept on the device.
+    let appearance = AppearanceManager()
     let apiSession: ApiSession
     let api: GeneratedTaleedApi
     let session: SessionManager

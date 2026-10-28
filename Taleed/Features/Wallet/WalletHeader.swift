@@ -137,7 +137,7 @@ struct TopUpBannerView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(TaleedSize.alertPadding)
-                .background(TaleedColor.blue100, in: RoundedRectangle(cornerRadius: TaleedSize.alertRadius, style: .continuous))
+                .background(TaleedColor.brandTintStrong, in: RoundedRectangle(cornerRadius: TaleedSize.alertRadius, style: .continuous))
                 .accessibilityElement(children: .combine)
             case .paid:
                 InlineAlert(kind: .success, title: l10n.string(.walletToppedUp), actionTitle: l10n.string(.commonDismiss),

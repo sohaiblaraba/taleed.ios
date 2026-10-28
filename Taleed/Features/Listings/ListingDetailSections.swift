@@ -119,7 +119,7 @@ struct ListingInfoSection: View {
             }
             Spacer(minLength: 0)
             HStack(spacing: TaleedSpacing.s4) {
-                TaleedIconView(.eyeBold, size: 14, color: TaleedColor.navy500)
+                TaleedIconView(.eyeBold, size: 14, color: TaleedColor.iconMuted)
                 Text(l10n.format(.listingViews, listing.viewsCount))
                     .taleedFont(TaleedFont.caption)
                     .foregroundStyle(TaleedColor.textSecondarySmall)

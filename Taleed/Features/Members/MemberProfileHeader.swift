@@ -227,6 +227,6 @@ private extension MemberProfileHeader {
         }
         .padding(TaleedSpacing.s16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(TaleedColor.blue50, in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+        .background(TaleedColor.brandTint, in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
     }
 }

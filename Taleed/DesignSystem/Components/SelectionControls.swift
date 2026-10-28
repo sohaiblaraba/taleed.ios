@@ -40,7 +40,7 @@ private struct SwitchTrack: View {
             .frame(width: TaleedSize.toggleWidth, height: TaleedSize.toggleHeight)
             .overlay(alignment: isOn ? .trailing : .leading) {
                 Circle()
-                    .fill(TaleedColor.surfacePrimary)
+                    .fill(TaleedColor.toggleThumb)
                     .frame(width: TaleedSize.toggleThumb, height: TaleedSize.toggleThumb)
                     .taleedShadow(isOn ? TaleedElevation.toggleThumbOn : TaleedElevation.toggleThumbOff)
                     .padding(TaleedSize.togglePadding)
@@ -78,10 +78,10 @@ private struct CheckboxBox: View {
         let shape = RoundedRectangle(cornerRadius: TaleedSize.checkboxRadius, style: .continuous)
         shape
             .fill(isOn ? TaleedColor.brandPrimary : TaleedColor.surfacePrimary)
-            .overlay(shape.strokeBorder(isOn ? TaleedColor.brandPrimary : TaleedColor.borderSubtle,
+            .overlay(shape.strokeBorder(isOn ? TaleedColor.brandPrimary : TaleedColor.borderField,
                                         lineWidth: TaleedSize.checkboxBorderWidth))
             .overlay {
-                if isOn { TaleedIconView(.check, size: TaleedSize.checkboxCheckIcon, color: TaleedColor.textInverse) }
+                if isOn { TaleedIconView(.check, size: TaleedSize.checkboxCheckIcon, color: TaleedColor.onBrandPrimary) }
             }
             .frame(width: TaleedSize.checkboxSize, height: TaleedSize.checkboxSize)
     }
@@ -108,11 +108,11 @@ struct RadioIndicator: View {
     var body: some View {
         Circle()
             .fill(isSelected ? TaleedColor.brandPrimary : TaleedColor.surfacePrimary)
-            .overlay(Circle().strokeBorder(isSelected ? TaleedColor.brandPrimary : TaleedColor.borderSubtle,
+            .overlay(Circle().strokeBorder(isSelected ? TaleedColor.brandPrimary : TaleedColor.borderField,
                                            lineWidth: TaleedSize.radioBorderWidth))
             .overlay {
                 if isSelected {
-                    Circle().fill(TaleedColor.textInverse).frame(width: min(dot, 12), height: min(dot, 12))
+                    Circle().fill(TaleedColor.onBrandPrimary).frame(width: min(dot, 12), height: min(dot, 12))
                 }
             }
             // Up to 32 pt: larger would take the label's room and break its words.

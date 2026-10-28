@@ -67,8 +67,9 @@ struct DesignSystemConsistencyTests {
 
     @Test func outlineAndUnderlinedLinkFollowAndroid() {
         #expect(TaleedButtonColors.of(.outline, .pressed).fill == TaleedColor.surfaceGrouped)
-        #expect(TaleedButtonColors.of(.outline, .disabled).content == TaleedColor.navy300)
-        #expect(TaleedButtonColors.of(.hyperlinkUnderlined, .normal).content == TaleedColor.blue900)
+        // navy/300 and blue/900 in light; their dark-mode roles keep the label readable in dark.
+        #expect(TaleedButtonColors.of(.outline, .disabled).content == TaleedColor.contentDisabled)
+        #expect(TaleedButtonColors.of(.hyperlinkUnderlined, .normal).content == TaleedColor.linkStrong)
         #expect(TaleedButtonMetrics.of(.outline, .medium).paddingX == 16)
         #expect(TaleedButtonMetrics.of(.outline, .large).paddingX == 24)
         #expect(TaleedButtonMetrics.of(.outline, .large).radius == TaleedRadius.m)

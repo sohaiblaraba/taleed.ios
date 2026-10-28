@@ -3,6 +3,16 @@
     {
       "filename": "empty-state-search.svg",
       "idiom": "universal"
+    },
+    {
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ],
+      "filename": "empty-state-search-dark.svg",
+      "idiom": "universal"
     }
   ],
   "info": {

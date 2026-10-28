@@ -3,6 +3,16 @@
     {
       "filename": "taleed-wordmark.svg",
       "idiom": "universal"
+    },
+    {
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ],
+      "filename": "taleed-wordmark-dark.svg",
+      "idiom": "universal"
     }
   ],
   "info": {

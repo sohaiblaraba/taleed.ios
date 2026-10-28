@@ -8,8 +8,9 @@ struct GalleryFoundations: View {
     var body: some View {
         let copy = GalleryCopy(locale)
         GallerySection(id: "colors", number: "1.2", title: "Colour",
-                       note: "Scales, semantic variables and recurring literals (tokens.json); app: colours the app adds (D-9).") {
-            ForEach(["semantic", "literal", "app", "blue", "mint", "navy", "neutral"], id: \.self) { group in
+                       note: "Scales, semantic variables and recurring literals (tokens.json); dark: the dark-mode.md roles; "
+                       + "app and dark role: colours the app adds (D-9, dark mode). Values of the current appearance.") {
+            ForEach(["semantic", "literal", "dark", "app", "dark role", "blue", "mint", "navy", "neutral"], id: \.self) { group in
                 VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
                     GalleryCaption(text: group)
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: TaleedSpacing.s8)],
@@ -123,6 +124,12 @@ struct GalleryFoundations: View {
 
 private struct ColorSwatch: View {
     let token: ColorToken
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var label: String {
+        let (hex, opacity) = colorScheme == .dark ? (token.darkHex, token.darkOpacity) : (token.hex, token.opacity)
+        return String(format: "#%06X", hex) + (opacity < 1 ? " \(Int(opacity * 100))%" : "")
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -136,7 +143,7 @@ private struct ColorSwatch: View {
                 .foregroundStyle(TaleedColor.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-            Text(verbatim: String(format: "#%06X", token.hex) + (token.opacity < 1 ? " \(Int(token.opacity * 100))%" : ""))
+            Text(verbatim: label)
                 .font(.custom(TaleedTypeface.plusJakartaSans.postScriptName(.regular), fixedSize: 9))
                 .foregroundStyle(TaleedColor.textSecondarySmall)
         }

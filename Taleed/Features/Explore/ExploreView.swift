@@ -147,7 +147,7 @@ private struct CategoryDisclosureRow: View {
         Button(action: action) {
             VStack(spacing: 0) {
                 HStack(spacing: TaleedSpacing.s12) {
-                    TaleedIconView(icon ?? .tShirt, size: min(iconSize, 36), color: TaleedColor.blue800)
+                    TaleedIconView(icon ?? .tShirt, size: min(iconSize, 36), color: TaleedColor.brandOnTintStrong)
                         .opacity(icon == nil ? 0 : 1)
                     Text(title)
                         .taleedFont(TaleedFont.bodyLarge)

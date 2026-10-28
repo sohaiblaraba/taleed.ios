@@ -153,14 +153,14 @@ struct GalleryNavigation: View {
                                                       topTrailingRadius: TaleedSize.bottomSheetTopRadius))
                     .taleedShadow(TaleedElevation.level2)
                 ZStack {
-                    TaleedColor.textPrimary.opacity(0.5)
+                    TaleedColor.modalDim
                     deleteModal(copy).padding(TaleedSpacing.s16)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.l))
                 GalleryCaption(text: copy("« Supprimer » appuyé", "«حذف» مضغوط", "\u{201C}Delete\u{201D} pressed"))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 ZStack {
-                    TaleedColor.textPrimary.opacity(0.5)
+                    TaleedColor.modalDim
                     deleteModal(copy, forcesPressed: true).padding(TaleedSpacing.s16)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.l))

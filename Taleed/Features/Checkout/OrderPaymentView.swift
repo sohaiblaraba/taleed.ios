@@ -302,7 +302,7 @@ struct PaymentResultHeader: View {
         case .paid, .confirmed: TaleedColor.successSoft
         case .failed, .expired: TaleedColor.errorSoft
         case .awaitingConfirmation, .awaitingPayment: TaleedColor.warningSoft
-        case .other: TaleedColor.blue100
+        case .other: TaleedColor.brandTintStrong
         }
     }
 

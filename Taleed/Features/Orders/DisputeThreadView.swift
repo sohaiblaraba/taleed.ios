@@ -212,7 +212,7 @@ private struct ComposerPhotoButton: View {
         EvidencePickerButton(photos: photos, isDisabled: isDisabled) {
             TaleedIconView(.plus, size: 20, color: TaleedColor.brandPrimary)
                 .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
-                .background(TaleedColor.blue50, in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+                .background(TaleedColor.brandTint, in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
         }
         .accessibilityLabel(l10n.string(.disputesAddPhotos))
         .accessibilityIdentifier("dispute.composerPhoto")
@@ -331,7 +331,7 @@ private struct DisputeMessageBubble: View {
                 }
             }
             .padding(TaleedSpacing.s12)
-            .background(message.isMine ? TaleedColor.blue50 : TaleedColor.surfacePrimary,
+            .background(message.isMine ? TaleedColor.brandTint : TaleedColor.surfacePrimary,
                         in: RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
@@ -364,10 +364,10 @@ private struct DisputeMessageBubble: View {
     private var roleChip: some View {
         if message.role == .support {
             HStack(spacing: 2) {
-                TaleedIconView(.shieldCheck, size: 12, color: TaleedColor.textInverse)
+                TaleedIconView(.shieldCheck, size: 12, color: TaleedColor.onBrandPrimary)
                 Text(message.roleLabel).taleedFont(TaleedFont.tagLabel)
             }
-            .foregroundStyle(TaleedColor.textInverse)
+            .foregroundStyle(TaleedColor.onBrandPrimary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(TaleedColor.brandPrimary, in: RoundedRectangle(cornerRadius: TaleedRadius.xs, style: .continuous))

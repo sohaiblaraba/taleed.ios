@@ -70,11 +70,11 @@ struct PhotoUploader: View {
     private var uploadZone: some View {
         Button(action: onAdd) {
             VStack(spacing: TaleedSpacing.s4) {
-                TaleedIconView(.cloudArrowUp, size: 28, color: TaleedColor.mint500)
+                TaleedIconView(.cloudArrowUp, size: 28, color: TaleedColor.mintIcon)
                     .frame(width: 48, height: 48)
                 Text(DesignSystemStrings.format(.photoUploaderZoneTitle, locale: locale, maxPhotos))
                     .taleedFont(TaleedFont.caption)
-                    .foregroundStyle(TaleedColor.mint600)
+                    .foregroundStyle(TaleedColor.mintText)
                 Text(string(.photoUploaderZoneBody))
                     .taleedFont(Self.zoneSubtitleStyle)
                     .foregroundStyle(TaleedColor.textSecondarySmall)
@@ -114,7 +114,7 @@ struct PhotoUploader: View {
     private var addTile: some View {
         Button(action: onAdd) {
             Color.clear
-                .overlay { TaleedIconView(.plus, size: 20, color: TaleedColor.mint500) }
+                .overlay { TaleedIconView(.plus, size: 20, color: TaleedColor.mintIcon) }
                 .modifier(DashedMintBox())
                 .contentShape(Rectangle())
         }
@@ -133,7 +133,7 @@ struct DashedMintBox: ViewModifier {
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous)
         content
-            .background(shape.fill(TaleedColor.mint50))
+            .background(shape.fill(TaleedColor.mintTint))
             .overlay(shape.strokeBorder(hasError ? TaleedColor.feedbackError : TaleedColor.mint400,
                                         style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
             .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: hasError)
@@ -205,7 +205,7 @@ private struct PhotoTile: View {
             EmptyView()
         case .uploading:
             ZStack {
-                TaleedColor.textPrimary.opacity(0.35)
+                TaleedColor.photoBusyOverlay
                 ProgressView().tint(TaleedColor.textInverse)
             }
             .accessibilityHidden(true)
@@ -274,7 +274,7 @@ private struct PhotoTile: View {
         Button { onRemove(item.id) } label: {
             TaleedIconView(.x, size: TaleedSize.photoUploaderRemoveIcon, color: TaleedColor.textInverse)
                 .frame(width: TaleedSize.photoUploaderRemoveButton, height: TaleedSize.photoUploaderRemoveButton)
-                .background(Circle().fill(TaleedColor.textPrimary))
+                .background(Circle().fill(TaleedColor.toastDark))
                 .minimumHitArea()
         }
         .buttonStyle(.plain)

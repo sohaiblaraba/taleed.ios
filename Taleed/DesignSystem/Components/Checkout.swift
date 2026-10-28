@@ -69,7 +69,7 @@ struct DeliveryOption: View {
                 RadioIndicator(isSelected: selected)
             }
             .padding(TaleedSpacing.s16)
-            .taleedCard(fill: selected ? TaleedColor.blue50 : TaleedColor.surfacePrimary,
+            .taleedCard(fill: selected ? TaleedColor.brandTint : TaleedColor.surfacePrimary,
                         border: selected ? TaleedColor.brandPrimary : TaleedColor.borderSubtle)
             .contentShape(Rectangle())
         }

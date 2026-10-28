@@ -182,7 +182,7 @@ struct SpecValueText: View {
     var body: some View {
         Text(verbatim: text)
             .taleedFont(PatternStyles.body13Strong)
-            .foregroundStyle(isLink ? TaleedColor.blue600 : TaleedColor.textPrimary)
+            .foregroundStyle(isLink ? TaleedColor.brandEmphasis : TaleedColor.textPrimary)
     }
 }
 

@@ -36,11 +36,11 @@ struct DocumentPhotoSlot: View {
             ZStack {
                 Color.clear.aspectRatio(16 / 9, contentMode: .fit)
                 VStack(spacing: TaleedSpacing.s4) {
-                    TaleedIconView(.cloudArrowUp, size: 28, color: TaleedColor.mint500)
+                    TaleedIconView(.cloudArrowUp, size: 28, color: TaleedColor.mintIcon)
                         .frame(width: 48, height: 48)
                     Text(hint)
                         .taleedFont(TaleedFont.caption)
-                        .foregroundStyle(TaleedColor.mint600)
+                        .foregroundStyle(TaleedColor.mintText)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -73,7 +73,7 @@ struct DocumentPhotoSlot: View {
                 Button(action: onRemove) {
                     TaleedIconView(.x, size: TaleedSize.photoUploaderRemoveIcon, color: TaleedColor.textInverse)
                         .frame(width: TaleedSize.photoUploaderRemoveButton, height: TaleedSize.photoUploaderRemoveButton)
-                        .background(Circle().fill(TaleedColor.textPrimary))
+                        .background(Circle().fill(TaleedColor.toastDark))
                         // The whole 44 pt square is the button, inside the tile.
                         .frame(width: TaleedSize.touchTargetMin, height: TaleedSize.touchTargetMin)
                         .contentShape(Rectangle())

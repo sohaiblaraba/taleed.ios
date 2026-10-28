@@ -102,19 +102,19 @@ struct TrustStrip: View {
         }
         .padding(TaleedSpacing.s12)
         .frame(minHeight: 72)
-        .background(TaleedColor.blue50, in: RoundedRectangle(cornerRadius: style == .card ? 16 : 0, style: .continuous))
+        .background(TaleedColor.brandTint, in: RoundedRectangle(cornerRadius: style == .card ? 16 : 0, style: .continuous))
     }
 
     private var divider: some View {
-        Rectangle().fill(TaleedColor.blue200).frame(width: 1, height: 48).accessibilityHidden(true)
+        Rectangle().fill(TaleedColor.brandTintBorderStrong).frame(width: 1, height: 48).accessibilityHidden(true)
     }
 
     private func item(_ icon: TaleedIcon, _ key: L10nKey) -> some View {
         VStack(spacing: TaleedSpacing.s4) {
-            TaleedIconView(icon, size: 24, color: TaleedColor.blue500)
+            TaleedIconView(icon, size: 24, color: TaleedColor.brandPrimary)
             Text(DesignSystemStrings.string(key, locale: locale))
                 .taleedFont(TaleedFont.tagLabel)
-                .foregroundStyle(TaleedColor.blue700)
+                .foregroundStyle(TaleedColor.brandOnTint)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)

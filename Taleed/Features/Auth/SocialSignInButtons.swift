@@ -55,12 +55,13 @@ struct SocialSignInSection: View {
     }
 }
 
-/// `SignInWithAppleButton` "Continue with Apple", black, at the Large button's size. Apple draws the label in
+/// `SignInWithAppleButton` "Continue with Apple", black in light and white in dark, at the Large button's size. Apple draws the label in
 /// the device language, whatever the app language is (FB-11).
 private struct AppleSignInButton: View {
     let viewModel: SocialSignInViewModel
     let onOutcome: (SocialSignInViewModel.Outcome) -> Void
     @Environment(LanguageManager.self) private var l10n
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         SignInWithAppleButton(.continue) { request in
@@ -68,14 +69,14 @@ private struct AppleSignInButton: View {
         } onCompletion: { result in
             Task { onOutcome(await viewModel.completeApple(result)) }
         }
-        .signInWithAppleButtonStyle(.black)
+        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
         .frame(height: TaleedSize.buttonLargeHeight)
         .clipShape(RoundedRectangle(cornerRadius: TaleedSize.buttonRadius, style: .continuous))
         .overlay {
             if viewModel.pending == .apple {
                 RoundedRectangle(cornerRadius: TaleedSize.buttonRadius, style: .continuous)
-                    .fill(Color.black)
-                    .overlay { ProgressView().tint(.white) }
+                    .fill(colorScheme == .dark ? Color.white : Color.black)
+                    .overlay { ProgressView().tint(colorScheme == .dark ? Color.black : Color.white) }
             }
         }
         // VoiceOver reads the app language; the visible label stays in the device language (FB-11).
@@ -85,17 +86,18 @@ private struct AppleSignInButton: View {
     }
 }
 
-/// "Continue with Google" (Google's branding guidelines, light theme): white fill, a 1 pt #747775 border,
-/// the standard "G" on the leading side and the #1F1F1F label. Google's own colours, not Taleed tokens.
+/// "Continue with Google" (Google's branding guidelines): light theme, white fill, a 1 pt #747775 border and
+/// the #1F1F1F label; dark theme, #131314 fill, a #8E918F border and the #E3E3E3 label; the standard "G" on
+/// the leading side. Google's own colours, not Taleed tokens.
 struct GoogleSignInButton: View {
     let title: String
     var isLoading = false
     let action: () -> Void
 
-    static let fill = Color.white
-    static let pressedFill = Color(taleedHex: 0xF2F2F2)
-    static let border = Color(taleedHex: 0x747775)
-    static let label = Color(taleedHex: 0x1F1F1F)
+    static let fill = Color(taleedLight: 0xFFFFFF, dark: 0x131314)
+    static let pressedFill = Color(taleedLight: 0xF2F2F2, dark: 0x262628)
+    static let border = Color(taleedLight: 0x747775, dark: 0x8E918F)
+    static let label = Color(taleedLight: 0x1F1F1F, dark: 0xE3E3E3)
 
     var body: some View {
         Button(action: action) {

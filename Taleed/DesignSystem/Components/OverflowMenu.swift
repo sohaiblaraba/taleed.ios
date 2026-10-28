@@ -23,7 +23,7 @@ struct TaleedOverflowMenu<Label: View>: View {
             .popover(isPresented: $isPresented, arrowEdge: .top) {
                 entries
                     .presentationCompactAdaptation(.popover)
-                    .presentationBackground(TaleedColor.surfacePrimary)
+                    .presentationBackground(TaleedColor.surfaceElevated)
                     .environment(\.locale, locale)
                     .environment(\.layoutDirection, layoutDirection)
                     .onDisappear {

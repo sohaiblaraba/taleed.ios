@@ -34,7 +34,7 @@ struct InlineAlert: View {
                     if let message {
                         Text(message)
                             .taleedFont(Self.messageStyle)
-                            .foregroundStyle(kind == .info ? TaleedColor.navy700 : TaleedColor.textBody)
+                            .foregroundStyle(kind == .info ? TaleedColor.infoText : TaleedColor.textBody)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -79,7 +79,7 @@ struct InlineAlert: View {
 
     private var fill: Color {
         switch kind {
-        case .info: TaleedColor.blue100
+        case .info: TaleedColor.brandTintStrong
         case .success: TaleedColor.successSoft
         case .warning: TaleedColor.warningSoft
         case .error: TaleedColor.errorSoft
@@ -152,7 +152,7 @@ struct TaleedToast: View {
             if let onClose {
                 Button(action: onClose) {
                     TaleedIconView(.x, size: TaleedSize.toastIconSize,
-                                   color: style == .light ? TaleedColor.navy600 : TaleedColor.navy300)
+                                   color: style == .light ? TaleedColor.navInactive : TaleedColor.navy300)
                         .frame(width: 24, height: 24)
                         .minimumHitArea()
                 }
@@ -161,7 +161,7 @@ struct TaleedToast: View {
             }
         }
         .padding(TaleedSize.toastPadding)
-        .background(style == .light ? TaleedColor.surfacePrimary : TaleedColor.textPrimary,
+        .background(style == .light ? TaleedColor.surfaceElevated : TaleedColor.toastDark,
                     in: RoundedRectangle(cornerRadius: TaleedSize.toastRadius, style: .continuous))
         .taleedShadow(TaleedElevation.level2)
         .accessibilityElement(children: .contain)
