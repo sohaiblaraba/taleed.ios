@@ -21,10 +21,10 @@ enum WalletRules {
         return nil
     }
 
-    /// "Paid with the next weekly payout, on {date}." The website shows it always; the app leaves it out
-    /// for a negative amount, which the next run does not pay.
+    /// "Paid with the next weekly payout, on {date}." only while something is owed: nothing to pay at 0, and
+    /// the next run does not pay a negative amount (the website does the same).
     static func showsNextPayoutDate(_ summary: WalletSummary) -> Bool {
-        summary.owed >= 0
+        summary.owed > 0
     }
 
     /// The colour of a history amount.
@@ -57,20 +57,6 @@ enum WalletRules {
         case .rejected: .error
         }
     }
-
-    /// The voucher rules' numbers: the program's when it is known, otherwise the server's current values
-    /// with the minimum item price of `GET /wallet` (a suspended member gets no program).
-    static func voucherRules(program: VoucherRulesInfo?, limits: WalletLimitsInfo) -> VoucherRulesInfo {
-        program ?? VoucherRulesInfo(voucherAmount: VoucherRulesInfo.fallbackAmount, minItemPrice: limits.voucherMinItemPrice,
-                                    validityDays: VoucherRulesInfo.fallbackValidityDays)
-    }
-}
-
-extension VoucherRulesInfo {
-    /// The server's `REFERRAL_VOUCHER_AMOUNT` and `VOUCHER_EXPIRY_DAYS` (slice H), used only while the
-    /// program of `GET /me/referrals` is not there.
-    static let fallbackAmount = 500
-    static let fallbackValidityDays = 365
 }
 
 /// Text of the Earnings lines.

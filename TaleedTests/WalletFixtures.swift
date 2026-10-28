@@ -13,7 +13,8 @@ func walletSummary(owed: Int = 4200, inPayout: Int = 1500, inProgress: Int = 300
                    account: PayoutAccountInfo? = walletAccount, minPayout: Int = 100) -> WalletSummary {
     WalletSummary(owed: owed, inPayout: inPayout, inProgress: inProgress, voucherBalance: vouchers, nextPayoutAt: walletNextRun,
                   payoutAccount: account,
-                  limits: WalletLimitsInfo(minPayout: minPayout, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500))
+                  limits: WalletLimitsInfo(minPayout: minPayout, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500,
+                                           voucherAmount: 500, voucherValidityDays: 365))
 }
 
 func walletEntry(_ id: String, kind: WalletEntryKind = .saleRelease, amount: Int = 5000, note: String? = "T-000010",
@@ -40,12 +41,8 @@ final class FakeWalletApi: WalletApi {
     var historyItems = [walletEntry("e1"), walletEntry("e2", kind: .purchase, amount: -2000, note: "T-000010", orderId: "o1")]
     var payoutItems = [walletPayout("p1", status: .paid, reference: "VIR-2026-0042")]
     var saveResults: [Result<PayoutAccountInfo, Taleed.ApiError>] = []
-    var program: Result<VoucherRulesInfo, Taleed.ApiError> = .success(
-        VoucherRulesInfo(voucherAmount: 500, minItemPrice: 1500, validityDays: 365)
-    )
     private(set) var summaryCalls = 0
     private(set) var historyCalls = 0
-    private(set) var programCalls = 0
     private(set) var saved: [(method: String, accountDetails: String)] = []
 
     func wallet(automatic: Bool) async throws(Taleed.ApiError) -> WalletSummary {
@@ -67,10 +64,5 @@ final class FakeWalletApi: WalletApi {
         saved.append((method, accountDetails))
         if !saveResults.isEmpty { return try saveResults.removeFirst().get() }
         return PayoutAccountInfo(method: method, methodLabel: method, accountDetails: accountDetails, updatedAt: Date())
-    }
-
-    func voucherRules(automatic: Bool) async throws(Taleed.ApiError) -> VoucherRulesInfo {
-        programCalls += 1
-        return try program.get()
     }
 }

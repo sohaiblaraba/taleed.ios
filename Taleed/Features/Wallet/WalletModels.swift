@@ -41,18 +41,13 @@ struct WalletLimitsInfo: Equatable, Sendable {
     let payoutDetailsMax: Int
     /// Vouchers apply to orders from this item price.
     let voucherMinItemPrice: Int
-
-    static let `default` = WalletLimitsInfo(minPayout: 100, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500)
-}
-
-/// The numbers of the voucher rules text (`program` of `GET /me/referrals`).
-struct VoucherRulesInfo: Equatable, Sendable {
-    /// The value of one voucher.
+    /// The value of one voucher, for the voucher rules.
     let voucherAmount: Int
-    /// The item price from which a voucher applies.
-    let minItemPrice: Int
-    /// Days a voucher stays usable once granted.
-    let validityDays: Int
+    /// Days a voucher stays usable once granted, for the voucher rules.
+    let voucherValidityDays: Int
+
+    static let `default` = WalletLimitsInfo(minPayout: 100, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500,
+                                            voucherAmount: 500, voucherValidityDays: 365)
 }
 
 /// What a history line is about; picks the icon only (the server writes the label).

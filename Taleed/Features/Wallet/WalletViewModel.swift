@@ -3,7 +3,7 @@ import Observation
 
 /// Earnings (slice H; the website's `/wallet` page): the header of `GET /wallet` (owed, in payout, in
 /// progress, the payout details, the vouchers), the history and the payouts (each a paged list
-/// de-duplicated by id), the voucher rules' numbers, and saving the payout details
+/// de-duplicated by id), and saving the payout details
 /// (`PUT /wallet/payout-account`). Nothing here can be spent, added or withdrawn.
 @MainActor
 @Observable
@@ -33,8 +33,6 @@ final class WalletViewModel {
     /// The header failed and nothing is on screen: the error with "Retry".
     private(set) var loadError: ApiError?
     private(set) var isLoading = false
-    /// The program's numbers for the voucher rules; nil until they come (or for a suspended member).
-    private(set) var voucherProgram: VoucherRulesInfo?
     var tab: Tab = .history
     let history: PagedList<WalletEntryRow>
     let payouts: PagedList<PayoutRow>
@@ -43,16 +41,13 @@ final class WalletViewModel {
 
     @ObservationIgnored private let api: WalletApi
     @ObservationIgnored private let pager: WalletPager
-    /// `GET /me/referrals` answers `banned` to a suspended member: not asked then.
-    @ObservationIgnored private let loadsVoucherProgram: Bool
     @ObservationIgnored private var backgroundSince: ContinuousClock.Instant?
 
     /// A shorter absence keeps the screen as it is.
     static let foregroundReloadAfter: Duration = .seconds(30)
 
-    init(api: WalletApi, loadsVoucherProgram: Bool = true) {
+    init(api: WalletApi) {
         self.api = api
-        self.loadsVoucherProgram = loadsVoucherProgram
         let pager = WalletPager(api: api)
         self.pager = pager
         history = PagedList { cursor throws(ApiError) in try await pager.history(cursor: cursor) }
@@ -61,11 +56,6 @@ final class WalletViewModel {
 
     /// "Payouts (3)": the API's total, once the first page came.
     var payoutCount: Int? { payouts.hasLoaded ? payouts.total : nil }
-
-    /// The voucher rules' numbers: the program's, else the server's current values.
-    var voucherRules: VoucherRulesInfo? {
-        summary.map { WalletRules.voucherRules(program: voucherProgram, limits: $0.limits) }
-    }
 
     // MARK: Loading
 
@@ -79,7 +69,7 @@ final class WalletViewModel {
         await load()
     }
 
-    /// The header first (the screen needs it), then both lists and the voucher rules' numbers.
+    /// The header first (the screen needs it), then both lists.
     private func load() async {
         isLoading = true
         do {
@@ -97,14 +87,7 @@ final class WalletViewModel {
         isLoading = false
         async let historyLoad: Void = history.loadIfNeeded()
         async let payoutsLoad: Void = payouts.loadIfNeeded()
-        async let programLoad: Void = loadVoucherProgram()
-        _ = await (historyLoad, payoutsLoad, programLoad)
-    }
-
-    /// Quiet: without an answer the rules use the server's current values.
-    private func loadVoucherProgram() async {
-        guard loadsVoucherProgram, voucherProgram == nil else { return }
-        voucherProgram = try? await api.voucherRules(automatic: true)
+        _ = await (historyLoad, payoutsLoad)
     }
 
     /// Pull-to-refresh: the header and both lists; a failure keeps what is on screen and says so.

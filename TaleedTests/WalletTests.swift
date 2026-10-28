@@ -22,18 +22,11 @@ struct WalletRulesTests {
         #expect(WalletRules.owedNote(walletSummary(owed: 0, account: nil)) == nil)
     }
 
-    @Test func theNextPayoutDateShowsUnlessTheAmountIsNegative() {
+    @Test func theNextPayoutDateShowsOnlyWhileSomethingIsOwed() {
         #expect(WalletRules.showsNextPayoutDate(walletSummary(owed: 4200)))
-        #expect(WalletRules.showsNextPayoutDate(walletSummary(owed: 0)))
+        #expect(WalletRules.showsNextPayoutDate(walletSummary(owed: 50)))
+        #expect(!WalletRules.showsNextPayoutDate(walletSummary(owed: 0)))
         #expect(!WalletRules.showsNextPayoutDate(walletSummary(owed: -1)))
-    }
-
-    @Test func voucherRulesUseTheProgramElseTheServersValues() {
-        let limits = walletSummary().limits
-        let program = VoucherRulesInfo(voucherAmount: 700, minItemPrice: 2000, validityDays: 180)
-        #expect(WalletRules.voucherRules(program: program, limits: limits) == program)
-        #expect(WalletRules.voucherRules(program: nil, limits: limits)
-            == VoucherRulesInfo(voucherAmount: 500, minItemPrice: 1500, validityDays: 365))
     }
 
     @Test func amountsAreGreenFromZeroAndVouchersOnlyWhileActive() {
@@ -190,7 +183,8 @@ struct WalletMappingTests {
         let wallet = Wallet(owed: -400, inPayout: 1500, inProgress: 3000, voucherBalance: 500, nextPayoutAt: walletNextRun,
                             payoutAccount: PayoutAccount(method: .ccp, methodLabel: "CCP", accountDetails: "0012345678 clé 90",
                                                          updatedAt: updated),
-                            limits: WalletLimits(minPayout: 100, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500))
+                            limits: WalletLimits(minPayout: 100, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500,
+                                                 voucherAmount: 700, voucherValidityDays: 180))
         let mapped = WalletSummary(wallet)
         #expect(mapped.owed == -400)
         #expect(mapped.inPayout == 1500)
@@ -199,7 +193,9 @@ struct WalletMappingTests {
         #expect(mapped.nextPayoutAt == walletNextRun)
         #expect(mapped.payoutAccount == PayoutAccountInfo(method: "CCP", methodLabel: "CCP", accountDetails: "0012345678 clé 90",
                                                           updatedAt: updated))
-        #expect(mapped.limits == WalletLimitsInfo(minPayout: 100, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500))
+        // The voucher rules' numbers come from `limits` (API 1.7.1).
+        #expect(mapped.limits == WalletLimitsInfo(minPayout: 100, payoutDetailsMin: 5, payoutDetailsMax: 300, voucherMinItemPrice: 1500,
+                                                  voucherAmount: 700, voucherValidityDays: 180))
         let empty = Wallet(owed: 0, inPayout: 0, inProgress: 0, voucherBalance: 0, nextPayoutAt: walletNextRun, payoutAccount: nil,
                            limits: wallet.limits)
         #expect(WalletSummary(empty).payoutAccount == nil)

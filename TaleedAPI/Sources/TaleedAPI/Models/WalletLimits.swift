@@ -7,13 +7,15 @@
 
 import Foundation
 
-/** The bounds of the Earnings screen&#39;s forms: check them before sending. */
+/** The bounds of the Earnings screen&#39;s forms, and the figures of its voucher rules. */
 public struct WalletLimits: Sendable, Codable, Hashable {
 
     public static let minPayoutRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let payoutDetailsMinRule = NumericRule<Int>(minimum: 1, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let payoutDetailsMaxRule = NumericRule<Int>(minimum: 1, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     public static let voucherMinItemPriceRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
+    public static let voucherAmountRule = NumericRule<Int>(minimum: 0, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
+    public static let voucherValidityDaysRule = NumericRule<Int>(minimum: 1, exclusiveMinimum: false, maximum: nil, exclusiveMaximum: false, multipleOf: nil)
     /** The weekly payout run pays `owed` once it reaches this amount. Integer DZD. */
     public var minPayout: Int
     /** Fewest characters of `accountDetails`, once trimmed. */
@@ -22,12 +24,18 @@ public struct WalletLimits: Sendable, Codable, Hashable {
     public var payoutDetailsMax: Int
     /** Referral vouchers apply to orders from this item price. Integer DZD. */
     public var voucherMinItemPrice: Int
+    /** The fixed value of one referral or verification voucher, for the voucher rules. Integer DZD. */
+    public var voucherAmount: Int
+    /** Days a voucher stays valid from the day it is granted, for the voucher rules. */
+    public var voucherValidityDays: Int
 
-    public init(minPayout: Int, payoutDetailsMin: Int, payoutDetailsMax: Int, voucherMinItemPrice: Int) {
+    public init(minPayout: Int, payoutDetailsMin: Int, payoutDetailsMax: Int, voucherMinItemPrice: Int, voucherAmount: Int, voucherValidityDays: Int) {
         self.minPayout = minPayout
         self.payoutDetailsMin = payoutDetailsMin
         self.payoutDetailsMax = payoutDetailsMax
         self.voucherMinItemPrice = voucherMinItemPrice
+        self.voucherAmount = voucherAmount
+        self.voucherValidityDays = voucherValidityDays
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
@@ -35,6 +43,8 @@ public struct WalletLimits: Sendable, Codable, Hashable {
         case payoutDetailsMin
         case payoutDetailsMax
         case voucherMinItemPrice
+        case voucherAmount
+        case voucherValidityDays
     }
 
     // Encodable protocol methods
@@ -45,6 +55,8 @@ public struct WalletLimits: Sendable, Codable, Hashable {
         try container.encode(payoutDetailsMin, forKey: .payoutDetailsMin)
         try container.encode(payoutDetailsMax, forKey: .payoutDetailsMax)
         try container.encode(voucherMinItemPrice, forKey: .voucherMinItemPrice)
+        try container.encode(voucherAmount, forKey: .voucherAmount)
+        try container.encode(voucherValidityDays, forKey: .voucherValidityDays)
     }
 }
 

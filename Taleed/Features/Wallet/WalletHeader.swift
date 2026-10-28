@@ -182,10 +182,10 @@ struct PayoutDetailsPurpose: View {
 }
 
 /// "Vouchers": the active total or "No active vouchers.", then "Voucher rules" (Google Play's rule for
-/// loyalty programs: the rules are published in the app) on a grouped panel.
+/// loyalty programs: the rules are published in the app) on a grouped panel, with the numbers of `limits`.
 struct VouchersCard: View {
     let voucherBalance: Int
-    let rules: VoucherRulesInfo
+    let limits: WalletLimitsInfo
     @Environment(LanguageManager.self) private var l10n
 
     var body: some View {
@@ -229,8 +229,8 @@ struct VouchersCard: View {
     }
 
     private var rulesText: String {
-        l10n.format(.walletVoucherRules, PriceFormatter.format(rules.voucherAmount, language: l10n.language),
-                    PriceFormatter.format(rules.minItemPrice, language: l10n.language), rules.validityDays)
+        l10n.format(.walletVoucherRules, PriceFormatter.format(limits.voucherAmount, language: l10n.language),
+                    PriceFormatter.format(limits.voucherMinItemPrice, language: l10n.language), limits.voucherValidityDays)
     }
 }
 

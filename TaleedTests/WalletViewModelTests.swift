@@ -7,7 +7,7 @@ import Testing
 
 @MainActor
 struct WalletViewModelTests {
-    @Test func loadingShowsTheAmountsBothListsAndTheVoucherRules() async {
+    @Test func loadingShowsTheAmountsAndBothLists() async {
         let api = FakeWalletApi()
         let model = WalletViewModel(api: api)
         await model.loadIfNeeded()
@@ -16,8 +16,8 @@ struct WalletViewModelTests {
         #expect(model.summary?.inProgress == 3000)
         #expect(model.history.items.map(\.id) == ["e1", "e2"])
         #expect(model.payoutCount == 1)
-        #expect(model.voucherRules == VoucherRulesInfo(voucherAmount: 500, minItemPrice: 1500, validityDays: 365))
-        #expect(api.programCalls == 1)
+        #expect(model.summary?.limits.voucherAmount == 500)
+        #expect(model.summary?.limits.voucherValidityDays == 365)
     }
 
     @Test func aFailedHeaderShowsTheErrorThenRetries() async {
@@ -27,26 +27,9 @@ struct WalletViewModelTests {
         await model.loadIfNeeded()
         #expect(model.loadError == .network)
         #expect(model.summary == nil)
-        #expect(model.voucherRules == nil)
         await model.retry()
         #expect(model.loadError == nil)
         #expect(model.summary != nil)
-    }
-
-    /// A suspended member gets no program (`GET /me/referrals` answers `banned`): the rules still show.
-    @Test func withoutTheProgramTheRulesUseTheServersValues() async {
-        let api = FakeWalletApi()
-        let model = WalletViewModel(api: api, loadsVoucherProgram: false)
-        await model.loadIfNeeded()
-        #expect(api.programCalls == 0)
-        #expect(model.voucherRules == VoucherRulesInfo(voucherAmount: 500, minItemPrice: 1500, validityDays: 365))
-
-        let failing = FakeWalletApi()
-        failing.program = .failure(.network)
-        let other = WalletViewModel(api: failing)
-        await other.loadIfNeeded()
-        #expect(other.voucherRules?.minItemPrice == 1500)
-        #expect(other.notice == nil)
     }
 
     @Test func savedDetailsShowAtOnceWithTheToast() async {

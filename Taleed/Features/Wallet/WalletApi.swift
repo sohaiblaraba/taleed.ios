@@ -14,8 +14,6 @@ protocol WalletApi: AnyObject {
     /// `PUT /wallet/payout-account`: saves the payout details (trimmed by the caller). A change never
     /// alters the payouts already created.
     func savePayoutAccount(method: String, accountDetails: String) async throws(ApiError) -> PayoutAccountInfo
-    /// The voucher rules' numbers, from `program` of `GET /me/referrals` (not open to suspended members).
-    func voucherRules(automatic: Bool) async throws(ApiError) -> VoucherRulesInfo
 }
 
 extension WalletApi {
@@ -48,12 +46,6 @@ extension GeneratedTaleedApi: WalletApi {
             try await WalletAPI.savePayoutAccount(payoutAccountUpdate: body, apiConfiguration: $0)
         })
     }
-
-    func voucherRules(automatic: Bool) async throws(ApiError) -> VoucherRulesInfo {
-        let program = try await referrals(cursor: nil, automatic: automatic).program
-        return VoucherRulesInfo(voucherAmount: program.voucherAmount, minItemPrice: program.minItemPrice,
-                                validityDays: program.voucherValidityDays)
-    }
 }
 
 // MARK: Mapping
@@ -69,7 +61,9 @@ extension WalletSummary {
             payoutAccount: wallet.payoutAccount.map(PayoutAccountInfo.init),
             limits: WalletLimitsInfo(minPayout: wallet.limits.minPayout, payoutDetailsMin: wallet.limits.payoutDetailsMin,
                                      payoutDetailsMax: wallet.limits.payoutDetailsMax,
-                                     voucherMinItemPrice: wallet.limits.voucherMinItemPrice)
+                                     voucherMinItemPrice: wallet.limits.voucherMinItemPrice,
+                                     voucherAmount: wallet.limits.voucherAmount,
+                                     voucherValidityDays: wallet.limits.voucherValidityDays)
         )
     }
 }

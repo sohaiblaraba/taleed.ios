@@ -20,9 +20,8 @@ struct WalletView: View {
 
     var body: some View {
         if session.isSignedIn {
-            // A new screen for another member. A suspended member gets no referral program.
-            WalletScreen(api: api, opensPayoutDetails: opensPayoutDetails, loadsVoucherProgram: session.state != .suspended)
-                .id(session.user?.id)
+            // A new screen for another member.
+            WalletScreen(api: api, opensPayoutDetails: opensPayoutDetails).id(session.user?.id)
         } else {
             ShellScreen {
                 TaleedTopAppBar(title: l10n.string(.walletTitle), onBack: { dismiss() })
@@ -45,8 +44,8 @@ private struct WalletScreen: View {
     private let opensPayoutDetails: Bool
     @State private var didOpenPayoutDetails = false
 
-    init(api: WalletApi, opensPayoutDetails: Bool, loadsVoucherProgram: Bool) {
-        _model = State(initialValue: WalletViewModel(api: api, loadsVoucherProgram: loadsVoucherProgram))
+    init(api: WalletApi, opensPayoutDetails: Bool) {
+        _model = State(initialValue: WalletViewModel(api: api))
         self.opensPayoutDetails = opensPayoutDetails
     }
 
@@ -108,9 +107,7 @@ private struct WalletScreen: View {
                         EarningsWeeklyNote()
                         WalletTiles(summary: summary)
                         PayoutDetailsCard(account: summary.payoutAccount) { showsPayoutDetails = true }
-                        if let rules = model.voucherRules {
-                            VouchersCard(voucherBalance: summary.voucherBalance, rules: rules)
-                        }
+                        VouchersCard(voucherBalance: summary.voucherBalance, limits: summary.limits)
                     }
                     .padding(.horizontal, TaleedLayout.screenMargin)
                     .padding(.top, TaleedSpacing.s16)
