@@ -33,6 +33,16 @@ struct AppearanceTests {
         #expect(AppearanceManager(defaults: defaults).appearance == .light)
     }
 
+    /// The in-app browser takes its style from the stored choice, not from the presenter's traits.
+    @Test func theStoredChoiceIsReadWithoutAManager() {
+        let defaults = freshDefaults()
+        #expect(AppearanceManager.storedAppearance(defaults: defaults) == .light)
+        let manager = AppearanceManager(defaults: defaults)
+        manager.applyToWindows = { _ in }
+        manager.select(.dark)
+        #expect(AppearanceManager.storedAppearance(defaults: defaults).userInterfaceStyle == .dark)
+    }
+
     @Test func aChangeAppliesAtOnce() {
         let manager = AppearanceManager(defaults: freshDefaults())
         var applied: [UIUserInterfaceStyle] = []

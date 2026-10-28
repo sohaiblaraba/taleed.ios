@@ -60,6 +60,11 @@ final class AppearanceManager {
         stored.flatMap(AppAppearance.init(rawValue:)) ?? .fallback
     }
 
+    /// The stored choice, for UIKit code that has no manager at hand (the in-app browser).
+    static func storedAppearance(defaults: UserDefaults = .standard) -> AppAppearance {
+        resolve(stored: defaults.string(forKey: storageKey))
+    }
+
     var colorScheme: ColorScheme { appearance.colorScheme }
 
     /// Stores the choice and applies it at once.
