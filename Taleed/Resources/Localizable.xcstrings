@@ -11329,13 +11329,13 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يرسله فريق Taleed بتحويل بنكي إلى بيانات الدفع الخاصة بك."
+            "value": "يرسله فريق Taleed بتحويل إلى بيانات الدفع الخاصة بك."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The Taleed team sends it by bank transfer to your payout details."
+            "value": "The Taleed team sends it by transfer to your payout details."
           }
         }
       }
@@ -16204,13 +16204,13 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تُستخدم فقط لإرسال دفعاتك واسترجاعاتك عبر التحويل البنكي."
+            "value": "تُستخدم فقط لإرسال دفعاتك واسترجاعاتك عبر التحويل."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Used only to send your payouts and bank refunds."
+            "value": "Used only to send your payouts and refunds by transfer."
           }
         }
       }
@@ -19970,19 +19970,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أنفق قسائمك"
+            "value": "استعمل قسائمك"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Spend your vouchers"
+            "value": "Use your vouchers"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dépensez vos bons"
+            "value": "Utilisez vos bons"
           }
         }
       }
@@ -20062,19 +20062,109 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "بمجرد أن ينشر صديقك %1$@، تحصلان معًا على %2$@ للإنفاق على Taleed، ثم %3$@ إضافية لكل منكما عندما يحقق أول عملية بيع."
+            "value": "بمجرد أن ينشر صديقك %1$@، تحصلان معًا على قسيمة شراء بقيمة %2$@ تُخصم من طلب قادم، ثم %#@more@ لكل منكما عندما يحقق أول عملية بيع."
+          },
+          "substitutions": {
+            "more": {
+              "argNum": 3,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "zero": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسيمة إضافية بقيمة %2$@"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "قسيمة إضافية واحدة بقيمة %2$@"
+                    }
+                  },
+                  "two": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "قسيمتين إضافيتين بقيمة %2$@"
+                    }
+                  },
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسائم إضافية بقيمة %2$@"
+                    }
+                  },
+                  "many": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسيمة إضافية بقيمة %2$@"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسيمة إضافية بقيمة %2$@"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Once your friend lists %1$@, you'll both get %2$@ to spend on Taleed, then another %3$@ each when they make a sale."
+            "value": "Once your friend lists %1$@, you'll both get a %2$@ voucher off a future order, then %#@more@ each when they make a sale."
+          },
+          "substitutions": {
+            "more": {
+              "argNum": 3,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg more %2$@ voucher"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg more %2$@ vouchers"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dès que votre ami publie %1$@, vous recevez chacun %2$@ à dépenser sur Taleed. Puis %3$@ de plus chacun lorsqu’il réalise sa première vente."
+            "value": "Dès que votre ami publie %1$@, vous recevez chacun un bon d’achat de %2$@, à déduire d’une prochaine commande. Puis %#@more@ de plus chacun lorsqu’il réalise sa première vente."
+          },
+          "substitutions": {
+            "more": {
+              "argNum": 3,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg bon de %2$@"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg bons de %2$@"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -20085,19 +20175,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إذا نشر %1$@ خلال %2$@ من انضمامه، تحصلان معًا على %3$@ للإنفاق على Taleed. وإذا باع مقالاً خلال أول %4$@، تحصلان معًا على %5$@ بقيمة %3$@"
+            "value": "إذا نشر %1$@ خلال %2$@ من انضمامه، تحصلان معًا على قسيمة شراء بقيمة %3$@ تُخصم من طلب قادم. وإذا باع مقالاً خلال أول %4$@، تحصلان معًا على %5$@ بقيمة %3$@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Once they list %1$@ within %2$@ of joining, you'll both get %3$@ to spend on Taleed. If they sell an item within their first %4$@, you'll both get %5$@ of %3$@."
+            "value": "Once they list %1$@ within %2$@ of joining, you'll both get a %3$@ voucher off a future order. If they sell an item within their first %4$@, you'll both get %5$@ of %3$@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "S’il publie %1$@ dans les %2$@ suivant son inscription, vous recevez chacun %3$@ à dépenser sur Taleed. S’il vend un article dans les %4$@ suivant son inscription, vous recevez chacun %5$@ de %3$@."
+            "value": "S’il publie %1$@ dans les %2$@ suivant son inscription, vous recevez chacun un bon d’achat de %3$@, à déduire d’une prochaine commande. S’il vend un article dans les %4$@ suivant son inscription, vous recevez chacun %5$@ de %3$@."
           }
         }
       }

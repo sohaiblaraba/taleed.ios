@@ -26,9 +26,10 @@ struct ReferralsCopy {
     /// "Invitez un ami — 1 500 DA pour vous, 1 500 DA pour lui".
     var heroTitle: String { l10n.format(.appReferralsHeroTitle, amount(program.totalPerSide)) }
 
-    /// "Dès que votre ami publie 3 articles, vous recevez chacun 500 DA… Puis 1 000 DA de plus chacun…".
+    /// "Dès que votre ami publie 3 articles, vous recevez chacun un bon d’achat de 500 DA… Puis 2 bons de 500 DA
+    /// de plus chacun…" (the third argument picks the plural of the sale vouchers).
     var heroBody: String {
-        l10n.format(.appReferralsHeroBody, items(program.listingGoal), amount(program.voucherAmount), amount(program.saleReward))
+        l10n.format(.appReferralsHeroBody, items(program.listingGoal), amount(program.voucherAmount), program.saleVouchers)
     }
 
     /// "S’il publie 3 articles dans les 7 jours suivant son inscription… 2 bons de 500 DA."

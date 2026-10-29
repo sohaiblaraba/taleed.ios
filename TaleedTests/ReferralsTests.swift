@@ -117,9 +117,10 @@ struct ReferralCopyTests {
         let copy = ReferralsCopy(program: program(), l10n: languageManager(.fr))
         #expect(plain(copy.eyebrow) == "Gagnez 1 500 DA en parrainant")
         #expect(plain(copy.heroTitle) == "Invitez un ami — 1 500 DA pour vous, 1 500 DA pour lui")
-        #expect(plain(copy.heroBody) == "Dès que votre ami publie 3 articles, vous recevez chacun 500 DA à dépenser sur Taleed. "
-            + "Puis 1 000 DA de plus chacun lorsqu’il réalise sa première vente.")
-        #expect(plain(copy.step2Body).contains("S’il publie 3 articles dans les 7 jours suivant son inscription"))
+        #expect(plain(copy.heroBody) == "Dès que votre ami publie 3 articles, vous recevez chacun un bon d’achat de 500 DA, "
+            + "à déduire d’une prochaine commande. Puis 2 bons de 500 DA de plus chacun lorsqu’il réalise sa première vente.")
+        #expect(plain(copy.step2Body).contains("S’il publie 3 articles dans les 7 jours suivant son inscription, "
+            + "vous recevez chacun un bon d’achat de 500 DA, à déduire d’une prochaine commande."))
         #expect(plain(copy.step2Body).hasSuffix("vous recevez chacun 2 bons de 500 DA."))
         #expect(plain(copy.step3Body).contains("commande de 1 500 DA ou plus"))
         #expect(copy.rules.map(plain) == [
@@ -132,8 +133,19 @@ struct ReferralCopyTests {
     @Test func otherProgramValuesChangeTheCopy() {
         let copy = ReferralsCopy(program: program(amount: 300, goal: 1, saleVouchers: 1), l10n: languageManager(.fr))
         #expect(plain(copy.eyebrow) == "Gagnez 600 DA en parrainant")
-        #expect(plain(copy.heroBody).hasPrefix("Dès que votre ami publie 1 article, vous recevez chacun 300 DA"))
+        #expect(plain(copy.heroBody).hasPrefix("Dès que votre ami publie 1 article, vous recevez chacun un bon d’achat de 300 DA"))
+        #expect(plain(copy.heroBody).contains("Puis 1 bon de 300 DA de plus chacun"))
         #expect(plain(copy.step2Body).hasSuffix("vous recevez chacun 1 bon de 300 DA."))
+    }
+
+    @Test func englishCopyMatchesTheWebsiteAndSaysVouchersNotMoney() {
+        let copy = ReferralsCopy(program: program(), l10n: languageManager(.en))
+        #expect(plain(copy.heroBody) == "Once your friend lists 3 items, you'll both get a 500 DA voucher off a future order, "
+            + "then 2 more 500 DA vouchers each when they make a sale.")
+        #expect(plain(copy.step2Body).hasPrefix("Once they list 3 items within 7 days of joining, "
+            + "you'll both get a 500 DA voucher off a future order."))
+        let single = ReferralsCopy(program: program(amount: 300, goal: 1, saleVouchers: 1), l10n: languageManager(.en))
+        #expect(plain(single.heroBody).hasSuffix("then 1 more 300 DA voucher each when they make a sale."))
     }
 
     @Test func arabicUsesItsPluralForms() {
@@ -143,6 +155,9 @@ struct ReferralCopyTests {
         #expect(step2.contains("7 أيام"))
         #expect(step2.contains("30 يومًا"))
         #expect(step2.contains("قسيمتين"))
+        #expect(step2.contains("قسيمة شراء بقيمة"))
+        #expect(plain(copy.heroBody).contains("ثم قسيمتين إضافيتين بقيمة"))
+        #expect(!plain(copy.heroBody).contains("للإنفاق"))
         #expect(plain(copy.rules[0]).contains("365 يومًا"))
     }
 
