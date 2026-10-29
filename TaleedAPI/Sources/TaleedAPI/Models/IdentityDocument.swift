@@ -12,13 +12,17 @@ public struct IdentityDocument: Sendable, Codable, Hashable {
     public static let documentKeyRule = StringRule(minLength: 1, maxLength: 200, pattern: nil)
     /** A key from `POST /uploads?purpose=id_document`: the readable front side of an ID card or a passport. */
     public var documentKey: String
+    /** The member's answer to the automatic check consent step, asked at each sending while `features.identityAiReview` is true in `GET /config`. `true`: the photo and the account name go to OpenAI for an automatic first check. `false`, or left out: the team reviews the ID by hand (slower), and nothing goes to OpenAI. Leave it out when `identityAiReview` is false. */
+    public var aiConsent: Bool?
 
-    public init(documentKey: String) {
+    public init(documentKey: String, aiConsent: Bool? = nil) {
         self.documentKey = documentKey
+        self.aiConsent = aiConsent
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
         case documentKey
+        case aiConsent
     }
 
     // Encodable protocol methods
@@ -26,6 +30,7 @@ public struct IdentityDocument: Sendable, Codable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(documentKey, forKey: .documentKey)
+        try container.encodeIfPresent(aiConsent, forKey: .aiConsent)
     }
 }
 

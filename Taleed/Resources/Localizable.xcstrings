@@ -4204,19 +4204,19 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En créant un compte, vous acceptez nos <terms>conditions d’utilisation</terms> et notre <privacy>politique de confidentialité</privacy>."
+            "value": "En continuant, vous confirmez avoir 18 ans ou plus et accepter les <terms>conditions d’utilisation</terms> et la <privacy>politique de confidentialité</privacy> de Taleed."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "بإنشائك لحساب، فإنك توافق على <terms>شروط الاستخدام</terms> و<privacy>سياسة الخصوصية</privacy> الخاصة بنا."
+            "value": "بالمتابعة، فإنك تؤكد أن عمرك 18 عامًا أو أكثر وأنك توافق على <terms>شروط الاستخدام</terms> و<privacy>سياسة الخصوصية</privacy> الخاصة بـ Taleed."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "By creating an account, you agree to our <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
+            "value": "By continuing, you confirm you are 18 or older and agree to Taleed's <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
           }
         }
       }
@@ -20016,19 +20016,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "اربح %@ من دعوة الأصدقاء"
+            "value": "حتى %@ من قسائم الشراء عند دعوة الأصدقاء"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Earn %@ from referrals"
+            "value": "Up to %@ in vouchers by inviting friends"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gagnez %@ en parrainant"
+            "value": "Jusqu’à %@ de bons d’achat en parrainant"
           }
         }
       }
@@ -20039,19 +20039,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ادعُ صديقًا — %1$@ لك و%1$@ له"
+            "value": "ادعُ صديقًا — قسائم شراء بقيمة %1$@ لك و%1$@ له"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Invite a friend — get %1$@, give %1$@"
+            "value": "Invite a friend — %1$@ in vouchers for you, %1$@ for them"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Invitez un ami — %1$@ pour vous, %1$@ pour lui"
+            "value": "Invitez un ami — %1$@ de bons d’achat pour vous, %1$@ pour lui"
           }
         }
       }
@@ -20221,19 +20221,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ✓ — تم دفع %2$@"
+            "value": "%1$@ ✓ — تم منح قسيمة شراء بقيمة %2$@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ✓ — %2$@ paid"
+            "value": "%1$@ ✓ — %2$@ voucher granted"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ✓ — %2$@ versés"
+            "value": "%1$@ ✓ — bon d’achat de %2$@ accordé"
           }
         }
       }
@@ -20244,19 +20244,109 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أول عملية بيع ← %1$d×%2$@"
+            "value": "أول عملية بيع ← %#@vouchers@"
+          },
+          "substitutions": {
+            "vouchers": {
+              "argNum": 1,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "zero": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسيمة شراء بقيمة %2$@"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "قسيمة شراء واحدة بقيمة %2$@"
+                    }
+                  },
+                  "two": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "قسيمتا شراء بقيمة %2$@"
+                    }
+                  },
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسائم شراء بقيمة %2$@"
+                    }
+                  },
+                  "many": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسيمة شراء بقيمة %2$@"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسيمة شراء بقيمة %2$@"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "First sale → %1$d×%2$@"
+            "value": "First sale → %#@vouchers@"
+          },
+          "substitutions": {
+            "vouchers": {
+              "argNum": 1,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg×%2$@ voucher"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg×%2$@ vouchers"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Première vente → %1$d×%2$@"
+            "value": "Première vente → %#@vouchers@"
+          },
+          "substitutions": {
+            "vouchers": {
+              "argNum": 1,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg bon d’achat de %2$@"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg bons d’achat de %2$@"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -20267,19 +20357,109 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أول عملية بيع ✓ — تم دفع %1$d×%2$@"
+            "value": "أول عملية بيع ✓ — تم منح %#@vouchers@"
+          },
+          "substitutions": {
+            "vouchers": {
+              "argNum": 1,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "zero": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسيمة شراء بقيمة %2$@"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "قسيمة شراء واحدة بقيمة %2$@"
+                    }
+                  },
+                  "two": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "قسيمتي شراء بقيمة %2$@"
+                    }
+                  },
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسائم شراء بقيمة %2$@"
+                    }
+                  },
+                  "many": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسيمة شراء بقيمة %2$@"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg قسيمة شراء بقيمة %2$@"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "First sale ✓ — %1$d×%2$@ paid"
+            "value": "First sale ✓ — %#@vouchers@ granted"
+          },
+          "substitutions": {
+            "vouchers": {
+              "argNum": 1,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg×%2$@ voucher"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg×%2$@ vouchers"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Première vente ✓ — %1$d×%2$@ versés"
+            "value": "Première vente ✓ — %#@vouchers@"
+          },
+          "substitutions": {
+            "vouchers": {
+              "argNum": 1,
+              "formatSpecifier": "ld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg bon d’achat de %2$@ accordé"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg bons d’achat de %2$@ accordés"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -22642,6 +22822,213 @@
           "stringUnit": {
             "state": "translated",
             "value": "Litige résolu — paiement au vendeur"
+          }
+        }
+      }
+    },
+    "settings_verification_ai_consent_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérification automatique par OpenAI"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic check by OpenAI"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التحقق الآلي عبر OpenAI"
+          }
+        }
+      }
+    },
+    "settings_verification_ai_consent_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour accélérer l’examen, Taleed peut envoyer la photo de votre pièce d’identité et le nom de votre compte à OpenAI, un service d’intelligence artificielle, pour une première vérification automatique. Elle peut accepter votre demande, jamais la refuser : notre équipe examine tous les autres cas."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To speed up the review, Taleed can send the photo of your ID and the name on your account to OpenAI, an artificial intelligence service, for an automatic first check. It can approve your request, never refuse it: our team reviews every other case."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لتسريع المراجعة، يمكن لـ Taleed إرسال صورة وثيقة هويتك واسم حسابك إلى OpenAI، وهي خدمة ذكاء اصطناعي، لإجراء تحقق أولي آلي. يمكن لهذا التحقق قبول طلبك ولا يرفضه أبدًا: يراجع فريقنا جميع الحالات الأخرى."
+          }
+        }
+      }
+    },
+    "settings_verification_ai_consent_agree": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepter et continuer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and continue"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموافقة والمتابعة"
+          }
+        }
+      }
+    },
+    "settings_verification_ai_consent_decline": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer sans vérification automatique"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue without automatic check"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتابعة دون تحقق آلي"
+          }
+        }
+      }
+    },
+    "settings_verification_ai_consent_decline_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notre équipe examine alors votre pièce d’identité manuellement. C’est plus long."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Our team then checks your ID by hand. This takes longer."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيراجع فريقنا وثيقتك يدويًا، وهذا يستغرق وقتًا أطول."
+          }
+        }
+      }
+    },
+    "visual_consent_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recherche par photo avec Jina AI"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo search by Jina AI"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث بالصورة عبر Jina AI"
+          }
+        }
+      }
+    },
+    "visual_consent_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour trouver des annonces similaires, Taleed envoie votre photo à Jina AI, un service d’intelligence artificielle. Aucune donnée de votre compte n’est envoyée avec elle. Nous supprimons la photo de nos serveurs après 24 heures."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To find similar listings, Taleed sends your photo to Jina AI, an artificial intelligence service. No data from your account is sent with it. We delete the photo from our servers after 24 hours."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للعثور على إعلانات مشابهة، ترسل Taleed صورتك إلى Jina AI، وهي خدمة ذكاء اصطناعي. لا تُرسل معها أي بيانات من حسابك. نحذف الصورة من خوادمنا بعد 24 ساعة."
+          }
+        }
+      }
+    },
+    "visual_consent_agree": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepter"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موافق"
+          }
+        }
+      }
+    },
+    "visual_consent_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء"
           }
         }
       }

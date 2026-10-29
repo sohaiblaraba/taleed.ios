@@ -61,7 +61,7 @@ open class VerificationAPI {
     /**
      Send an ID for review
      - POST /me/verification
-     - A verified identity gives the member the verified badge, and lets them invite others (`GET /me/referrals`). The ID is checked against the account's legal name, which then no longer changes: have the member check `firstName` and `lastName` before sending. The review is automatic or done by the team, and its decision arrives as a notification (`VERIFICATION_APPROVED` or `VERIFICATION_REJECTED`); the photo is deleted once decided. One request at a time: while one is `PENDING`, or once `VERIFIED`, this answers `invalid_state`. A key that is not an uploaded ID document is an `invalid_request` on `body.documentKey`.  Requires a bearer token.  Rate limit: 5 per day per member, on top of the general limit.
+     - A verified identity gives the member the verified badge, and lets them invite others (`GET /me/referrals`). The ID is checked against the account's legal name, which then no longer changes: have the member check `firstName` and `lastName` before sending. The review is automatic (only with `aiConsent: true`) or done by the team, and its decision arrives as a notification (`VERIFICATION_APPROVED` or `VERIFICATION_REJECTED`); the photo is deleted once decided. One request at a time: while one is `PENDING`, or once `VERIFIED`, this answers `invalid_state`. A key that is not an uploaded ID document is an `invalid_request` on `body.documentKey`.  Requires a bearer token.  Rate limit: 5 per day per member, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth

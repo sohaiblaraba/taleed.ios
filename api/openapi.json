@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.7.1",
+    "version": "1.8.0",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -4307,7 +4307,18 @@
           "Visual search"
         ],
         "summary": "Search by photo",
-        "description": "Offer it only while `features.visualSearch` is true in `GET /config`; otherwise this answers `feature_disabled`. It takes a few seconds: show progress. Returns the first page of results, 24 items; only items for sale are found. A photo of the item alone, filling the frame, gives the best matches.\n\nAuthentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.\n\nRate limit: 30 per 10 minutes per member, or per network address when signed out, on top of the general limit.",
+        "description": "Offer it only while `features.visualSearch` is true in `GET /config`; otherwise this answers `feature_disabled`. The photo is sent to Jina AI to find similar listings: before the member's first search, show the consent step and send `aiConsent=true` once they agree (remember the answer on the device, per account). Without it this answers `ai_consent_required` and sends nothing. It takes a few seconds: show progress. Returns the first page of results, 24 items; only items for sale are found. A photo of the item alone, filling the frame, gives the best matches.\n\nAuthentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.\n\nRate limit: 30 per 10 minutes per member, or per network address when signed out, on top of the general limit.",
+        "parameters": [
+          {
+            "name": "aiConsent",
+            "in": "query",
+            "required": false,
+            "description": "Send `true` once the member agreed that the photo is sent to Jina AI. Left out or `false`: the search is refused with `ai_consent_required`, and the photo is not sent anywhere.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4340,8 +4351,9 @@
             }
           },
           "400": {
-            "description": "Error codes: `invalid_request`.",
+            "description": "Error codes: `ai_consent_required`, `invalid_request`.",
             "x-error-codes": [
+              "ai_consent_required",
               "invalid_request"
             ],
             "content": {
@@ -10643,7 +10655,7 @@
           "Verification"
         ],
         "summary": "Send an ID for review",
-        "description": "A verified identity gives the member the verified badge, and lets them invite others (`GET /me/referrals`). The ID is checked against the account's legal name, which then no longer changes: have the member check `firstName` and `lastName` before sending. The review is automatic or done by the team, and its decision arrives as a notification (`VERIFICATION_APPROVED` or `VERIFICATION_REJECTED`); the photo is deleted once decided. One request at a time: while one is `PENDING`, or once `VERIFIED`, this answers `invalid_state`. A key that is not an uploaded ID document is an `invalid_request` on `body.documentKey`.\n\nRequires a bearer token.\n\nRate limit: 5 per day per member, on top of the general limit.",
+        "description": "A verified identity gives the member the verified badge, and lets them invite others (`GET /me/referrals`). The ID is checked against the account's legal name, which then no longer changes: have the member check `firstName` and `lastName` before sending. The review is automatic (only with `aiConsent: true`) or done by the team, and its decision arrives as a notification (`VERIFICATION_APPROVED` or `VERIFICATION_REJECTED`); the photo is deleted once decided. One request at a time: while one is `PENDING`, or once `VERIFIED`, this answers `invalid_state`. A key that is not an uploaded ID document is an `invalid_request` on `body.documentKey`.\n\nRequires a bearer token.\n\nRate limit: 5 per day per member, on top of the general limit.",
         "requestBody": {
           "required": true,
           "content": {
@@ -11360,7 +11372,11 @@
             "properties": {
               "visualSearch": {
                 "type": "boolean",
-                "description": "Search by photo is available."
+                "description": "Search by photo is available: the Jina AI key is set and the team has the feature on. While true, ask the member's consent before the first search (the photo goes to Jina AI) and send `aiConsent=true` with `POST /visual-searches`."
+              },
+              "identityAiReview": {
+                "type": "boolean",
+                "description": "Identity verification can have an automatic first check by OpenAI (the OpenAI key is set). While true, ask the member before each `POST /me/verification` and send the answer as `aiConsent`. While false, show no consent step: the team reviews every ID by hand."
               },
               "push": {
                 "type": "boolean",
@@ -11377,6 +11393,7 @@
             },
             "required": [
               "visualSearch",
+              "identityAiReview",
               "push",
               "googleSignIn",
               "appleSignIn"
@@ -13133,7 +13150,8 @@
           "unsupported_media_type",
           "rate_limited",
           "internal",
-          "feature_disabled"
+          "feature_disabled",
+          "ai_consent_required"
         ],
         "description": "Machine-readable error code. Apps show their own localized message for it; `message` is for developers and logs. New codes can appear: handle an unknown code by its HTTP status."
       },
@@ -13241,6 +13259,10 @@
             "minLength": 1,
             "maxLength": 200,
             "description": "A key from `POST /uploads?purpose=id_document`: the readable front side of an ID card or a passport."
+          },
+          "aiConsent": {
+            "description": "The member's answer to the automatic check consent step, asked at each sending while `features.identityAiReview` is true in `GET /config`. `true`: the photo and the account name go to OpenAI for an automatic first check. `false`, or left out: the team reviews the ID by hand (slower), and nothing goes to OpenAI. Leave it out when `identityAiReview` is false.",
+            "type": "boolean"
           }
         },
         "required": [

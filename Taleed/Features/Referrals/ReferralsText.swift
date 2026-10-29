@@ -20,10 +20,10 @@ struct ReferralsCopy {
 
     func date(_ date: Date) -> String { OrderText.date(date, locale: language.formattingLocale) }
 
-    /// "Gagnez 1 500 DA en parrainant" (also the Profile hub's row).
+    /// "Jusqu’à 1 500 DA de bons d’achat en parrainant" (also the Profile hub's row).
     var eyebrow: String { l10n.format(.appReferralsEyebrow, amount(program.totalPerSide)) }
 
-    /// "Invitez un ami — 1 500 DA pour vous, 1 500 DA pour lui".
+    /// "Invitez un ami — 1 500 DA de bons d’achat pour vous, 1 500 DA pour lui".
     var heroTitle: String { l10n.format(.appReferralsHeroTitle, amount(program.totalPerSide)) }
 
     /// "Dès que votre ami publie 3 articles, vous recevez chacun un bon d’achat de 500 DA… Puis 2 bons de 500 DA
@@ -56,7 +56,7 @@ struct ReferralsCopy {
     /// "Inscrit le 19 oct. 2026".
     func joined(_ row: ReferralRow) -> String { l10n.format(.referralsJoinedOn, date(row.joinedAt)) }
 
-    /// The listings badge: "0/3 articles publiés", or "3 articles ✓ — 500 DA versés".
+    /// The listings badge: "0/3 articles publiés", or "3 articles ✓ — bon d’achat de 500 DA accordé".
     func listings(_ row: ReferralRow, now: Date = .now) -> MilestoneText {
         let milestone = row.listingMilestone(now: now)
         if milestone == .done {
@@ -70,7 +70,8 @@ struct ReferralsCopy {
                              caption: caption(milestone))
     }
 
-    /// The sale badge: "Première vente → 2×500 DA", or "Première vente ✓ — 2×500 DA versés".
+    /// The sale badge: "Première vente → 2 bons d’achat de 500 DA", or "… ✓ — 2 bons d’achat de 500 DA accordés"
+    /// (the first argument picks the plural of the vouchers).
     func sale(_ row: ReferralRow, now: Date = .now) -> MilestoneText {
         let milestone = row.saleMilestone(now: now)
         let key: L10nKey = milestone == .done ? .appReferralsMilestoneSaleDone : .appReferralsMilestoneSale

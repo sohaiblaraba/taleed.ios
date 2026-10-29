@@ -73,6 +73,8 @@ extension ApiError {
         case .socialEmailUnverified: .authSocialErrorEmailUnverified
         case .socialLinkForbidden: .authSocialErrorLinkForbidden
         case .socialSignupExpired: .authFinishExpiredBody
+        // Photo search shows its consent step again instead of a message (slice I).
+        case .aiConsentRequired: .commonErrorGeneric
         // A code added after this build: by its status.
         case .unknownDefaultOpenApi: status >= 500 ? .commonErrorGeneric : .authErrorGeneric
         }

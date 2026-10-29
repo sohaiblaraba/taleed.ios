@@ -26,6 +26,8 @@ import Foundation
 ///                                              `empty` answers no favorites
 ///     -TaleedDebugVisualSearch YES             show the photo-search button although `GET /config` has it
 ///                                              off (the API then answers `503 feature_disabled`)
+///     -TaleedDebugIdentityAiReview YES         act as if `features.identityAiReview` were on: identity
+///                                              verification shows the OpenAI consent step (slice I)
 ///     -TaleedDebugSell upload                  the sell form's first photo upload fails offline (then works);
 ///                                              `upload-refused`: it fails as too large (413);
 ///                                              `publish`: the first publish (or edit save) fails offline

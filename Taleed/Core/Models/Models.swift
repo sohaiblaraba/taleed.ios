@@ -37,7 +37,11 @@ struct RemoteConfig: Equatable, Sendable {
 
 /// `features` of `GET /config`: hide what is off.
 struct RemoteFeatures: Equatable, Sendable {
+    /// Search by photo: the photo goes to Jina AI, after the member's consent (slice I).
     var visualSearch = false
+    /// Identity verification can have an automatic first check by OpenAI: ask before each sending and
+    /// send the answer as `aiConsent` (slice I, API 1.8.0). False: no step, no `aiConsent`.
+    var identityAiReview = false
     var push = false
     /// "Continue with Google": the server knows the iOS client ID (slice G).
     var googleSignIn = false

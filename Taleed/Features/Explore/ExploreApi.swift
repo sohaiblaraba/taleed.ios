@@ -9,8 +9,9 @@ protocol ExploreApi: AnyObject {
     func brands() async throws(ApiError) -> [CatalogBrand]
     /// `GET /sizes`: the sizes of the items on sale right now, in natural order.
     func sizes() async throws(ApiError) -> [String]
-    /// `POST /visual-searches` with a prepared JPEG in the `photo` part: the search and its first page.
-    func createVisualSearch(photo: URL) async throws(ApiError) -> VisualSearchPage
+    /// `POST /visual-searches?aiConsent=true` with a prepared JPEG in the `photo` part: the search and its
+    /// first page. Without `aiConsent` true the API answers `400 ai_consent_required` (slice I).
+    func createVisualSearch(photo: URL, aiConsent: Bool) async throws(ApiError) -> VisualSearchPage
     /// `GET /visual-searches/{id}`: a page of a search made in the last 24 hours (`404` after).
     func visualSearch(id: String, cursor: String?) async throws(ApiError) -> VisualSearchPage
 }
@@ -46,12 +47,12 @@ extension GeneratedTaleedApi: ExploreApi {
         return list.items.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
     }
 
-    func createVisualSearch(photo: URL) async throws(ApiError) -> VisualSearchPage {
+    func createVisualSearch(photo: URL, aiConsent: Bool) async throws(ApiError) -> VisualSearchPage {
         let asOf = ContinuousClock.now
         // Never repeated on its own: a failed search is not kept, and the member's retry sends the photo
         // again (slice B). The upload configuration allows about a minute.
         let search = try await caller.call(.write, configuration: session.uploadConfiguration()) {
-            try await VisualSearchAPI.createVisualSearch(photo: photo, apiConfiguration: $0)
+            try await VisualSearchAPI.createVisualSearch(photo: photo, aiConsent: aiConsent, apiConfiguration: $0)
         }
         return VisualSearchPage(search, asOf: asOf)
     }

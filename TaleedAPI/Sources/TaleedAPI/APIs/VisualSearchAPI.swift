@@ -13,25 +13,27 @@ open class VisualSearchAPI {
      Search by photo
      
      - parameter photo: (form) A JPEG, PNG, WebP, AVIF or GIF image, 10 MB at most. The format is read from the bytes, not the part&#39;s Content-Type. HEIC is not accepted: convert to JPEG on the device. 
+     - parameter aiConsent: (query) Send &#x60;true&#x60; once the member agreed that the photo is sent to Jina AI. Left out or &#x60;false&#x60;: the search is refused with &#x60;ai_consent_required&#x60;, and the photo is not sent anywhere. (optional)
      - parameter apiConfiguration: The configuration for the http request.
      - returns: VisualSearch
      */
-    open class func createVisualSearch(photo: URL, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> VisualSearch {
-        return try await createVisualSearchWithRequestBuilder(photo: photo, apiConfiguration: apiConfiguration).execute().body
+    open class func createVisualSearch(photo: URL, aiConsent: Bool? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> VisualSearch {
+        return try await createVisualSearchWithRequestBuilder(photo: photo, aiConsent: aiConsent, apiConfiguration: apiConfiguration).execute().body
     }
 
     /**
      Search by photo
      - POST /visual-searches
-     - Offer it only while `features.visualSearch` is true in `GET /config`; otherwise this answers `feature_disabled`. It takes a few seconds: show progress. Returns the first page of results, 24 items; only items for sale are found. A photo of the item alone, filling the frame, gives the best matches.  Authentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.  Rate limit: 30 per 10 minutes per member, or per network address when signed out, on top of the general limit.
+     - Offer it only while `features.visualSearch` is true in `GET /config`; otherwise this answers `feature_disabled`. The photo is sent to Jina AI to find similar listings: before the member's first search, show the consent step and send `aiConsent=true` once they agree (remember the answer on the device, per account). Without it this answers `ai_consent_required` and sends nothing. It takes a few seconds: show progress. Returns the first page of results, 24 items; only items for sale are found. A photo of the item alone, filling the frame, gives the best matches.  Authentication optional: signed in, the response is personalized (favorites, follows, ownership). An invalid token answers 401.  Rate limit: 30 per 10 minutes per member, or per network address when signed out, on top of the general limit.
      - Bearer Token:
        - type: http
        - name: bearerAuth
      - parameter photo: (form) A JPEG, PNG, WebP, AVIF or GIF image, 10 MB at most. The format is read from the bytes, not the part&#39;s Content-Type. HEIC is not accepted: convert to JPEG on the device. 
+     - parameter aiConsent: (query) Send &#x60;true&#x60; once the member agreed that the photo is sent to Jina AI. Left out or &#x60;false&#x60;: the search is refused with &#x60;ai_consent_required&#x60;, and the photo is not sent anywhere. (optional)
      - parameter apiConfiguration: The configuration for the http request.
      - returns: RequestBuilder<VisualSearch> 
      */
-    open class func createVisualSearchWithRequestBuilder(photo: URL, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<VisualSearch> {
+    open class func createVisualSearchWithRequestBuilder(photo: URL, aiConsent: Bool? = nil, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<VisualSearch> {
         let localVariablePath = "/visual-searches"
         let localVariableURLString = apiConfiguration.basePath + localVariablePath
         let localVariableFormParams: [String: (any Sendable)?] = [
@@ -41,7 +43,11 @@ open class VisualSearchAPI {
         let localVariableNonNullParameters = APIHelper.rejectNil(localVariableFormParams)
         let localVariableParameters = APIHelper.convertBoolToString(localVariableNonNullParameters)
 
-        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        var localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        let localVariableQueryParameters: [String: (wrappedValue: (any Sendable)?, isExplode: Bool)] = [
+            "aiConsent": (wrappedValue: aiConsent?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+        ]
+        localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems(localVariableQueryParameters)
 
         let localVariableNillableHeaders: [String: (any Sendable)?] = [
             "Content-Type": "multipart/form-data",

@@ -27,6 +27,9 @@ final class LaunchViewModel {
     /// Debug builds: `-TaleedDebugVisualSearch YES` shows the photo-search button while the server has
     /// it off (screenshots, and the `503 feature_disabled` path). Cleared by that answer.
     private var forcesVisualSearch = false
+    /// Debug builds: `-TaleedDebugIdentityAiReview YES` acts as if `features.identityAiReview` were true
+    /// (the consent step of identity verification against a server without the OpenAI key).
+    private var forcesIdentityAiReview = false
 
     /// Called once the launch knows the session, just before `route` leaves `.loading` for the shell (or
     /// the suspended screen): the router opens a link that came during launch, so the screen's first
@@ -43,12 +46,19 @@ final class LaunchViewModel {
         self.environment = environment
         #if DEBUG
         forcesVisualSearch = UserDefaults.standard.bool(forKey: "TaleedDebugVisualSearch")
+        forcesIdentityAiReview = UserDefaults.standard.bool(forKey: "TaleedDebugIdentityAiReview")
         #endif
     }
 
     /// Search by photo is offered (`features.visualSearch` of `GET /config`, slice B).
     var isVisualSearchEnabled: Bool {
         forcesVisualSearch || (config?.features.visualSearch ?? false)
+    }
+
+    /// Identity verification asks for the consent to OpenAI's first check before each sending
+    /// (`features.identityAiReview`, slice I).
+    var isIdentityAiReviewEnabled: Bool {
+        forcesIdentityAiReview || (config?.features.identityAiReview ?? false)
     }
 
     /// The API answered `503 feature_disabled` to a photo search: hide the button at once, then read

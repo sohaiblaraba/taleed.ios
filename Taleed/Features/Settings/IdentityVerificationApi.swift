@@ -39,10 +39,11 @@ enum IdentityStatus: Equatable, Sendable {
 protocol IdentityVerificationApi: AnyObject {
     /// `GET /me/verification`. `automatic`: a refresh the member did not ask for (back in the foreground).
     func verification(automatic: Bool) async throws(ApiError) -> IdentityStatus
-    /// `POST /me/verification {documentKey}` → `PENDING`. `409 invalid_state`: already pending or verified
-    /// (also the answer to a repeat whose first answer was lost); `400 invalid_request` on
-    /// `body.documentKey`: upload the photo again. 5 per day.
-    func submitVerification(documentKey: String) async throws(ApiError) -> IdentityStatus
+    /// `POST /me/verification {documentKey, aiConsent}` → `PENDING`. `aiConsent`: the answer to the consent
+    /// step while `features.identityAiReview` is on (true: OpenAI's first check), nil (left out) while it
+    /// is off (slice I). `409 invalid_state`: already pending or verified (also the answer to a repeat whose
+    /// first answer was lost); `400 invalid_request` on `body.documentKey`: upload the photo again. 5 per day.
+    func submitVerification(documentKey: String, aiConsent: Bool?) async throws(ApiError) -> IdentityStatus
 }
 
 extension GeneratedTaleedApi: IdentityVerificationApi {
@@ -55,11 +56,11 @@ extension GeneratedTaleedApi: IdentityVerificationApi {
         })
     }
 
-    func submitVerification(documentKey: String) async throws(ApiError) -> IdentityStatus {
+    func submitVerification(documentKey: String, aiConsent: Bool?) async throws(ApiError) -> IdentityStatus {
         #if DEBUG
         try VerificationDebugFailures.fail(.submit)
         #endif
-        let body = IdentityDocument(documentKey: documentKey)
+        let body = IdentityDocument(documentKey: documentKey, aiConsent: aiConsent)
         // Never repeated on its own: after a lost answer, the member's next tap gets `invalid_state`.
         return IdentityStatus(try await caller.call(.write) {
             try await VerificationAPI.submitVerification(identityDocument: body, apiConfiguration: $0)

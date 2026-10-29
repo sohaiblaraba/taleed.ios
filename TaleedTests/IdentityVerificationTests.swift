@@ -13,6 +13,8 @@ final class FakeIdentityVerificationApi: IdentityVerificationApi {
     var submitResults: [Result<IdentityStatus, Taleed.ApiError>] = []
     private(set) var loads: [Bool] = []
     private(set) var submittedKeys: [String] = []
+    /// The `aiConsent` of each send (nil: left out).
+    private(set) var submittedConsents: [Bool?] = []
 
     func verification(automatic: Bool) async throws(Taleed.ApiError) -> IdentityStatus {
         loads.append(automatic)
@@ -20,8 +22,9 @@ final class FakeIdentityVerificationApi: IdentityVerificationApi {
         return status
     }
 
-    func submitVerification(documentKey: String) async throws(Taleed.ApiError) -> IdentityStatus {
+    func submitVerification(documentKey: String, aiConsent: Bool?) async throws(Taleed.ApiError) -> IdentityStatus {
         submittedKeys.append(documentKey)
+        submittedConsents.append(aiConsent)
         if !submitResults.isEmpty { return try submitResults.removeFirst().get() }
         status = .pending
         return .pending
@@ -139,7 +142,7 @@ struct IdentityVerificationViewModelTests {
         let model = await model()
         let data = photoData()
         model.photoPicked(data)
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(uploads.uploads == [data])
         #expect(api.submittedKeys == ["verification/k1.webp"])
         #expect(model.status == .pending)
@@ -155,7 +158,7 @@ struct IdentityVerificationViewModelTests {
         let model = await model()
         model.photoPicked(photoData())
         model.lastName = "Kaci Benali"
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(account.profileChanges == [ProfileChanges(lastName: "Kaci Benali")])
         #expect(model.status == .pending)
     }
@@ -164,7 +167,7 @@ struct IdentityVerificationViewModelTests {
         let model = await model()
         model.photoPicked(photoData())
         model.firstName = "Y"
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(model.nameError(.firstName) == .nameLength)
         #expect(model.nameError(.lastName) == nil)
         #expect(uploads.uploads.isEmpty)
@@ -177,7 +180,7 @@ struct IdentityVerificationViewModelTests {
         model.photoPicked(photoData())
         model.firstName = "Yacinou"
         account.updateProfileError = invalidRequest("body.firstName")
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(model.nameError(.firstName) == .invalid)
         #expect(uploads.uploads.isEmpty)
         model.firstName = "Yacine2"
@@ -190,7 +193,7 @@ struct IdentityVerificationViewModelTests {
         model.firstName = "Yacinou"
         account.updateProfileError = .failed(ApiFailure(status: 409, code: .nameLocked))
         api.status = .verified
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(model.status == .verified)
         #expect(model.submitError == nil)
         #expect(model.photo == nil)
@@ -202,7 +205,7 @@ struct IdentityVerificationViewModelTests {
         model.photoPicked(photoData())
         api.submitResults = [.failure(invalidState)]
         api.status = .pending
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(model.status == .pending)
         #expect(model.submitError == nil)
         #expect(model.notice == nil)
@@ -213,7 +216,7 @@ struct IdentityVerificationViewModelTests {
         let model = await model()
         model.photoPicked(photoData())
         api.submitResults = [.failure(invalidRequest("body.documentKey"))]
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(uploads.uploads.count == 2)
         #expect(api.submittedKeys == ["verification/k1.webp", "verification/k2.webp"])
         #expect(model.status == .pending)
@@ -224,7 +227,7 @@ struct IdentityVerificationViewModelTests {
         model.photoPicked(photoData())
         let refusal = invalidRequest("body.documentKey")
         api.submitResults = [.failure(refusal), .failure(refusal)]
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(model.submitError == .upload(refusal))
         #expect(model.status == IdentityStatus.none)
         #expect(model.photo != nil)
@@ -234,11 +237,11 @@ struct IdentityVerificationViewModelTests {
         let model = await model()
         model.photoPicked(photoData())
         uploads.errors = [.network]
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(model.submitError == .upload(.network))
         #expect(api.submittedKeys.isEmpty)
         #expect(model.canSubmit)
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(model.status == .pending)
     }
 
@@ -248,9 +251,9 @@ struct IdentityVerificationViewModelTests {
         let model = await model()
         model.photoPicked(photoData())
         api.submitResults = [.failure(.network)]
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(model.submitError == .submit(.network))
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(uploads.uploads.count == 1)
         #expect(api.submittedKeys == ["verification/k1.webp", "verification/k1.webp"])
         #expect(model.status == .pending)
@@ -260,9 +263,9 @@ struct IdentityVerificationViewModelTests {
         let model = await model()
         model.photoPicked(photoData())
         api.submitResults = [.failure(.network)]
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         model.photoPicked(photoData())
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(uploads.uploads.count == 2)
     }
 
@@ -270,7 +273,7 @@ struct IdentityVerificationViewModelTests {
         let model = await model(status: .rejected(note: "Photo floue"))
         model.photoPicked(photoData())
         api.submitResults = [.failure(.rateLimited(retryAfter: 3600))]
-        await model.submit()
+        await model.submitTapped(identityAiReview: false)
         #expect(model.submitError == .submit(.rateLimited(retryAfter: 3600)))
         #expect(model.status == .rejected(note: "Photo floue"))
         #expect(model.submitError?.error.rateLimitMinutes == 60)

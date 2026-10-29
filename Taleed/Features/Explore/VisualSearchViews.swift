@@ -2,8 +2,9 @@ import PhotosUI
 import SwiftUI
 import UIKit
 
-/// The photo-search sheet (design-system bottom sheet): the website's title, the hint "a photo of the
-/// item alone…" (slice B), "Take a photo" (when the device has a camera) and "Import a photo"; while
+/// The photo-search sheet (design-system bottom sheet): the Jina AI consent step while this account has
+/// not agreed on this device (slice I); then the website's title, the hint "a photo of the item alone…"
+/// (slice B), "Take a photo" (when the device has a camera) and "Import a photo"; while
 /// the search runs, the photo with a scanning frame and the website's rotating steps; on failure, the
 /// message with Retry when the same photo may work.
 struct VisualSearchSheet: View {
@@ -21,9 +22,16 @@ struct VisualSearchSheet: View {
     private static let stageInterval: Duration = .milliseconds(1400)
 
     var body: some View {
-        TaleedBottomSheet(title: l10n.string(.visualTitle), onClose: model.isSearching ? nil : { dismiss() }) {
+        TaleedBottomSheet(title: l10n.string(model.phase == .consent ? .visualConsentTitle : .visualTitle),
+                          onClose: model.isSearching ? nil : { dismiss() }) {
             VStack(spacing: TaleedSpacing.s16) {
                 switch model.phase {
+                case .consent:
+                    // Slice I: before the first search of this account on the device. Cancel sends nothing.
+                    AiConsentContent(message: l10n.string(.visualConsentBody), agreeTitle: l10n.string(.visualConsentAgree),
+                                     declineTitle: l10n.string(.visualConsentCancel), onAgree: model.agreeToConsent,
+                                     onDecline: { dismiss() })
+                        .accessibilityIdentifier("visual.consent")
                 case .pick:
                     hint
                     actions

@@ -52,8 +52,9 @@ enum VerificationSubmitError: Equatable {
 /// note above it), PENDING "under review", VERIFIED the badge with the legal name read-only. The form,
 /// in order: the legal name (first word, then the rest, as `GET /me` splits it), which the ID is checked
 /// against; one photo of the ID's front, kept in memory; "Envoyer ma demande", enabled once there is a
-/// photo. Sending saves a changed name (`PATCH /me`), uploads the photo (`id_document`, just before
-/// sending, slice E), then `POST /me/verification` → PENDING.
+/// photo. While `features.identityAiReview` is on, the OpenAI consent sheet comes first (slice I).
+/// Sending saves a changed name (`PATCH /me`), uploads the photo (`id_document`, just before sending,
+/// slice E), then `POST /me/verification` (with the consent answer) → PENDING.
 @MainActor
 @Observable
 final class IdentityVerificationViewModel {
@@ -88,6 +89,9 @@ final class IdentityVerificationViewModel {
     private(set) var showsNameErrors = false
     private(set) var nameApiErrors: [VerificationNameField: ProfileFieldError] = [:]
     var notice: Notice?
+    /// The OpenAI consent sheet shows (slice I): set by "Envoyer ma demande" while
+    /// `features.identityAiReview` is on. Dismissing the sheet (false) sends nothing.
+    var asksAiConsent = false
 
     @ObservationIgnored private let api: IdentityVerificationApi
     @ObservationIgnored private let account: AccountApi
@@ -231,7 +235,28 @@ final class IdentityVerificationViewModel {
 
     // MARK: Sending
 
-    func submit() async {
+    /// "Envoyer ma demande". With `identityAiReview` (slice I), the consent sheet first, at every sending
+    /// (a resubmission after a refusal included); without it, the request at once, with no `aiConsent`.
+    func submitTapped(identityAiReview: Bool) async {
+        guard canSubmit, store.profile != nil else { return }
+        showsNameErrors = true
+        guard Self.nameErrors(firstName: firstName, lastName: lastName).isEmpty else { return }
+        if identityAiReview {
+            asksAiConsent = true
+        } else {
+            await submit(aiConsent: nil)
+        }
+    }
+
+    /// The consent sheet's answer: "Accepter et continuer" (true) or "Continuer sans vérification
+    /// automatique" (false, the team reviews the ID by hand). The sheet closes and the request goes out.
+    func answerAiConsent(_ agreed: Bool) async {
+        guard asksAiConsent else { return }
+        asksAiConsent = false
+        await submit(aiConsent: agreed)
+    }
+
+    private func submit(aiConsent: Bool?) async {
         guard canSubmit, let photo, let profile = store.profile else { return }
         showsNameErrors = true
         guard Self.nameErrors(firstName: firstName, lastName: lastName).isEmpty else { return }
@@ -239,7 +264,7 @@ final class IdentityVerificationViewModel {
         submitError = nil
         defer { isSubmitting = false }
         guard await saveNameIfChanged(profile) else { return }
-        await send(photo, uploadAgainOnRefusal: true)
+        await send(photo, aiConsent: aiConsent, uploadAgainOnRefusal: true)
     }
 
     /// The ID is checked against the account's name: a changed one is saved first.
@@ -272,7 +297,7 @@ final class IdentityVerificationViewModel {
         }
     }
 
-    private func send(_ photo: PickedIdDocument, uploadAgainOnRefusal: Bool) async {
+    private func send(_ photo: PickedIdDocument, aiConsent: Bool?, uploadAgainOnRefusal: Bool) async {
         let key: String
         if let uploadedKey {
             key = uploadedKey
@@ -290,7 +315,7 @@ final class IdentityVerificationViewModel {
             }
         }
         do {
-            let status = try await api.submitVerification(documentKey: key)
+            let status = try await api.submitVerification(documentKey: key, aiConsent: aiConsent)
             apply(status)
             clearPhoto()
             notice = .submitted
@@ -303,7 +328,7 @@ final class IdentityVerificationViewModel {
                 // The key is not an uploaded ID document (an unused upload expires after 24 hours): upload again.
                 uploadedKey = nil
                 if uploadAgainOnRefusal {
-                    await send(photo, uploadAgainOnRefusal: false)
+                    await send(photo, aiConsent: aiConsent, uploadAgainOnRefusal: false)
                 } else {
                     submitError = .upload(error)
                 }

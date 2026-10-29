@@ -10,8 +10,9 @@ import UIKit
 /// legal name read-only with the locked hint; PENDING the info alert, no form; REJECTED the red alert
 /// (the reviewer's note when there is one) above the form; NONE the form. The form: the legal name
 /// (app step: the ID is checked against it), "Pièce d’identité" (camera or library; the preview with an
-/// X), the privacy note, then "Envoyer ma demande" / "Renvoyer une demande". Reloads in the foreground
-/// and on pull-to-refresh (the decision arrives as a notification).
+/// X), the privacy note, then "Envoyer ma demande" / "Renvoyer une demande" (with the OpenAI consent sheet
+/// first while `features.identityAiReview` is on, slice I). Reloads in the foreground and on
+/// pull-to-refresh (the decision arrives as a notification).
 struct IdentityVerificationView: View {
     @State private var model: IdentityVerificationViewModel
     @State private var choosesSource = false
@@ -21,6 +22,7 @@ struct IdentityVerificationView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppToasts.self) private var toasts
     @Environment(SessionManager.self) private var session
+    @Environment(LaunchViewModel.self) private var launch
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
     /// The description's badge icon grows with its text.
@@ -68,6 +70,8 @@ struct IdentityVerificationView: View {
             }
         }
         .taleedSheet(isPresented: $choosesSource) { sourceSheet }
+        // Swiped down or closed: nothing is sent and the form stays as it was (slice I).
+        .taleedSheet(isPresented: $model.asksAiConsent) { aiConsentSheet }
         .photosPicker(isPresented: $showsLibrary, selection: $pickedItem, matching: .images, preferredItemEncoding: .compatible)
         .onChange(of: pickedItem) { _, item in
             guard let item else { return }
@@ -198,7 +202,7 @@ struct IdentityVerificationView: View {
             }
             TaleedButton(title: l10n.string(isResubmit ? .settingsVerificationResubmit : .settingsVerificationSubmit),
                          kind: .secondary, size: .large, isLoading: model.isSubmitting, isFullWidth: true) {
-                Task { await model.submit() }
+                Task { await model.submitTapped(identityAiReview: launch.isIdentityAiReviewEnabled) }
             }
             .disabled(!model.canSubmit)
             .accessibilityIdentifier("verification.submit")
@@ -294,5 +298,21 @@ struct IdentityVerificationView: View {
                 }
             }
         })
+    }
+}
+
+extension IdentityVerificationView {
+    /// "Vérification automatique par OpenAI" (slice I): what goes to OpenAI and why, the manual review
+    /// otherwise, then "Accepter et continuer" or "Continuer sans vérification automatique".
+    fileprivate var aiConsentSheet: some View {
+        TaleedBottomSheet(title: l10n.string(.settingsVerificationAiConsentTitle), onClose: { model.asksAiConsent = false }, content: {
+            AiConsentContent(message: l10n.string(.settingsVerificationAiConsentBody),
+                             hint: l10n.string(.settingsVerificationAiConsentDeclineHint),
+                             agreeTitle: l10n.string(.settingsVerificationAiConsentAgree),
+                             declineTitle: l10n.string(.settingsVerificationAiConsentDecline),
+                             onAgree: { Task { await model.answerAiConsent(true) } },
+                             onDecline: { Task { await model.answerAiConsent(false) } })
+        })
+        .accessibilityIdentifier("verification.aiConsent")
     }
 }

@@ -9,8 +9,10 @@ import Foundation
 
 public struct AppConfigFeatures: Sendable, Codable, Hashable {
 
-    /** Search by photo is available. */
+    /** Search by photo is available: the Jina AI key is set and the team has the feature on. While true, ask the member's consent before the first search (the photo goes to Jina AI) and send `aiConsent=true` with `POST /visual-searches`. */
     public var visualSearch: Bool
+    /** Identity verification can have an automatic first check by OpenAI (the OpenAI key is set). While true, ask the member before each `POST /me/verification` and send the answer as `aiConsent`. While false, show no consent step: the team reviews every ID by hand. */
+    public var identityAiReview: Bool
     /** This server sends push notifications to the apps: ask for the notification permission and register with `POST /devices`. */
     public var push: Bool
     /** Show \"Continue with Google\" (`POST /auth/social`). Depends on the platform sent in `X-App-Platform`: the server needs the iOS client ID for iOS. */
@@ -18,8 +20,9 @@ public struct AppConfigFeatures: Sendable, Codable, Hashable {
     /** Show \"Continue with Apple\" (`POST /auth/social`). Always false on Android, which does not offer Apple sign-in. */
     public var appleSignIn: Bool
 
-    public init(visualSearch: Bool, push: Bool, googleSignIn: Bool, appleSignIn: Bool) {
+    public init(visualSearch: Bool, identityAiReview: Bool, push: Bool, googleSignIn: Bool, appleSignIn: Bool) {
         self.visualSearch = visualSearch
+        self.identityAiReview = identityAiReview
         self.push = push
         self.googleSignIn = googleSignIn
         self.appleSignIn = appleSignIn
@@ -27,6 +30,7 @@ public struct AppConfigFeatures: Sendable, Codable, Hashable {
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
         case visualSearch
+        case identityAiReview
         case push
         case googleSignIn
         case appleSignIn
@@ -37,6 +41,7 @@ public struct AppConfigFeatures: Sendable, Codable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(visualSearch, forKey: .visualSearch)
+        try container.encode(identityAiReview, forKey: .identityAiReview)
         try container.encode(push, forKey: .push)
         try container.encode(googleSignIn, forKey: .googleSignIn)
         try container.encode(appleSignIn, forKey: .appleSignIn)

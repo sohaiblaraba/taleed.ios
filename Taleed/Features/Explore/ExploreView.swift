@@ -14,6 +14,7 @@ struct ExploreView: View {
     @Environment(CatalogStore.self) private var catalog
     @Environment(LaunchViewModel.self) private var launch
     @Environment(AppToasts.self) private var toasts
+    @Environment(SessionManager.self) private var session
     @Environment(\.exploreDependencies) private var dependencies
 
     var body: some View {
@@ -112,7 +113,9 @@ struct ExploreView: View {
     }
 
     private func openVisualSearch() {
-        guard visualSearch != nil else { return }
+        guard let visualSearch else { return }
+        // The consent step first unless this account agreed on this device (slice I).
+        visualSearch.open(userId: session.user?.id)
         showsVisualSearch = true
     }
 

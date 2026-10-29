@@ -884,8 +884,8 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appReferralsStep2Body = "app_referrals_step2_body"
     case appReferralsStep3Body = "app_referrals_step3_body"
     case appReferralsMilestoneListingsDone = "app_referrals_milestone_listings_done"
-    case appReferralsMilestoneSale = "app_referrals_milestone_sale"
-    case appReferralsMilestoneSaleDone = "app_referrals_milestone_sale_done"
+    case appReferralsMilestoneSale = "app_referrals_milestone_sale"  // plural (argument 1)
+    case appReferralsMilestoneSaleDone = "app_referrals_milestone_sale_done"  // plural (argument 1)
     case appReferralsItems = "app_referrals_items"  // plural
     case appReferralsDays = "app_referrals_days"  // plural
     case appReferralsVouchers = "app_referrals_vouchers"  // plural
@@ -932,4 +932,14 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     // API 1.6.1.
     case authSocialErrorLinkForbidden = "auth_social_error_link_forbidden"
     case settingsEmailVerifyFirstError = "settings_email_verify_first_error"
+    // API 1.8.0 (slice I): consent to the AI services.
+    case settingsVerificationAiConsentTitle = "settings_verification_ai_consent_title"
+    case settingsVerificationAiConsentBody = "settings_verification_ai_consent_body"
+    case settingsVerificationAiConsentAgree = "settings_verification_ai_consent_agree"
+    case settingsVerificationAiConsentDecline = "settings_verification_ai_consent_decline"
+    case settingsVerificationAiConsentDeclineHint = "settings_verification_ai_consent_decline_hint"
+    case visualConsentTitle = "visual_consent_title"
+    case visualConsentBody = "visual_consent_body"
+    case visualConsentAgree = "visual_consent_agree"
+    case visualConsentCancel = "visual_consent_cancel"
 }

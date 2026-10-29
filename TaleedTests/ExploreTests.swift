@@ -16,6 +16,10 @@ final class FakeExploreApi: ExploreApi {
     private(set) var uploadedFiles: [URL] = []
     /// Whether each uploaded file was still on disk during the call.
     private(set) var uploadedFileExisted: [Bool] = []
+    /// The `aiConsent` of each photo search.
+    private(set) var sentConsents: [Bool] = []
+    /// Answers of `createVisualSearch` before `createResult` (one each).
+    var queuedCreateResults: [Result<VisualSearchPage, ApiError>] = []
 
     func brands() async throws(ApiError) -> [CatalogBrand] {
         brandsCalls += 1
@@ -27,9 +31,11 @@ final class FakeExploreApi: ExploreApi {
         return try sizesResult.get()
     }
 
-    func createVisualSearch(photo: URL) async throws(ApiError) -> VisualSearchPage {
+    func createVisualSearch(photo: URL, aiConsent: Bool) async throws(ApiError) -> VisualSearchPage {
         uploadedFiles.append(photo)
+        sentConsents.append(aiConsent)
         uploadedFileExisted.append(FileManager.default.fileExists(atPath: photo.path))
+        if !queuedCreateResults.isEmpty { return try queuedCreateResults.removeFirst().get() }
         return try createResult.get()
     }
 

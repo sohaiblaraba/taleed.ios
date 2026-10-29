@@ -115,8 +115,8 @@ struct ReferralRulesTests {
 struct ReferralCopyTests {
     @Test func frenchCopyIsFilledFromTheProgram() {
         let copy = ReferralsCopy(program: program(), l10n: languageManager(.fr))
-        #expect(plain(copy.eyebrow) == "Gagnez 1 500 DA en parrainant")
-        #expect(plain(copy.heroTitle) == "Invitez un ami — 1 500 DA pour vous, 1 500 DA pour lui")
+        #expect(plain(copy.eyebrow) == "Jusqu’à 1 500 DA de bons d’achat en parrainant")
+        #expect(plain(copy.heroTitle) == "Invitez un ami — 1 500 DA de bons d’achat pour vous, 1 500 DA pour lui")
         #expect(plain(copy.heroBody) == "Dès que votre ami publie 3 articles, vous recevez chacun un bon d’achat de 500 DA, "
             + "à déduire d’une prochaine commande. Puis 2 bons de 500 DA de plus chacun lorsqu’il réalise sa première vente.")
         #expect(plain(copy.step2Body).contains("S’il publie 3 articles dans les 7 jours suivant son inscription, "
@@ -132,7 +132,7 @@ struct ReferralCopyTests {
 
     @Test func otherProgramValuesChangeTheCopy() {
         let copy = ReferralsCopy(program: program(amount: 300, goal: 1, saleVouchers: 1), l10n: languageManager(.fr))
-        #expect(plain(copy.eyebrow) == "Gagnez 600 DA en parrainant")
+        #expect(plain(copy.eyebrow) == "Jusqu’à 600 DA de bons d’achat en parrainant")
         #expect(plain(copy.heroBody).hasPrefix("Dès que votre ami publie 1 article, vous recevez chacun un bon d’achat de 300 DA"))
         #expect(plain(copy.heroBody).contains("Puis 1 bon de 300 DA de plus chacun"))
         #expect(plain(copy.step2Body).hasSuffix("vous recevez chacun 1 bon de 300 DA."))
@@ -170,15 +170,42 @@ struct ReferralCopyTests {
         #expect(open.caption?.hasPrefix("Jusqu’au ") == true)
 
         let done = copy.listings(referral("r1", count: 3, listingRewarded: true), now: early)
-        #expect(plain(done.title) == "3 articles ✓ — 500 DA versés")
+        #expect(plain(done.title) == "3 articles ✓ — bon d’achat de 500 DA accordé")
         #expect(done.caption == nil)
 
         let missed = copy.sale(referral("r1"), now: joined + 31 * day)
-        #expect(plain(missed.title) == "Première vente → 2×500 DA")
+        #expect(plain(missed.title) == "Première vente → 2 bons d’achat de 500 DA")
         #expect(missed.caption == "Délai dépassé")
 
         let sold = copy.sale(referral("r1", saleRewarded: true), now: early)
-        #expect(plain(sold.title) == "Première vente ✓ — 2×500 DA versés")
+        #expect(plain(sold.title) == "Première vente ✓ — 2 bons d’achat de 500 DA accordés")
+    }
+
+    /// Slice I: the badges and the hero say "voucher granted", never "paid", as the website (backend 52d9035).
+    @Test func theBadgesAndTheHeroSayVouchersGranted() {
+        let early = joined + day
+        let english = ReferralsCopy(program: program(), l10n: languageManager(.en))
+        #expect(plain(english.eyebrow) == "Up to 1 500 DA in vouchers by inviting friends")
+        #expect(plain(english.heroTitle) == "Invite a friend — 1 500 DA in vouchers for you, 1 500 DA for them")
+        #expect(plain(english.listings(referral("r1", count: 3, listingRewarded: true), now: early).title)
+            == "3 items ✓ — 500 DA voucher granted")
+        #expect(plain(english.sale(referral("r1"), now: early).title) == "First sale → 2×500 DA vouchers")
+        #expect(plain(english.sale(referral("r1", saleRewarded: true), now: early).title) == "First sale ✓ — 2×500 DA vouchers granted")
+        let single = ReferralsCopy(program: program(amount: 300, goal: 1, saleVouchers: 1), l10n: languageManager(.fr))
+        #expect(plain(single.sale(referral("r1", saleRewarded: true), now: early).title)
+            == "Première vente ✓ — 1 bon d’achat de 300 DA accordé")
+        let arabic = ReferralsCopy(program: program(), l10n: languageManager(.ar))
+        #expect(plain(arabic.eyebrow) == "حتى 1.500 د.ج. من قسائم الشراء عند دعوة الأصدقاء")
+        #expect(plain(arabic.listings(referral("r1", count: 3, listingRewarded: true), now: early).title)
+            .hasPrefix("3 مقالات ✓ — تم منح قسيمة شراء بقيمة 500"))
+        #expect(plain(arabic.sale(referral("r1"), now: early).title).hasPrefix("أول عملية بيع ← قسيمتا شراء بقيمة 500"))
+        #expect(plain(arabic.sale(referral("r1", saleRewarded: true), now: early).title)
+            .hasPrefix("أول عملية بيع ✓ — تم منح قسيمتي شراء بقيمة 500"))
+        for copy in [english, arabic, ReferralsCopy(program: program(), l10n: languageManager(.fr))] {
+            let texts = [copy.listings(referral("r1", count: 3, listingRewarded: true), now: early).title,
+                         copy.sale(referral("r1", saleRewarded: true), now: early).title]
+            #expect(texts.allSatisfy { !$0.contains("paid") && !$0.contains("versés") && !$0.contains("دفع") })
+        }
     }
 
     @Test func aCountAboveTheGoalShowsTheGoal() {

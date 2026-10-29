@@ -12,6 +12,15 @@ private func photoData() -> Data {
     }
 }
 
+/// A consent store of its own, empty.
+@MainActor
+private func consentStore(_ name: String) -> PhotoSearchConsentStore {
+    let suite = "VisualSearchTests.\(name)"
+    let defaults = UserDefaults(suiteName: suite) ?? .standard
+    defaults.removePersistentDomain(forName: suite)
+    return PhotoSearchConsentStore(defaults: defaults)
+}
+
 // MARK: - Search by photo
 
 @MainActor
@@ -21,14 +30,78 @@ struct VisualSearchTests {
         let model = VisualSearchModel(api: fake)
         let outcome = await model.search(photoData())
         #expect(outcome == .found(id: "vs1"))
+        #expect(fake.sentConsents == [true])
         #expect(model.phase == .pick)
         // The prepared JPEG went out, then was deleted.
         #expect(fake.uploadedFileExisted == [true])
         #expect(fake.uploadedFiles.allSatisfy { !FileManager.default.fileExists(atPath: $0.path) })
     }
 
+    // MARK: Consent to Jina AI (slice I)
+
+    @Test func everySearchSendsTheConsent() async {
+        let fake = FakeExploreApi()
+        let model = VisualSearchModel(api: fake, consent: consentStore("sends"))
+        model.open(userId: "u1")
+        model.agreeToConsent()
+        _ = await model.search(photoData())
+        _ = await model.search(photoData())
+        #expect(fake.sentConsents == [true, true])
+    }
+
+    @Test func theFirstSearchAsksAndCancelSendsNothing() async {
+        let fake = FakeExploreApi()
+        let store = consentStore("cancel")
+        let model = VisualSearchModel(api: fake, consent: store)
+        model.open(userId: "u1")
+        #expect(model.phase == .consent)
+        // "Annuler" closes the sheet: nothing is stored or sent.
+        model.reset()
+        #expect(model.phase == .consent)
+        #expect(!store.hasConsent(userId: "u1"))
+        #expect(fake.uploadedFiles.isEmpty)
+    }
+
+    @Test func agreeingIsRememberedPerAccount() {
+        let store = consentStore("accounts")
+        let model = VisualSearchModel(api: FakeExploreApi(), consent: store)
+        model.open(userId: "u1")
+        model.agreeToConsent()
+        #expect(model.phase == .pick)
+        #expect(store.hasConsent(userId: "u1"))
+        // The same account again: no step.
+        model.reset()
+        model.open(userId: "u1")
+        #expect(model.phase == .pick)
+        // Another account on the device, and a signed-out visitor: the step again.
+        model.open(userId: "u2")
+        #expect(model.phase == .consent)
+        model.open(userId: nil)
+        #expect(model.phase == .consent)
+        #expect(PhotoSearchConsentStore.key(for: nil) == "taleed.photoSearchConsent.guest")
+        #expect(PhotoSearchConsentStore.key(for: "u1") == "taleed.photoSearchConsent.u1")
+    }
+
+    @Test func aConsentTheServerDoesNotHaveIsAskedAgain() async {
+        let fake = FakeExploreApi()
+        fake.queuedCreateResults = [.failure(.failed(ApiFailure(status: 400, code: .aiConsentRequired)))]
+        let store = consentStore("required")
+        let model = VisualSearchModel(api: fake, consent: store)
+        model.open(userId: "u1")
+        model.agreeToConsent()
+        #expect(await model.search(photoData()) == .failed)
+        // The stored consent is gone and the sheet shows the step again, with no error.
+        #expect(model.phase == .consent)
+        #expect(model.photo == nil)
+        #expect(!store.hasConsent(userId: "u1"))
+        model.agreeToConsent()
+        #expect(await model.search(photoData()) == .found(id: "vs1"))
+    }
+
     @Test func aPhotoThatCannotBeReadSaysSo() {
-        let model = VisualSearchModel(api: FakeExploreApi())
+        let model = VisualSearchModel(api: FakeExploreApi(), consent: consentStore("unreadable"))
+        model.open(userId: "u1")
+        model.agreeToConsent()
         // An iCloud photo that cannot download: the network message, and the buttons to pick again.
         model.photoUnreadable(downloadFailed: true)
         #expect(model.phase == .failed(.network, canRetry: false))

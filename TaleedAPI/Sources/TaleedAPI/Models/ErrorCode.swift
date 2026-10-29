@@ -57,6 +57,7 @@ public enum ErrorCode: String, Sendable, Codable, CaseIterable, CaseIterableDefa
     case rateLimited = "rate_limited"
     case _internal = "internal"
     case featureDisabled = "feature_disabled"
+    case aiConsentRequired = "ai_consent_required"
     case unknownDefaultOpenApi = "unknown_default_open_api"
 }
 
