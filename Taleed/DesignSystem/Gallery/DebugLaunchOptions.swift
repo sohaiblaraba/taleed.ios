@@ -57,6 +57,8 @@ import Foundation
 ///                                              `offline,newsletter`: both
 ///     -TaleedDebugDelete unauthorized          deleting the account answers `401` without calling the
 ///                                              API (the retry after a lost answer): the signed-out Home
+///     -TaleedDebugDelete orders                deleting the account is refused without calling the API:
+///                                              `orders` (orders in progress), `payout`, `admin`
 ///     -TaleedDebugVerification offline         identity verification's first load fails offline (then
 ///                                              works); `upload`: the first ID upload fails offline;
 ///                                              `limit`: the first send answers 429 (an hour to wait)

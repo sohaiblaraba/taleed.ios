@@ -132,6 +132,7 @@ extension GeneratedTaleedApi: AccountApi {
             caller.record(.unauthorized, sentToken: caller.session.token)
             throw .unauthorized
         }
+        if let refusal = SettingsDebugFailures.deletionRefusal() { throw refusal }
         #endif
         let body = AccountDeletion(password: password)
         // Password attempts are counted (5 per 15 minutes): the member's tap only.

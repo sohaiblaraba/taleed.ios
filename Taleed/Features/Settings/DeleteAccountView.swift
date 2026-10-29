@@ -6,8 +6,8 @@ import SwiftUI
 ///
 /// Screen 1 explains what is erased, what stays, and that it cannot be undone. Screen 2 is the website's
 /// dialog: its title and text, the password, then `POST /me/delete`. What stops the deletion shows inside
-/// the form with the way to the screen that solves it (the orders, Earnings, the support contacts for an
-/// admin account or an amount owed to Taleed).
+/// the form as a red alert whose link opens the screen that solves it (the orders, Earnings), or with the
+/// support contacts under it (an admin account or an amount owed to Taleed).
 @MainActor
 @Observable
 final class DeleteAccountViewModel {
@@ -197,9 +197,8 @@ struct DeleteAccountView: View {
             blockerView(blocker)
         }
         VStack(spacing: TaleedSpacing.s8) {
-            // While something only another screen can solve stops the deletion, trying again cannot
-            // succeed: the red button steps back to a red link, and the way out is the button above.
-            TaleedButton(title: l10n.string(.settingsDeleteConfirmCta), kind: isBlockedElsewhere ? .hyperlinkDanger : .danger,
+            // Always the filled red button, as Android (FB-13); the way out of a blocker is the alert's link.
+            TaleedButton(title: l10n.string(.settingsDeleteConfirmCta), kind: .danger,
                          size: .large, isLoading: model.isDeleting, isFullWidth: true) {
                 Task { await model.delete() }
             }
@@ -214,18 +213,14 @@ struct DeleteAccountView: View {
         .padding(.top, TaleedSpacing.s8)
     }
 
-    /// A blocker the member solves on another screen (orders, Earnings, support), not by retrying.
-    private var isBlockedElsewhere: Bool { model.blocker?.remedy != nil }
-
+    /// What stops the deletion, as Android: the red alert with the next step as its link (the orders,
+    /// Earnings), and for the support the contact rows under it.
     @ViewBuilder
     private func blockerView(_ blocker: DeletionBlocker) -> some View {
         VStack(alignment: .leading, spacing: TaleedSpacing.s12) {
-            InlineAlert(kind: .error, title: message(blocker))
+            InlineAlert(kind: .error, title: message(blocker), actionTitle: remedyTitle(blocker.remedy),
+                        action: remedyAction(blocker.remedy))
                 .accessibilityIdentifier("delete.blocker")
-            if let title = remedyTitle(blocker.remedy), let action = remedyAction(blocker.remedy) {
-                TaleedButton(title: title, kind: .outline, size: .medium, action: action)
-                    .accessibilityIdentifier("delete.remedy")
-            }
             if blocker.remedy == .support, let support = launch.config?.support {
                 SupportContactRows(support: support)
                     .taleedCard()
