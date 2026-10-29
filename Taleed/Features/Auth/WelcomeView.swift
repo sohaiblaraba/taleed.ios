@@ -72,10 +72,11 @@ struct WelcomeView: View {
                 // Figma: legal 604, its frame 48 high, then 16 to the actions.
                 legal(scaleX: scaleX, isAccessibilitySize: isAccessibilitySize)
                 VStack(spacing: TaleedSpacing.s12) {
-                    // With "Continue with phone" hidden, email is the only way in: it takes the phone
-                    // button's mint Secondary look (the main CTA, decision D-10) and keeps its envelope.
-                    TaleedButton(title: l10n.string(.appWelcomeContinueEmail), kind: .secondary, size: .large,
-                                 leadingIcon: .envelope, isFullWidth: true, action: onContinueWithEmail)
+                    // Figma's soft mint (`mint/50` fill, `mint/100` border, `mint/900` label) with the
+                    // `blue/600` envelope (FB-13, which replaces D-10's filled Secondary).
+                    TaleedButton(title: l10n.string(.appWelcomeContinueEmail), kind: .mintSoft, size: .large,
+                                 leadingIcon: .envelope, isFullWidth: true, leadingIconColor: TaleedColor.brandEmphasis,
+                                 action: onContinueWithEmail)
                     TaleedButton(title: l10n.string(.appWelcomeBrowse), kind: .hyperlinkUnderlined, size: .large,
                                  action: onBrowse)
                 }
