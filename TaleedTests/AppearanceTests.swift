@@ -88,7 +88,8 @@ struct AppearanceTests {
         #expect(dark("surfacePrimary") == 0x121A2E)
         #expect(dark("surfaceGrouped") == 0x0B1120)
         #expect(dark("surfaceElevated") == 0x1A2338)
-        #expect(dark("borderField") == 0x4A5675)
+        #expect(dark("borderField") == 0x66728F)
+        #expect(dark("toggleOffTrack") == 0x66728F)
         #expect(dark("textPrimary") == 0xEEF1F8)
         #expect(dark("feedbackError") == 0xFF7A8C)
         #expect(dark("onFeedbackError") == 0x0B1120)
@@ -100,6 +101,7 @@ struct AppearanceTests {
         #expect(light("onBrandAccent") == 0x032117)
         #expect(light("brandAccentPressed") == 0x4AB08B)
         #expect(light("linkDisabled") == 0xACC8FF)
+        #expect(light("borderField") == 0x7E889F)
         let pairs: [(String, String)] = [
             ("textPrimary", "surfacePrimary"), ("textBody", "surfacePrimary"), ("textSecondary", "surfacePrimary"),
             ("textSecondary", "surfaceElevated"), ("brandPrimary", "surfacePrimary"), ("feedbackError", "surfacePrimary"),
@@ -112,6 +114,13 @@ struct AppearanceTests {
         for (text, surface) in pairs {
             let ratio = try Self.contrast(#require(dark(text)), #require(dark(surface)))
             #expect(ratio >= 4.5, "\(text) on \(surface): \(ratio)")
+        }
+        // A field's border is a control boundary: 3:1 on the screens and sheets it sits on (WCAG 1.4.11, FB-13).
+        for surface in ["surfacePrimary", "surfaceElevated", "surfaceGrouped"] {
+            let lightRatio = try Self.contrast(#require(light("borderField")), #require(light(surface)))
+            #expect(lightRatio >= 3, "borderField on \(surface) in light: \(lightRatio)")
+            let darkRatio = try Self.contrast(#require(dark("borderField")), #require(dark(surface)))
+            #expect(darkRatio >= 3, "borderField on \(surface) in dark: \(darkRatio)")
         }
     }
 

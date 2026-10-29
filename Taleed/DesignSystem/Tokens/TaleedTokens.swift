@@ -119,7 +119,7 @@ enum TaleedColor {
     /// Danger button disabled fill and border
     static let dangerDisabled = Color(taleedLight: 0xF3D0D5, dark: 0x4A2530)
     /// Toggle off track
-    static let toggleOffTrack = Color(taleedLight: 0xCCD2DE, dark: 0x4A5675)
+    static let toggleOffTrack = Color(taleedLight: 0xCCD2DE, dark: 0x66728F)
     /// Skeleton media, label and title bars (price bar uses surfaceSubtle)
     static let skeleton = Color(taleedLight: 0xE8EBF2, dark: 0x1C253D)
     /// Bottom-nav stage skeleton title
@@ -144,8 +144,8 @@ enum TaleedColor {
     static let onBrandAccent = Color(taleedLight: 0x032117, dark: 0x0B1120)
     /// Sheets, dialogs, menus, the tab bar.
     static let surfaceElevated = Color(taleedLight: 0xFFFFFF, dark: 0x1A2338)
-    /// Text fields, checkboxes, the toggle's off track.
-    static let borderField = Color(taleedLight: 0xDDE2EC, dark: 0x4A5675)
+    /// Text fields, checkboxes, the toggle's off track (3:1).
+    static let borderField = Color(taleedLight: 0x7E889F, dark: 0x66728F)
     /// Text on a destructive fill.
     static let onFeedbackError = Color(taleedLight: 0xFFFFFF, dark: 0x0B1120)
     /// Pressed `brandAccent` fill.
@@ -227,7 +227,7 @@ enum TaleedColor {
         ColorToken(group: "literal", name: "toastInfoSoft", color: toastInfoSoft, hex: 0xEAF2FF, opacity: 1, darkHex: 0x16223F, darkOpacity: 1),
         ColorToken(group: "literal", name: "dangerPressed", color: dangerPressed, hex: 0xB42318, opacity: 1, darkHex: 0xFF9AA8, darkOpacity: 1),
         ColorToken(group: "literal", name: "dangerDisabled", color: dangerDisabled, hex: 0xF3D0D5, opacity: 1, darkHex: 0x4A2530, darkOpacity: 1),
-        ColorToken(group: "literal", name: "toggleOffTrack", color: toggleOffTrack, hex: 0xCCD2DE, opacity: 1, darkHex: 0x4A5675, darkOpacity: 1),
+        ColorToken(group: "literal", name: "toggleOffTrack", color: toggleOffTrack, hex: 0xCCD2DE, opacity: 1, darkHex: 0x66728F, darkOpacity: 1),
         ColorToken(group: "literal", name: "skeleton", color: skeleton, hex: 0xE8EBF2, opacity: 1, darkHex: 0x1C253D, darkOpacity: 1),
         ColorToken(group: "literal", name: "skeletonTitle", color: skeletonTitle, hex: 0xE2E6EE, opacity: 1, darkHex: 0x222C46, darkOpacity: 1),
         ColorToken(group: "literal", name: "sheetHandle", color: sheetHandle, hex: 0xC8CDD8, opacity: 1, darkHex: 0x4A5675, darkOpacity: 1),
@@ -239,7 +239,7 @@ enum TaleedColor {
         ColorToken(group: "dark", name: "onBrandPrimary", color: onBrandPrimary, hex: 0xFFFFFF, opacity: 1, darkHex: 0x0B1120, darkOpacity: 1),
         ColorToken(group: "dark", name: "onBrandAccent", color: onBrandAccent, hex: 0x032117, opacity: 1, darkHex: 0x0B1120, darkOpacity: 1),
         ColorToken(group: "dark", name: "surfaceElevated", color: surfaceElevated, hex: 0xFFFFFF, opacity: 1, darkHex: 0x1A2338, darkOpacity: 1),
-        ColorToken(group: "dark", name: "borderField", color: borderField, hex: 0xDDE2EC, opacity: 1, darkHex: 0x4A5675, darkOpacity: 1),
+        ColorToken(group: "dark", name: "borderField", color: borderField, hex: 0x7E889F, opacity: 1, darkHex: 0x66728F, darkOpacity: 1),
         ColorToken(group: "dark", name: "onFeedbackError", color: onFeedbackError, hex: 0xFFFFFF, opacity: 1, darkHex: 0x0B1120, darkOpacity: 1),
         ColorToken(group: "dark", name: "brandAccentPressed", color: brandAccentPressed, hex: 0x4AB08B, opacity: 1, darkHex: 0x4CD39F, darkOpacity: 1),
         ColorToken(group: "dark", name: "linkDisabled", color: linkDisabled, hex: 0xACC8FF, opacity: 1, darkHex: 0x8A94AC, darkOpacity: 1),
