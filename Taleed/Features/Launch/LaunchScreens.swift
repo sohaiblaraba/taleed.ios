@@ -20,8 +20,8 @@ struct SplashView: View {
     }
 }
 
-// The three blocking launch screens share one treatment: the brand app bar (wordmark) at the top,
-// then a title and a body (the empty/error-state pattern here, an alert on Suspended).
+// The launch error and update screens show the brand app bar (wordmark) at the top, then a title and a
+// body (the empty/error-state pattern). Suspended follows Android's screen: a large title and an alert.
 
 /// The launch could not finish (no network, server error). The token, if any, is kept.
 struct LaunchErrorView: View {
@@ -72,7 +72,6 @@ struct SuspendedView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(SessionManager.self) private var session
     @Environment(AppRouter.self) private var router
-    @Environment(\.openURL) private var openURL
 
     var body: some View {
         NavigationStack(path: router.pathBinding(.profile)) {
@@ -86,68 +85,62 @@ struct SuspendedView: View {
         }
     }
 
+    /// As Android's suspended screen (FB-13): no app bar, the large "Account suspended" title, the red
+    /// alert with the body, "Contact" with the support rows (as Help), "Still available" with the account
+    /// links, then Sign out.
     private var content: some View {
-        VStack(spacing: 0) {
-            BrandAppBar(showsDivider: true)
-            ScrollView {
-                VStack(alignment: .leading, spacing: TaleedSpacing.s24) {
-                    InlineAlert(kind: .error, title: l10n.string(.suspendedTitle), message: l10n.string(.suspendedBody))
+        ScrollView {
+            VStack(alignment: .leading, spacing: TaleedSpacing.s16) {
+                Text(l10n.string(.suspendedTitle))
+                    .taleedFont(TaleedFont.screenTitle)
+                    .foregroundStyle(TaleedColor.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                    .padding(.horizontal, TaleedLayout.screenMargin)
+                    .accessibilityIdentifier("suspended.title")
+                InlineAlert(kind: .error, title: l10n.string(.suspendedBody))
+                    .padding(.horizontal, TaleedLayout.screenMargin)
+                    .accessibilityIdentifier("suspended.alert")
 
-                    VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-                        Eyebrow(text: l10n.string(.suspendedContact))
-                        VStack(spacing: 0) {
-                            if let url = URL(string: "mailto:\(support.email)") {
-                                contactRow(support.email, icon: .envelope, url: url)
-                            }
-                            if let url = URL(string: "tel:\(support.phone.filter { !$0.isWhitespace })") {
-                                contactRow(support.phone, icon: .phone, url: url, showsDivider: support.whatsappURL != nil)
-                            }
-                            if let url = support.whatsappURL {
-                                contactRow("WhatsApp", icon: .chatCircle, url: url, showsDivider: false)
-                            }
+                VStack(alignment: .leading, spacing: 0) {
+                    sectionLabel(l10n.string(.suspendedContact))
+                    SupportContactRows(support: support)
+                }
+
+                if showsAccountLinks {
+                    VStack(alignment: .leading, spacing: 0) {
+                        sectionLabel(l10n.string(.appSuspendedStillAvailable))
+                        ListRow(label: l10n.string(.navOrders), leadingIcon: .truck, showsChevron: true) {
+                            router.push(.orders)
                         }
-                        .taleedCard()
-                        .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
-                    }
-
-                    if showsAccountLinks {
-                        VStack(alignment: .leading, spacing: TaleedSpacing.s8) {
-                            Eyebrow(text: l10n.string(.appSuspendedStillAvailable))
-                            VStack(spacing: 0) {
-                                ListRow(label: l10n.string(.navOrders), leadingIcon: .truck, showsChevron: true) {
-                                    router.push(.orders)
-                                }
-                                ListRow(label: l10n.string(.navWallet), leadingIcon: .money, showsChevron: true) {
-                                    router.push(.wallet)
-                                }
-                                ListRow(label: l10n.string(.settingsDeleteCta), leadingIcon: .trash, showsChevron: true,
-                                        showsDivider: false, labelColor: TaleedColor.feedbackError) {
-                                    router.push(.deleteAccount)
-                                }
-                            }
-                            .taleedCard()
-                            .clipShape(RoundedRectangle(cornerRadius: TaleedRadius.m, style: .continuous))
+                        ListRow(label: l10n.string(.navWallet), leadingIcon: .money, showsChevron: true) {
+                            router.push(.wallet)
                         }
-                    }
-
-                    TaleedButton(title: l10n.string(.authSignOut), kind: .tertiary, size: .large, isFullWidth: true) {
-                        router.popToRoot(.profile)
-                        session.signOut()
+                        ListRow(label: l10n.string(.settingsDeleteCta), leadingIcon: .trash, showsChevron: true,
+                                showsDivider: false, labelColor: TaleedColor.feedbackError) {
+                            router.push(.deleteAccount)
+                        }
                     }
                 }
-                .padding(TaleedLayout.screenMargin)
-                .padding(.top, TaleedSpacing.s8)
+
+                TaleedButton(title: l10n.string(.authSignOut), kind: .tertiary, size: .large, isFullWidth: true) {
+                    router.popToRoot(.profile)
+                    session.signOut()
+                }
+                .padding(.horizontal, TaleedLayout.screenMargin)
             }
+            .padding(.vertical, TaleedSpacing.s24)
         }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
     }
 
-    private func contactRow(_ title: String, icon: TaleedIcon, url: URL, showsDivider: Bool = true) -> some View {
-        // Emails and phone numbers read left to right in Arabic too.
-        ListRow(label: title.isolatedLeftToRight, leadingIcon: icon, showsDivider: showsDivider,
-                labelColor: TaleedColor.brandPrimary, keepsLabelOnOneLine: true) {
-            openURL(url)
-        }
-        .accessibilityAddTraits(.isLink)
+    /// A section's eyebrow, as Android's (8 above, 4 below, at the screen margins).
+    private func sectionLabel(_ text: String) -> some View {
+        Eyebrow(text: text)
+            .accessibilityAddTraits(.isHeader)
+            .padding(.horizontal, TaleedLayout.screenMargin)
+            .padding(.top, TaleedSpacing.s8)
+            .padding(.bottom, TaleedSpacing.s4)
     }
 }
