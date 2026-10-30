@@ -102,4 +102,15 @@ struct PushPayloadTests {
         #expect(center.messageArrivals == 1)
         #expect(arrivals == ["MESSAGE", "ORDER_PAID"])
     }
+
+    /// A verification decision's `/settings` opens identity verification; any other `/settings` push, Settings.
+    @Test func aVerificationDecisionOpensIdentityVerification() {
+        for type in ["VERIFICATION_APPROVED", "VERIFICATION_REJECTED"] {
+            #expect(PushPayload(type: type, url: "http://localhost:3000/settings").destination == .screen(.identityVerification))
+            #expect(PushPayload(type: type, url: "https://taleed.app/ar/settings").destination == .screen(.identityVerification))
+        }
+        #expect(PushPayload(type: "ANY", url: "https://taleed.app/settings").destination == .screen(.settings))
+        // Another link of a decision type is left as it is.
+        #expect(PushPayload(type: "VERIFICATION_APPROVED", url: "/wallet").destination == .screen(.wallet))
+    }
 }

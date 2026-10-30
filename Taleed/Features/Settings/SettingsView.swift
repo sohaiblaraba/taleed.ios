@@ -192,8 +192,10 @@ struct SettingsView: View {
     }
 
     /// Usage statistics (Google Analytics), signed in or not: on by default, kept on the device, applied at
-    /// once. Under the push switch, or under the appearance when there is none.
+    /// once. Its own group under the website's "Privacy" title, after the notifications, as on Android.
+    @ViewBuilder
     private var analyticsSection: some View {
+        SettingsEyebrow(text: l10n.string(.footerPrivacy))
         VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
             Toggle(isOn: Binding(get: { analytics.isSwitchedOn }, set: { analytics.setSwitchedOn($0) })) {
                 Text(l10n.string(.appSettingsAnalytics))
@@ -203,7 +205,6 @@ struct SettingsView: View {
             FieldHelper(text: l10n.string(.appSettingsAnalyticsHint), color: TaleedColor.textSecondarySmall)
         }
         .padding(.horizontal, TaleedLayout.screenMargin)
-        .padding(.top, TaleedSpacing.s16)
     }
 
     private func setPush(_ isOn: Bool) {

@@ -27,7 +27,8 @@ struct NotificationRow: Identifiable, Equatable, Sendable {
         return destination == .screen(.notifications) ? nil : destination
     }
 
-    private static let verificationDecisions: Set<String> = ["VERIFICATION_APPROVED", "VERIFICATION_REJECTED"]
+    /// The identity verification decisions: their `/settings` link opens identity verification (rows and pushes).
+    static let verificationDecisions: Set<String> = ["VERIFICATION_APPROVED", "VERIFICATION_REJECTED"]
 
     /// A `ROLE_OFFERED` row, or any row whose link is the website's `/role-offers` page (with or
     /// without a language prefix).

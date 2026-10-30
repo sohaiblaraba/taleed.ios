@@ -32,9 +32,17 @@ struct PushPayload: Equatable, Sendable {
     var isMessage: Bool { type == Self.messageType }
 
     /// Where a tap leads: the push's `url` through the link router, as a link into the app (slice C,
-    /// Opening a push). A conversation push without a `url` opens its conversation; anything else, Home.
+    /// Opening a push). A verification decision's `/settings` opens identity verification, as its notification
+    /// row does (§7 G17). A conversation push without a `url` opens its conversation; anything else, Home.
     var destination: AppDestination {
-        if let url { return LinkRouter.destination(for: url) }
+        if let url {
+            let destination = LinkRouter.destination(for: url)
+            if destination == .screen(.settings), let type,
+               NotificationRow.verificationDecisions.contains(type.uppercased()) {
+                return .screen(.identityVerification)
+            }
+            return destination
+        }
         if let conversationId { return .screen(.conversation(id: conversationId)) }
         return .home
     }
