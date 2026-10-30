@@ -36,6 +36,8 @@ struct PushPayloadTests {
         // ROLE_REVOKED, and ROLE_OFFERED (staff tooling stays on the website, screens.md Q9): Home.
         ("/", .home),
         ("/role-offers", .home),
+        // OFFER_EXPIRED, OFFER_EXPIRED_RECEIVED (API 1.9.2): the conversation, like the other offer pushes.
+        ("/inbox/cmconv2", .screen(.conversation(id: "cmconv2"))),
         // Team types: admin pages are not in the apps.
         ("/admin/payouts", .home),
     ])
@@ -112,5 +114,24 @@ struct PushPayloadTests {
         #expect(PushPayload(type: "ANY", url: "https://taleed.app/settings").destination == .screen(.settings))
         // Another link of a decision type is left as it is.
         #expect(PushPayload(type: "VERIFICATION_APPROVED", url: "/wallet").destination == .screen(.wallet))
+    }
+
+    /// LISTING_REMOVED (API 1.9.2): `/trust#listing-rules` opens in the in-app browser at the whole address.
+    @Test func aListingRemovalOpensTheListingRulesInTheBrowser() throws {
+        let local = try #require(URL(string: "http://localhost:3000/trust#listing-rules"))
+        #expect(PushPayload(type: "LISTING_REMOVED", url: local.absoluteString).destination == .web(local))
+        let arabic = try #require(URL(string: "https://taleed.app/ar/trust#listing-rules"))
+        #expect(PushPayload(type: "LISTING_REMOVED", url: arabic.absoluteString).destination == .web(arabic))
+        // A bare path: the same page on the build's website host.
+        guard case let .web(url) = PushPayload(type: "LISTING_REMOVED", url: "/trust#listing-rules").destination else {
+            Issue.record("not the browser")
+            return
+        }
+        #expect(url.scheme == "https")
+        #expect(url.path() == "/trust")
+        #expect(url.fragment() == "listing-rules")
+        // A notification row with the same link opens the same page.
+        let row = NotificationRow(id: "n1", type: "LISTING_REMOVED", text: "", url: local, isRead: false, createdAt: .now)
+        #expect(row.destination == .web(local))
     }
 }

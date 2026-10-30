@@ -60,8 +60,35 @@ enum LinkRouter {
         if let first = segments.first, languagePrefixes.contains(first.lowercased()) {
             segments.removeFirst()
         }
+        // Website content pages with no screen in the app open in the in-app browser, at the whole address
+        // (language prefix and anchor kept): `/trust#listing-rules` of LISTING_REMOVED (API 1.9.2).
+        if let first = segments.first, webOnlyPages.contains(first.lowercased()) {
+            return websiteURL(url).map { .web($0) } ?? .home
+        }
         return destination(segments: segments, query: queryItems(url))
     }
+
+    /// The first path segments of the website's content pages that only the in-app browser shows.
+    private static let webOnlyPages: Set<String> = ["trust"]
+
+    /// `url` itself when it is a web address; a bare path or a `taleed://` link becomes the same page on the
+    /// build's website host (`TaleedAppLinkHost`).
+    private static func websiteURL(_ url: URL) -> URL? {
+        if let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" { return url }
+        var path = url.path(percentEncoded: true)
+        if url.scheme?.lowercased() == appScheme, let host = url.host(percentEncoded: true) { path = "/" + host + path }
+        guard var components = URLComponents(string: "https://\(websiteHost)") else { return nil }
+        components.percentEncodedPath = path.hasPrefix("/") ? path : "/" + path
+        components.percentEncodedQuery = url.query(percentEncoded: true)
+        components.percentEncodedFragment = url.fragment(percentEncoded: true)
+        return components.url
+    }
+
+    /// The build's website host (`TaleedAppLinkHost`: taleed.app, dev.taleed.app in Staging).
+    private static let websiteHost: String = {
+        let host = (Bundle.main.object(forInfoDictionaryKey: "TaleedAppLinkHost") as? String)?.lowercased() ?? ""
+        return host.isEmpty ? "taleed.app" : host
+    }()
 
     /// A link given as text: an absolute URL or a path such as `/listings/42`.
     static func destination(for link: String) -> AppDestination {
