@@ -42,6 +42,8 @@ final class AppContainer {
     let crashReporting = CrashReporting(reporter: FirebaseServices.crashReporter)
     /// Usage statistics (Google Analytics, automatic events only) and the Settings switch.
     let analytics: UsageAnalytics
+    /// The named `screen_view` of each screen (plan/analytics-screens.md).
+    let screens: ScreenTracker
     /// Sign in with Google (slice G).
     let google = GoogleSignInSDKClient()
     /// The member's account for the settings screens (G16).
@@ -67,6 +69,7 @@ final class AppContainer {
         account = AccountStore(api: api, session: session)
         analytics = UsageAnalytics(backend: FirebaseServices.analytics, isBuildEnabled: UsageAnalytics.isBuildEnabled(),
                                    buildType: UsageAnalytics.buildType(), language: languageManager.language)
+        screens = ScreenTracker { [analytics] in analytics.logScreenView($0) }
 
         // A suspended member who was signed in keeps the screens that still answer (orders, wallet,
         // account deletion), so links to them do not ask to sign in.
@@ -120,6 +123,22 @@ final class AppContainer {
         }
         // The suspended screen is the root of the Profile stack: nothing may cover it (screens.md §0.6).
         session.onSuspended = { [router] in router.popToRoot(.profile) }
+    }
+
+    /// The screen under any sheet that is a screen: the launch's own screens, then the welcome screen over the
+    /// tabs, then the screen on top of the selected tab. Nil while the app launches (splash, launch error). The
+    /// sign-in sheet logs its step itself (`AuthSheetView`).
+    var baseScreen: ScreenView? {
+        switch launch.route {
+        case .loading, .failed: return nil
+        case .updateRequired: return .updateRequired
+        case .suspended: return .suspended
+        case .main:
+            if welcome.isVisible && !session.isSignedIn { return .welcome }
+            let tab = router.selectedTab
+            guard let top = router.path(tab).last else { return tab.screenView }
+            return top.screenView
+        }
     }
 
     /// When links and pushes open: once the launch knows the session, and not while the account is

@@ -160,6 +160,11 @@ final class FirebaseAnalyticsBackend: AnalyticsBackend {
     func setUserProperty(_ value: String?, forName name: String) {
         Analytics.setUserProperty(value, forName: name)
     }
+
+    func logScreenView(name: String, screenClass: String) {
+        Analytics.logEvent(AnalyticsEventScreenView,
+                           parameters: [AnalyticsParameterScreenName: name, AnalyticsParameterScreenClass: screenClass])
+    }
 }
 
 #if DEBUG && targetEnvironment(simulator)

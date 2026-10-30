@@ -59,6 +59,8 @@ struct ShippingLabelSheet: View {
             }
         }
         .background(TaleedColor.surfacePrimary.ignoresSafeArea())
+        // A sheet here, a screen on Android: logged on both (plan/analytics-screens.md).
+        .analyticsScreen(.shippingLabel)
         .task { model.start() }
         .onChange(of: model.printError) { _, error in
             guard let error else { return }

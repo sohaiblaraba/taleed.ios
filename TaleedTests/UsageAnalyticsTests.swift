@@ -9,6 +9,9 @@ private final class FakeAnalytics: AnalyticsBackend {
 
     func setCollectionEnabled(_ isEnabled: Bool) { collection.append(isEnabled) }
     func setUserProperty(_ value: String?, forName name: String) { properties[name] = value }
+
+    private(set) var screenViews: [String] = []
+    func logScreenView(name: String, screenClass: String) { screenViews.append("\(name)/\(screenClass)") }
 }
 
 @MainActor
@@ -54,5 +57,15 @@ struct UsageAnalyticsTests {
         let usage = analytics()
         usage.languageDidChange(.ar)
         #expect(backend.properties["app_language"] == "ar")
+    }
+
+    /// Screen views go out only while statistics are collected: never in Debug, never with the switch off.
+    @Test func screenViewsFollowTheCollection() {
+        let usage = analytics()
+        usage.logScreenView(AppTab.home.screenView)
+        usage.setSwitchedOn(false)
+        usage.logScreenView(AppTab.explore.screenView)
+        analytics(build: false).logScreenView(AppTab.sell.screenView)
+        #expect(backend.screenViews == ["home/HomeView"])
     }
 }

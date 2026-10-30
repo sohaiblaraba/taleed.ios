@@ -53,6 +53,8 @@ struct AddressesView: View {
                 Task { await model.saved() }
             }
             .appLanguage(l10n.language)
+            // A sheet here, a screen on Android: logged on both (plan/analytics-screens.md).
+            .analyticsScreen(.addressForm)
         }
         .taleedConfirmation(isPresented: pendingDelete != nil) {
             ConfirmationModalCard(title: l10n.string(.appSettingsAddressDeleteTitle),

@@ -44,6 +44,7 @@ struct AppRootView: View {
                                               offers: container.api, reports: container.api, uploads: container.uploads,
                                               reads: container.conversationReads))
             .environment(\.pushRegistration, container.push)
+            .environment(\.screenTracker, container.screens)
             .environment(\.bundleDependencies, BundleDependencies(bundles: container.api, members: container.api))
             .environment(\.checkoutDependencies,
                          CheckoutDependencies(checkout: container.api, listings: container.api, bundles: container.api))
@@ -82,6 +83,8 @@ struct AppRootView: View {
             // The Appearance setting: SwiftUI's views and sheets, then the windows for what UIKit presents.
             .preferredColorScheme(colorScheme)
             .onAppear { container.appearance.apply() }
+            // A named screen view per screen (plan/analytics-screens.md).
+            .onChange(of: currentScreen, initial: true) { _, screen in container.screens.didChange(to: screen) }
             .onChange(of: container.appearance.appearance, initial: true) { _, appearance in
                 container.crashReporting.appearanceDidChange(appearance)
             }
@@ -152,6 +155,11 @@ struct AppRootView: View {
         let showsWelcome = container.launch.route == .main && container.welcome.isVisible
             && !container.session.isSignedIn && container.router.authEntry == nil
         return showsWelcome ? .light : container.appearance.colorScheme
+    }
+
+    /// The screen the member sees, for the analytics screen views.
+    private var currentScreen: ScreenView? {
+        container.screens.current(base: container.baseScreen)
     }
 
     /// Unread messages plus unread notifications, as `GET /me` and the read marks give them; 0 signed out.

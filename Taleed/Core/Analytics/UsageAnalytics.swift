@@ -6,10 +6,13 @@ import Observation
 protocol AnalyticsBackend: AnyObject {
     func setCollectionEnabled(_ isEnabled: Bool)
     func setUserProperty(_ value: String?, forName name: String)
+    /// A `screen_view` with only the screen's name and class.
+    func logScreenView(name: String, screenClass: String)
 }
 
-/// Usage statistics: Google Analytics for Firebase with its automatic events only (first_open,
-/// session_start, screen_view, app_update…), no event of the app's own.
+/// Usage statistics: Google Analytics for Firebase with its automatic events (first_open, session_start,
+/// app_update…) and the named `screen_view` of each screen (`ScreenTracker`, plan/analytics-screens.md), no other
+/// event. Firebase's own screen reporting is off (`FirebaseAutomaticScreenReportingEnabled`).
 ///
 /// - Collection is on in Release and Staging builds (`TALEED_ANALYTICS`), off in Debug, and off whenever the
 ///   member turned the Settings switch off. The switch is on by default, kept on the device, and applies at once.
@@ -54,6 +57,12 @@ final class UsageAnalytics {
         isSwitchedOn = isOn
         defaults.set(isOn, forKey: Self.switchKey)
         backend?.setCollectionEnabled(isCollecting)
+    }
+
+    /// Logs a screen view, only while statistics are collected (never in Debug, never with the switch off).
+    func logScreenView(_ view: ScreenView) {
+        guard isCollecting else { return }
+        backend?.logScreenView(name: view.screen.rawValue, screenClass: view.screenClass)
     }
 
     func languageDidChange(_ language: AppLanguage) {

@@ -43,6 +43,8 @@ struct AuthSheetView: View {
             }
         })
         .animation(.easeInOut(duration: TaleedMotion.transitionMin), value: flow?.step)
+        // The sign-in sheet covers the tabs: its step is the screen (plan/analytics-screens.md, rule 9).
+        .analyticsScreen((flow?.step ?? .signIn).screenView)
         .onAppear {
             guard flow == nil, let dependencies else { return }
             flow = AuthFlowModel(entry: entry ?? .signIn, session: session, api: dependencies.api,
