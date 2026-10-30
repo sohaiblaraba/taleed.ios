@@ -2,7 +2,7 @@
 
 // The build number is YYYYMMVN: the year, the month and this month's build number from 01 (20261001, 20261002,
 // then 20261101 in November). The version is the same number. Android uses it as its versionCode and versionName.
-CURRENT_PROJECT_VERSION = 20261002
+CURRENT_PROJECT_VERSION = 20261004
 MARKETING_VERSION = $(CURRENT_PROJECT_VERSION)
 
 IPHONEOS_DEPLOYMENT_TARGET = 17.0
