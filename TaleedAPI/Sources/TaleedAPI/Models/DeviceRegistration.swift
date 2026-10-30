@@ -18,19 +18,35 @@ public struct DeviceRegistration: Sendable, Codable, Hashable {
     }
     public static let tokenRule = StringRule(minLength: 1, maxLength: 4096, pattern: nil)
     public static let appVersionRule = StringRule(minLength: nil, maxLength: 32, pattern: nil)
+    public static let appBuildRule = StringRule(minLength: nil, maxLength: 32, pattern: nil)
+    public static let osVersionRule = StringRule(minLength: nil, maxLength: 32, pattern: nil)
+    public static let deviceManufacturerRule = StringRule(minLength: nil, maxLength: 64, pattern: nil)
+    public static let deviceModelRule = StringRule(minLength: nil, maxLength: 64, pattern: nil)
     /** The Firebase Cloud Messaging registration token of this installation. */
     public var token: String
     public var platform: DevicePlatform
     /** Language of the pushes: the app's language. Defaults to the request's `Accept-Language`. */
     public var locale: ModelLocale?
-    /** Defaults to the `X-App-Version` header. */
+    /** The app's version, such as \"1.2.0\": `CFBundleShortVersionString` on iOS, `versionName` on Android. Defaults to the `X-App-Version` header. 32 characters at most. Optional; empty counts as not sent. */
     public var appVersion: String?
+    /** The build number, such as \"20261003\": `CFBundleVersion` on iOS, `versionCode` on Android. 32 characters at most. Optional; empty counts as not sent. */
+    public var appBuild: String?
+    /** The operating system's version, such as \"18.1\" (`UIDevice.systemVersion`) or \"15\" (`Build.VERSION.RELEASE`). 32 characters at most. Optional; empty counts as not sent. */
+    public var osVersion: String?
+    /** \"Apple\" on iOS, `Build.MANUFACTURER` on Android, such as \"samsung\". 64 characters at most. Optional; empty counts as not sent. */
+    public var deviceManufacturer: String?
+    /** The hardware model: `utsname.machine` on iOS, such as \"iPhone16,2\"; `Build.MODEL` on Android, such as \"SM-S918B\". 64 characters at most. Optional; empty counts as not sent. */
+    public var deviceModel: String?
 
-    public init(token: String, platform: DevicePlatform, locale: ModelLocale? = nil, appVersion: String? = nil) {
+    public init(token: String, platform: DevicePlatform, locale: ModelLocale? = nil, appVersion: String? = nil, appBuild: String? = nil, osVersion: String? = nil, deviceManufacturer: String? = nil, deviceModel: String? = nil) {
         self.token = token
         self.platform = platform
         self.locale = locale
         self.appVersion = appVersion
+        self.appBuild = appBuild
+        self.osVersion = osVersion
+        self.deviceManufacturer = deviceManufacturer
+        self.deviceModel = deviceModel
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
@@ -38,6 +54,10 @@ public struct DeviceRegistration: Sendable, Codable, Hashable {
         case platform
         case locale
         case appVersion
+        case appBuild
+        case osVersion
+        case deviceManufacturer
+        case deviceModel
     }
 
     // Encodable protocol methods
@@ -48,6 +68,10 @@ public struct DeviceRegistration: Sendable, Codable, Hashable {
         try container.encode(platform, forKey: .platform)
         try container.encodeIfPresent(locale, forKey: .locale)
         try container.encodeIfPresent(appVersion, forKey: .appVersion)
+        try container.encodeIfPresent(appBuild, forKey: .appBuild)
+        try container.encodeIfPresent(osVersion, forKey: .osVersion)
+        try container.encodeIfPresent(deviceManufacturer, forKey: .deviceManufacturer)
+        try container.encodeIfPresent(deviceModel, forKey: .deviceModel)
     }
 }
 

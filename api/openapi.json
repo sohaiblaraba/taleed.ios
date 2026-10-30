@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Taleed API",
-    "version": "1.8.0",
+    "version": "1.9.1",
     "description": "The API of the Taleed mobile apps.\n\nRead docs/mobile/api-guide.md in the Taleed repository before integrating. In short:\n\n- Authenticate with `Authorization: Bearer <token>` from `POST /auth/sign-in` or `POST /auth/sign-up`.\n- Send `Accept-Language` (`fr`, `ar` or `en`), `X-App-Platform` (`ios` or `android`) and `X-App-Version` on every request.\n- Errors always have the `ApiError` shape; switch on `error.code`.\n- Amounts are integer Algerian dinars. Dates are ISO 8601 in UTC. URLs are absolute.\n- In request bodies, a field set to null counts as left out.\n- Lists are paginated with opaque cursors: pass `nextCursor` back as `cursor`.\n- Requests are rate-limited: 300 per minute per member; without a session, and on endpoints that take none, 1200 per minute per network address. Some endpoints have a tighter limit of their own. Over a limit: `429 rate_limited`, with `Retry-After` in seconds.\n- v1 only changes in backward-compatible ways: ignore unknown fields and accept unknown enum values."
   },
   "servers": [
@@ -110,7 +110,7 @@
     },
     {
       "name": "Development",
-      "description": "Development and staging servers only: test helpers that stand in for a mock driver, such as the demo carrier. Elsewhere, production included, they answer 404 like an unknown path. Never use them in a release build's flows."
+      "description": "Development and staging servers only: test helpers, such as moving a demo parcel forward or sending every notification to a test account. They exist only while the carrier is the demo one (`SHIPPING_DRIVER=mock`). Elsewhere, production included, they answer 404 like an unknown path. Never use them in a release build's flows."
     }
   ],
   "paths": {
@@ -6875,7 +6875,7 @@
           "Push"
         ],
         "summary": "Register for push notifications",
-        "description": "Call it after each sign-in, whenever Firebase hands the app a new token, and when the member changes the app's language. Pushes go to this installation while its session lasts: signing out stops them, and so does `DELETE /devices`. Each push carries a `type` (`MESSAGE`, `CAMPAIGN`, or the notification type) and the `url` of the website page to open, which the app routes like a universal link; chat pushes also carry `conversationId`. Android channels: `messages`, `announcements` and `activity`.\n\nRequires a bearer token.",
+        "description": "Call it after each sign-in, whenever Firebase hands the app a new token, and when the member changes the app's language. Idempotent per token: registering again updates the row (account, language, device details, last seen) and never adds one. Send the device details as well (`appVersion`, `appBuild`, `osVersion`, `deviceManufacturer`, `deviceModel`): the Taleed team reads them to fix push and app problems. A detail left out, or empty, keeps the value stored for this token (older apps send none). Pushes go to this installation while its session lasts: signing out stops them, and so does `DELETE /devices`. Each push carries a `type` (`MESSAGE`, `CAMPAIGN`, or the notification type) and the `url` of the website page to open, which the app routes like a universal link; chat pushes also carry `conversationId`. Android channels: `messages`, `announcements` and `activity`.\n\nRequires a bearer token.",
         "requestBody": {
           "required": true,
           "content": {
@@ -11114,6 +11114,199 @@
           }
         ]
       }
+    },
+    "/dev/notifications/types": {
+      "get": {
+        "operationId": "listDevNotificationTypes",
+        "tags": [
+          "Development"
+        ],
+        "summary": "Every notification type (development only)",
+        "description": "DEVELOPMENT ONLY: never call it from a release build's flows. It exists only on servers whose carrier is the demo one (`SHIPPING_DRIVER=mock`, development and staging), like `POST /orders/{id}/shipment/simulate`; everywhere else, production included, it answers `404 not_found` like an unknown path, before checking the session. Lists the types `POST /dev/notifications/test` can create.\n\nRequires a bearer token.",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevNotificationTypeList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error codes: `unauthorized`.",
+            "x-error-codes": [
+              "unauthorized"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error codes: `banned`.",
+            "x-error-codes": [
+              "banned"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error codes: `rate_limited`.",
+            "x-error-codes": [
+              "rate_limited"
+            ],
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/dev/notifications/test": {
+      "post": {
+        "operationId": "createDevNotifications",
+        "tags": [
+          "Development"
+        ],
+        "summary": "Send test notifications to the signed-in member (development only)",
+        "description": "DEVELOPMENT ONLY: never call it from a release build's flows. It exists only on servers whose carrier is the demo one (`SHIPPING_DRIVER=mock`, development and staging), like `POST /orders/{id}/shipment/simulate`; everywhere else, production included, it answers `404 not_found` like an unknown path, before checking the session. Creates one notification per type for the signed-in member, with sample values and a link to one of the member's own listings, orders, conversations or disputes where one exists. Each goes through the same code as a real one: it is stored (`GET /notifications`), pushed to the member's registered devices in their language, and emailed when that type is. Not idempotent: each call creates new ones. An unknown `type`, or neither `type` nor `all`, is `invalid_request`.\n\nRequires a bearer token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevNotificationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevNotificationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error codes: `invalid_request`.",
+            "x-error-codes": [
+              "invalid_request"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error codes: `unauthorized`.",
+            "x-error-codes": [
+              "unauthorized"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error codes: `banned`.",
+            "x-error-codes": [
+              "banned"
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error codes: `rate_limited`.",
+            "x-error-codes": [
+              "rate_limited"
+            ],
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again, as `retryAfter` in the body.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Unexpected server error (`internal`). A read can be retried; an action may have happened anyway (see the API guide).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -12771,9 +12964,29 @@
             ]
           },
           "appVersion": {
-            "description": "Defaults to the `X-App-Version` header.",
+            "description": "The app's version, such as \"1.2.0\": `CFBundleShortVersionString` on iOS, `versionName` on Android. Defaults to the `X-App-Version` header. 32 characters at most. Optional; empty counts as not sent.",
             "type": "string",
             "maxLength": 32
+          },
+          "appBuild": {
+            "description": "The build number, such as \"20261003\": `CFBundleVersion` on iOS, `versionCode` on Android. 32 characters at most. Optional; empty counts as not sent.",
+            "type": "string",
+            "maxLength": 32
+          },
+          "osVersion": {
+            "description": "The operating system's version, such as \"18.1\" (`UIDevice.systemVersion`) or \"15\" (`Build.VERSION.RELEASE`). 32 characters at most. Optional; empty counts as not sent.",
+            "type": "string",
+            "maxLength": 32
+          },
+          "deviceManufacturer": {
+            "description": "\"Apple\" on iOS, `Build.MANUFACTURER` on Android, such as \"samsung\". 64 characters at most. Optional; empty counts as not sent.",
+            "type": "string",
+            "maxLength": 64
+          },
+          "deviceModel": {
+            "description": "The hardware model: `utsname.machine` on iOS, such as \"iPhone16,2\"; `Build.MODEL` on Android, such as \"SM-S918B\". 64 characters at most. Optional; empty counts as not sent.",
+            "type": "string",
+            "maxLength": 64
           }
         },
         "required": [
@@ -12781,6 +12994,146 @@
           "platform"
         ],
         "description": "This app installation, to send it push notifications."
+      },
+      "DevNotificationCreated": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "audience": {
+            "$ref": "#/components/schemas/NotificationAudience"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Where it leads, as `NotificationItem.url` and the push's `data.url`: a real object of the member when one exists."
+          },
+          "fallback": {
+            "type": "boolean",
+            "description": "True: the member has no matching object (no sale, no dispute…), so the link opens a screen (`/orders`, `/inbox`, `/sell`…) instead."
+          },
+          "push": {
+            "type": "boolean",
+            "description": "A push went to the member's devices (it can still fail at Firebase)."
+          },
+          "emailed": {
+            "type": "boolean",
+            "description": "An email went out too, as for a real one."
+          }
+        },
+        "required": [
+          "type",
+          "audience",
+          "url",
+          "fallback",
+          "push",
+          "emailed"
+        ],
+        "description": "One notification the test created."
+      },
+      "DevNotificationRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "One type from `GET /dev/notifications/types`, created whatever its audience or `inUse`.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "all": {
+            "description": "`true`: every type in use that the member can receive. Team-only types are left out unless the account is on the team; legacy types are left out. Both appear in `skipped`.",
+            "type": "boolean"
+          }
+        },
+        "description": "Send `type` or `all: true`, not both."
+      },
+      "DevNotificationResult": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DevNotificationCreated"
+            },
+            "description": "In the order they were created: the newest is last."
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DevNotificationSkipped"
+            }
+          }
+        },
+        "required": [
+          "created",
+          "skipped"
+        ],
+        "description": "What the test created."
+      },
+      "DevNotificationSkipped": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "reason"
+        ],
+        "description": "A type the test did not create, and why."
+      },
+      "DevNotificationType": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The notification type, as in `NotificationItem.type` and the push's `data.type`."
+          },
+          "audience": {
+            "$ref": "#/components/schemas/NotificationAudience"
+          },
+          "inUse": {
+            "type": "boolean",
+            "description": "False: no code creates it any more (`NEW_MESSAGE`: chat messages push as `MESSAGE` without a notification). Old rows still show."
+          },
+          "push": {
+            "type": "boolean",
+            "description": "Whether a real one is pushed. Always true since 1.9.1, when `FOLLOWED_MEMBER_LISTED` started to push."
+          },
+          "emailed": {
+            "type": "boolean",
+            "description": "A real one is also emailed, in French."
+          }
+        },
+        "required": [
+          "type",
+          "audience",
+          "inUse",
+          "push",
+          "emailed"
+        ],
+        "description": "One type of the notifications catalog."
+      },
+      "DevNotificationTypeList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DevNotificationType"
+            },
+            "description": "Every type of the website's `notifications` catalog, in its order."
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "description": "Every notification type."
       },
       "Dispute": {
         "type": "object",
@@ -14509,6 +14862,14 @@
           "counts"
         ],
         "description": "A page of the signed-in member's own listings, newest first."
+      },
+      "NotificationAudience": {
+        "type": "string",
+        "enum": [
+          "member",
+          "team"
+        ],
+        "description": "Who receives the type: `member`, members (some also reach the team, such as `DISPUTE_OPENED`); `team`, only the Taleed team (alarms, milestones, review queues), whose links open admin pages on the website."
       },
       "NotificationItem": {
         "type": "object",

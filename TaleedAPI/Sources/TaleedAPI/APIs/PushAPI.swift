@@ -23,7 +23,7 @@ open class PushAPI {
     /**
      Register for push notifications
      - POST /devices
-     - Call it after each sign-in, whenever Firebase hands the app a new token, and when the member changes the app's language. Pushes go to this installation while its session lasts: signing out stops them, and so does `DELETE /devices`. Each push carries a `type` (`MESSAGE`, `CAMPAIGN`, or the notification type) and the `url` of the website page to open, which the app routes like a universal link; chat pushes also carry `conversationId`. Android channels: `messages`, `announcements` and `activity`.  Requires a bearer token.
+     - Call it after each sign-in, whenever Firebase hands the app a new token, and when the member changes the app's language. Idempotent per token: registering again updates the row (account, language, device details, last seen) and never adds one. Send the device details as well (`appVersion`, `appBuild`, `osVersion`, `deviceManufacturer`, `deviceModel`): the Taleed team reads them to fix push and app problems. A detail left out, or empty, keeps the value stored for this token (older apps send none). Pushes go to this installation while its session lasts: signing out stops them, and so does `DELETE /devices`. Each push carries a `type` (`MESSAGE`, `CAMPAIGN`, or the notification type) and the `url` of the website page to open, which the app routes like a universal link; chat pushes also carry `conversationId`. Android channels: `messages`, `announcements` and `activity`.  Requires a bearer token.
      - Bearer Token:
        - type: http
        - name: bearerAuth

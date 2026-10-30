@@ -10,6 +10,84 @@ import Foundation
 open class DevelopmentAPI {
 
     /**
+     Send test notifications to the signed-in member (development only)
+     
+     - parameter devNotificationRequest: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: DevNotificationResult
+     */
+    open class func createDevNotifications(devNotificationRequest: DevNotificationRequest, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> DevNotificationResult {
+        return try await createDevNotificationsWithRequestBuilder(devNotificationRequest: devNotificationRequest, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     Send test notifications to the signed-in member (development only)
+     - POST /dev/notifications/test
+     - DEVELOPMENT ONLY: never call it from a release build's flows. It exists only on servers whose carrier is the demo one (`SHIPPING_DRIVER=mock`, development and staging), like `POST /orders/{id}/shipment/simulate`; everywhere else, production included, it answers `404 not_found` like an unknown path, before checking the session. Creates one notification per type for the signed-in member, with sample values and a link to one of the member's own listings, orders, conversations or disputes where one exists. Each goes through the same code as a real one: it is stored (`GET /notifications`), pushed to the member's registered devices in their language, and emailed when that type is. Not idempotent: each call creates new ones. An unknown `type`, or neither `type` nor `all`, is `invalid_request`.  Requires a bearer token.
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter devNotificationRequest: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<DevNotificationResult> 
+     */
+    open class func createDevNotificationsWithRequestBuilder(devNotificationRequest: DevNotificationRequest, apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<DevNotificationResult> {
+        let localVariablePath = "/dev/notifications/test"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters = JSONEncodingHelper.encodingParameters(forEncodableObject: devNotificationRequest, codableHelper: apiConfiguration.codableHelper)
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            "Content-Type": "application/json",
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<DevNotificationResult>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
+     Every notification type (development only)
+     
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: DevNotificationTypeList
+     */
+    open class func listDevNotificationTypes(apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) async throws(ErrorResponse) -> DevNotificationTypeList {
+        return try await listDevNotificationTypesWithRequestBuilder(apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     Every notification type (development only)
+     - GET /dev/notifications/types
+     - DEVELOPMENT ONLY: never call it from a release build's flows. It exists only on servers whose carrier is the demo one (`SHIPPING_DRIVER=mock`, development and staging), like `POST /orders/{id}/shipment/simulate`; everywhere else, production included, it answers `404 not_found` like an unknown path, before checking the session. Lists the types `POST /dev/notifications/test` can create.  Requires a bearer token.
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<DevNotificationTypeList> 
+     */
+    open class func listDevNotificationTypesWithRequestBuilder(apiConfiguration: TaleedAPIAPIConfiguration = TaleedAPIAPIConfiguration.shared) -> RequestBuilder<DevNotificationTypeList> {
+        let localVariablePath = "/dev/notifications/types"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters: [String: any Sendable]? = nil
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<DevNotificationTypeList>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
      Move a demo parcel forward (development only)
      
      - parameter id: (path)  

@@ -92,6 +92,12 @@ Sources/TaleedAPI/Models/ConversationRole.swift
 Sources/TaleedAPI/Models/ConversationSummary.swift
 Sources/TaleedAPI/Models/ConversationSummaryPage.swift
 Sources/TaleedAPI/Models/DeliveryType.swift
+Sources/TaleedAPI/Models/DevNotificationCreated.swift
+Sources/TaleedAPI/Models/DevNotificationRequest.swift
+Sources/TaleedAPI/Models/DevNotificationResult.swift
+Sources/TaleedAPI/Models/DevNotificationSkipped.swift
+Sources/TaleedAPI/Models/DevNotificationType.swift
+Sources/TaleedAPI/Models/DevNotificationTypeList.swift
 Sources/TaleedAPI/Models/DevicePlatform.swift
 Sources/TaleedAPI/Models/DeviceRegistration.swift
 Sources/TaleedAPI/Models/Dispute.swift
@@ -141,6 +147,7 @@ Sources/TaleedAPI/Models/MessagePage.swift
 Sources/TaleedAPI/Models/MessagePreview.swift
 Sources/TaleedAPI/Models/MyListingCounts.swift
 Sources/TaleedAPI/Models/MyListingsPage.swift
+Sources/TaleedAPI/Models/NotificationAudience.swift
 Sources/TaleedAPI/Models/NotificationItem.swift
 Sources/TaleedAPI/Models/NotificationPage.swift
 Sources/TaleedAPI/Models/NotificationsRead.swift
@@ -290,6 +297,12 @@ docs/ConversationSummary.md
 docs/ConversationSummaryPage.md
 docs/ConversationsAPI.md
 docs/DeliveryType.md
+docs/DevNotificationCreated.md
+docs/DevNotificationRequest.md
+docs/DevNotificationResult.md
+docs/DevNotificationSkipped.md
+docs/DevNotificationType.md
+docs/DevNotificationTypeList.md
 docs/DevelopmentAPI.md
 docs/DevicePlatform.md
 docs/DeviceRegistration.md
@@ -344,6 +357,7 @@ docs/MessagePage.md
 docs/MessagePreview.md
 docs/MyListingCounts.md
 docs/MyListingsPage.md
+docs/NotificationAudience.md
 docs/NotificationItem.md
 docs/NotificationPage.md
 docs/NotificationsAPI.md
