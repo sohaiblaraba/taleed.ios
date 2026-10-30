@@ -16,10 +16,10 @@ if [[ ! -f "$PLIST" ]]; then
   exit 0
 fi
 
-# The Crashlytics script of the Firebase package (Swift Package Manager checkout).
-RUN="${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
-if [[ ! -x "$RUN" ]]; then
-  echo "warning: Crashlytics' run script is missing ($RUN): the dSYM was not uploaded."
+# The Crashlytics upload tool of the Firebase package (Swift Package Manager checkout).
+UPLOAD="${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols"
+if [[ ! -x "$UPLOAD" ]]; then
+  echo "warning: Crashlytics' upload-symbols is missing ($UPLOAD): the dSYM was not uploaded."
   exit 0
 fi
 
@@ -33,4 +33,8 @@ if [[ ! -f "$DWARF" ]]; then
   exit 0
 fi
 
-"$RUN" -gsp "$PLIST"
+# In the foreground: Crashlytics' run script uploads in the background, and a command-line build can end before
+# that upload does, which leaves the crashes unsymbolicated. With a clean environment: upload-symbols crashes
+# (segmentation fault) on the build's own variables.
+env -i PATH="$PATH" HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" "$UPLOAD" -gsp "$PLIST" -p ios "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}" \
+  || echo "warning: The dSYM upload failed: upload it by hand (README) so crashes show function names."
