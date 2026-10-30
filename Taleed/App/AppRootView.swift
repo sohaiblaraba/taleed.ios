@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// Shows the screen that the launch flow decides, in the app language and its direction.
 struct AppRootView: View {
@@ -27,6 +28,8 @@ struct AppRootView: View {
             .environment(container.launch)
             .environment(container.account)
             .environment(container.push)
+            .environment(container.pushCenter)
+            .environment(container.analytics)
             .environment(container.exploreReferences)
             .environment(\.exploreDependencies, ExploreDependencies(listings: container.api, explore: container.api))
             .environment(\.listingDependencies,
@@ -70,7 +73,7 @@ struct AppRootView: View {
                     Task { await launch.socialSignInWasDisabled(provider) }
                 }
             ))
-            #if DEBUG
+            #if DEBUG || TALEED_TEST_TOOLS
             .environment(\.developmentApi, container.api)
             #endif
             .environment(\.appEnvironment, container.environment)
@@ -79,6 +82,13 @@ struct AppRootView: View {
             // The Appearance setting: SwiftUI's views and sheets, then the windows for what UIKit presents.
             .preferredColorScheme(colorScheme)
             .onAppear { container.appearance.apply() }
+            .onChange(of: container.appearance.appearance, initial: true) { _, appearance in
+                container.crashReporting.appearanceDidChange(appearance)
+            }
+            // The icon badge follows the counts the app shows (slice C): unread messages and notifications.
+            .onChange(of: badgeCount, initial: true) { _, count in
+                Task { try? await UNUserNotificationCenter.current().setBadgeCount(count) }
+            }
             .task { await container.launch.start() }
             // The disk copy shows at once; the launch fetches the catalog again (api-guide.md, Caching).
             .task { await container.catalog.refresh() }
@@ -142,6 +152,12 @@ struct AppRootView: View {
         let showsWelcome = container.launch.route == .main && container.welcome.isVisible
             && !container.session.isSignedIn && container.router.authEntry == nil
         return showsWelcome ? .light : container.appearance.colorScheme
+    }
+
+    /// Unread messages plus unread notifications, as `GET /me` and the read marks give them; 0 signed out.
+    private var badgeCount: Int {
+        guard let user = container.session.user else { return 0 }
+        return user.unreadMessages + user.unreadNotifications
     }
 
     /// The App Store page, or the website until the app has an App Store ID (`TALEED_APP_STORE_ID`).

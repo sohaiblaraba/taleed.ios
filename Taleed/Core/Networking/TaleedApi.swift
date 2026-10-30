@@ -70,6 +70,46 @@ enum ShipmentSimulationStep: String, CaseIterable, Sendable {
 protocol DevelopmentApi: AnyObject {
     /// Moves a demo parcel forward. `404` unless the server's carrier is the mock one.
     func simulateShipment(orderId: String, step: ShipmentSimulationStep) async throws(ApiError)
+    /// `GET /dev/notifications/types` (slice J): every type of the notifications catalog.
+    func testNotificationTypes() async throws(ApiError) -> [TestNotificationType]
+    /// `POST /dev/notifications/test` (slice J): one notification of `type`, or nil for every type the member
+    /// can receive, through the real notification code (stored, pushed, emailed). Not idempotent.
+    func sendTestNotifications(type: String?) async throws(ApiError) -> TestNotificationResult
+}
+
+/// A type of `GET /dev/notifications/types`.
+struct TestNotificationType: Equatable, Sendable, Identifiable {
+    let type: String
+    /// `member` or `team`.
+    let audience: String
+    /// False: no code creates it any more.
+    let inUse: Bool
+    /// False: a real one is stored without a push.
+    let push: Bool
+
+    var id: String { type }
+}
+
+/// What `POST /dev/notifications/test` created and skipped.
+struct TestNotificationResult: Equatable, Sendable {
+    struct Created: Equatable, Sendable, Identifiable {
+        let type: String
+        let url: String
+        /// The link opens a screen, not the member's own object.
+        let fallback: Bool
+        let push: Bool
+        var id: String { type + url }
+    }
+
+    struct Skipped: Equatable, Sendable, Identifiable {
+        let type: String
+        let reason: String
+        var id: String { type }
+    }
+
+    /// In creation order: the newest is last.
+    let created: [Created]
+    let skipped: [Skipped]
 }
 
 @MainActor
@@ -153,6 +193,26 @@ final class GeneratedTaleedApi: TaleedApi, UploadsApi, DevelopmentApi {
         try await caller.call(.write) {
             try await DevelopmentAPI.simulateShipment(id: orderId, shipmentSimulation: body, apiConfiguration: $0)
         }
+    }
+
+    func testNotificationTypes() async throws(ApiError) -> [TestNotificationType] {
+        let list = try await caller.call(.read) { try await DevelopmentAPI.listDevNotificationTypes(apiConfiguration: $0) }
+        return list.items.map {
+            TestNotificationType(type: $0.type, audience: $0.audience.rawValue, inUse: $0.inUse, push: $0.push)
+        }
+    }
+
+    func sendTestNotifications(type: String?) async throws(ApiError) -> TestNotificationResult {
+        let request = type.map { DevNotificationRequest(type: $0) } ?? DevNotificationRequest(all: true)
+        // Not idempotent: each call creates new notifications, so it is never repeated. `all` takes about half a
+        // minute on a local server (48 notifications, their pushes and emails): the upload session's minute.
+        let result = try await caller.call(.write, configuration: session.uploadConfiguration()) {
+            try await DevelopmentAPI.createDevNotifications(devNotificationRequest: request, apiConfiguration: $0)
+        }
+        return TestNotificationResult(
+            created: result.created.map { .init(type: $0.type, url: $0.url, fallback: $0.fallback, push: $0.push) },
+            skipped: result.skipped.map { .init(type: $0.type, reason: $0.reason) }
+        )
     }
 }
 

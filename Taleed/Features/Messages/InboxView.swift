@@ -24,14 +24,15 @@ struct MessagesView: View {
 
 /// The inbox (`GET /conversations`): the Tous / Achats / Ventes filter, then one row per conversation,
 /// most recent first. States: loading, the error with Retry (offline included), "Aucune conversation",
-/// pull-to-refresh and the pagination footer; a quiet reload on return to the foreground and when the
-/// member comes back to it.
+/// pull-to-refresh and the pagination footer; a quiet reload on return to the foreground, when the
+/// member comes back to it and when a message push arrives.
 struct InboxView: View {
     @State private var model: InboxViewModel
     let reads: ConversationReads
     @Environment(LanguageManager.self) private var l10n
     @Environment(AppRouter.self) private var router
     @Environment(SessionManager.self) private var session
+    @Environment(PushNotificationCenter.self) private var pushes
     @Environment(\.scenePhase) private var scenePhase
 
     init(api: MessagesApi, reads: ConversationReads) {
@@ -70,6 +71,10 @@ struct InboxView: View {
         // Back on the inbox: a conversation with news moves to the top, a read one loses its counter.
         .onChange(of: isOnScreen) { _, onScreen in
             if onScreen { Task { await refresh() } }
+        }
+        // A message push while the inbox shows: the conversation moves to the top (slice C).
+        .onChange(of: pushes.messageArrivals) { _, _ in
+            if isOnScreen { Task { await refresh() } }
         }
         // A conversation was read (here or from another tab): its row clears at once, even when the quiet
         // reload on the way back is skipped as too recent.

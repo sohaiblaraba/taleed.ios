@@ -24,3 +24,8 @@ Package.resolved.orig
 *.mobileprovision
 *.cer
 .env
+
+# Firebase files of each environment: copied in at build time (scripts/copy-firebase-config.sh)
+GoogleService-Info.plist
+# Local build settings (Config/*.xcconfig include it when it is there)
+Config/Local.xcconfig

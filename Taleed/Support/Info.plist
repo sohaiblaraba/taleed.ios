@@ -45,6 +45,18 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+	<false/>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<key>FirebaseCrashlyticsCollectionEnabled</key>
+	<false/>
+	<key>FirebaseMessagingAutoInitEnabled</key>
+	<false/>
+	<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS</key>
+	<false/>
+	<key>GOOGLE_ANALYTICS_REGISTRATION_WITH_AD_NETWORK_ENABLED</key>
+	<false/>
 	<key>GIDClientID</key>
 	<string>$(GOOGLE_IOS_CLIENT_ID)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -60,6 +72,12 @@
 		<true/>
 	</dict>
 #endif
+	<key>TaleedAnalytics</key>
+	<string>$(TALEED_ANALYTICS)</string>
+	<key>TaleedBuildType</key>
+	<string>$(TALEED_BUILD_TYPE)</string>
+	<key>TaleedCrashReporting</key>
+	<string>$(TALEED_CRASH_REPORTING)</string>
 	<key>TaleedURLScheme</key>
 	<string>$(TALEED_URL_SCHEME)</string>
 	<key>TaleedAppLinkHost</key>

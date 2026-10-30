@@ -134,6 +134,12 @@ final class AppRouter {
         )
     }
 
+    /// The conversation on top of the selected tab: a push for it shows nothing in the foreground (slice C).
+    var conversationOnScreen: String? {
+        if case let .conversation(id, _) = path(selectedTab).last { return id }
+        return nil
+    }
+
     // MARK: Links and pushes
 
     /// Opens a website address, a push's `data.url`, a notification's `url` or a `taleed://` URL.
@@ -232,7 +238,10 @@ final class AppRouter {
              .identityVerification, .help:
             (.profile, [.settings, route])
         #if DEBUG
-        case .designSystem, .developerMenu: (.profile, [.settings, route])
+        case .designSystem: (.profile, [.settings, route])
+        #endif
+        #if DEBUG || TALEED_TEST_TOOLS
+        case .developerMenu: (.profile, [.settings, route])
         #endif
         }
     }

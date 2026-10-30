@@ -1,2 +1,5 @@
 // Release: production over HTTPS only.
 #include "Base.xcconfig"
+
+// Local settings that are not in git, such as TALEED_FIREBASE_CONFIG_DIR. Optional.
+#include? "Local.xcconfig"

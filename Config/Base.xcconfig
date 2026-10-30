@@ -37,3 +37,16 @@ TALEED_APP_STORE_ID =
 // configuration whose environment has another client sets both. Empty: the app shows no Google button.
 GOOGLE_IOS_CLIENT_ID = 406327415556-9o6ic1tk0mtkdkoqpbjphfhno35djdul.apps.googleusercontent.com
 GOOGLE_IOS_URL_SCHEME = com.googleusercontent.apps.406327415556-9o6ic1tk0mtkdkoqpbjphfhno35djdul
+
+// Firebase (slice J: push and crash reports). The folder that holds this build's GoogleService-Info.plist, which is
+// never in the repository: a build script copies it into the app (scripts/copy-firebase-config.sh). Without the file
+// the app builds and runs with push and crash reporting off. Set another folder in Config/Local.xcconfig (not in git).
+TALEED_FIREBASE_CONFIG_DIR = $(SRCROOT)/../taleed/local/firebase
+
+// Crash reports leave the device (Crashlytics collection): on in Release and Staging, off in Debug.
+TALEED_CRASH_REPORTING = YES
+
+// Usage statistics (Google Analytics for Firebase, automatic events only): on in Release and Staging, off in Debug.
+// The member can turn them off in Settings. TALEED_BUILD_TYPE is the `build_type` user property.
+TALEED_ANALYTICS = YES
+TALEED_BUILD_TYPE = release

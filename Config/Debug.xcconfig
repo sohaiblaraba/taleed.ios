@@ -7,5 +7,14 @@ PRODUCT_BUNDLE_IDENTIFIER = app.taleed.mobile
 APP_DISPLAY_NAME = Taleed Dev
 TALEED_API_BASE_URL = http:/$()/localhost:3000/api/v1
 
+// Crash reports stay on the simulator or device (Crashlytics collection off).
+TALEED_CRASH_REPORTING = NO
+// No usage statistics from local builds.
+TALEED_ANALYTICS = NO
+TALEED_BUILD_TYPE = debug
+
 // Info.plist is preprocessed: TALEED_ALLOWS_LOCAL_NETWORKING turns on NSAllowsLocalNetworking.
 INFOPLIST_PREPROCESSOR_DEFINITIONS = TALEED_ALLOWS_LOCAL_NETWORKING=1
+
+// Local settings that are not in git, such as TALEED_FIREBASE_CONFIG_DIR. Optional.
+#include? "Local.xcconfig"

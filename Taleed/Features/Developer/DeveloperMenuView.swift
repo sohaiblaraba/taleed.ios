@@ -1,10 +1,19 @@
-#if DEBUG
+#if DEBUG || TALEED_TEST_TOOLS
 import SwiftUI
 
-/// The developer menu (debug builds only; Settings → Developer menu): what the build talks to, sign
-/// out, open a link through the router, move a demo parcel forward (`POST /orders/{id}/shipment/simulate`,
-/// slice F), and empty the caches. Its copy is English and never ships.
+/// The developer menu (debug builds; Settings → Developer menu): what the build talks to, sign out, open a
+/// link through the router, move a demo parcel forward (`POST /orders/{id}/shipment/simulate`, slice F),
+/// send test notifications and crash on purpose (slice J), and empty the caches.
+///
+/// Staging builds show it as "Test tools", with only the build, the parcel step, the test notifications and
+/// the test crash. Release builds have neither. Its copy is English and never reaches members.
 struct DeveloperMenuView: View {
+    #if DEBUG
+    static let title = "Developer menu"
+    #else
+    static let title = "Test tools"
+    #endif
+
     @Environment(SessionManager.self) private var session
     @Environment(AppRouter.self) private var router
     @Environment(LanguageManager.self) private var l10n
@@ -23,7 +32,7 @@ struct DeveloperMenuView: View {
 
     var body: some View {
         ShellScreen {
-            TaleedTopAppBar(title: "Developer menu", onBack: { dismiss() })
+            TaleedTopAppBar(title: Self.title, onBack: { dismiss() })
         } content: {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -33,6 +42,7 @@ struct DeveloperMenuView: View {
                     ListRow(label: "URL scheme", trailingText: LinkRouter.appScheme.isolatedLeftToRight)
                     ListRow(label: "Language", trailingText: l10n.language.rawValue)
 
+                    #if DEBUG
                     section("Session")
                     ListRow(label: session.user.map { "Signed in as \($0.handle ?? $0.id)" } ?? "Signed out")
                     if session.isSignedIn {
@@ -42,9 +52,20 @@ struct DeveloperMenuView: View {
                         .padding(.horizontal, TaleedLayout.screenMargin)
                         .padding(.top, TaleedSpacing.s8)
                     }
+                    #endif
 
                     section("Simulate parcel step")
                     simulateShipment
+
+                    section("Send test notifications")
+                    if let developmentApi {
+                        TestNotificationsSection(api: developmentApi)
+                    }
+
+                    section("Crash reporting")
+                    CrashTestSection()
+
+                    #if DEBUG
 
                     section("Open a link")
                     openLink
@@ -60,6 +81,7 @@ struct DeveloperMenuView: View {
                     section("Caches")
                     ListRow(label: "Empty the image caches", leadingIcon: .trash) { ImageLoading.clearCaches() }
                     ListRow(label: "Delete the catalog copies", leadingIcon: .trash) { CatalogDiskCache().clear() }
+                    #endif
                 }
                 .padding(.bottom, TaleedSpacing.s24)
             }

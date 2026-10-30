@@ -5,9 +5,9 @@ import SwiftUI
 ///
 /// Signed in, in the website's order: the account (profile and billing, username, email, password,
 /// identity verification), the newsletter switch, then the app-only sections: the language, the push switch (only with
-/// `features.push`), saved addresses, blocked members, help and the version, "Se déconnecter" and, at
-/// the bottom, "Supprimer mon compte". Signed out: the language, help and the version. The appearance
-/// (Light or Dark) follows the language, signed in or not.
+/// `features.push`), the usage statistics switch, saved addresses, blocked members, help and the version,
+/// "Se déconnecter" and, at the bottom, "Supprimer mon compte". Signed out: the language, the usage statistics
+/// switch, help and the version. The appearance (Light or Dark) follows the language, signed in or not.
 ///
 /// The account rows wait for `GET /me` (skeleton rows, or the error with Retry, offline included); the
 /// language, help and sign-out work without it.
@@ -18,6 +18,7 @@ struct SettingsView: View {
     @Environment(SessionManager.self) private var session
     @Environment(AccountStore.self) private var account
     @Environment(PushRegistration.self) private var push
+    @Environment(UsageAnalytics.self) private var analytics
     @Environment(AppToasts.self) private var toasts
     @Environment(\.appEnvironment) private var environment
     @Environment(\.dismiss) private var dismiss
@@ -35,6 +36,7 @@ struct SettingsView: View {
                     languageSection
                     appearanceSection
                     if session.isSignedIn, push.canBeSwitched { pushSection }
+                    analyticsSection
                     moreSection
                     if session.isSignedIn { signOutAndDelete }
                 }
@@ -189,6 +191,21 @@ struct SettingsView: View {
         .padding(.horizontal, TaleedLayout.screenMargin)
     }
 
+    /// Usage statistics (Google Analytics), signed in or not: on by default, kept on the device, applied at
+    /// once. Under the push switch, or under the appearance when there is none.
+    private var analyticsSection: some View {
+        VStack(alignment: .leading, spacing: TaleedSpacing.s4) {
+            Toggle(isOn: Binding(get: { analytics.isSwitchedOn }, set: { analytics.setSwitchedOn($0) })) {
+                Text(l10n.string(.appSettingsAnalytics))
+            }
+            .toggleStyle(.taleedRow)
+            .accessibilityIdentifier("settings.analytics")
+            FieldHelper(text: l10n.string(.appSettingsAnalyticsHint), color: TaleedColor.textSecondarySmall)
+        }
+        .padding(.horizontal, TaleedLayout.screenMargin)
+        .padding(.top, TaleedSpacing.s16)
+    }
+
     private func setPush(_ isOn: Bool) {
         guard pushPending == nil else { return }
         pushPending = isOn
@@ -220,9 +237,13 @@ struct SettingsView: View {
             ListRow(label: "Design system", leadingIcon: .sparkle, showsChevron: true) {
                 router.push(.designSystem)
             }
-            ListRow(label: "Developer menu", leadingIcon: .info, showsChevron: true) {
+            #endif
+            #if DEBUG || TALEED_TEST_TOOLS
+            // "Test tools" in staging builds; nothing in release builds.
+            ListRow(label: DeveloperMenuView.title, leadingIcon: .info, showsChevron: true) {
                 router.push(.developerMenu)
             }
+            .accessibilityIdentifier("settings.developerMenu")
             #endif
         }
         .padding(.top, TaleedSpacing.s16)

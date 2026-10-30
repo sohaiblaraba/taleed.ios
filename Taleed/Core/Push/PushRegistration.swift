@@ -5,17 +5,15 @@ import UserNotifications
 /// `POST /devices` (slice C, Registering the device).
 @MainActor
 protocol DevicesApi: AnyObject {
-    /// Registers this installation for pushes in `language`. Idempotent.
-    func registerDevice(token: String, language: AppLanguage) async throws(ApiError)
+    /// Registers this installation for pushes in `language`, with its device details (slice J). Idempotent.
+    func registerDevice(token: String, language: AppLanguage, details: DeviceDetails) async throws(ApiError)
     /// `DELETE /devices`: this installation stops receiving pushes. Idempotent.
     func unregisterDevice() async throws(ApiError)
 }
 
-/// The installation's Firebase Cloud Messaging registration token, the one `POST /devices` takes.
-///
-/// This build has none yet: Firebase (the SDK and each environment's `GoogleService-Info.plist`, plan
-/// action 3) brings it, with the token refresh. `PushRegistration` already owns the push switch and the
-/// registration after sign-in and after a language switch.
+/// The installation's Firebase Cloud Messaging registration token, the one `POST /devices` takes
+/// (`FirebasePushTokenSource`). A build without `GoogleService-Info.plist` has none: then pushes are off.
+/// A new token (Firebase rotated it) comes through `PushRegistration.tokenDidChange(_:)`.
 @MainActor
 protocol PushTokenSource: AnyObject {
     func registrationToken() async -> String?
@@ -74,8 +72,12 @@ final class PushRegistration {
     @ObservationIgnored private let isEnabled: () -> Bool
     @ObservationIgnored private let isSignedIn: () -> Bool
     @ObservationIgnored private let language: () -> AppLanguage
+    @ObservationIgnored private let details: () -> DeviceDetails
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var isWorking = false
+    /// The token of the last registration of this session: a refresh that hands the same one again is not
+    /// sent twice.
+    @ObservationIgnored private var registeredToken: String?
     /// This installation is registered for the current session.
     private(set) var isRegistered = false
     /// The system permission as last read: `nil` before the member was asked (or before it was read).
@@ -87,13 +89,15 @@ final class PushRegistration {
 
     init(api: DevicesApi, permission: NotificationPermission, tokenSource: PushTokenSource?,
          isEnabled: @escaping () -> Bool, isSignedIn: @escaping () -> Bool = { true },
-         language: @escaping () -> AppLanguage, defaults: UserDefaults = .standard) {
+         language: @escaping () -> AppLanguage, details: @escaping () -> DeviceDetails,
+         defaults: UserDefaults = .standard) {
         self.api = api
         self.permission = permission
         self.tokenSource = tokenSource
         self.isEnabled = isEnabled
         self.isSignedIn = isSignedIn
         self.language = language
+        self.details = details
         self.defaults = defaults
         isWanted = defaults.object(forKey: Self.switchKey) as? Bool ?? true
     }
@@ -125,11 +129,10 @@ final class PushRegistration {
             }
             guard let token = await tokenSource.registrationToken() else { return .failed }
             do {
-                try await api.registerDevice(token: token, language: language())
+                try await register(token)
             } catch {
                 return .failed
             }
-            isRegistered = true
         } else {
             do {
                 try await api.unregisterDevice()
@@ -137,6 +140,7 @@ final class PushRegistration {
                 return .failed
             }
             isRegistered = false
+            registeredToken = nil
         }
         isWanted = isOn
         defaults.set(isOn, forKey: Self.switchKey)
@@ -179,15 +183,20 @@ final class PushRegistration {
             return
         }
         guard let token = await tokenSource.registrationToken() else { return }
-        do {
-            try await api.registerDevice(token: token, language: language())
-            isRegistered = true
-        } catch {}
+        try? await register(token)
+    }
+
+    /// Firebase handed the app a new registration token (slice C, Registering the device): registers it,
+    /// under the same conditions as at launch. The token this session already registered is not sent again.
+    func tokenDidChange(_ token: String) async {
+        guard token != registeredToken else { return }
+        await registerIfAllowed(again: true)
     }
 
     /// Signed out: pushes stop with the session (slice C); the next member registers again.
     func sessionDidEnd() {
         isRegistered = false
+        registeredToken = nil
     }
 
     /// Registers without asking: only with `features.push`, a session, the member's choice and a granted
@@ -199,10 +208,14 @@ final class PushRegistration {
         isWorking = true
         defer { isWorking = false }
         guard let token = await tokenSource.registrationToken() else { return }
-        do {
-            try await api.registerDevice(token: token, language: language())
-            isRegistered = true
-        } catch {}
+        try? await register(token)
+    }
+
+    /// `POST /devices` with the app's language and the device details.
+    private func register(_ token: String) async throws(ApiError) {
+        try await api.registerDevice(token: token, language: language(), details: details())
+        isRegistered = true
+        registeredToken = token
     }
 
     private func readPermission() async -> Bool? {
@@ -213,9 +226,8 @@ final class PushRegistration {
 }
 
 extension GeneratedTaleedApi: DevicesApi {
-    func registerDevice(token: String, language: AppLanguage) async throws(ApiError) {
-        let locale = DeviceRegistration.ModelLocale(rawValue: language.rawValue)
-        let registration = DeviceRegistration(token: token, platform: .ios, locale: locale)
+    func registerDevice(token: String, language: AppLanguage, details: DeviceDetails) async throws(ApiError) {
+        let registration = DeviceRegistration(token: token, language: language, details: details)
         // Idempotent (slice C, Registering the device).
         try await caller.call(.read, automatic: true) {
             try await PushAPI.registerDevice(deviceRegistration: registration, apiConfiguration: $0)

@@ -23055,6 +23055,52 @@
           }
         }
       }
+    },
+    "app_settings_analytics": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مشاركة إحصاءات الاستخدام"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share usage statistics"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager les statistiques d’utilisation"
+          }
+        }
+      }
+    },
+    "app_settings_analytics_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إحصاءات حول استخدامك للتطبيق، دون اسمك أو بيانات الاتصال بك. تساعدنا على تحسين تليد."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistics about how you use the app, without your name or contact details. They help us improve Taleed."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des statistiques sur votre utilisation de l’application, sans votre nom ni vos coordonnées. Elles nous aident à améliorer Taleed."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

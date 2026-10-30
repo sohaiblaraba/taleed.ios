@@ -4,14 +4,20 @@ import Testing
 
 @MainActor
 private final class FakeDevicesApi: DevicesApi {
-    private(set) var registered: [(token: String, language: AppLanguage)] = []
+    struct Registration {
+        let token: String
+        let language: AppLanguage
+        let details: DeviceDetails
+    }
+
+    private(set) var registered: [Registration] = []
     var failure: Taleed.ApiError?
 
     private(set) var unregistered = 0
 
-    func registerDevice(token: String, language: AppLanguage) async throws(Taleed.ApiError) {
+    func registerDevice(token: String, language: AppLanguage, details: DeviceDetails) async throws(Taleed.ApiError) {
         if let failure { throw failure }
-        registered.append((token, language))
+        registered.append(Registration(token: token, language: language, details: details))
     }
 
     func unregisterDevice() async throws(Taleed.ApiError) {
@@ -37,8 +43,12 @@ private final class FakePermission: NotificationPermission {
 
 @MainActor
 private final class FakeTokenSource: PushTokenSource {
-    func registrationToken() async -> String? { "fcm-token" }
+    var token = "fcm-token"
+    func registrationToken() async -> String? { token }
 }
+
+private let sampleDetails = DeviceDetails(appVersion: "20261002", appBuild: "20261002", osVersion: "26.0",
+                                          deviceModel: "iPhone18,2")
 
 @MainActor
 struct PushRegistrationTests {
@@ -50,7 +60,7 @@ struct PushRegistrationTests {
     private func registration(enabled: Bool = true, signedIn: Bool = true, tokens: PushTokenSource? = FakeTokenSource(),
                               language: @escaping () -> AppLanguage = { .ar }) -> PushRegistration {
         PushRegistration(api: api, permission: permission, tokenSource: tokens, isEnabled: { enabled }, isSignedIn: { signedIn },
-                         language: language, defaults: defaults)
+                         language: language, details: { sampleDetails }, defaults: defaults)
     }
 
     /// The Settings switch shows only with `features.push` and a token source.
@@ -210,5 +220,37 @@ struct PushRegistrationTests {
         await push.memberReachedOut()
         #expect(api.registered.count == 1)
         #expect(permission.requests == 1)
+    }
+
+    /// Every registration sends the five device details (slice J).
+    @Test func eachRegistrationSendsTheDeviceDetails() async {
+        permission.granted = true
+        let push = registration()
+        await push.sessionDidStart()
+        await push.languageDidChange()
+        #expect(api.registered.map(\.details) == [sampleDetails, sampleDetails])
+    }
+
+    /// Firebase rotated the token: it registers again; the same token again is not sent twice.
+    @Test func aNewTokenRegistersAgain() async {
+        permission.granted = true
+        let tokens = FakeTokenSource()
+        let push = registration(tokens: tokens)
+        await push.sessionDidStart()
+        await push.tokenDidChange("fcm-token")
+        #expect(api.registered.count == 1)
+        tokens.token = "fcm-token-2"
+        await push.tokenDidChange("fcm-token-2")
+        #expect(api.registered.map(\.token) == ["fcm-token", "fcm-token-2"])
+    }
+
+    /// A new token while signed out, or with the permission not given, waits for the next session.
+    @Test func aNewTokenSignedOutRegistersNothing() async {
+        permission.granted = true
+        await registration(signedIn: false).tokenDidChange("fcm-token-2")
+        permission.granted = nil
+        await registration().tokenDidChange("fcm-token-3")
+        #expect(api.registered.isEmpty)
+        #expect(permission.requests == 0)
     }
 }

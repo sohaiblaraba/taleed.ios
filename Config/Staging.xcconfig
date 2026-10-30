@@ -10,3 +10,11 @@ TALEED_API_BASE_URL = https:/$()/dev.taleed.app/api/v1
 // Links to dev.taleed.app open the app (LinkRouter, Associated Domains). The payment return keeps the
 // `taleed` scheme: dev.taleed.app leaves MOBILE_URL_SCHEME at its default.
 TALEED_APP_LINK_HOST = dev.taleed.app
+
+TALEED_BUILD_TYPE = staging
+
+// Settings → "Test tools" (the parcel step, test notifications, test crash), for testers. Release builds lack it.
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) TALEED_TEST_TOOLS
+
+// Local settings that are not in git, such as TALEED_FIREBASE_CONFIG_DIR. Optional.
+#include? "Local.xcconfig"

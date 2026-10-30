@@ -138,6 +138,8 @@ struct RouteDestinationView: View {
             if let referralsApi { ReferralsView(api: referralsApi) } else { RoutePlaceholderView(route: route) }
         #if DEBUG
         case .designSystem: DesignSystemGalleryView()
+        #endif
+        #if DEBUG || TALEED_TEST_TOOLS
         case .developerMenu: DeveloperMenuView()
         #endif
         }

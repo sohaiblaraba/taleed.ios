@@ -36,6 +36,12 @@ final class AppContainer {
     let welcome: WelcomeGate
     /// The push permission and `POST /devices`, after the member's first message or offer.
     let push: PushRegistration
+    /// How pushes show while the app is open, and where a tap leads (slice C).
+    let pushCenter = PushNotificationCenter.shared
+    /// The member's `id` and the non-personal keys of crash reports (slice J).
+    let crashReporting = CrashReporting(reporter: FirebaseServices.crashReporter)
+    /// Usage statistics (Google Analytics, automatic events only) and the Settings switch.
+    let analytics: UsageAnalytics
     /// Sign in with Google (slice G).
     let google = GoogleSignInSDKClient()
     /// The member's account for the settings screens (G16).
@@ -56,8 +62,11 @@ final class AppContainer {
         toasts = AppToasts(languageManager: languageManager)
         uploads = PhotoUploadService(api: api)
         welcome = WelcomeGate()
-        push = Self.makePush(api: api, launch: launch, session: session, languageManager: languageManager)
+        push = Self.makePush(api: api, environment: environment, launch: launch, session: session,
+                             languageManager: languageManager)
         account = AccountStore(api: api, session: session)
+        analytics = UsageAnalytics(backend: FirebaseServices.analytics, isBuildEnabled: UsageAnalytics.isBuildEnabled(),
+                                   buildType: UsageAnalytics.buildType(), language: languageManager.language)
 
         // A suspended member who was signed in keeps the screens that still answer (orders, wallet,
         // account deletion), so links to them do not ask to sign in.
@@ -69,22 +78,7 @@ final class AppContainer {
             transaction.disablesAnimations = true
             withTransaction(transaction) { welcome.skipForLink() }
         }
-        session.onSignedOut = { [welcome, router, push, account] in
-            push.sessionDidEnd()
-            account.reset()
-            welcome.showAfterSignOut()
-            router.sessionDidEnd()
-            router.selectedTab = .home
-        }
-        // From the suspended screen the shell was not on screen to see the session end: leave the
-        // screens that need an account here too.
-        session.onSessionExpired = { [router, account] in
-            account.reset()
-            router.sessionDidEnd()
-            router.presentSignIn()
-        }
-        // The suspended screen is the root of the Profile stack: nothing may cover it (screens.md §0.6).
-        session.onSuspended = { [router] in router.popToRoot(.profile) }
+        connectSessionEnds()
         router.resolveConversation = { [api] (listingId: String, buyerId: String?) async throws(ApiError) -> String in
             try await api.openConversation(listingId: listingId, buyerId: buyerId)
         }
@@ -97,12 +91,35 @@ final class AppContainer {
             toasts.show(languageManager.string(.appNotFoundTitle), kind: .info)
         }
         connectLinks()
+        connectPushes()
 
         #if DEBUG
         DebugLaunchOptions.apply(to: router)
         #endif
 
         connectSettings()
+    }
+
+    /// What a session's end clears: the push registration, the crash reports' member id, the account.
+    private func connectSessionEnds() {
+        session.onSignedOut = { [welcome, router, push, account, crashReporting] in
+            push.sessionDidEnd()
+            crashReporting.sessionDidEnd()
+            account.reset()
+            welcome.showAfterSignOut()
+            router.sessionDidEnd()
+            router.selectedTab = .home
+        }
+        // From the suspended screen the shell was not on screen to see the session end: leave the
+        // screens that need an account here too.
+        session.onSessionExpired = { [router, account, crashReporting] in
+            crashReporting.sessionDidEnd()
+            account.reset()
+            router.sessionDidEnd()
+            router.presentSignIn()
+        }
+        // The suspended screen is the root of the Profile stack: nothing may cover it (screens.md §0.6).
+        session.onSuspended = { [router] in router.popToRoot(.profile) }
     }
 
     /// When links and pushes open: once the launch knows the session, and not while the account is
@@ -115,13 +132,30 @@ final class AppContainer {
         session.signOutOfProviders = { [google] in google.signOut() }
     }
 
-    /// No token source until Firebase is set up (plan action 3): nothing is asked or registered meanwhile.
-    private static func makePush(api: GeneratedTaleedApi, launch: LaunchViewModel, session: SessionManager,
-                                 languageManager: LanguageManager) -> PushRegistration {
-        PushRegistration(api: api, permission: SystemNotificationPermission(), tokenSource: nil,
+    /// No token source without Firebase (a build without `GoogleService-Info.plist`): then nothing is asked
+    /// or registered.
+    private static func makePush(api: GeneratedTaleedApi, environment: AppEnvironment, launch: LaunchViewModel,
+                                 session: SessionManager, languageManager: LanguageManager) -> PushRegistration {
+        PushRegistration(api: api, permission: SystemNotificationPermission(), tokenSource: FirebaseServices.pushTokens,
                          isEnabled: { [launch] in launch.config?.features.push == true },
                          isSignedIn: { [session] in session.isSignedIn },
-                         language: { [languageManager] in languageManager.language })
+                         language: { [languageManager] in languageManager.language },
+                         details: { DeviceDetails.current(environment: environment) })
+    }
+
+    /// Pushes (slice C): a new Firebase token registers again; a tap opens the push's `url` through the
+    /// router, like a link (during launch it waits for the launch flow); one that arrives while the app is
+    /// open reloads the badges and the open lists.
+    private func connectPushes() {
+        FirebaseServices.pushTokens?.onNewToken = { [push] token in
+            Task { await push.tokenDidChange(token) }
+        }
+        pushCenter.conversationOnScreen = { [router] in router.conversationOnScreen }
+        pushCenter.onArrival = { [session, notificationsFeed] payload in
+            Task { await session.refresh() }
+            if !payload.isMessage { notificationsFeed.somethingArrived() }
+        }
+        pushCenter.onOpen = { [router] payload in router.open(payload.destination) }
     }
 
     /// The settings (G16): a deleted account, and the language switch.
@@ -129,8 +163,9 @@ final class AppContainer {
         // Deleted: the signed-out Home, without the welcome screen (screens.md §2 G16). After a lost
         // answer the retry's `401` already asked to sign in (`onSessionExpired`): the account is gone, so
         // that sheet closes (slice E, Retrying).
-        session.onAccountDeleted = { [router, push, account] in
+        session.onAccountDeleted = { [router, push, account, crashReporting] in
             push.sessionDidEnd()
+            crashReporting.sessionDidEnd()
             account.reset()
             router.closeSignIn()
             router.sessionDidEnd()
@@ -138,11 +173,16 @@ final class AppContainer {
         }
         // Each sign-in, sign-up and launch with a session registers the push device again once the
         // permission is granted (slice C, Registering the device).
-        session.onSessionStarted = { [push] in
+        session.onSessionStarted = { [push, session, crashReporting] in
+            // Crash reports carry the member's `id`, never a name, email address or phone number (slice J).
+            crashReporting.sessionDidStart(memberId: session.user?.id)
             Task { await push.sessionDidStart() }
         }
-        languageManager.onChange = { [apiSession, catalog, push, launch] language in
+        crashReporting.languageDidChange(languageManager.language)
+        languageManager.onChange = { [apiSession, catalog, push, launch, crashReporting, analytics] language in
             apiSession.setLanguage(language)
+            crashReporting.languageDidChange(language)
+            analytics.languageDidChange(language)
             Task { await catalog.languageDidChange(to: language) }
             // The website links of `GET /config` carry the language (API 1.5.11).
             Task { await launch.languageDidChange() }

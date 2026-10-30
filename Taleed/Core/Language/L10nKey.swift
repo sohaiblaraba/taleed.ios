@@ -804,6 +804,8 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case appSettingsAppearanceSystem = "app_settings_appearance_system"
     case appSettingsAppearanceLight = "app_settings_appearance_light"
     case appSettingsAppearanceDark = "app_settings_appearance_dark"
+    case appSettingsAnalytics = "app_settings_analytics"
+    case appSettingsAnalyticsHint = "app_settings_analytics_hint"
     case appSettingsAvatarRemove = "app_settings_avatar_remove"
     case appSettingsPhoneRefused = "app_settings_phone_refused"
     case appSettingsPasswordChanged = "app_settings_password_changed"

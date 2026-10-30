@@ -60,11 +60,34 @@ What every screen group reuses (screens.md §0 and §1, api-guide.md):
 | Identity verification (G17): `.identityVerification` (Settings → Vérification d'identité, "Vérifié" once verified; the VERIFICATION_APPROVED / VERIFICATION_REJECTED notifications; the Referrals gate later): `GET /me/verification` decides — NONE the form, REJECTED the reviewer's note above it, PENDING "en cours d'examen", VERIFIED the success alert and the legal name read-only. The form: the legal name (saved with `PATCH /me` when changed), one ID photo kept in memory (`DocumentPhotoSlot`, camera or library), uploaded with `id_document` just before `POST /me/verification`; while `features.identityAiReview` is on, the OpenAI consent sheet first at each sending, its answer sent as `aiConsent` (slice I; `-TaleedDebugIdentityAiReview YES`); `invalid_state` reloads, a refused key is uploaded again once, a 429 shows the wait. Reloads in the foreground. `-TaleedDebugVerification offline,upload,limit` | `Features/Settings/IdentityVerification*.swift`, `DesignSystem/Components/DocumentPhotoSlot.swift` |
 | Referrals (G18): `.referrals` (Profile → "Jusqu’à 1 500 DA de bons d’achat en parrainant", the amount from `program`; `/referrals` links and the REFERRAL_SIGNUP notification): `GET /me/referrals` (program + members invited, 30 a page) — the hero with the website's artwork and copy filled from `program`; verified: the invite link, Copier ("Lien copié !" 2.5 s, toast), Partager (system share sheet) and "Vos filleuls (n)", a sheet with the members (reward badges: done, "Jusqu'au …", "Délai dépassé"; a row opens the profile) and `GET /me/vouchers` (a used one opens its order); not verified: the warning alert that opens identity verification; the three steps and "Bon à savoir"; terms (`program.termsUrl`) in the in-app browser. `ReferralsApi` (`\.referralsApi`); `-TaleedDebugReferrals offline` | `Features/Referrals/` |
 | Sign in with Google and Apple (slice G): "Continue with Apple" (`SignInWithAppleButton`) and "Continue with Google" (GoogleSignIn-iOS) above the email form of sign-in and sign-up, with "or", from `GET /config` `features.appleSignIn` / `googleSignIn` (release builds show Google only with Apple, guideline 4.8; Debug may show Google alone). A nonce per attempt (Apple gets its SHA-256), then `POST /auth/social`; `profile_required` opens the finish step (name, username, referral code, `POST /auth/social/complete`). Settings: no password (`Me.hasPassword` false) shows "Set a password" (the reset link) and deletes without a password. Sign-out also signs out of Google. The client ID and URL scheme are in `Config/Base.xcconfig` (`GOOGLE_IOS_CLIENT_ID`, `GOOGLE_IOS_URL_SCHEME`) | `Core/Auth/Social*.swift`, `Features/Auth/SocialSignIn*.swift`, `Features/Auth/FinishSignUp*.swift` |
-| Push registration: the permission asked after the member's first message or offer, then `POST /devices`, only when `features.push` (`false` locally). **Deferred:** the Firebase token source (SDK and `GoogleService-Info.plist`, plan action 3) comes with G16, with the push switch and the registration after sign-in and a language switch; until then nothing is asked | `Core/Push/PushRegistration.swift` |
+| Push (slice C, slice J): the permission asked after the member's first message or offer, then `POST /devices` with the five device details (`DeviceDetails`), only when `features.push`; the Firebase token (`FirebasePushTokenSource`, re-registered when Firebase rotates it); pushes in the foreground (nothing for the conversation on screen) and their taps through the router, app killed included (`PushNotificationCenter`); the icon badge from the unread counts | `Core/Push/` |
+| Crash reports and usage statistics (slice J): Crashlytics with the member's `id` only (`CrashReporting`), Google Analytics with automatic events only and the Settings switch (`UsageAnalytics`); Debug sends neither | `Core/CrashReporting/`, `Core/Analytics/`, `Core/Push/FirebaseServices.swift` |
+| Test tools (Debug: Settings → Developer menu; Staging: Settings → Test tools): the parcel step, "Send test notifications" (`POST /dev/notifications/test`), "Test crash" | `Features/Developer/` |
 
 Links can be tried on the simulator with the app's scheme, which reads like a path:
 `xcrun simctl openurl booted "taleed://ar/orders/<id>"`, or with the launch argument
 `-TaleedDebugOpenURL /listings/<id>`.
+
+## Firebase (push, crash reports, usage statistics)
+
+`GoogleService-Info.plist` is never in the repository (`.gitignore`). The build phase
+`scripts/copy-firebase-config.sh` copies it into the app from `TALEED_FIREBASE_CONFIG_DIR`, which is
+`../taleed/local/firebase` by default (`Config/Base.xcconfig`). To use another folder, set
+`TALEED_FIREBASE_CONFIG_DIR` in `Config/Local.xcconfig` (not in git). Without the file the app builds and
+runs with push, crash reports and statistics off.
+
+| | Debug | Staging, Release |
+|---|---|---|
+| Crash reports sent (`TALEED_CRASH_REPORTING`) | No (deleted on the device) | Yes |
+| Usage statistics (`TALEED_ANALYTICS`, the Settings switch) | No | Yes, unless the member turned them off |
+| dSYM upload (`scripts/upload-crashlytics-symbols.sh`) | No dSYM | Yes |
+
+Analytics is `FirebaseAnalyticsCore`: no IDFA, no AdSupport, no tracking prompt. Script sandboxing is off
+for the app target, because both build scripts read files that may be missing.
+
+A simulator whose APNs connection is blocked gets no device token. In Debug, the launch argument
+`-TaleedDebugAPNsToken <hex>` lets it register anyway; test pushes with `xcrun simctl push` and the payload
+of `taleed/src/server/fcm.ts`.
 
 ## Build configurations
 
@@ -81,7 +104,7 @@ To add a configuration: create `Config/<Name>.xcconfig` (include `Base.xcconfig`
 ## Staging build (for testers)
 
 Staging is a release build (optimised, no `#if DEBUG` code, so no developer menu and no
-local-networking exception) that talks to `https://dev.taleed.app/api/v1`. It is the build for
+local-networking exception, but Settings → "Test tools", `TALEED_TEST_TOOLS`) that talks to `https://dev.taleed.app/api/v1`. It is the build for
 TestFlight, so it has the App Store bundle ID `app.taleed.mobile` and the name "Taleed": it uploads to
 the same App Store Connect record as Release. When the backend URL changes, change
 `TALEED_API_BASE_URL` in `Config/Staging.xcconfig` and upload a new build. The `Taleed Staging`

@@ -178,7 +178,7 @@ final class SessionManager {
         onSignedOut?()
         guard let token else { return }
         let api = self.api
-        // Push is off (`features.push`), so no device is registered: no `DELETE /devices` yet.
+        // Pushes stop with the session, without a call (slice C, Registering the device).
         Task { try? await api.signOut(token: token) }
     }
 

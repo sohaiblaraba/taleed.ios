@@ -29,6 +29,11 @@ packages:
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS
     from: "9.0.0"
+  # Push (Cloud Messaging), crash reporting (Crashlytics, slice J) and usage statistics (Analytics). 12, not 13: GoogleSignIn 9
+  # needs app-check 11, which Firebase 13 left.
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: "12.0.0"
 
 targets:
   Taleed:
@@ -44,7 +49,27 @@ targets:
         product: NukeUI
       - package: GoogleSignIn
         product: GoogleSignIn
+      - package: Firebase
+        product: FirebaseMessaging
+      - package: Firebase
+        product: FirebaseCrashlytics
+      # Google Analytics without the advertising identifier (no IDFA, no AdSupport).
+      - package: Firebase
+        product: FirebaseAnalyticsCore
       - sdk: AuthenticationServices.framework
+    # GoogleService-Info.plist is not in the repository: it is copied in from TALEED_FIREBASE_CONFIG_DIR when it is
+    # there (Config/Base.xcconfig). Without it the app builds and runs with push and crash reporting off.
+    postBuildScripts:
+      - name: Copy GoogleService-Info.plist
+        basedOnDependencyAnalysis: false
+        script: |
+          "${SRCROOT}/scripts/copy-firebase-config.sh"
+      # Sends the dSYM to Crashlytics, so crash reports show symbols. Only builds that make a dSYM (Release,
+      # Staging) and have the Firebase file; Debug has neither.
+      - name: Upload dSYM to Crashlytics
+        basedOnDependencyAnalysis: false
+        script: |
+          "${SRCROOT}/scripts/upload-crashlytics-symbols.sh"
     settings:
       base:
         INFOPLIST_FILE: Taleed/Support/Info.plist
@@ -54,7 +79,9 @@ targets:
         INFOPLIST_PREPROCESS: YES
         GENERATE_INFOPLIST_FILE: NO
         SWIFT_EMIT_LOC_STRINGS: NO
-        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        # Off: the two build scripts read files that may be missing (GoogleService-Info.plist outside the
+        # repository, a dSYM only in Release and Staging), which a sandboxed script must declare as inputs.
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
         CODE_SIGN_STYLE: Automatic
         # Taleed's Apple Developer team: the App ID app.taleed.mobile has Sign in with Apple, Push Notifications
         # and Associated Domains. Not a secret.

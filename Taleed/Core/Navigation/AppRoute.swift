@@ -67,7 +67,9 @@ enum AppRoute: Hashable, Sendable {
     #if DEBUG
     /// The design-system gallery (debug builds only).
     case designSystem
-    /// The developer menu (debug builds only).
+    #endif
+    #if DEBUG || TALEED_TEST_TOOLS
+    /// The developer menu (debug builds), "Test tools" in staging builds.
     case developerMenu
     #endif
 
@@ -82,7 +84,11 @@ enum AppRoute: Hashable, Sendable {
         case .listing, .member, .search, .visualSearch, .settings, .help:
             false
         #if DEBUG
-        case .designSystem, .developerMenu:
+        case .designSystem:
+            false
+        #endif
+        #if DEBUG || TALEED_TEST_TOOLS
+        case .developerMenu:
             false
         #endif
         }
