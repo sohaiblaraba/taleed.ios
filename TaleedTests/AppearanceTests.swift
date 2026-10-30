@@ -3,7 +3,7 @@ import SwiftUI
 import Testing
 import UIKit
 
-/// The Appearance setting (design/dark-mode.md): Light by default, kept on the device, applied at once.
+/// The Appearance setting (design/dark-mode.md): System by default, kept on the device, applied at once.
 @MainActor
 struct AppearanceTests {
     private func freshDefaults() -> UserDefaults {
@@ -13,12 +13,39 @@ struct AppearanceTests {
         return defaults
     }
 
-    @Test func lightIsTheDefault() {
+    @Test func systemIsTheDefault() {
+        #expect(AppAppearance.fallback == .system)
         let manager = AppearanceManager(defaults: freshDefaults())
-        #expect(manager.appearance == .light)
-        #expect(manager.colorScheme == .light)
-        #expect(AppearanceManager.resolve(stored: nil) == .light)
-        #expect(AppearanceManager.resolve(stored: "sepia") == .light)
+        #expect(manager.appearance == .system)
+        #expect(manager.colorScheme == nil)
+        #expect(AppearanceManager.resolve(stored: nil) == .system)
+        #expect(AppearanceManager.resolve(stored: "sepia") == .system)
+        #expect(AppearanceManager.resolve(stored: "") == .system)
+        #expect(AppearanceManager.resolve(stored: "system") == .system)
+    }
+
+    /// A member who saved Light or Dark before System existed keeps it; no saved value means System.
+    @Test func aStoredLightOrDarkIsKept() {
+        #expect(AppearanceManager.resolve(stored: "light") == .light)
+        #expect(AppearanceManager.resolve(stored: "dark") == .dark)
+        for stored in ["light", "dark"] {
+            let defaults = freshDefaults()
+            defaults.set(stored, forKey: AppearanceManager.storageKey)
+            #expect(AppearanceManager(defaults: defaults).appearance.rawValue == stored)
+        }
+        let unknown = freshDefaults()
+        unknown.set("sepia", forKey: AppearanceManager.storageKey)
+        #expect(AppearanceManager(defaults: unknown).appearance == .system)
+    }
+
+    /// System follows the phone: no SwiftUI scheme and no window override, instead of a style read once.
+    @Test func systemLeavesTheSchemeToThePhone() {
+        #expect(AppAppearance.system.colorScheme == nil)
+        #expect(AppAppearance.system.userInterfaceStyle == .unspecified)
+        #expect(AppAppearance.light.colorScheme == .light)
+        #expect(AppAppearance.light.userInterfaceStyle == .light)
+        #expect(AppAppearance.dark.colorScheme == .dark)
+        #expect(AppAppearance.dark.userInterfaceStyle == .dark)
     }
 
     @Test func theChoiceIsStoredAndReadBack() {
@@ -31,12 +58,16 @@ struct AppearanceTests {
         #expect(AppearanceManager(defaults: defaults).appearance == .dark)
         manager.select(.light)
         #expect(AppearanceManager(defaults: defaults).appearance == .light)
+        manager.select(.system)
+        #expect(defaults.string(forKey: AppearanceManager.storageKey) == "system")
+        #expect(AppearanceManager(defaults: defaults).appearance == .system)
     }
 
     /// The in-app browser takes its style from the stored choice, not from the presenter's traits.
     @Test func theStoredChoiceIsReadWithoutAManager() {
         let defaults = freshDefaults()
-        #expect(AppearanceManager.storedAppearance(defaults: defaults) == .light)
+        #expect(AppearanceManager.storedAppearance(defaults: defaults) == .system)
+        #expect(AppearanceManager.storedAppearance(defaults: defaults).userInterfaceStyle == .unspecified)
         let manager = AppearanceManager(defaults: defaults)
         manager.applyToWindows = { _ in }
         manager.select(.dark)
@@ -56,11 +87,17 @@ struct AppearanceTests {
         manager.select(.light)
         #expect(manager.colorScheme == .light)
         #expect(applied == [.dark, .light])
+        // Back to System: the override is lifted.
+        manager.select(.system)
+        #expect(manager.colorScheme == nil)
+        #expect(applied == [.dark, .light, .unspecified])
     }
 
     @Test func eachChoiceHasItsLabelInEveryLanguage() {
-        #expect(AppAppearance.allCases == [.light, .dark])
-        let expected: [AppLanguage: [String]] = [.en: ["Light", "Dark"], .fr: ["Clair", "Sombre"], .ar: ["فاتح", "داكن"]]
+        #expect(AppAppearance.allCases == [.system, .light, .dark])
+        let expected: [AppLanguage: [String]] = [
+            .en: ["System", "Light", "Dark"], .fr: ["Système", "Clair", "Sombre"], .ar: ["حسب النظام", "فاتح", "داكن"],
+        ]
         for (language, labels) in expected {
             #expect(AppAppearance.allCases.map { LanguageManager.localizedString($0.titleKey, language: language) } == labels)
         }

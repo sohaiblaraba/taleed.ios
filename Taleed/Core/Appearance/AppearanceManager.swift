@@ -3,25 +3,30 @@ import Observation
 import SwiftUI
 import UIKit
 
-/// The app's colour schemes (design/dark-mode.md). Light is the default; the app does not follow the
-/// device setting.
+/// The app's colour schemes (design/dark-mode.md). System is the default: it follows the phone's setting,
+/// live. Light and Dark override it.
 enum AppAppearance: String, CaseIterable, Identifiable, Sendable {
+    case system
     case light
     case dark
 
-    static let fallback: AppAppearance = .light
+    static let fallback: AppAppearance = .system
 
     var id: String { rawValue }
 
-    var colorScheme: ColorScheme {
+    /// Nil for System: SwiftUI then follows the phone and switches when the phone switches.
+    var colorScheme: ColorScheme? {
         switch self {
+        case .system: nil
         case .light: .light
         case .dark: .dark
         }
     }
 
+    /// `.unspecified` for System: the windows then inherit the phone's style instead of a copy read once.
     var userInterfaceStyle: UIUserInterfaceStyle {
         switch self {
+        case .system: .unspecified
         case .light: .light
         case .dark: .dark
         }
@@ -30,6 +35,7 @@ enum AppAppearance: String, CaseIterable, Identifiable, Sendable {
     /// The choice's name in Settings.
     var titleKey: L10nKey {
         switch self {
+        case .system: .appSettingsAppearanceSystem
         case .light: .appSettingsAppearanceLight
         case .dark: .appSettingsAppearanceDark
         }
@@ -55,7 +61,7 @@ final class AppearanceManager {
         appearance = Self.resolve(stored: defaults.string(forKey: Self.storageKey))
     }
 
-    /// The stored choice, otherwise Light.
+    /// The stored choice. No stored value, or an unknown one, means System; a stored Light or Dark is kept.
     nonisolated static func resolve(stored: String?) -> AppAppearance {
         stored.flatMap(AppAppearance.init(rawValue:)) ?? .fallback
     }
@@ -65,7 +71,8 @@ final class AppearanceManager {
         resolve(stored: defaults.string(forKey: storageKey))
     }
 
-    var colorScheme: ColorScheme { appearance.colorScheme }
+    /// Nil for System (follow the phone).
+    var colorScheme: ColorScheme? { appearance.colorScheme }
 
     /// Stores the choice and applies it at once.
     func select(_ appearance: AppAppearance) {

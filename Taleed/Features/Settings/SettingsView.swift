@@ -148,7 +148,8 @@ struct SettingsView: View {
         .padding(.horizontal, TaleedLayout.screenMargin)
     }
 
-    /// Light (the default) or Dark, kept on the device and applied at once (design/dark-mode.md).
+    /// System (the default, follows the phone), Light or Dark, kept on the device and applied at once
+    /// (design/dark-mode.md).
     @ViewBuilder
     private var appearanceSection: some View {
         SettingsEyebrow(text: l10n.string(.appSettingsAppearance))

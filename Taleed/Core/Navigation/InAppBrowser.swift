@@ -1,4 +1,5 @@
 import SafariServices
+import SwiftUI
 import UIKit
 
 /// Opens website pages (terms, privacy, buyer protection, guides: `GET /config` `links`) in
@@ -13,14 +14,18 @@ enum InAppBrowser {
         configuration.barCollapsingEnabled = true
         let safari = SFSafariViewController(url: url, configuration: configuration)
         // The Appearance setting, read from the stored choice (AppearanceManager), not from the presenter:
-        // the browser's bars follow it even when the presenter's traits lag behind the window's.
+        // the browser's bars follow it even when the presenter's traits lag behind the window's. System
+        // (`.unspecified`) follows the phone, live.
         let style = AppearanceManager.storedAppearance().userInterfaceStyle
-        let traits = UITraitCollection(userInterfaceStyle: style)
         safari.overrideUserInterfaceStyle = style
         // iOS 17 to 25 tint the bars (`surfaceElevated`). iOS 26 ignores both tints (deprecated): its glass
-        // bars follow the page under them, and the website has no dark theme.
-        safari.preferredControlTintColor = UIColor(TaleedColor.brandPrimary).resolvedColor(with: traits)
-        safari.preferredBarTintColor = UIColor(TaleedColor.surfaceElevated).resolvedColor(with: traits)
+        // bars follow the page under them, and the website has no dark theme. With System the tints stay
+        // dynamic, so they switch with the phone; with Light or Dark they are resolved for that style.
+        let tint = { (color: Color) -> UIColor in
+            style == .unspecified ? UIColor(color) : UIColor(color).resolvedColor(with: UITraitCollection(userInterfaceStyle: style))
+        }
+        safari.preferredControlTintColor = tint(TaleedColor.brandPrimary)
+        safari.preferredBarTintColor = tint(TaleedColor.surfaceElevated)
         safari.dismissButtonStyle = .close
         safari.modalPresentationStyle = .pageSheet
         presenter.present(safari, animated: true)

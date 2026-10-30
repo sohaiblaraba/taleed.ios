@@ -801,6 +801,7 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     // Settings (G16): app-only keys.
     case appSettingsAccount = "app_settings_account"
     case appSettingsAppearance = "app_settings_appearance"
+    case appSettingsAppearanceSystem = "app_settings_appearance_system"
     case appSettingsAppearanceLight = "app_settings_appearance_light"
     case appSettingsAppearanceDark = "app_settings_appearance_dark"
     case appSettingsAvatarRemove = "app_settings_avatar_remove"

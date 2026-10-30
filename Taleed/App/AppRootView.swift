@@ -136,8 +136,9 @@ struct AppRootView: View {
     #endif
 
     /// The Appearance setting, except under the welcome screen's sky artwork, which is drawn for light
-    /// (dark text, dark status bar) in both appearances; its sign-in sheet follows the setting.
-    private var colorScheme: ColorScheme {
+    /// (dark text, dark status bar) in every appearance; its sign-in sheet follows the setting. Nil (System)
+    /// follows the phone.
+    private var colorScheme: ColorScheme? {
         let showsWelcome = container.launch.route == .main && container.welcome.isVisible
             && !container.session.isSignedIn && container.router.authEntry == nil
         return showsWelcome ? .light : container.appearance.colorScheme
