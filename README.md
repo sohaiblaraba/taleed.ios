@@ -82,9 +82,10 @@ runs with push, crash reports and statistics off.
 | Usage statistics (`TALEED_ANALYTICS`, the Settings switch) | No | Yes, unless the member turned them off |
 | dSYM upload (`scripts/upload-crashlytics-symbols.sh`) | No dSYM | Yes |
 
-The dSYM upload runs in the background, detached from the build, so an archive never waits for it (inside an
-archive the upload tool could hang and block Xcode). Its result goes to `~/Library/Logs/Taleed/dsym-upload.log`;
-it gives up after five minutes. If it failed, upload by hand with `<DerivedData>/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols
+The dSYM upload runs in the background as a launchd job, so a build never waits for it. In an archive the build
+step runs before Xcode writes the dSYM (the upload tool hung on the empty placeholder and blocked Xcode), so the
+job waits until the dSYM is complete, then uploads it. Its result goes to `~/Library/Logs/Taleed/dsym-upload.log`;
+it gives up after ten minutes of waiting or five of uploading. If it failed, upload by hand with `<DerivedData>/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols
 -gsp <GoogleService-Info.plist> -p ios <Taleed.app.dSYM>`. For an archive, the dSYM is in the archive's `dSYMs`
 folder.
 
