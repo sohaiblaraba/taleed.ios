@@ -33,8 +33,16 @@ if [[ ! -f "$DWARF" ]]; then
   exit 0
 fi
 
-# In the foreground: Crashlytics' run script uploads in the background, and a command-line build can end before
-# that upload does, which leaves the crashes unsymbolicated. With a clean environment: upload-symbols crashes
-# (segmentation fault) on the build's own variables.
-env -i PATH="$PATH" HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" "$UPLOAD" -gsp "$PLIST" -p ios "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}" \
-  || echo "warning: The dSYM upload failed: upload it by hand (README) so crashes show function names."
+# Detached, so the build never waits on it: inside an archive, upload-symbols can hang with no network activity
+# and block Xcode for good, while the same command finishes in seconds outside the build. Its own copy of the
+# dSYM, so a clean or a rebuild cannot remove it mid-upload. A clean environment, because upload-symbols crashes
+# (segmentation fault) on the build's own variables. Five minutes at most, then it gives up.
+LOG_DIR="$HOME/Library/Logs/Taleed"
+mkdir -p "$LOG_DIR"
+COPY="$(mktemp -d "${TMPDIR:-/tmp}/taleed-dsym.XXXXXX")"
+cp -R "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}" "$COPY/"
+cp "$PLIST" "$COPY/GoogleService-Info.plist"
+nohup env -i PATH="/usr/bin:/bin:/usr/sbin:/sbin" HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" \
+  perl -e 'alarm 300; exec @ARGV' "$UPLOAD" -gsp "$COPY/GoogleService-Info.plist" -p ios "$COPY/${DWARF_DSYM_FILE_NAME}" \
+  </dev/null >>"$LOG_DIR/dsym-upload.log" 2>&1 &
+echo "The dSYM upload runs in the background. Result: $LOG_DIR/dsym-upload.log (or upload it by hand, README)."
