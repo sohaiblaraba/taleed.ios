@@ -11,6 +11,7 @@ struct MainShellView: View {
     @Environment(AppToasts.self) private var toasts
     @Environment(WelcomeGate.self) private var welcome
     @Environment(FavoriteStore.self) private var favorites
+    @Environment(PushRegistration.self) private var push
     @Environment(\.scenePhase) private var scenePhase
     @State private var tabBarHeight: CGFloat = 0
     /// The shell's bottom edge, and the lowest it has been (without the keyboard).
@@ -21,6 +22,7 @@ struct MainShellView: View {
 
     var body: some View {
         @Bindable var router = router
+        @Bindable var push = push
         ZStack {
             tab(.home) { HomeView(viewModel: home) }
             tab(.explore) { ExploreView() }
@@ -84,6 +86,13 @@ struct MainShellView: View {
             AuthSheetView(entry: router.authEntry)
                 .appLanguage(l10n.language)
         })
+        // "Enable notifications" (plan/push-prompt.md): once per installation, the first time a signed-in member
+        // is on the main tabs with nothing over them.
+        .fullScreenCover(isPresented: $push.isPromptPresented) {
+            PushPromptView()
+                .appLanguage(l10n.language)
+        }
+        .task(id: pushPromptMoment) { await presentPushPromptIfNeeded() }
         // Home reloads after a while in the background (here, since Home may sit under a pushed screen).
         .onChange(of: scenePhase) { _, phase in
             switch phase {
@@ -127,6 +136,40 @@ struct MainShellView: View {
 
     private var showsWelcome: Bool {
         welcome.isVisible && !session.isSignedIn
+    }
+
+    /// The member (`id`) is on the main tabs: signed in, a tab's first screen on top (a link or a push that
+    /// opened a screen goes first), and no welcome, sign-in sheet, confirmation or link being resolved over
+    /// it. Nil otherwise, or when the "Enable notifications" screen cannot show at all. A change starts a new
+    /// check.
+    private var pushPromptMoment: String? {
+        guard let id = session.user?.id, session.isSignedIn, push.canBeSwitched, push.isWanted, !showsWelcome,
+              router.authEntry == nil, !router.isResolvingLink, router.path(router.selectedTab).isEmpty,
+              confirmations.presentation(in: router.selectedTab) == nil, scenePhase == .active else { return nil }
+        return id
+    }
+
+    /// Shows "Enable notifications" when the member stays on the main tabs a moment (a closing sheet finishes;
+    /// an action waiting for sign-in opens its screen first) and the rules allow it (`shouldShowPrompt()`).
+    private func presentPushPromptIfNeeded() async {
+        guard pushPromptMoment != nil else { return }
+        // Waits while UIKit presents something over the tabs: the sign-in sheet as it closes, the system's "Save
+        // Password?" after an email sign-in, the in-app browser. A change of moment cancels the wait.
+        repeat {
+            try? await Task.sleep(for: .milliseconds(500))
+            if Task.isCancelled { return }
+        } while Self.isWindowPresenting
+        guard pushPromptMoment != nil, await push.shouldShowPrompt(), !Task.isCancelled, pushPromptMoment != nil,
+              !Self.isWindowPresenting else { return }
+        push.isPromptPresented = true
+    }
+
+    /// The key window presents something (a sheet, the in-app browser, a picker).
+    private static var isWindowPresenting: Bool {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .contains { $0.isKeyWindow && $0.rootViewController?.presentedViewController != nil }
     }
 
     private var authSheetPresented: Binding<Bool> {

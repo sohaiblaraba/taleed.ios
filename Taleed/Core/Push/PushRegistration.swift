@@ -54,6 +54,10 @@ struct SystemNotificationPermission: NotificationPermission {
 /// The switch in Settings (G16) turns pushes off for this installation (`DELETE /devices`) and back on
 /// (the permission, then `POST /devices`); the choice is kept on the device. It shows the real state: on
 /// only while the member wants pushes, the system allows them and this installation is registered.
+///
+/// The "Enable notifications" screen (plan/push-prompt.md) asks first, the first time a signed-in member is
+/// on the main tabs: once per installation, while the system permission was never decided
+/// (`shouldShowPrompt()`). Its "Enable" asks and registers the same way as the first message does.
 @MainActor
 @Observable
 final class PushRegistration {
@@ -84,8 +88,13 @@ final class PushRegistration {
     private(set) var isPermissionGranted: Bool?
     /// The member's choice on this device: true unless they turned pushes off in Settings.
     private(set) var isWanted: Bool
+    /// The "Enable notifications" screen covers the tabs (`MainShellView`).
+    var isPromptPresented = false
 
     static let switchKey = "push_switched_on"
+    /// The "Enable notifications" screen showed on this installation: it never shows again. Kept across
+    /// sign-out and sign-in.
+    static let promptShownKey = "push_prompt_shown"
 
     init(api: DevicesApi, permission: NotificationPermission, tokenSource: PushTokenSource?,
          isEnabled: @escaping () -> Bool, isSignedIn: @escaping () -> Bool = { true },
@@ -169,6 +178,48 @@ final class PushRegistration {
     /// who said no is never asked again here (the system settings can change it). Best effort: a failed
     /// registration is tried again after the next message. Nothing while the Settings switch is off.
     func memberReachedOut() async {
+        await askThenRegister()
+    }
+
+    /// The "Enable notifications" screen may show: `features.push`, a token source, a session, the member
+    /// did not turn the Settings switch off on this installation, the screen never showed on it, and the
+    /// system permission was never decided (plan/push-prompt.md). The caller checks that the main tabs are
+    /// on screen, with nothing over them.
+    func shouldShowPrompt() async -> Bool {
+        guard canBeSwitched, isSignedIn(), isWanted, !defaults.bool(forKey: Self.promptShownKey) else { return false }
+        return await readPermission() == nil
+    }
+
+    /// The screen is on screen: it never shows again on this installation, whatever the member taps (or if
+    /// the app stops meanwhile).
+    func promptDidAppear() {
+        defaults.set(true, forKey: Self.promptShownKey)
+    }
+
+    /// "Enable": the system dialog, then `POST /devices` when allowed, then the screen closes. A refusal
+    /// closes it with no message (the Settings switch shows the blocked state).
+    func promptDidEnable() async {
+        promptDidAppear()
+        await askThenRegister()
+        isPromptPresented = false
+    }
+
+    /// "Not now": the screen closes. The first message or offer still asks (`memberReachedOut()`).
+    func promptDidDecline() {
+        promptDidAppear()
+        isPromptPresented = false
+    }
+
+    #if DEBUG
+    /// The developer menu's "Reset push prompt": the screen may show again on this installation.
+    func resetPrompt() {
+        defaults.removeObject(forKey: Self.promptShownKey)
+    }
+    #endif
+
+    /// Asks for the permission when it was never decided, then registers. Nothing when it was refused,
+    /// while the Settings switch is off, or signed out.
+    private func askThenRegister() async {
         guard isEnabled(), isWanted, let tokenSource, !isRegistered, !isWorking, isSignedIn() else { return }
         isWorking = true
         defer { isWorking = false }

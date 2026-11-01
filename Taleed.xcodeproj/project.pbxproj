@@ -260,6 +260,7 @@
 		B58C39037792E59D70250BEE /* UsernameRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05B8440C9B49F3B2C234802 /* UsernameRuleTests.swift */; };
 		B5FA93B513C8814FC1AA8678 /* ListRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9FB2866C9642329F3BCB506 /* ListRow.swift */; };
 		B6A429572190C053E7FD58C6 /* OffersApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8009F0D1ED8ABF52AD487380 /* OffersApi.swift */; };
+		B6A6D93C1E4FB5CA1C3C3860 /* PushPromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3ED91606DA6FAAAECFEFBA8 /* PushPromptView.swift */; };
 		B72BCE66B5E844E794A159EE /* TaleedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33392415F8DAE11A1675C5BC /* TaleedButton.swift */; };
 		B7E6BCAB47FDC99CB6D338B8 /* CrashReporting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CFC93958348FC4A2A61EC41 /* CrashReporting.swift */; };
 		B90A99F733F40B093E36BCFE /* Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E21C7F15EAFCCD44D94E892 /* Navigation.swift */; };
@@ -645,6 +646,7 @@
 		C26A536761AEC14E4D98C63E /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		C345D65C25D86447E8FBABF6 /* EditListingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListingViewModel.swift; sourceTree = "<group>"; };
 		C3775A2E061D635BCDD55BA8 /* ReferralsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralsView.swift; sourceTree = "<group>"; };
+		C3ED91606DA6FAAAECFEFBA8 /* PushPromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushPromptView.swift; sourceTree = "<group>"; };
 		C44C003B216D3B6194591B7F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C49D8C2150C0C92C9AFFBDD4 /* HomeFeedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFeedTests.swift; sourceTree = "<group>"; };
 		C58C7710111F8CEB59EB1C2A /* Alexandria-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Alexandria-Bold.ttf"; sourceTree = "<group>"; };
@@ -1476,6 +1478,7 @@
 				DBE2F1C7C94478DEF91B281D /* NotificationsApi.swift */,
 				8C9C17B567E633CBF91CF06F /* NotificationsView.swift */,
 				C23E3FD441B77AE4CB89AB01 /* NotificationsViewModel.swift */,
+				C3ED91606DA6FAAAECFEFBA8 /* PushPromptView.swift */,
 			);
 			path = Notifications;
 			sourceTree = "<group>";
@@ -1969,6 +1972,7 @@
 				19F1916B0DBFA07C1DAD70EE /* ProfileView.swift in Sources */,
 				4977B48116CF75EBEAF6F51C /* Promotions.swift in Sources */,
 				61B726CE9F2E84AB71256E30 /* PushNotifications.swift in Sources */,
+				B6A6D93C1E4FB5CA1C3C3860 /* PushPromptView.swift in Sources */,
 				CDD7E9F0C3146E2EE904CA95 /* PushRegistration.swift in Sources */,
 				A7A140C2F1B2581A6AEAA39C /* RangeSlider.swift in Sources */,
 				381DA7E54B056B1685C63EFC /* ReferralModels.swift in Sources */,

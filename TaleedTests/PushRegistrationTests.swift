@@ -253,4 +253,104 @@ struct PushRegistrationTests {
         #expect(api.registered.isEmpty)
         #expect(permission.requests == 0)
     }
+
+    // MARK: The "Enable notifications" screen (plan/push-prompt.md)
+
+    /// Signed in, `features.push`, a token source, the switch never turned off, the permission never decided and
+    /// the screen never shown: it shows.
+    @Test func thePromptShowsOnceThePermissionWasNeverDecided() async {
+        #expect(await registration().shouldShowPrompt())
+    }
+
+    @Test func thePromptNeedsPushATokenAndASession() async {
+        #expect(await !registration(enabled: false).shouldShowPrompt())
+        #expect(await !registration(tokens: nil).shouldShowPrompt())
+        #expect(await !registration(signedIn: false).shouldShowPrompt())
+    }
+
+    /// The system permission was already given or refused (the first message asked, say): no screen.
+    @Test func thePromptNeedsAnUndecidedPermission() async {
+        permission.granted = true
+        #expect(await !registration().shouldShowPrompt())
+        permission.granted = false
+        #expect(await !registration().shouldShowPrompt())
+    }
+
+    /// The member turned the Settings switch off on this installation: never the screen.
+    @Test func thePromptRespectsTheSettingsSwitch() async {
+        permission.granted = true
+        _ = await registration().setSwitchedOn(false)
+        permission.granted = nil
+        #expect(await !registration().shouldShowPrompt())
+    }
+
+    /// "Not now" closes without asking, and the screen never shows again on this installation, after a sign-out
+    /// and a new sign-in too.
+    @Test func notNowClosesAndNeverShowsAgain() async {
+        let push = registration()
+        push.isPromptPresented = true
+        push.promptDidDecline()
+        #expect(!push.isPromptPresented)
+        #expect(permission.requests == 0)
+        #expect(api.registered.isEmpty)
+        #expect(await !push.shouldShowPrompt())
+        push.sessionDidEnd()
+        await push.sessionDidStart()
+        #expect(await !push.shouldShowPrompt())
+        #expect(await !registration().shouldShowPrompt())
+    }
+
+    /// The screen showed (the app may stop before an answer): it never shows again.
+    @Test func aShownPromptNeverShowsAgain() async {
+        registration().promptDidAppear()
+        #expect(await !registration().shouldShowPrompt())
+    }
+
+    /// "Enable", then Allow: the system dialog once, `POST /devices`, then the screen closes.
+    @Test func enableAsksRegistersThenCloses() async {
+        let push = registration()
+        push.isPromptPresented = true
+        await push.promptDidEnable()
+        #expect(permission.requests == 1)
+        #expect(api.registered.map(\.token) == ["fcm-token"])
+        #expect(api.registered.first?.details == sampleDetails)
+        #expect(push.isRegistered)
+        #expect(!push.isPromptPresented)
+        #expect(await !registration().shouldShowPrompt())
+    }
+
+    /// "Enable", then Don't Allow: the screen closes, nothing is registered, and the first message does not ask
+    /// again.
+    @Test func enableRefusedClosesSilently() async {
+        permission.answer = false
+        let push = registration()
+        push.isPromptPresented = true
+        await push.promptDidEnable()
+        #expect(permission.requests == 1)
+        #expect(api.registered.isEmpty)
+        #expect(!push.isPromptPresented)
+        #expect(push.isPermissionDenied)
+        await push.memberReachedOut()
+        #expect(permission.requests == 1)
+        #expect(await !registration().shouldShowPrompt())
+    }
+
+    /// After "Not now" the first message or offer still asks, as before.
+    @Test func afterNotNowTheFirstMessageStillAsks() async {
+        let push = registration()
+        push.promptDidDecline()
+        await push.memberReachedOut()
+        #expect(permission.requests == 1)
+        #expect(api.registered.count == 1)
+    }
+
+    #if DEBUG
+    /// The developer menu's "Reset push prompt".
+    @Test func theResetShowsThePromptAgain() async {
+        let push = registration()
+        push.promptDidDecline()
+        push.resetPrompt()
+        #expect(await push.shouldShowPrompt())
+    }
+    #endif
 }

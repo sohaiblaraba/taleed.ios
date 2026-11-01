@@ -48,6 +48,7 @@ enum AnalyticsScreen: String, CaseIterable, Sendable {
     case identityVerification = "identity_verification"
     case referrals
     case help
+    case pushPermission = "push_permission"
 }
 
 /// One `screen_view`: the shared name and a stable class string of this platform (the route case or the view),
@@ -139,6 +140,8 @@ extension ScreenView {
     /// Sheets on iOS that are screens on Android: logged on both (plan/analytics-screens.md, rule 10).
     static let addressForm = ScreenView(.addressForm, "AddressFormSheet")
     static let shippingLabel = ScreenView(.shippingLabel, "ShippingLabelSheet")
+    /// The "Enable notifications" screen over the tabs (plan/push-prompt.md).
+    static let pushPermission = ScreenView(.pushPermission, "PushPromptView")
 }
 
 /// Logs a `screen_view` each time the screen the member sees changes (plan/analytics-screens.md).

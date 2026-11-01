@@ -3,7 +3,8 @@ import SwiftUI
 
 /// The developer menu (debug builds; Settings → Developer menu): what the build talks to, sign out, open a
 /// link through the router, move a demo parcel forward (`POST /orders/{id}/shipment/simulate`, slice F),
-/// send test notifications and crash on purpose (slice J), and empty the caches.
+/// send test notifications and crash on purpose (slice J), show the "Enable notifications" screen again
+/// (plan/push-prompt.md), and empty the caches.
 ///
 /// Staging builds show it as "Test tools", with only the build, the parcel step, the test notifications and
 /// the test crash. Release builds have neither. Its copy is English and never reaches members.
@@ -19,6 +20,7 @@ struct DeveloperMenuView: View {
     @Environment(LanguageManager.self) private var l10n
     @Environment(\.appEnvironment) private var environment
     @Environment(\.developmentApi) private var developmentApi
+    @Environment(PushRegistration.self) private var push
     @Environment(\.dismiss) private var dismiss
 
     @State private var orderId = ""
@@ -29,6 +31,7 @@ struct DeveloperMenuView: View {
     @State private var isUploading = false
     @State private var upload: UploadedPhoto?
     @State private var uploadError: String?
+    @State private var didResetPushPrompt = false
 
     var body: some View {
         ShellScreen {
@@ -61,6 +64,16 @@ struct DeveloperMenuView: View {
                     if let developmentApi {
                         TestNotificationsSection(api: developmentApi)
                     }
+
+                    #if DEBUG
+                    // Shows on the main tabs again, while the system permission was never decided (reset it with
+                    // `xcrun simctl privacy booted reset notifications app.taleed.mobile`).
+                    ListRow(label: "Reset push prompt", leadingIcon: .bell, trailingText: didResetPushPrompt ? "Done" : nil) {
+                        push.resetPrompt()
+                        didResetPushPrompt = true
+                    }
+                    .accessibilityIdentifier("developer.resetPushPrompt")
+                    #endif
 
                     section("Crash reporting")
                     CrashTestSection()

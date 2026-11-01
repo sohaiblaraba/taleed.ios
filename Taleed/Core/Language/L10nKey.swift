@@ -798,6 +798,9 @@ enum L10nKey: String, CaseIterable, Sendable { // swiftlint:disable:this type_bo
     case footerTrust = "footer_trust"
     case pwaPushTitle = "pwa_push_title"
     case pwaPushBody = "pwa_push_body"
+    case pwaPushEnable = "pwa_push_enable"
+    // The "Enable notifications" screen after sign-in: app-only key.
+    case appPushPromptNotNow = "app_push_prompt_not_now"
     // Settings (G16): app-only keys.
     case appSettingsAccount = "app_settings_account"
     case appSettingsAppearance = "app_settings_appearance"

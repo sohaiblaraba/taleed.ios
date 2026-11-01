@@ -4,7 +4,7 @@ import Testing
 
 @MainActor
 struct ScreenTrackingTests {
-    /// plan/analytics-screens.md, "Screens (43)", in its order. Android uses the same names.
+    /// plan/analytics-screens.md, "Screens (44)", in its order. Android uses the same names.
     private static let sharedList = [
         "update_required", "welcome", "sign_in", "sign_up", "request_access", "forgot_password", "finish_sign_up",
         "suspended", "home", "explore", "search_results", "visual_search_results", "listing_detail", "member_profile",
@@ -12,6 +12,7 @@ struct ScreenTrackingTests {
         "checkout", "order_payment", "orders", "order_detail", "dispute", "shipping_label", "earnings", "notifications",
         "profile", "settings", "profile_settings", "username_settings", "email_settings", "password_settings",
         "addresses", "address_form", "blocked_members", "delete_account", "identity_verification", "referrals", "help",
+        "push_permission",
     ]
 
     /// One route of each case (the associated values do not matter).
@@ -26,10 +27,11 @@ struct ScreenTrackingTests {
 
     private static let authSteps: [AuthFlowModel.Step] = [.signIn, .signUp, .forgotPassword, .requestAccess, .finishSignUp]
 
-    /// Every screen view the app can log: routes, tab roots, sign-in steps, launch screens and the two sheets.
+    /// Every screen view the app can log: routes, tab roots, sign-in steps, launch screens, the two sheets and the
+    /// "Enable notifications" screen.
     private static var allViews: [ScreenView] {
         routes.compactMap(\.screenView) + AppTab.allCases.map(\.screenView) + authSteps.map(\.screenView)
-            + [.welcome, .updateRequired, .suspended, .addressForm, .shippingLabel]
+            + [.welcome, .updateRequired, .suspended, .addressForm, .shippingLabel, .pushPermission]
     }
 
     @Test func theNamesAreTheSharedList() {
