@@ -147,9 +147,6 @@ struct CheckoutTarget: Hashable, Sendable {
     let listingId: String
     var offerId: String?
     var bundleId: String?
-    /// Opened by a link (`/checkout/{listingId}`): `listingId` may be the website's slug, so checkout reads
-    /// the listing's id first (`GET /listings/{id}`), since the quote and the order take ids only.
-    var fromLink = false
 }
 
 /// The order the payment screen shows, how the member came to it, and the home address of the order

@@ -116,8 +116,7 @@ enum LinkRouter {
         case "bundle": return single(segments) { .screen(.bundle(id: $0)) }
         case "checkout":
             return single(segments) { listingId in
-                let target = CheckoutTarget(listingId: listingId, offerId: query["offer"], bundleId: query["bundle"], fromLink: true)
-                return .screen(.checkout(target))
+                .screen(.checkout(CheckoutTarget(listingId: listingId, offerId: query["offer"], bundleId: query["bundle"])))
             }
         case "orders":
             if segments.count == 1 { return .screen(.orders) }

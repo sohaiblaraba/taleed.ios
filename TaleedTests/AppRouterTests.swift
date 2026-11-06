@@ -19,6 +19,31 @@ struct AppRouterTests {
         #expect(router.path(.home) == [.listing(id: "l1")])
     }
 
+    /// "Retour à l'annonce" from the payment screen goes back to the listing below, also when a website
+    /// slug link opened it (its screen loaded the id); any other listing opens on top.
+    @Test func backToListingFindsTheSlugLinksScreen() {
+        signedIn.value = true
+        router.open(url: URL(string: "https://taleed.app/listings/robe-fleurie-zara")!)
+        router.listingDidLoad(routeId: "robe-fleurie-zara", listingId: "l1")
+        router.push(.orderPayment(OrderPaymentTarget(orderId: "o1")))
+        #expect(router.route(.listing(id: "robe-fleurie-zara"), showsListing: "l1"))
+        #expect(!router.route(.listing(id: "robe-fleurie-zara"), showsListing: "l2"))
+        router.backToListing("l1", tab: .home)
+        #expect(router.path(.home) == [.listing(id: "robe-fleurie-zara")])
+
+        router.push(.orderPayment(OrderPaymentTarget(orderId: "o2")))
+        router.backToListing("l2", tab: .home)
+        #expect(router.path(.home) == [.listing(id: "robe-fleurie-zara"), .orderPayment(OrderPaymentTarget(orderId: "o2")),
+                                       .listing(id: "l2")])
+
+        // An id link, as before.
+        router.open(url: URL(string: "https://taleed.app/listings/l3")!)
+        router.listingDidLoad(routeId: "l3", listingId: "l3")
+        router.push(.orderPayment(OrderPaymentTarget(orderId: "o3")))
+        router.backToListing("l3", tab: .home)
+        #expect(router.path(.home) == [.listing(id: "l3")])
+    }
+
     @Test func orderOpensOverTheOrdersList() {
         signedIn.value = true
         router.open(.screen(.order(id: "o1")))

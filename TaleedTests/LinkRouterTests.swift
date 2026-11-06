@@ -50,11 +50,11 @@ struct LinkRouterTests {
     }
 
     @Test func checkoutCarriesOfferAndBundle() {
-        #expect(destination("https://taleed.app/checkout/l1") == .screen(.checkout(CheckoutTarget(listingId: "l1", fromLink: true))))
+        #expect(destination("https://taleed.app/checkout/l1") == .screen(.checkout(CheckoutTarget(listingId: "l1"))))
         #expect(destination("https://taleed.app/checkout/l1?offer=of1")
-            == .screen(.checkout(CheckoutTarget(listingId: "l1", offerId: "of1", fromLink: true))))
+            == .screen(.checkout(CheckoutTarget(listingId: "l1", offerId: "of1"))))
         #expect(destination("https://taleed.app/checkout/l1?bundle=b1")
-            == .screen(.checkout(CheckoutTarget(listingId: "l1", bundleId: "b1", fromLink: true))))
+            == .screen(.checkout(CheckoutTarget(listingId: "l1", bundleId: "b1"))))
     }
 
     /// The website's listing addresses carry a slug since the backend's slug URLs; old id addresses still work.

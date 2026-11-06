@@ -104,6 +104,10 @@ struct ListingDetailView: View {
         // Saved on the edit form, hidden or deleted from My listings (G8).
         .onChange(of: listingChanges.seq) { _, _ in Task { await model.sync(with: listingChanges) } }
         .onChange(of: session.user?.id) { _, id in Task { await model.memberDidChange(to: id) } }
+        // A slug link's screen: back-to-listing from checkout's payment screen finds it by the loaded id.
+        .onChange(of: model.listing?.id) { _, id in
+            if let id { router.listingDidLoad(routeId: model.routeId, listingId: id) }
+        }
         .onChange(of: model.refreshError) { _, error in if let error { toasts.show(error: error) } }
         .onChange(of: model.loadError) { _, error in
             // Removed, hidden or taken down: lists leave its card out too.

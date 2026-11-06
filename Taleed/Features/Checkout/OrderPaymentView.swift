@@ -207,7 +207,7 @@ struct OrderPaymentView: View {
             .accessibilityIdentifier("payment.viewOrder")
             if let listingId = order.listingId {
                 TaleedButton(title: l10n.string(.checkoutBackToListing), kind: .hyperlink, size: .medium) {
-                    backToListing(listingId)
+                    router.backToListing(listingId, tab: shellTab)
                 }
                 .accessibilityIdentifier("payment.backToListing")
             }
@@ -220,16 +220,6 @@ struct OrderPaymentView: View {
                      size: .large, leadingIcon: .lockKey, isLoading: model.isPaying, isFullWidth: true, action: payAgain)
             .disabled(isInBrowser || model.isSyncing)
             .accessibilityIdentifier("payment.payNow")
-    }
-
-    /// Back to the listing below when checkout came from it; otherwise opened on top.
-    private func backToListing(_ listingId: String) {
-        let stack = shellTab.map { router.path($0) } ?? []
-        if stack.count >= 2, stack[stack.count - 2] == .listing(id: listingId) {
-            dismiss()
-        } else {
-            router.push(.listing(id: listingId))
-        }
     }
 
     /// "Payer maintenant": a new page from the gateway, then the sync.

@@ -55,8 +55,7 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
         case invalid
     }
 
-    /// The goods; a link's listing slug becomes the listing's id on the first load.
-    private(set) var target: CheckoutTarget
+    let target: CheckoutTarget
     var form = CheckoutFormState()
     private(set) var phase: Phase = .loading
     private(set) var pricing: CheckoutPricing?
@@ -156,27 +155,12 @@ final class CheckoutViewModel { // swiftlint:disable:this type_body_length
             phase = .failed(error)
             return
         }
-        guard await resolveLinkedListing() else { return }
         if form.wilayaId == nil {
             await loadPreview()
         } else {
             async let communes: Void = loadCommunes()
             await quote(initial: true)
             await communes
-        }
-    }
-
-    /// A link's listing (`/checkout/{slug}`): its id from `GET /listings/{id}`, once, before any quote.
-    /// False when that failed (the phase says why).
-    private func resolveLinkedListing() async -> Bool {
-        guard target.fromLink, target.bundleId == nil else { return true }
-        do {
-            let listing = try await dependencies.listings.listing(id: target.listingId, countView: false, automatic: false)
-            target = CheckoutTarget(listingId: listing.id, offerId: target.offerId)
-            return true
-        } catch {
-            handleBlockingError(error, initial: true)
-            return false
         }
     }
 

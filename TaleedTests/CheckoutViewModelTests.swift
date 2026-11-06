@@ -25,29 +25,6 @@ struct CheckoutViewModelTests {
         #expect(model.action == .pending) // no commune nor street yet
     }
 
-    /// `/checkout/{slug}`: the listing's id first, then the quote and the order name it (they take no slug).
-    @Test func aLinksSlugBecomesTheListingsIdBeforeTheQuote() async {
-        let model = model(CheckoutTarget(listingId: "robe-fleurie-zara", offerId: "of1", fromLink: true))
-        await model.loadIfNeeded()
-        #expect(listings.listingIds == ["robe-fleurie-zara"])
-        #expect(model.target == CheckoutTarget(listingId: "l1", offerId: "of1"))
-        #expect(api.quoteRequests.first?.listingId == "l1")
-        #expect(api.quoteRequests.first?.offerId == "of1")
-        #expect(model.goodsListingIds == ["l1"])
-        // Opened in the app, the id is the listing's already: no extra load.
-        let inApp = self.model()
-        await inApp.loadIfNeeded()
-        #expect(listings.listingIds.count == 1)
-    }
-
-    @Test func aLinkToAListingThatIsGoneShowsNotFound() async {
-        listings.listing = .failure(apiError(404, "not_found"))
-        let model = model(CheckoutTarget(listingId: "robe-fleurie-zara", fromLink: true))
-        await model.loadIfNeeded()
-        #expect(model.phase == .notFound)
-        #expect(api.quoteRequests.isEmpty)
-    }
-
     @Test func theDefaultSavedAddressComesFirst() async {
         api.addresses = [SavedAddress(id: "a1", recipientName: "Lina K", phone: "0661000000", wilaya: CatalogWilaya(id: 16, name: "Alger"),
                                       communeId: 16001, commune: "Alger", addressLine: "Rue 1", isDefault: true)]

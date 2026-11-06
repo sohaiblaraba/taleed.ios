@@ -58,6 +58,9 @@ final class AppRouter {
     /// read again (`NotificationsFeed`).
     @ObservationIgnored var onNotificationsOpened: (() -> Void)?
 
+    /// The id each listing screen loaded, by the value its route names it with, when they differ (a website
+    /// slug, `/listings/{slug}`): the stack keeps the route as the link gave it.
+    @ObservationIgnored private var loadedListingIds: [String: String] = [:]
     /// The action waiting for sign-in, run once the sheet closes signed in.
     @ObservationIgnored private var afterSignIn: (() -> Void)?
     /// A link that arrived before the launch flow finished (`GET /config`, the session restored), or
@@ -361,5 +364,33 @@ final class AppRouter {
         return AppBarAction(icon: .shieldCheck, accessibilityLabel: accessibilityLabel,
                             action: hasLink ? { [weak self] in self?.openWebsite(.buyerProtection) } : nil,
                             accessibilityIdentifier: "appBar.buyerProtection")
+    }
+}
+
+// MARK: - Listings opened by a slug
+
+extension AppRouter {
+    /// The listing screen of `.listing(id: routeId)` loaded the listing `listingId` (`ListingDetailView`).
+    func listingDidLoad(routeId: String, listingId: String) {
+        guard routeId != listingId else { return }
+        loadedListingIds[routeId] = listingId
+    }
+
+    /// Whether `route` is the screen of the listing `listingId`: by its id, or by the slug that screen
+    /// loaded it from.
+    func route(_ route: AppRoute, showsListing listingId: String) -> Bool {
+        guard case let .listing(id) = route else { return false }
+        return id == listingId || loadedListingIds[id] == listingId
+    }
+
+    /// "Retour à l'annonce" from the payment screen: back to the listing right below when checkout came
+    /// from it (a slug link's screen included), otherwise the listing opened on top.
+    func backToListing(_ listingId: String, tab: AppTab?) {
+        let stack = tab.map { path($0) } ?? []
+        if stack.count >= 2, route(stack[stack.count - 2], showsListing: listingId), let tab {
+            navigation.paths[tab]?.removeLast()
+        } else {
+            push(.listing(id: listingId))
+        }
     }
 }
