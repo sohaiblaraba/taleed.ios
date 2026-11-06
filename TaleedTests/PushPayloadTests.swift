@@ -18,7 +18,7 @@ struct PushPayloadTests {
         // OFFER_ACCEPTED: the bundle, or the checkout with the offer.
         ("/bundle/cmbundle1", .screen(.bundle(id: "cmbundle1"))),
         ("/checkout/cmlisting1?offer=cmoffer1",
-         .screen(.checkout(CheckoutTarget(listingId: "cmlisting1", offerId: "cmoffer1", bundleId: nil)))),
+         .screen(.checkout(CheckoutTarget(listingId: "cmlisting1", offerId: "cmoffer1", bundleId: nil, fromLink: true)))),
         // ORDER_*, DISPUTE_* (the order of the dispute), REVIEW_RECEIVED, REFUND_SENT, and their fallback.
         ("/orders/cmorder1", .screen(.order(id: "cmorder1"))),
         ("/orders", .screen(.orders)),

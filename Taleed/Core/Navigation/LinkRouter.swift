@@ -116,7 +116,8 @@ enum LinkRouter {
         case "bundle": return single(segments) { .screen(.bundle(id: $0)) }
         case "checkout":
             return single(segments) { listingId in
-                .screen(.checkout(CheckoutTarget(listingId: listingId, offerId: query["offer"], bundleId: query["bundle"])))
+                let target = CheckoutTarget(listingId: listingId, offerId: query["offer"], bundleId: query["bundle"], fromLink: true)
+                return .screen(.checkout(target))
             }
         case "orders":
             if segments.count == 1 { return .screen(.orders) }
@@ -133,6 +134,9 @@ enum LinkRouter {
     /// `/listings/{id}` and `/listings/{id}/chat`: the conversation about the listing, found or created
     /// (screens.md §7 G9), with `?with={memberId}` for the seller writing to a member. The website's edit
     /// page `/listings/{id}/edit` goes Home like any other path (screens.md §1.2, the same on Android).
+    /// The segment may be the website's slug (`/listings/robe-zara`, Arabic letters decoded once): the API
+    /// reads it in `GET /listings/{id}` and `POST /conversations`, and the listing screen goes on with the
+    /// id it loads.
     private static func listing(_ segments: [String], query: [String: String]) -> AppDestination {
         guard segments.count >= 2, !segments[1].isEmpty else { return .home }
         let id = segments[1]

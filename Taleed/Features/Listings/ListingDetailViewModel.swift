@@ -47,7 +47,12 @@ final class ListingDetailViewModel {
         case message, offer, visibility, delete, bundle
     }
 
-    let listingId: String
+    /// The listing as the route names it: its id, or the website's slug from a link (`/listings/{slug}`,
+    /// percent-decoded). Only the loads before the first answer use it, and the route keys (toasts).
+    let routeId: String
+    /// The listing's id: the API's once it has loaded (a slug route included), the route's until then.
+    /// Every call, comparison and screen opened from here uses it: the API takes no slug in its bodies.
+    var listingId: String { loadedId ?? routeId }
     private(set) var listing: ListingDetail?
     /// The first load failed (`404`: "no longer available").
     private(set) var loadError: ApiError?
@@ -63,6 +68,8 @@ final class ListingDetailViewModel {
     /// The member the listing on screen was loaded for (nil signed out): its flags are theirs.
     @ObservationIgnored private var loadedFor: String??
     @ObservationIgnored private var memberId: String?
+    /// The id of the first answer, kept when a later load fails (`404` included).
+    @ObservationIgnored private var loadedId: String?
     @ObservationIgnored private var backgroundSince: ContinuousClock.Instant?
     /// The screen's opening load succeeded: it counted the view, and no other load may (API 1.5.3).
     @ObservationIgnored private var viewCounted = false
@@ -76,7 +83,7 @@ final class ListingDetailViewModel {
     @ObservationIgnored private var appliedChangeSeq: Int?
 
     init(listingId: String, api: ListingDetailApi, bundles: BundlesApi, memberId: String? = nil) {
-        self.listingId = listingId
+        routeId = listingId
         self.api = api
         self.bundles = bundles
         self.memberId = memberId
@@ -127,6 +134,7 @@ final class ListingDetailViewModel {
             let countView = !viewCounted
             let fresh = try await api.listing(id: listingId, countView: countView, automatic: automatic)
             viewCounted = true
+            loadedId = fresh.id
             listing = fresh
             loadError = nil
             refreshError = nil

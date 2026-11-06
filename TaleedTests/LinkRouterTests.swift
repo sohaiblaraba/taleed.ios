@@ -50,11 +50,36 @@ struct LinkRouterTests {
     }
 
     @Test func checkoutCarriesOfferAndBundle() {
-        #expect(destination("https://taleed.app/checkout/l1") == .screen(.checkout(CheckoutTarget(listingId: "l1"))))
+        #expect(destination("https://taleed.app/checkout/l1") == .screen(.checkout(CheckoutTarget(listingId: "l1", fromLink: true))))
         #expect(destination("https://taleed.app/checkout/l1?offer=of1")
-            == .screen(.checkout(CheckoutTarget(listingId: "l1", offerId: "of1"))))
+            == .screen(.checkout(CheckoutTarget(listingId: "l1", offerId: "of1", fromLink: true))))
         #expect(destination("https://taleed.app/checkout/l1?bundle=b1")
-            == .screen(.checkout(CheckoutTarget(listingId: "l1", bundleId: "b1"))))
+            == .screen(.checkout(CheckoutTarget(listingId: "l1", bundleId: "b1", fromLink: true))))
+    }
+
+    /// The website's listing addresses carry a slug since the backend's slug URLs; old id addresses still work.
+    @Test func listingSlugsOpenTheListing() {
+        let slug = "appareil-photo-kodak-pixpro-rose"
+        #expect(destination("https://taleed.app/listings/\(slug)") == .screen(.listing(id: slug)))
+        #expect(destination("https://taleed.app/ar/listings/\(slug)/chat") == .listingChat(listingId: slug, memberId: nil))
+        #expect(destination("taleed://listings/\(slug)") == .screen(.listing(id: slug)))
+        #expect(destination("https://taleed.app/listings/cmvj2hs9r00239gzdl4ptq46w")
+            == .screen(.listing(id: "cmvj2hs9r00239gzdl4ptq46w")))
+    }
+
+    /// An Arabic slug arrives percent-encoded: the route holds it decoded once, and the generated client
+    /// encodes it once again in the API path.
+    @Test func arabicSlugsAreDecodedOnce() throws {
+        let slug = "فستان-صيفي-أزرق"
+        let encoded = try #require(slug.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed))
+        #expect(encoded.hasPrefix("%D9%81"))
+        #expect(destination("https://taleed.app/ar/listings/\(encoded)") == .screen(.listing(id: slug)))
+        #expect(destination("https://taleed.app/listings/\(encoded)/chat?with=m2") == .listingChat(listingId: slug, memberId: "m2"))
+        #expect(destination("taleed://ar/listings/\(encoded)") == .screen(.listing(id: slug)))
+        // A push or a notification may give the letters as they are.
+        #expect(destination("/listings/\(slug)") == .screen(.listing(id: slug)))
+        // Once in the API path, as `ListingsAPI.getListing` builds it.
+        #expect(slug.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) == encoded)
     }
 
     @Test func browseKeepsEveryFilter() {

@@ -94,7 +94,7 @@ struct ListingDetailView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             // Toasts show above this screen's own bar while it is on top (each listing measures its own).
             bottomBar.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
-                if let shellTab { toasts.setBottomBarHeight(height, tab: shellTab, route: .listing(id: model.listingId)) }
+                if let shellTab { toasts.setBottomBarHeight(height, tab: shellTab, route: .listing(id: model.routeId)) }
             }
         }
         .task {

@@ -94,7 +94,7 @@ struct NotificationRulesTests {
         #expect(notification("n", url: "http://localhost:3000/listings/l1/chat?with=m2").destination
             == .listingChat(listingId: "l1", memberId: "m2"))
         #expect(notification("n", url: "http://localhost:3000/checkout/l1?offer=of1").destination
-            == .screen(.checkout(CheckoutTarget(listingId: "l1", offerId: "of1"))))
+            == .screen(.checkout(CheckoutTarget(listingId: "l1", offerId: "of1", fromLink: true))))
         #expect(notification("n", url: "http://localhost:3000/inbox").destination == .inbox)
         // Staff pages go Home, like any path the router does not know.
         #expect(notification("n", url: "http://localhost:3000/admin/payouts").destination == .home)

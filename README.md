@@ -66,7 +66,14 @@ What every screen group reuses (screens.md §0 and §1, api-guide.md):
 
 Links can be tried on the simulator with the app's scheme, which reads like a path:
 `xcrun simctl openurl booted "taleed://ar/orders/<id>"`, or with the launch argument
-`-TaleedDebugOpenURL /listings/<id>`.
+`-TaleedDebugOpenURL /listings/<id>`. If an older debug build (another bundle ID) is still installed on the
+simulator, `simctl openurl` may open that one: use the launch argument then.
+
+Listing links may name the listing by the website's slug instead of its id (`/listings/<slug>`, Arabic
+letters percent-encoded; old id links keep working). The router keeps the segment decoded once, the generated
+client encodes it once in `GET /listings/{id}`, and the listing screen then uses the `id` it loaded for every
+other call, comparison and screen (the API takes no slug in the bundle, report, checkout and order bodies). A
+`/checkout/<slug>` link reads the listing's id first (`CheckoutTarget.fromLink`).
 
 ## Firebase (push, crash reports, usage statistics)
 

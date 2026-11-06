@@ -49,6 +49,10 @@ final class FakeListingDetailApi: ListingDetailApi, ReportsApi {
     }
 
     private(set) var listingCalls: [ListingCall] = []
+    /// The ids (or slugs) in the path of each `GET /listings/{id}`, each offer and each `POST /conversations`.
+    private(set) var listingIds: [String] = []
+    private(set) var offerListingIds: [String] = []
+    private(set) var conversationListingIds: [String] = []
     private(set) var offers: [Int] = []
     struct SentReport {
         let target: ReportTarget
@@ -61,14 +65,19 @@ final class FakeListingDetailApi: ListingDetailApi, ReportsApi {
 
     func listing(id: String, countView: Bool, automatic: Bool) async throws(Taleed.ApiError) -> Taleed.ListingDetail {
         listingCalls.append(ListingCall(countView: countView, automatic: automatic))
+        listingIds.append(id)
         if !listings.isEmpty { return try listings.removeFirst().get() }
         return try listing.get()
     }
 
-    func openConversation(listingId: String) async throws(Taleed.ApiError) -> String { try conversation.get() }
+    func openConversation(listingId: String) async throws(Taleed.ApiError) -> String {
+        conversationListingIds.append(listingId)
+        return try conversation.get()
+    }
 
     func makeOffer(listingId: String, amount: Int) async throws(Taleed.ApiError) -> String {
         offers.append(amount)
+        offerListingIds.append(listingId)
         return try offer.get()
     }
 
