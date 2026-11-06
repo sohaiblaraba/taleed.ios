@@ -167,7 +167,7 @@ private struct AddressCard: View {
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textBody)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("\(address.commune), \(address.wilaya.name)")
+                Text(verbatim: "\(address.commune), \(address.wilaya.name)")
                     .taleedFont(TaleedFont.bodyRegular)
                     .foregroundStyle(TaleedColor.textSecondarySmall)
                 if address.communeId == nil {

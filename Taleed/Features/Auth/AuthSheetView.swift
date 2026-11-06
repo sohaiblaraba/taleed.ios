@@ -118,7 +118,9 @@ struct AuthFooterLink: View {
         Button(action: onTap) {
             let promptText = Text(prompt).foregroundStyle(TaleedColor.textBody)
             let actionText = Text(action).foregroundStyle(TaleedColor.brandPrimary).fontWeight(.semibold)
-            Text("\(promptText) \(actionText)")
+            // Joined, not interpolated: an interpolated literal is a localization key, and Xcode adds "%@ %@"
+            // to the string catalog.
+            (promptText + Text(verbatim: " ") + actionText)
                 .taleedFont(TaleedFont.bodyRegular)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, minHeight: TaleedSize.touchTargetMin)
